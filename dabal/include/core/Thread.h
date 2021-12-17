@@ -210,7 +210,17 @@ namespace core {
 
 			static void setDefaultCrashReportingEnabled(bool cr);
 			static bool isDefaultCrashReportingEnabled();
-
+			/**
+			* return minimun time(msecs) the system will wait with accuracy.
+			* it depends on underlying OS and hardware, but traditionally it's about 10-15 msecs
+			* @todo for the moment we will return a fixed contant depending on platform
+			*/
+			constexpr static unsigned getMinimunSleepTime()
+			{
+				//@todo por ahora pongo tiempo fijo "típico" para que se pueda usar y ya trataremos de que sea automático o al menos más flexible
+				constexpr unsigned MINIMUM_SLEEP = 10;
+				return MINIMUM_SLEEP;
+			}
 		protected:
 			Thread(const char* name,unsigned int maxTaskSize = Runnable::DEFAULT_POOL_SIZE);
 			
@@ -245,7 +255,7 @@ namespace core {
 			/**
 			* suspend inmediately, can be called only from same thread execution
 			*/
-			bool suspendInternal(unsigned int millis,Process* proc,::core::EGenericProcessState);		
+			bool suspendInternal(uint64_t millis,Process* proc,::core::EGenericProcessState);
 			/**
 			* called when thread begins to run
 			*/

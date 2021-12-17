@@ -12,8 +12,8 @@ namespace core
 	{
 	private:
 		//signature por transition functions. If return true, then exite, else, continue executing change function until true
-		typedef bool (T::*ChangeStateFunction)( unsigned int milliseconds);
-		typedef void (T::*StateFunction)( unsigned int milliseconds);
+		typedef bool (T::*ChangeStateFunction)(uint64_t milliseconds);
+		typedef void (T::*StateFunction)(uint64_t milliseconds);
 	public:
 		StateTemplate():
 			mInstance(0),
@@ -38,17 +38,17 @@ namespace core
 		 * called by StateMachine on state entering 
 		 * 
 		 */
-		bool _executeEnterState(unsigned int milliseconds);
+		bool _executeEnterState(uint64_t milliseconds);
 		/**
 		 * overridden from State
 		 * @param milliseconds    milliseconds
 		 */
-		bool _executeExitState(unsigned int milliseconds);
+		bool _executeExitState(uint64_t milliseconds);
 		/**
 		 * overridden from State
 		 * @param milliseconds    milliseconds
 		 */
-		void _executeState(unsigned int milliseconds);
+		void _executeState(uint64_t milliseconds);
 
 	protected:
 		/**
@@ -95,7 +95,7 @@ struct TimeElapsedEvent : public Event<unsigned int, State*>
 		*/
 	};
 template <class T>
-bool StateTemplate<T>::_executeEnterState(unsigned int milliseconds)
+bool StateTemplate<T>::_executeEnterState(uint64_t milliseconds)
 {
 	mInitialTime = milliseconds;
 	mPhase = ENTRY;
@@ -106,7 +106,7 @@ bool StateTemplate<T>::_executeEnterState(unsigned int milliseconds)
 	return true;
 }
 template <class T>
-bool StateTemplate<T>::_executeExitState(unsigned int milliseconds)
+bool StateTemplate<T>::_executeExitState(uint64_t milliseconds)
 {
 	mElapsedTime = milliseconds - mInitialTime;
 	mPhase = EXIT;
@@ -118,7 +118,7 @@ bool StateTemplate<T>::_executeExitState(unsigned int milliseconds)
 
 }
 template <class T>
-void StateTemplate<T>::_executeState( unsigned int milliseconds )
+void StateTemplate<T>::_executeState(uint64_t milliseconds )
 {
 	mPhase = STATE;
 	mElapsedTime  = milliseconds  - mInitialTime;

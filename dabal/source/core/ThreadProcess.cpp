@@ -38,7 +38,7 @@ void ThreadProcess::initConstruction()
 		)
 	);
 }
-void ThreadProcess::update(unsigned int milliseconds )
+void ThreadProcess::update(uint64_t milliseconds )
 {
 	//sends thread a yield each period milliseconds
 	//this is only orientative
@@ -67,7 +67,7 @@ void ThreadProcess::yieldTask()
 	Thread::yield();
 	mYieldDone = true;
 }
-void ThreadProcess::onInit(unsigned int msegs)
+void ThreadProcess::onInit(uint64_t msegs)
 {
 	mThread->start();
 }

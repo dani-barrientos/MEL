@@ -20,7 +20,7 @@ using core::MThreadAttributtes;
 #define mStackSizeOFF offsetof( MThreadAttributtes,mStackSize)
 #define mStackOFF offsetof( MThreadAttributtes,mStack)
 
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread(uint64_t msegs )
 {
     volatile MThreadAttributtes* thisAux = this;
 

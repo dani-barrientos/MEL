@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <core/Thread.h>
-
+//#include <logging/Logger.h>
 #include <mpl/MemberEncapsulate.h>
 
 using mpl::makeMemberEncapsulate;
@@ -24,11 +24,13 @@ static CriticalSection gCurrrentThreadCS;
 #include <pthread.h>
 #import <sys/syscall.h>
 #endif
-#if defined (_WINDOWS) && defined(CRASHPRT) 
-#include <CrashReport/CrashRpt.h>
+#if defined _WINDOWS && defined _CRASHRPT
+#include <CrashRpt.h>
 #endif
 
 namespace core {
+
+//using logging::Logger;
 
 unsigned int getNumProcessors()
 {
@@ -174,7 +176,7 @@ FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(Thread,Runnable);
 	{
 		Thread* t = (Thread*)lpParameter;
 		assert(t && "NULL Thread!");
-#ifdef CRASHPRT
+#ifdef _CRASHRPT
 		bool doCR = t->isCrashReportingEnabled();
 		if (doCR) {
 			crInstallToCurrentThread2(0);
@@ -182,7 +184,7 @@ FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(Thread,Runnable);
 #endif
 		DWORD result;
 		result = t->runInternal();
-#ifdef CRASHPRT
+#ifdef _CRASHRPT
 		if (doCR) {
 			crUninstallFromCurrentThread();
 		}
@@ -376,7 +378,7 @@ void Thread::start() {
 		DWORD sc=ResumeThread(mHandle);
 		if (sc!=1 && sc!=0)
 		{
-			//Logger::getLogger()->warnf("Thread not started (suspended count=%d)!",1,sc);
+		//	Logger::getLogger()->warnf("Thread not started (suspended count=%d)!",1,sc);
 		}
 	}
 #endif
@@ -414,7 +416,7 @@ void Thread::start() {
 }
 
 //#if defined(_MACOSX) || defined(_IOS)
-bool Thread::suspendInternal(unsigned int millis,Process* proc, ::core::EGenericProcessState) {
+bool Thread::suspendInternal(uint64_t millis,Process* proc, ::core::EGenericProcessState) {
 	mPauseEV.wait();
 	return true;
 }

@@ -1,3 +1,4 @@
+
 ///////////////////////////////////////////////////////////
 //  ProcessScheduler.cpp
 //  Implementation of the Class ProcessScheduler
@@ -94,7 +95,7 @@ void ProcessScheduler::executeProcesses()
 	//Process* previousProcess = (Process*)TLS::getValue( gTLSCurrentProcessKey ); //TODO por alguna razón en VTS lo hacía en cada executeProcesses..
 	
 	assert(	mTimer != NULL );
-	unsigned int time= (unsigned int)mTimer->getMilliseconds();
+	uint64_t time= mTimer->getMilliseconds();
 	//inserto procesos pendientes
 	//mNew.clear();
 	mCS.enter();
@@ -136,7 +137,7 @@ void ProcessScheduler::executeProcesses()
 	mProcessInfo->current = previousProcess;
 }
 
-void ProcessScheduler::executeProcesses( unsigned int time,TProcessList& processes )
+void ProcessScheduler::executeProcesses( uint64_t time,TProcessList& processes )
 {
 	std::shared_ptr<Process> p;
 
@@ -174,7 +175,7 @@ void ProcessScheduler::executeProcesses( unsigned int time,TProcessList& process
 					mNew.push_back( p->getNext() );
 				}*/
 				p->setProcessScheduler( NULL ); //nobody is scheduling the process
-				//EvictSubscriptor::triggerCallbacks(p);
+				EvictSubscriptor::triggerCallbacks(p);
 				i = processes.erase( i );
 			}else
 			{
@@ -278,11 +279,11 @@ void ProcessScheduler::killProcesses( bool deferred )
 		mKillingProcess = true;
 		auto task = std::make_shared<GenericProcess>();
 		task->setProcessCallback(
-			addParam<bool,::core::EGenericProcessState,unsigned int,Process*,void>
+			addParam<bool,::core::EGenericProcessState, uint64_t,Process*,void>
 			(
-				addParam<bool,Process*,unsigned int,void>
+				addParam<bool,Process*, uint64_t,void>
 				(
-					addParam<bool,unsigned int,void>
+					addParam<bool, uint64_t,void>
 					(
 						returnAdaptor<void>
 						(
@@ -304,16 +305,17 @@ void ProcessScheduler::killProcesses( bool deferred )
 
 void ProcessScheduler::destroyAllProcesses()
 {
-	for( auto i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
+	list< std::shared_ptr<Process> >::iterator i;
+	for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
 	{
 		(*i)->setProcessScheduler( NULL );
 
 	}
-	for(auto i = mProcessList.begin() ; i != mProcessList.end(); ++i)
+	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 	{
 		(*i)->setProcessScheduler( NULL );
 	}
-	for( auto i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
+	for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
 	{
 		(*i)->setProcessScheduler( NULL );
 
@@ -326,7 +328,7 @@ void ProcessScheduler::destroyAllProcesses()
 	mNewFinalProcesses.clear();
 }
 
-unsigned int ProcessScheduler::insertProcess( std::shared_ptr<Process> process,EProcessPriority priority )
+unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process,EProcessPriority priority )
 {
 	TProcessList::iterator	i;
 	TProcessList* usedList;
@@ -351,6 +353,7 @@ unsigned int ProcessScheduler::insertProcess( std::shared_ptr<Process> process,E
 	//mark process as pending for execution
 	mPendingIdTasksCS.enter();
 	//mPendingIdTasks[ newId ] = process;
+
 	auto pos = mPendingIdTasks.find( process->getId() );
 	if ( pos == mPendingIdTasks.end() )
 	{
@@ -379,7 +382,7 @@ void ProcessScheduler::ini()
 	//@todo mTimer = Timer::getSingletonPtr();
 }
 
-void ProcessScheduler::setTimer( std::shared_ptr<Timer> timer )
+void ProcessScheduler::setTimer(std::shared_ptr<Timer> timer )
 {
  	mTimer = timer;
 }
@@ -402,22 +405,21 @@ std::shared_ptr<Process> ProcessScheduler::getCurrentProcess()
 		return nullptr;
 	}
 }
-//
-void ProcessScheduler::processAwakened( std::shared_ptr<Process> p)
+void ProcessScheduler::processAwakened(std::shared_ptr<Process> p)
 {
 	::core::atomicDecrement( &mInactiveProcessCount );
 	_triggerWakeEvents(p);
 }
-void ProcessScheduler::processAsleep(std::shared_ptr<Process> p)
+void ProcessScheduler::processAsleep(std::shared_ptr<Process>p)
 {
 	::core::atomicIncrement(&mInactiveProcessCount);
-	//_triggerSleepEvents(p); @todo
+	_triggerSleepEvents(p);
 }
-//void ProcessScheduler::_triggerSleepEvents(Process* p)
-//{
-//	SleepSubscriptor::triggerCallbacks(p);
-//}
-void ProcessScheduler::_triggerWakeEvents( std::shared_ptr<Process> p)
+void ProcessScheduler::_triggerSleepEvents(std::shared_ptr<Process> p)
+{
+	SleepSubscriptor::triggerCallbacks(p);
+}
+void ProcessScheduler::_triggerWakeEvents(std::shared_ptr<Process> p)
 {
 	WakeSubscriptor::triggerCallbacks(p);
 }

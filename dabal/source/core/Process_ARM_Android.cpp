@@ -16,7 +16,7 @@ using core::MThreadAttributtes;
 	#define mStackSizeOFF offsetof( MThreadAttributtes,mStackSize)
 	#define mStackOFF offsetof( MThreadAttributtes,mStack)
 
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread(uint64_t msegs )
 {
 	volatile MThreadAttributtes* thisAux = this;
 	asm volatile( "ldr r4,%[v]"::[v] "m" (thisAux):"r4","r0","r1" ); //tengo que engañarle aqui para que tenga en cuenta que se modifican, ya que se hace cuando se produce un cambio de contexto
@@ -35,7 +35,7 @@ volatile void Process::checkMicrothread( unsigned int msegs )
 	asm volatile( "sub r4,r4,%[v]":: [v] "i" (mCoRegistersOFF):"r4" );//restauramos posicion r4 al principio
 	asm volatile( "str r4,[r4,%[v]]":: [v] "i" (mRegistersOFF+16) );//guar R4 en su posicion regitros + 4*4 --> MEJORAR
 
-	asm volatile( "mov r5,#0\n" "add r5,pc,#68":::"r5" ); //TODO no se como obtener la direccion de un label!!
+	asm volatile( "mov r5,#0\n" "add r5,pc,#64":::"r5" ); //TODO no se como obtener la direccion de un label!!
 	//asm volatile( "ldr r5,3f" );
 	asm volatile("str r5,[r4,%[v]]"::[v] "i" (mLROFF));
 	asm volatile("ldrb r5, [r4,%[v]]"::[v] "i" (mSwitchedOFF));
@@ -116,7 +116,7 @@ void Process::_switchProcess( )
 #define mLROFF offsetof( MThreadAttributtes,mLR)
 #define mStackEndOFF offsetof( MThreadAttributtes,mStackEnd)
 #define mStackOFF offsetof( MThreadAttributtes,mStack)
-volatile void Process::checkMicrothread(unsigned int msegs)
+volatile void Process::checkMicrothread(uint64_t msegs)
 {
 	
 	volatile MThreadAttributtes* thisAux = this;

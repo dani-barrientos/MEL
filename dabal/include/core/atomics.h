@@ -13,13 +13,13 @@
 namespace core {
     
 	#ifdef _WIN64
-	inline long __fastcall atomicIncrement(volatile long* var) {
-		TODO!!!
-		return 0;
+	inline int32_t __fastcall atomicIncrement(volatile int32_t* var) {
+		//!@TODO 
+		return ++(*var);
 	}
-	inline long __fastcall atomicDecrement(volatile long* var) {
-		TODO!!!
-		return 0;
+	inline int32_t __fastcall atomicDecrement(volatile int32_t* var) {
+		//@TODO!!!
+		return --(*var);
 	}
 	#elif defined(WIN32)
 	//fastcall and inline seems to not be managed by compiler,just in case..

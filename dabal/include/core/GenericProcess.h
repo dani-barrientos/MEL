@@ -21,7 +21,7 @@ namespace core
 	{
 		FOUNDATION_CORE_OBJECT_TYPEINFO;
 	public:
-		typedef Callback< bool, unsigned int, Process*, EGenericProcessState > GenericCallback;
+		typedef Callback< bool, uint64_t, Process*, EGenericProcessState > GenericCallback;
 	private:
 		GenericCallback*		mProcessCallback;
 		EGenericProcessState	mCurrentState;
@@ -42,9 +42,9 @@ namespace core
 		* @param[in] functor A functor with signature bool f(unsigned int msegs, Process*, EGenericProcessState )
 		*/
 		template <class F> void setProcessCallback( F&& functor );
-		void setProcessCallback( std::function< bool(unsigned int,Process*,EGenericProcessState)>&& );
-		void setProcessCallback(const std::function< bool(unsigned int, Process*, EGenericProcessState)>&);
-		void setProcessCallback(std::function< bool(unsigned int, Process*, EGenericProcessState)>&);
+		void setProcessCallback( std::function< bool(uint64_t,Process*,EGenericProcessState)>&& );
+		void setProcessCallback(const std::function< bool(uint64_t, Process*, EGenericProcessState)>&);
+		void setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&);
 		inline GenericProcess::GenericCallback* getProcessCallback() const;
 		/**
 		* set if process will be atomatically killed when kill signal is received
@@ -68,7 +68,7 @@ namespace core
 		void setKillCallback( F functor );*/
 
 	protected:
-		void onInit(unsigned int msegs) override;
+		void onInit(uint64_t msegs) override;
 		/**
 		* overridden from Process
 		*/
@@ -78,7 +78,7 @@ namespace core
 		* @param msegs    msegs
 		* @remarks If callback method return false. Process is killed.
 		*/
-		void update(unsigned int msegs) override;
+		void update(uint64_t msegs) override;
 
 	};
 	template <class F> void GenericProcess::setProcessCallback( F&& functor )

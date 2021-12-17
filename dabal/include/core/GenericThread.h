@@ -54,7 +54,7 @@ namespace core
 		}
 
 		~GenericThread();
-	private:
+	protected:
 
 		template <class F>
 		GenericThread( F&& functor,bool autoRun, bool autoDestroy, unsigned int maxTaskSize );
@@ -69,6 +69,7 @@ namespace core
 		* default constructor. Only to hide to users
 		*/
 		GenericThread():Thread_Impl<GenericThread>(""){}
+	private:
 		bool _processAwaken(std::shared_ptr<Process> p);
 		Callback< bool, Thread*,bool >*	mThreadFunction;
 		bool						mAutoDestroy;
@@ -90,14 +91,14 @@ namespace core
 		/**
 		* overridden from Thread
 		*/
-		bool terminateRequest();
+		bool terminateRequest() override;
 
 		/**
 		* overriden from Runnable
 		*/
-		unsigned int onPostTask( std::shared_ptr<Process> process,ETaskPriority priority) override;
+		unsigned int onPostTask(std::shared_ptr<Process> process,ETaskPriority priority) override;
 		//! overriden from Thread
-		void terminate(unsigned int exitCode);
+		void terminate(unsigned int exitCode) override;
 	};
 	template <class F>
 	GenericThread::GenericThread( F&& functor, bool autoRun, bool autoDestroy,unsigned int maxTasksSize ):

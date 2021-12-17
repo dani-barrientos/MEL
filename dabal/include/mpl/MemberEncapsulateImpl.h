@@ -99,7 +99,7 @@ namespace mpl
 
 	public:
 		MEncapsulate_Base():mOwner(0){};
-		MEncapsulate_Base( const F& function, PointerType& obj ):mOwner(obj),mFunction(function)
+		MEncapsulate_Base( const F& function, PointerType& obj ):mFunction(function), mOwner(obj)
 		{
 		}
 		template <class F2>
@@ -203,7 +203,7 @@ namespace mpl
 
 	public:
 		MEncapsulate_Base():mOwner(0){};
-		MEncapsulate_Base( const F& function, PointerType& obj ):mOwner(obj),mFunction(function)
+		MEncapsulate_Base( const F& function, PointerType& obj ):mFunction(function), mOwner(obj)
 		{
 		}
         template <class F2>

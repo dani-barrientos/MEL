@@ -21,7 +21,7 @@ using core::MThreadAttributtes;
 
 
 
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread(uint64_t msegs )
 {
 	if ( !mSleeped )
 	{

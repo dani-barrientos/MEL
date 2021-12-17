@@ -18,8 +18,6 @@ using mpl::Type2Type;
 #include <mpl/_If.h>
 using mpl::_if;
 
-#include <core/Exception.h>
-using core::Exception;
 
 #include <core/Singleton_Singlethread_Policy.h>
 using core::Singleton_Singlethread_Policy;

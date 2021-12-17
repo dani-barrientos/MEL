@@ -19,6 +19,7 @@ using core::Process;
 using std::unordered_map;
 using std::pair;
 
+
 #include <core/CriticalSection.h>
 using core::CriticalSection;
 
@@ -31,20 +32,18 @@ using ::mpl::Int2Type;
 
 namespace core
 {
-	/**
-	* @class ProcessScheduler
-	* Process manager. It can be seen as a task scheduler
-	* @version 1.0
-	* @remarks as is explained in Process, temporization is used with a Timer but getting only the 32 bit low part of the
-	* 64 bits time returned, for efficiency reasons.
-	*/
-	//typedef CallbackSubscriptor<mpl::Int2Type<0>, true, bool, Process*> SleepSubscriptor;
+	typedef CallbackSubscriptor<mpl::Int2Type<0>, true, bool, std::shared_ptr<Process>> SleepSubscriptor;
 	typedef CallbackSubscriptor<mpl::Int2Type<1>, true, bool, std::shared_ptr<Process>> WakeSubscriptor;
-	//typedef CallbackSubscriptor<mpl::Int2Type<2>, true, bool, Process*> EvictSubscriptor;
-	class FOUNDATION_API ProcessScheduler  
-		//: private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
-		:private WakeSubscriptor
-		//,private EvictSubscriptor
+	typedef CallbackSubscriptor<mpl::Int2Type<2>, true, bool, std::shared_ptr<Process>> EvictSubscriptor;
+    /**
+    * Process manager. It can be seen as a task scheduler
+    * @version 1.0
+    * @remarks as is explained in Process, temporization is used with a Timer but getting only the 32 bit low part of the
+    * 64 bits time returned, for efficiency reasons.
+    */
+	class FOUNDATION_API ProcessScheduler : private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
+		,private WakeSubscriptor
+		,private EvictSubscriptor
 	{
 		typedef unsigned int ThreadID;
 	public:
@@ -147,7 +146,7 @@ namespace core
 		*/
 		template <class Predicado> bool forEach( Predicado pred);
 		/**
-		* coge los procesos que cumplen el predicado indicado (function)
+		* coge los procesos que cumplem el predicado indicado (function)
 		*/
 		template <class T> void getProcesses( T function, list<std::shared_ptr<Process>>& processList );
 
@@ -161,7 +160,7 @@ namespace core
 		/**
 		* set Timer to use.
 		*/
-		void setTimer( std::shared_ptr<Timer> timer );
+		void setTimer(std::shared_ptr<Timer> timer );
 		/**
 		* get used Timer
 		*/
@@ -176,7 +175,7 @@ namespace core
 		* internal method intended to be used by Process to notify was awakened
 		* @todo maybe this will be deprecated in favor of another mechanism (CallbackSubscriptor, etc)
 		*/
-		void processAwakened( std::shared_ptr<Process> );
+		void processAwakened(std::shared_ptr<Process>);
 		/**
 		* internal method intended to be used by Process to notify was asleep
 		* @todo maybe this will be deprecated in favor of another mechanism (CallbackSubscriptor, etc)
@@ -185,7 +184,7 @@ namespace core
 		/**
 		* subscribe to process sleep event
 		*/
-		/*template <class F> int susbcribeSleepEvent(F&& f)
+		template <class F> int susbcribeSleepEvent(F&& f)
 		{
 			return SleepSubscriptor::subscribeCallback(std::forward<F>(f));
 		}
@@ -196,7 +195,7 @@ namespace core
 		void unsusbcribeSleepEvent(int id)
 		{
 			SleepSubscriptor::unsubscribeCallback(id);
-		}*/
+		}
 		template <class F> int susbcribeWakeEvent(F&& f)
 		{
 			return WakeSubscriptor::subscribeCallback(std::forward<F>(f));
@@ -205,7 +204,6 @@ namespace core
 		{
 			WakeSubscriptor::unsubscribeCallback(std::forward<F>(f));
 		}
-		/*
 		template <class F> int subscribeProcessEvicted(F&& f)
 		{
 			return EvictSubscriptor::subscribeCallback(std::forward<F>(f));
@@ -217,7 +215,7 @@ namespace core
 		void unsubscribeProcessEvicted(int id)
 		{
 			EvictSubscriptor::unsubscribeCallback(id);
-		}*/
+		}
 	private:
 		struct ProcessInfo  //for TLS
 		{
@@ -240,19 +238,19 @@ namespace core
 		unsigned int			mRequestedTaskCount;
 		unsigned int			mProcessCount;
 		volatile int32_t		mInactiveProcessCount;
-		unordered_map<unsigned int,std::shared_ptr<Process>>	mPendingIdTasks;
-		//list < std::shared_ptr<Process>>			mNew;
+		unordered_map<unsigned int, std::shared_ptr<Process>>	mPendingIdTasks;
+		//list <std::shared_ptr<Process>>			mNew;
 
-		Process*				mPreviousProcess;
+		std::shared_ptr<Process>				mPreviousProcess;
 		bool					mKillingProcess; //flag to mark when ther is a kill task pending
 
 		/**
 		* helper function
 		*/
-		void executeProcesses( unsigned int time,TProcessList& processes) OPTIMIZE_FLAGS;
+		void executeProcesses(uint64_t time,TProcessList& processes) OPTIMIZE_FLAGS;
 
 		void killTask();
-		//void _triggerSleepEvents(Process* p);
+		void _triggerSleepEvents(std::shared_ptr<Process> p);
 		void _triggerWakeEvents(std::shared_ptr<Process> p);
 		static ProcessInfo* _getCurrentProcessInfo();
 	};

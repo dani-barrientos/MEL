@@ -100,11 +100,11 @@ namespace core
 		/**
 		* main behaviour
 		*/
-		void update(unsigned int milliseconds ) override;
+		void update(uint64_t milliseconds ) override;
 		/**
 		* starts the thread
 		*/
-		void onInit(unsigned int msegs) override;
+		void onInit(uint64_t msegs) override;
 		/**
 		* overridden from Process
 		* send terminate signal to thread and check if terminate

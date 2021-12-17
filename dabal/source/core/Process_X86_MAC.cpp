@@ -21,7 +21,7 @@ using core::MThreadAttributtes;
 #define mIniBPOFF offsetof( MThreadAttributtes,mIniBP)
 
 
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread( uint64_t msegs )
 {
 
 int tamanoActual;

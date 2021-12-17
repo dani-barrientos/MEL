@@ -10,10 +10,9 @@ using core::MThreadAttributtes;
 
 #undef max
 #include <limits>
-#include <cassert>
+#include <assert.h>
 
 FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
-
 
 /**
 * =============================================================================
@@ -25,8 +24,7 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 	mPeriod(0),
 	mFinished(false),
 	mPreviousTime(0),
-	mResetPreviousTime(false),
-	//mAttachedProcesses( 0 ),
+	mResetPreviousTime(false),	
 	mProcessId(0),
 	mOwnerProcessScheduler( 0 ),
 	//mExecuteNextAfterFinish(false),
@@ -37,7 +35,7 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 	mExtrainfo(0),
 	mStartTime(0),
 	mPausedTime(0)
-//	,mNext( NULL )
+	//,mNext( NULL )
 	//,mKillCallback(0)
 	{
 
@@ -141,11 +139,11 @@ Process::EProcessState Process::getState() const
 *
 * @param msegs    msegs
 */
-void Process::onUpdate(unsigned int msegs)
+void Process::onUpdate(uint64_t msegs)
 {
 	if( mSleeped )
 		return; 
-	unsigned int lap = (msegs-mLastTime)-mPausedTime;
+	unsigned int lap = (unsigned int)((msegs-mLastTime)-mPausedTime);
 	//TODO se está enrevesando ya esta comparación. Revisarla para simplificarla si se puede
 	unsigned int mask = PREPARED | PREPARED_TO_DIE/* | TRYING_TO_KILL*/;
 	if ( mState == TRYING_TO_KILL )
@@ -166,11 +164,11 @@ void Process::onUpdate(unsigned int msegs)
 		mPreviousTime = msegs;
 
 	}
-	////los procesos asociados se ejecutan independientemente de que este proceso entre en ejecución
-	//if ( mAttachedProcesses )
-	//{
-	//	mAttachedProcesses->executeProcesses();		
-	//}
+	//los procesos asociados se ejecutan independientemente de que este proceso entre en ejecución
+	/*if ( mAttachedProcesses )
+	{
+		mAttachedProcesses->executeProcesses();		
+	}*/
 }
 //void Process::attachProcess( Process* p )
 //{
@@ -203,7 +201,7 @@ void Process::setFinished(bool value)
 *
 * @param msegs    msegs
 */
-void Process::execute(unsigned int msegs){
+void Process::execute(uint64_t msegs){
 
 	switch ( mState )
 	{
@@ -233,7 +231,7 @@ void Process::execute(unsigned int msegs){
 	case WAITING_FOR_SCHEDULED:
 //		TEMAS: ¿REDUCIR PERÍODO?¿avisar de alguna forma?
 		//process was in "switched" state. Now It can be killed
-		KillEventSubscriptor::triggerCallbacks( this );
+		KillEventSubscriptor::triggerCallbacks( shared_from_this() );
 		mState = PREPARED_TO_DIE;
 		killDone();
 		break;
@@ -244,7 +242,7 @@ void Process::execute(unsigned int msegs){
 
 unsigned int Process::getElapsedTime() const
 {
-	return (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds() - mUpdateTime;
+	return (unsigned int)(mOwnerProcessScheduler->getTimer()->getMilliseconds() - (uint64_t)mUpdateTime);
 }
 
 
@@ -344,29 +342,7 @@ Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* 
 		(*postWait)();
 		delete postWait;
 	}
-	uint64_t tf = p->mOwnerProcessScheduler->getTimer()->getMilliseconds()+msegs;
-	ESwitchResult result = switchProcess( false );
-	uint64_t tactual = p->mOwnerProcessScheduler->getTimer()->getMilliseconds()+msegs;
-	//check if process was paused
-
-
-	/*CREO QUE ESTO NO DEBERIA HACER FALTA
-	if ( p->mPausedTime>0)  
-	{
-		//@note while in PAUSED state, proces is not updated, so maybe wait time was already wasted at this pint,i.e., time elpased is greater than wait time
-		//so at this point, mState is never PAUSED
-		unsigned int lastpaused = p->mPauseTime!=0?(unsigned int)(tactual-p->mPauseTime):0;  //paused when wait time ended   
-		if ( lastpaused > tf )  //means wait time really finished before returning
-		{
-			p->mPausedTime -= lastpaused;
-			p->mPausedTime += (unsigned int)(tf-p->mPauseTime);
-		}
-		unsigned int pt = p->mPausedTime;
-		p->mPausedTime = 0;
-		_wait(pt,NULL);  //wait extra time
-		//reset mPausedTime
-	}*/
-	
+	ESwitchResult result = switchProcess( false );		
 	p->setPeriod( currentPeriod );
 	p->mWaiting = false;
 	return result;

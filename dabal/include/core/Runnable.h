@@ -31,6 +31,7 @@ using mpl::asPtr;
 using core::Future;
 #include <functional>
 #include <cassert>
+
 #define RUNNABLE_TASK_ALIGNMENT 8
 
 
@@ -46,12 +47,13 @@ namespace core
 	//so you need to do RUNNABLE_CREATETASK( (link1st<false,void>( xxx )) ) or RUNNABLE_CREATETASK( link1st<false coma void>( xxx ) )
 	//to show de preprocessor that the ',' is not a parameter separator sign
 #define RUNNABLE_CREATETASK( f ) \
-	addParam< bool,::core::EGenericProcessState,unsigned int,Process*,void >( \
-	addParam< bool,Process*,unsigned int,void > \
-	(addParam< bool,unsigned int,void >( f ) ) )
-
+	addParam< bool,::core::EGenericProcessState,uint64_t,Process*,void >( \
+	addParam< bool,Process*,uint64_t,void > \
+	(addParam< bool,uint64_t,void >( f ) ) )
+//macro to simplify task creation from lambda expression
+#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<bool(uint64_t, Process*, ::core::EGenericProcessState)>(lambda)
 //useful macro to declare task parameters
-#define RUNNABLE_TASK_PARAMS unsigned int t,Process* p,::core::EGenericProcessState s
+#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::core::EGenericProcessState s
 	struct RTMemBlock2
 		{
 			enum EMemState { FREE = 0,USED = 1 } ;							
@@ -87,7 +89,7 @@ namespace core
 	* IllegalStateException maybe raised to calling threads when a new code execution is
 	* made and there is not enough room for the request.
 	*/
-	class FOUNDATION_API Runnable 
+	class FOUNDATION_API Runnable
 	{
 		FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT;
 	private:
@@ -107,11 +109,9 @@ namespace core
 		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception
 		//! todo esto no me gusta un pijo
 		//!ErrorInfo specialization for execute
-		
-		//@todo repensar esto que está relacionado con mejora de Futures
 		//struct ExecuteErrorInfo : public Future_Base::ErrorInfo
 		//{
-		//	Exception* exc; //captured exception, cloned
+		//	Exception* exc; //captured exception, cloned  @todo ver si puedo resolver esto
 		//	bool isPointer; //if original captured exception was as poiner or object
 		//	~ExecuteErrorInfo()
 		//	{
@@ -214,7 +214,7 @@ namespace core
 		*/
 
 		virtual unsigned int onRun() = 0;
-		virtual unsigned int onPostTask(std::shared_ptr<Process> process, ETaskPriority priority);
+		virtual unsigned int onPostTask(std::shared_ptr<Process> process,ETaskPriority priority);
 
 		/**
 		* set callback to call when a task is added
@@ -236,7 +236,6 @@ namespace core
 		* generates a new internal task id.
 		* @param[in] process structure containing execution data.
 		* @return an integer being the internal task id just created
-		* @remarks process is used as SmartPtr, so don't delete it, use or SmartPtr or do nothing
 		* @internally, it calls protected onPostTask, so children can override default behaviour
 		*/
 		inline unsigned int postTask(std::shared_ptr<Process> process,ETaskPriority priority);
@@ -409,7 +408,7 @@ namespace core
 		ETaskPriority priority ,
 		unsigned int period,unsigned int startTime,void* extraInfo  )
 	{
-		std::shared_ptr<RunnableTask> p(new (this)RunnableTask()); 
+		::std::shared_ptr<RunnableTask> p (new (this)RunnableTask());
 		//GenericProcess* p = new GenericProcess();
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
@@ -603,16 +602,22 @@ namespace core
 			//check chances of Exception
 			catch( std::exception& e )
 			{
-				//Runnable::ExecuteErrorInfo* ei = new Runnable::ExecuteErrorInfo;
+				/*Runnable::ExecuteErrorInfo* ei = new Runnable::ExecuteErrorInfo;
 				ei->error = Runnable::ERRORCODE_EXCEPTION;
-				//ei->exc = e.clone();
-				ei->isPointer = false;
+				ei->exc = e.clone();
+				ei->isPointer = false;*/
+				auto ei = new Future_Base::ErrorInfo;
+				ei->error = ERRORCODE_EXCEPTION;
+				ei->errorMsg = e.what();
 				f.setError( ei );	
 			}
 			catch(...)
 			{
-				Future_Base::ErrorInfo* ei = new Future_Base::ErrorInfo; 
+				/*Future_Base::ErrorInfo* ei = new Future_Base::ErrorInfo; 
 				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
+				ei->errorMsg = "Unknown exception";*/
+				auto ei = new Future_Base::ErrorInfo;
+				ei->error = ERRORCODE_UNKNOWN_EXCEPTION;
 				ei->errorMsg = "Unknown exception";
 				f.setError( ei );	
 			}

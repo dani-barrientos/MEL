@@ -39,8 +39,8 @@ namespace core
 		{
 			static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T&& functor)
 			{
-				throw std::exception("not implemented");
-//				return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
+				throw std::runtime_exe
+				return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
 			}
 		};
 
@@ -218,11 +218,13 @@ struct _CallbackCreator<b,T,TRet,VARIABLE_ARGS_DECL,void>
 template <class T,class TRet,VARIABLE_ARGS >
 struct _CallbackCreator<true,T,TRet,VARIABLE_ARGS_DECL,void>
 {
-
+	/*static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T& functor)
+	{
+		return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(functor);
+	}*/
     static CallbackInterface<TRet,VARIABLE_ARGS_DECL>* create( T&& functor )
     {
-		throw std::exception("not implemented");
-       // return new SmartPtrCallbackInterface<TRet,typename mpl::TypeTraits<T>::PointeeType,VARIABLE_ARGS_DECL>(::std::forward<T>(functor) );
+        return new SmartPtrCallbackInterface<TRet,typename mpl::TypeTraits<T>::PointeeType,VARIABLE_ARGS_DECL>(::std::forward<T>(functor) );
     }
 };
 

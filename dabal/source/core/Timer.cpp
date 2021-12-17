@@ -4,7 +4,13 @@ using core::Timer;
 using std::cout;
 #include <ctime>
 
-::core::CriticalSection Timer::sTimeCS;
+
+static ::core::CriticalSection& getCS() {
+	//critical section to access C time funcitons (gmtime and localtime)
+	static ::core::CriticalSection MYCS;
+	return MYCS;
+}
+
 Timer::Timer() :
 	mStartTime(0),
 	mState( ACTIVE )
@@ -173,7 +179,7 @@ struct tm* Timer::gmtime(const time_t* t, struct tm& output)
 		return nullptr;
 	}
 	
-	::core::Lock lck(sTimeCS);
+	::core::Lock lck(getCS());//(sTimeCS);
 #ifndef _WINDOWS
 	return _gmtime(t, output);
 #else
@@ -202,7 +208,7 @@ static struct tm* _localtime(const time_t* t, struct tm& output) {
 
 struct tm* Timer::localtime(const time_t* t, struct tm& output) {
 	if (!t) return nullptr;
-	::core::Lock lck(sTimeCS);
+	::core::Lock lck(getCS());// sTimeCS);
 #ifndef _WINDOWS
 	return _localtime(t, output);
 #else
@@ -225,7 +231,7 @@ static time_t _mktime(struct tm* t) {
 
 time_t Timer::mktime(struct tm* date) {
 	if (!date) return 0;
-	::core::Lock lck(sTimeCS);
+	::core::Lock lck(getCS());// sTimeCS);
 
 #ifndef _WINDOWS
 	return _mktime(date);

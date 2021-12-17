@@ -12,7 +12,7 @@
 struct tm; //predeclaration
 namespace core
 {
-	class FOUNDATION_API Timer
+	class FOUNDATION_API Timer 
 	{
 
 	public:
@@ -80,7 +80,6 @@ namespace core
 		uint64_t   mMsActive; //! active time in milliseconds
 	private:
 		enum { ACTIVE, PAUSED } mState;
-		static ::core::CriticalSection sTimeCS;  //critical section to access C time funcitons (gmtime and localtime)
 	};
 	uint64_t Timer::getMilliseconds( ) const
 	{

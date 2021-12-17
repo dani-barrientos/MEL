@@ -35,7 +35,8 @@ CriticalSection::CriticalSectionData::~CriticalSectionData() {
 
 void CriticalSection::CriticalSectionData::enter() {
 	int ret=pthread_mutex_lock(&mCS);
-	assert(!ret && "Error locking mutex!");
+    //@note: if current thread already owns the mutext shouldn´t be considered error
+    assert( (ret!=EINVAL && ret != EAGAIN) && "Error locking mutex!");
 //!@note: to avoid the "unused variable" warning
 #ifndef WIN32
 #pragma unused(ret)
@@ -50,8 +51,9 @@ bool CriticalSection::CriticalSectionData::tryEnter() {
 }
 
 void CriticalSection::CriticalSectionData::leave() {
-	int ret=pthread_mutex_unlock(&mCS);
-	assert(!ret && "Error unlocking mutex!");
+    int ret=pthread_mutex_unlock(&mCS);
+    //@note calling leave to a non-owner mutex shouldn't be considered error
+    assert(ret!=EINVAL && "Error unlocking mutex!");
     //!@note: to avoid the "unused variable" warning
 #ifndef WIN32
 #pragma unused(ret)

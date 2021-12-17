@@ -26,7 +26,7 @@ StateMachine::~StateMachine(void)
 
 }
 
-void StateMachine::update(unsigned int milliseconds)
+void StateMachine::update(uint64_t milliseconds)
 {
 	//TODO el codigo esta bastante chapuceado pero es por temas de eficiencia
 	switch( mExecutionState )

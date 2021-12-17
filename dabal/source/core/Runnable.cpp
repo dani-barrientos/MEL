@@ -2,7 +2,8 @@
 using core::Thread;
 #include <core/Runnable.h>
 using core::Runnable;
-#include <stdexcept>
+
+
 
 #include <core/Timer.h>
 using core::Timer;
@@ -50,8 +51,9 @@ void* Runnable::RunnableTask::operator new( size_t s,Runnable* owner )
 			}
 		}
 	}
-//	Logger::getLogger()->fatal( "Runnable::not enough memory" );
-	throw std::runtime_error("Runnable::not enough memory");
+	//Logger::getLogger()->fatal( "Runnable::not enough memory" );
+	throw std::bad_alloc();
+	//throw Exception( "Runnable::not enough memory" );
 }
 
 void Runnable::RunnableTask::operator delete( void* ptr, Runnable* )
@@ -228,7 +230,7 @@ unsigned int Runnable::run()
 	*/
 	return result;
 }
-void Runnable::setTimer( std::shared_ptr<Timer> timer )
+void Runnable::setTimer(std::shared_ptr<Timer> timer )
 {
 	mTasks.setTimer( timer );
 }

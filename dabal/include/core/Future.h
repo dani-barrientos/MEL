@@ -10,9 +10,7 @@
 #include <mpl/MemberEncapsulate.h>
 using mpl::makeMemberEncapsulate;
 #include <string>
-using std::string;
 #include <core/atomics.h>
-
 /**
 *
 TODO el comportamiento microhilil está hecho un poco chapucero para mantener la compatibilidad con lo anterior y
@@ -44,7 +42,7 @@ namespace core
 		{
 			//@remarks negative error code is reserved for internal errors
 			int		error;  //there was error. Error code. Very simple for now. 
-			string errorMsg;
+			std::string errorMsg;
 			virtual ~ErrorInfo(){}
 			bool operator== (const ErrorInfo & err) const {return true;}
 		};
@@ -268,19 +266,6 @@ namespace core
 		}
 
 		typedef FutureData_Base::ErrorInfo ErrorInfo;
-		
-/*	QUISIERA HACE ALGO PARA PODER ASIGNAR FUTURES PERO DE FORMA QUE APUNTEN A LO MISMO. ES DECIR, SI TENGO:
-	FUTURE<A> F1;
-	FUTURE<A> F2;
-	F1 = F2 QUE SI ALGUIEN ESPERABA POR F1, SIGA SIENDO VALIDO Y SEA COMO ESPERAR POR F2. EL PROBLEMA ES QUE EL MDATA NO  PUEDE SER EL MISMO, YA QUE SI ALGUIEN ESTABA ESPERANDO, ESPERA SOBRE EL MDATA
-	¿QUE A SU VEZ EL MDATA DENTRO TENGA PUNTERO A "LO DE VERDAD"?
-	
-
-
-POR OTRO LADO, EN ESTA ASIGNACION, DEBERIA HACE RUN SETERROR SOBRE EL MDATA YA QUE LO VOY A DESTRUIR (A NO SER QUE RESEULVA LO ANTERIOR)*/
-
-
-
 		Future_Base& operator= ( const Future_Base& f )
 		{
 			if ( !mData->getRefCount() )
@@ -326,7 +311,7 @@ POR OTRO LADO, EN ESTA ASIGNACION, DEBERIA HACE RUN SETERROR SOBRE EL MDATA YA Q
 		inline const FutureData_Base::ErrorInfo* getError() const { return mData->getError(); };
  		inline void setError( FutureData_Base::ErrorInfo* ei ){ mData->setError( ei ); } 
 		//convenient overload getting errr code and msg
-		inline void setError( int code,const string& msg) 
+		inline void setError( int code,const std::string& msg) 
 		{
 			ErrorInfo* ei = new ErrorInfo();
 			ei->error = code;

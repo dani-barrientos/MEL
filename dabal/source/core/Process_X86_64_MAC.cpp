@@ -17,18 +17,12 @@ using core::MThreadAttributtes;
 #define mStackEndOFF offsetof( MThreadAttributtes,mStackEnd)
 #define mStackSizeOFF offsetof( MThreadAttributtes,mStackSize)
 #define mStackOFF offsetof( MThreadAttributtes,mStack)
-//#define mActualSPOFF offsetof( MThreadAttributtes,mActualSP)
 #define mIniBPOFF offsetof( MThreadAttributtes,mIniRBP)
 #define mIniRBXOFF offsetof( MThreadAttributtes,mIniRBX)
 #define mRegistersOFF offsetof( MThreadAttributtes,mRegisters)
 
 
-/**
- * macos follows System V ABI
- * *
- * *
- * */
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread( uint64_t msegs )
 {
      MThreadAttributtes* realThis = this;
      asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax");

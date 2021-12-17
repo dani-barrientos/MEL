@@ -51,7 +51,6 @@ using core::Callback;
 
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
-#include <memory>
 
 // #include <core/ProcessException.h>
 // using core::ProcessException;
@@ -78,9 +77,10 @@ namespace core
 	struct KillEvent
 	{
 	};
-	class FOUNDATION_API Process : public MThreadAttributtes,
-		private CallbackSubscriptor<KillEvent,true,bool, Process*>  //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
-		, std::enable_shared_from_this<Process>
+	class FOUNDATION_API Process :
+		public std::enable_shared_from_this<Process>,
+		public MThreadAttributtes,
+		private CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>>  //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
 	{
 		FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT;
 	
@@ -211,15 +211,15 @@ namespace core
 		* returns time elapsed during this iteration 
 		*/
 		unsigned int getElapsedTime() const;
-		inline int getPausedTime() const;
+		inline unsigned int getPausedTime() const;
 		/**
 		* @return time in previous iteration
 		*/
-		inline unsigned int getPreviousTime() const;
+		inline uint64_t getPreviousTime() const;
 		/**
 		* @return time of execution for current iteration (i.e. time passed at update function )
 		*/
-		inline unsigned int getUpdateTime() const;
+		inline uint64_t getUpdateTime() const;
 		inline void resetTime();
 		/**
 		* execution function. It calls update() when time > mPeriod
@@ -227,7 +227,7 @@ namespace core
 		* @param msegs    msegs
 		*/
 
-		void onUpdate(unsigned int msegs) OPTIMIZE_FLAGS;
+		void onUpdate(uint64_t msegs) OPTIMIZE_FLAGS;
 
 		/**
 		* gets ProcessScheduler which holds this Process
@@ -247,7 +247,7 @@ namespace core
 		* @remarks It's stored as SmartPtr
 		*/
 		//void setNext( Process* );
-		//inline std::shared_ptr<Process> getNext();
+		//inline Process* getNext();
 
 		inline void setExtraInfo( void* );
 		inline void* getExtraInfo() const;
@@ -262,7 +262,7 @@ namespace core
 		inline void setStartTime( unsigned int );
 		inline unsigned int getStartTime( ) const;
 		// get time when process began
-		inline unsigned int getBeginTime() const;
+		inline uint64_t getBeginTime() const;
 
 		/**
 		* @return true if process received kill signal
@@ -336,7 +336,7 @@ namespace core
 		*
 		* @param msegs    msegs
 		*/
-		void execute(unsigned int msegs) OPTIMIZE_FLAGS;
+		void execute(uint64_t msegs) OPTIMIZE_FLAGS;
 
 		/**
 		* @warning no la tengo muy clara si realmente se podrá evitar
@@ -346,7 +346,7 @@ namespace core
 	private:
 		static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
-		typedef CallbackSubscriptor<KillEvent,true,bool, Process*> KillEventSubscriptor;
+		typedef CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>> KillEventSubscriptor;
 		EProcessState mState;
 		EProcessState mPreviousState;
 		unsigned int mPeriod;
@@ -362,26 +362,27 @@ namespace core
 		/**
 		* time at process execution
 		*/
-		unsigned int mLastTime;
-		unsigned int mUpdateTime;
+		uint64_t mLastTime;
+		uint64_t mUpdateTime;
 		/**
 		* time at previous iteration
-		*/
-		unsigned int mPreviousTime;
+		*/		
 		//ProcessScheduler*	mAttachedProcesses;
 		unsigned int mProcessId;
 
 
 		//extra data passed to Process for custom processing TODO temporal hasta tener el extradata bien
-		void*			mExtrainfo;
-		unsigned int	mStartTime; //!when to start process since insertion in scheduler (default = 0)
-		unsigned int	mBeginTime;  //time stored at init
-		unsigned int	mPausedTime;  
+		void*			mExtrainfo;		
+		uint64_t		mPreviousTime;
+		uint64_t		mBeginTime;  //time stored at init
 		uint64_t		mPauseTime;  //time when process was paused
-		//std::shared_ptr<Process>	mNext; //next process in chain. It's scheduled when killed
+		unsigned int	mStartTime; //!when to start process since insertion in scheduler (default = 0)
+		unsigned int	mPausedTime;  
+		//SmartPtr<Process>	mNext; //next process in chain. It's scheduled when killed
+		//Callback<void,Process*>* mKillCallback;
 
 
-		volatile void checkMicrothread( unsigned int msegs ) OPTIMIZE_FLAGS;		
+		volatile void checkMicrothread(uint64_t msegs ) OPTIMIZE_FLAGS;
 
 	protected:
 		/**
@@ -390,13 +391,13 @@ namespace core
 		*
 		* @param msecs milliseconds
 		*/
-		virtual void update(unsigned int msecs) = 0;
+		virtual void update(uint64_t msecs) = 0;
 		/**
 		* called when process inits
 		*
 		* @param msecs milliseconds
 		*/
-		virtual void onInit(unsigned int msecs){};
+		virtual void onInit(uint64_t msecs){};
 		/**
 		* called when process is going to be got out of scheduler and was inited (not in PREPARED state)
 		* can be overridden by children
@@ -468,11 +469,11 @@ namespace core
 	{
 		mLastTime = 0;
 	}
-	unsigned int Process::getPreviousTime() const
+	uint64_t Process::getPreviousTime() const
 	{
 		return mPreviousTime;
 	}
-	unsigned int Process::getUpdateTime() const
+	uint64_t Process::getUpdateTime() const
 	{
 		return mUpdateTime;
 	}
@@ -515,7 +516,7 @@ namespace core
 			}
 			if ( mState & PREPARED_TO_DIE  )	
 			{
-				KillEventSubscriptor::triggerCallbacks( this );
+				KillEventSubscriptor::triggerCallbacks( shared_from_this() );
 			}
 
 		}
@@ -537,14 +538,14 @@ namespace core
 	{
 		return mStartTime;
 	}
-	unsigned int Process::getBeginTime() const
+	uint64_t Process::getBeginTime() const
 	{
 		return mBeginTime;
 	}
-	//Process* Process::getNext()
-	//{
-	//	return mNext.getPtr();
-	//}
+	/*Process* Process::getNext()
+	{
+		return mNext.getPtr();
+	}*/
 	/*template <class F>
 	void Process::setKillCallback( F functor )
 	{
@@ -577,7 +578,7 @@ namespace core
 	{
 		return mWaiting;
 	}
-	int Process::getPausedTime() const
+	unsigned int Process::getPausedTime() const
 	{
 		return mPausedTime;
 	}

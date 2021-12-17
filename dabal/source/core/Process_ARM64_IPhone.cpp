@@ -31,7 +31,7 @@ using core::MThreadAttributtes;
   r16,r17,r18- dependiente plataforma
  */
 
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread(uint64_t msegs )
 {
     volatile MThreadAttributtes* thisAux = this;
     void* ptr = &&continueexecuting; //direccion absoluta de etiqueta.

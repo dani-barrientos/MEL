@@ -33,7 +33,7 @@ namespace core
 		 * 
 		 * @param milliseconds    update time
 		 */
-		void update(unsigned int milliseconds);
+		void update(uint64_t milliseconds) override;
 		inline State& getCurrentState();	
 		inline const State& getCurrentState() const;	
 		/**
@@ -66,26 +66,26 @@ namespace core
 		 * 
 		 * @param milliseconds    milliseconds
 		 */
-		virtual bool enterInitialState(unsigned int milliseconds){return true;};
+		virtual bool enterInitialState(uint64_t milliseconds){return true;};
 		/**
 		 * default (empty) exit function for initial state
 		 * 
 		 * @param milisegundos current millis
 		 * @return `true` if the initial estate exited; `false` it it still needs to continue executing
 		 */
-		virtual bool exitInitialState(unsigned int milisegundos){return true;};
+		virtual bool exitInitialState(uint64_t milisegundos){return true;};
 		/**
 		 * default (empty) function for the initial state
 		 * 
 		 * @param milliseconds    milliseconds
 		 */
-		virtual void initialStateFunction(unsigned int milliseconds){};
+		virtual void initialStateFunction(uint64_t milliseconds){};
 
 		/**
 		* overridden from Process
 		* set Machine in Initial state without execute previous state exitactions
 		*/
-		void reset();
+		void reset() override;
 		//! @see StateChangeSubscriptor
 		template <class F> int subscribeStateChange( F functor )
 		{

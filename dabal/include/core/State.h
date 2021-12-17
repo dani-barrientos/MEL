@@ -8,6 +8,7 @@
 #pragma once
 
 #include <FoundationLibType.h>
+#include <cstdint>
 
 namespace core
 {
@@ -30,28 +31,28 @@ namespace core
 		 * @param source source state the StateMachine is coming from
 		 * @return `true` if exit succeedes and the enter stat is finished; `false` if it still needs to continue executing
 		 */
-		inline bool executeEnterState(unsigned int milliseconds, State* source );
+		inline bool executeEnterState(uint64_t milliseconds, State* source );
 		/**
 		 * function describing the action to execute when machine exit state
 		 * 
 		 * @param milliseconds current millis
 		 * @return `true` if the state has actually fionished; `false` if still needs to continue executing
 		 */
-		inline bool executeExitState(unsigned int milliseconds);
+		inline bool executeExitState(uint64_t milliseconds);
 		/**
 		 * state function
 		 * 
 		 * @param milliseconds current millis
 		 */
-		inline void executeState(unsigned int milliseconds);
+		inline void executeState(uint64_t milliseconds);
 		/**
 		 * gets elapsed time in this state ( in chunks of actualization time )
 		 */
-		inline unsigned getElapsedTime() const;
+		inline uint64_t getElapsedTime() const;
 		/**
 		 * time at state begin
 		 */
-		inline unsigned getInitialTime() const;
+		inline uint64_t getInitialTime() const;
 		inline void resetElapsedTime();
 
 		/**
@@ -69,26 +70,26 @@ namespace core
 		/**
 		 * time at state begin
 		 */
-		unsigned int mInitialTime;
+		uint64_t mInitialTime;
 		/**
 		 * holds elapsed time since state begin
 		 */
-		unsigned int mElapsedTime;
+		uint64_t mElapsedTime;
 		
-		virtual bool _executeEnterState(unsigned int milliseconds) = 0;
+		virtual bool _executeEnterState(uint64_t milliseconds) = 0;
 		/**
 		* function describing the action to execute when machine exit state
 		* 
 		* @param milliseconds current millis
 		* @return `true` if the state has finished; `false` if still needs to continue executing
 		*/
-		virtual bool _executeExitState(unsigned int milliseconds) = 0;
+		virtual bool _executeExitState(uint64_t milliseconds) = 0;
 		/**
 		* state function
 		* 
 		* @param milliseconds  current millis
 		*/
-		virtual void _executeState(unsigned int milliseconds) = 0;
+		virtual void _executeState(uint64_t milliseconds) = 0;
 
 	private:
 		StateMachine*	mOwner;
@@ -97,11 +98,11 @@ namespace core
 	};
 
 //inlines
-unsigned State::getElapsedTime() const
+uint64_t State::getElapsedTime() const
 {
 	return mElapsedTime;
 }
-unsigned State::getInitialTime() const
+uint64_t State::getInitialTime() const
 {
 	return mInitialTime;
 }
@@ -117,16 +118,16 @@ void State::setStateMachine( StateMachine* sm )
 {
 	mOwner = sm;
 }
-bool State::executeEnterState(unsigned int milliseconds, State* source )
+bool State::executeEnterState(uint64_t milliseconds, State* source)
 {
 	mSource = source;
 	return _executeEnterState( milliseconds );
 }
-bool State::executeExitState(unsigned int milliseconds)
+bool State::executeExitState(uint64_t milliseconds)
 {
 	return _executeExitState( milliseconds );
 }
-void State::executeState(unsigned int milliseconds)
+void State::executeState(uint64_t milliseconds)
 {
 	return _executeState( milliseconds );
 }

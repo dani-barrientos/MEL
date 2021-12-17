@@ -18,7 +18,7 @@ GenericProcess::~GenericProcess()
 	
 }
 
-void GenericProcess::onInit(unsigned int msegs)
+void GenericProcess::onInit(uint64_t msegs)
 {
 
 /*	mCurrentState = INIT;
@@ -40,7 +40,7 @@ bool GenericProcess::onKill()
 	mCurrentState = KILL;
 	return mKillAccepted || mAutoKill/* || (mKillAccepted = (*mProcessCallback)( getUpdateTime(), this,mCurrentState ) )*/;
 }
-void GenericProcess::update(unsigned int msegs)
+void GenericProcess::update(uint64_t msegs)
 {
 	if ( !mKillAccepted )
 	{
@@ -54,17 +54,17 @@ void GenericProcess::update(unsigned int msegs)
 	}
 	
 }
-void GenericProcess::setProcessCallback(std::function< bool(unsigned int, Process*, EGenericProcessState)>&& f)
+void GenericProcess::setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&& f)
 {
 	delete mProcessCallback;
 	mProcessCallback = new GenericCallback(::std::move(f), ::core::use_function);
 }
-void GenericProcess::setProcessCallback(const std::function< bool(unsigned int, Process*, EGenericProcessState)>& f)
+void GenericProcess::setProcessCallback(const std::function< bool(uint64_t, Process*, EGenericProcessState)>& f)
 {
 	delete mProcessCallback;
 	mProcessCallback = new GenericCallback(f, ::core::use_function);
 }
-void GenericProcess::setProcessCallback(std::function< bool(unsigned int, Process*, EGenericProcessState)>& f)
+void GenericProcess::setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>& f)
 {
 	delete mProcessCallback;
 	mProcessCallback = new GenericCallback(f, ::core::use_function);
