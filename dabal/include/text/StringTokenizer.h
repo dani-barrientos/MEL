@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #ifdef _ANDROID
 //NULL is not defined at this point on Android
 #include <stddef.h>
@@ -11,7 +11,7 @@ namespace text
 	/**
 	*Splits a string into tokens given a separator
 	*/
-	class FOUNDATION_API StringTokenizer
+	class DABAL_API StringTokenizer
 	{
 	public:
 		/**

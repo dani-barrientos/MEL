@@ -9,9 +9,9 @@ namespace parameter
 	/**
 	* Complex parameter based on SimpleParameterList (so with possibly repeated params)
 	*/
-	class FOUNDATION_API ListParameter : public BaseParameter, public SimpleParameterList
+	class DABAL_API ListParameter : public BaseParameter, public SimpleParameterList
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		ListParameter(){};
 		ListParameter( const string& name );

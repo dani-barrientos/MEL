@@ -9,9 +9,9 @@ namespace parameter
 	/**
 	* Complex parameter based on uniqueParameterList
 	*/
-	class FOUNDATION_API ComplexParameter : public BaseParameter, public UniqueParameterList
+	class DABAL_API ComplexParameter : public BaseParameter, public UniqueParameterList
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		ComplexParameter(){};
 		ComplexParameter( const string& name );
@@ -24,7 +24,7 @@ namespace parameter
 
 /*
 
-	class FOUNDATION_API ListParameter : public Parameter
+	class DABAL_API ListParameter : public Parameter
 	{
 	public:
 		ListParameter( );

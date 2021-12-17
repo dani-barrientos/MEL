@@ -12,7 +12,7 @@ using core::MThreadAttributtes;
 #include <limits>
 #include <assert.h>
 
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
+DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 
 /**
 * =============================================================================

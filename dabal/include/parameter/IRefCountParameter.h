@@ -9,9 +9,9 @@ namespace parameter
 	/**
 	*hold IRefCount object as SmartPtr
 	*/
-	class FOUNDATION_API IRefCountParameter : public BaseParameter
+	class DABAL_API IRefCountParameter : public BaseParameter
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		IRefCountParameter(const string& name, IRefCount* value);
 		inline void setValue(IRefCount* value);

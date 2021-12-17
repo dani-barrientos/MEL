@@ -5,7 +5,7 @@ namespace core
 	template<class TRet, VARIABLE_ARGS>
 	class  FunctionCallbackInterface_Base : public CallbackInterface<TRet, VARIABLE_ARGS_DECL>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	protected:
 		typedef std::function < TRet(VARIABLE_ARGS_DECL)> F;
 		F mFunction;
@@ -37,7 +37,7 @@ namespace core
 	template<class TRet>
 	class  FunctionCallbackInterface_Base<TRet,void> : public CallbackInterface<TRet, void>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	protected:
 		typedef std::function < TRet()> F;
 		F mFunction;
@@ -63,13 +63,13 @@ namespace core
 		}
 	};
 	template <class TRet,VARIABLE_ARGS_NODEFAULT>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
 	template <class TRet>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface_Base <TRet>, CallbackInterface<TRet coma void>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface_Base <TRet>, CallbackInterface<TRet coma void>);
 	template<class TRet, VARIABLE_ARGS>
 	class  FunctionCallbackInterface : public FunctionCallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>
 	{
-			FOUNDATION_CORE_OBJECT_TYPEINFO;
+			DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		/**
 		* @todo modificar al estilo de las cosas de mpl para permitir const F&
@@ -116,13 +116,13 @@ namespace core
 
 
 	template <class TRet,VARIABLE_ARGS_NODEFAULT>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface <TRet coma VARIABLE_ARGS_DECL >,FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface <TRet coma VARIABLE_ARGS_DECL >,FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >);
 
 #else
 	template<class TRet, VARIABLE_ARGS>
 	class  FunctionCallbackInterface_Base<TRet,VARIABLE_ARGS_DECL,void> : public CallbackInterface<TRet, VARIABLE_ARGS_DECL>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;		
+		DABAL_CORE_OBJECT_TYPEINFO;		
 	protected:
 		typedef std::function < TRet( VARIABLE_ARGS_DECL ) > F;
 		F mFunction;
@@ -150,12 +150,12 @@ namespace core
 		}
 	};
 	template <class TRet,VARIABLE_ARGS>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
 
 	template<class TRet, VARIABLE_ARGS>
 	class  FunctionCallbackInterface<TRet,VARIABLE_ARGS_DECL,void> : public FunctionCallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		FunctionCallbackInterface( typename FunctionCallbackInterface_Base<TRet,VARIABLE_ARGS_DECL>::F && function) : FunctionCallbackInterface_Base<TRet,  VARIABLE_ARGS_DECL>(::std::move(function) ){}
 		FunctionCallbackInterface(const typename FunctionCallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>::F & function) : FunctionCallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>(function) {}
@@ -176,7 +176,7 @@ namespace core
 	};
 
 	template <class TRet, VARIABLE_ARGS>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface <TRet coma VARIABLE_ARGS_DECL>,FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(FunctionCallbackInterface <TRet coma VARIABLE_ARGS_DECL>,FunctionCallbackInterface_Base <TRet coma VARIABLE_ARGS_DECL >);
 
 
 #endif

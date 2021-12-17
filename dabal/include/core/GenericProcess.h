@@ -17,9 +17,9 @@ namespace core
 	*		RUN : second and next times
 	*		KILL : a kill request it's done. 
 	*/
-	class FOUNDATION_API GenericProcess : public Process
+	class DABAL_API GenericProcess : public Process
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		typedef Callback< bool, uint64_t, Process*, EGenericProcessState > GenericCallback;
 	private:

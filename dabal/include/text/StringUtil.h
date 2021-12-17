@@ -2,7 +2,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <algorithm>
 #include <ctype.h>
 #include <stdint.h>
@@ -17,7 +17,7 @@ namespace text {
 	If the managed parameter in the constructor is true the class itself takes care of delete the char* parameter.
 	If the managed parameter in the constructor is false the class will never delete the char* parameter.
 	*/
-	class FOUNDATION_API CharPtrProxy
+	class DABAL_API CharPtrProxy
 	{
 	public:
 		CharPtrProxy(const CharPtrProxy& original);
@@ -35,7 +35,7 @@ namespace text {
 	/**
 	 * Utility class with string manipulation methods.
 	 */
-	class FOUNDATION_API StringUtil {
+	class DABAL_API StringUtil {
 		public:
 			/**
 			* Copy n character from a string into another

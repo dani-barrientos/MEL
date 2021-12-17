@@ -13,9 +13,9 @@ version perfectamente funcional en GCC
 #define VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,N,...) N
 */
 //TENGO QUE HACER PATRAÑAS PARA QUE FUNCIONE EN VISUAL
-#define _FOUNDATION_PREP_ARGS(_0, _1, ...) _1
+#define _DABAL_PREP_ARGS(_0, _1, ...) _1
 #define TWO_ARGS(...) TWO_ARGS_IMPL( (__VA_ARGS__,1) )
-#define TWO_ARGS_IMPL( args ) _FOUNDATION_PREP_ARGS args
+#define TWO_ARGS_IMPL( args ) _DABAL_PREP_ARGS args
 #define TESTCASE_(...) 1,0
 #define ONEORZERO(...) TWO_ARGS( TESTCASE_ ##__VA_ARGS__() )
 

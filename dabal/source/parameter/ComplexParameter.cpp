@@ -3,7 +3,7 @@ using parameter::ComplexParameter;
 #include <core/Exception.h>
 using core::Exception;
 
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(ComplexParameter,BaseParameter);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL(ComplexParameter,BaseParameter);
 
 ComplexParameter::ComplexParameter( const string& name ): BaseParameter( name )
 {

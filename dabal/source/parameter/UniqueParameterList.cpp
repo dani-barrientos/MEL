@@ -3,7 +3,7 @@ using parameter::UniqueParameterList;
 #include <core/Exception.h>
 using core::Exception;
 
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(UniqueParameterList,ParameterList);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL(UniqueParameterList,ParameterList);
 
 UniqueParameterList::UniqueParameterList( const string& name )
 {

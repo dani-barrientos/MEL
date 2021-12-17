@@ -22,7 +22,7 @@ namespace core
 	* It's a Process, so it's apdated every period milliseconds. It manages states (@see State)
 	*
 	*/
-	class FOUNDATION_API StateMachine : public Process, public StateChangeSubscriptor
+	class DABAL_API StateMachine : public Process, public StateChangeSubscriptor
 	{
 	public:
 		StateMachine(void);

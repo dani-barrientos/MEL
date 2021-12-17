@@ -14,9 +14,9 @@ namespace parameter
 	* base class for parameter list
 	* @todo poder iterar sobre la colección subyacente desde aquí
 	*/
-	class FOUNDATION_API ParameterList : virtual public ::core::IRefCount 
+	class DABAL_API ParameterList : virtual public ::core::IRefCount 
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		/**
 		* 	add parameter. Takes ownership

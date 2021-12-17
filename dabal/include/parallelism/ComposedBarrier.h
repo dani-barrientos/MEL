@@ -25,7 +25,7 @@ namespace parallelism
 		FutureData_Base::EWaitResult wait( unsigned int msecs ) const;
 		FutureData_Base::EWaitResult waitAsMThread( unsigned int msecs ) const;
 	};
-	class FOUNDATION_API ComposedBarrier : public Barrier
+	class DABAL_API ComposedBarrier : public Barrier
 	{
 	public:
 		/*		

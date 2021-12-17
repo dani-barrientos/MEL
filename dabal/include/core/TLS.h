@@ -4,7 +4,7 @@
 #elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
 #include <pthread.h>
 #endif
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <mpl/TypeTraits.h>
 
 namespace core
@@ -14,7 +14,7 @@ namespace core
 	* @brief Thread Local Storage
 	* @todo EN OBRAS
 	*/
-	class FOUNDATION_API TLS
+	class DABAL_API TLS
 	{
 	public:
 #ifdef _WINDOWS 

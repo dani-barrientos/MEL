@@ -14,17 +14,17 @@
 
 #include <windows.h>
 
-	#ifdef FOUNDATION_EXPORTS
-		#define FOUNDATION_API __declspec(dllexport)
-	#elif defined (FOUNDATION_IMPORTS)
-		#define FOUNDATION_API __declspec(dllimport)
+	#ifdef DABAL_EXPORTS
+		#define DABAL_API __declspec(dllexport)
+	#elif defined (DABAL_IMPORTS)
+		#define DABAL_API __declspec(dllimport)
 	#else
-		#define FOUNDATION_API
+		#define DABAL_API
 	
 	#endif
 #else
-#define FOUNDATION_API
-#define FOUNDATION_API_STL
+#define DABAL_API
+#define DABAL_API_STL
 #endif
 
 #if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)

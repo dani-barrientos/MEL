@@ -1,5 +1,5 @@
 #pragma once
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <cstdint>
 #ifdef _ANDROID
 #include <stdatomic.h>

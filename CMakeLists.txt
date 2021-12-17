@@ -6,6 +6,5 @@ cmake_minimum_required (VERSION 3.8)
 project ("dabal")
 
 # Include sub-projects.
-add_subdirectory ("sample")
-
 add_subdirectory("dabal")
+add_subdirectory ("sample")

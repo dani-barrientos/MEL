@@ -20,7 +20,7 @@ namespace parallelism
 
 	};
 
-	class FOUNDATION_API Barrier
+	class DABAL_API Barrier
 	{
 	public:
 		Barrier( const Barrier& o2){ mData = o2.mData;}

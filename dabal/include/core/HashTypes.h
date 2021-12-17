@@ -5,7 +5,7 @@
 //TODO: use a hash map!!!
 #include <map>
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <core/SmartPtr.h>
 namespace core {
 	using ::core::SmartPtr;

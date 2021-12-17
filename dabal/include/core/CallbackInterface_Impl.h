@@ -16,7 +16,7 @@ namespace core
 	template<class TRet, VARIABLE_ARGS>
 	class   CallbackInterface_Base
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT
+		DABAL_CORE_OBJECT_TYPEINFO_ROOT
 	public:
 		virtual ~CallbackInterface_Base(){};
 		/**
@@ -37,7 +37,7 @@ namespace core
 	};
 
 	template <class TRet,VARIABLE_ARGS_NODEFAULT>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL_ROOT(CallbackInterface_Base<TRet coma VARIABLE_ARGS_DECL>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(CallbackInterface_Base<TRet coma VARIABLE_ARGS_DECL>);
 
 	///@cond HIDDEN_SYMBOLS
 	//specialization for void arguments
@@ -52,7 +52,7 @@ namespace core
 	template<class TRet, VARIABLE_ARGS>
 	class   CallbackInterface_Base<TRet,VARIABLE_ARGS_DECL,void>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT;
+		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	public:
 		virtual ~CallbackInterface_Base(){};
 		/**
@@ -73,7 +73,7 @@ namespace core
 		virtual TRet operator()( VARIABLE_ARGS_DECL ) =0;
 	};
 	template <class TRet,VARIABLE_ARGS>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL_ROOT(CallbackInterface_Base<TRet coma VARIABLE_ARGS_DECL>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(CallbackInterface_Base<TRet coma VARIABLE_ARGS_DECL>);
 
 #endif
 

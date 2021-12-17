@@ -41,7 +41,7 @@ namespace core
     * @remarks as is explained in Process, temporization is used with a Timer but getting only the 32 bit low part of the
     * 64 bits time returned, for efficiency reasons.
     */
-	class FOUNDATION_API ProcessScheduler : private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
+	class DABAL_API ProcessScheduler : private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
 		,private WakeSubscriptor
 		,private EvictSubscriptor
 	{

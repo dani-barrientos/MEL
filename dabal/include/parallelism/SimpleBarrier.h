@@ -33,7 +33,7 @@ namespace parallelism
 		inline int getActiveWorkers() const { return mActiveWorkers; }
 
 	};
-	class FOUNDATION_API SimpleBarrier : public Barrier
+	class DABAL_API SimpleBarrier : public Barrier
 	{
 	public:
 		SimpleBarrier( size_t nWorkers = 0);

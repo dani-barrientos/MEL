@@ -28,7 +28,7 @@ namespace core
 	* but it will not be killed if you do Runnable::getTaskScheduler().killProcesses(), you must to use Thread::finish (the usual way)
 	*
 	*/
-	class FOUNDATION_API GenericThread : public Thread_Impl< GenericThread >
+	class DABAL_API GenericThread : public Thread_Impl< GenericThread >
 	{
 		friend class Thread_Impl<GenericThread>;
 	public:

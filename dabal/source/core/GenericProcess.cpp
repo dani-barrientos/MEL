@@ -1,7 +1,7 @@
 #include <core/GenericProcess.h>
 using core::GenericProcess;
 
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(GenericProcess,Process);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL(GenericProcess,Process);
 GenericProcess::GenericProcess() :
 	mProcessCallback( 0 )
 	,mCurrentState( INIT )

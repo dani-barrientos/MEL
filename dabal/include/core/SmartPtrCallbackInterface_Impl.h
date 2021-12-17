@@ -8,7 +8,7 @@ namespace core
 	template<class TRet, class F,VARIABLE_ARGS>
 	class  SmartPtrCallbackInterface_Base : public CallbackInterface<TRet, VARIABLE_ARGS_DECL>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	protected:
 		SmartPtr<F> mFunction;
 
@@ -52,12 +52,12 @@ namespace core
 	}
 
 	template <class TRet,class F,VARIABLE_ARGS_NODEFAULT>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
 
 	template<class TRet, class F,VARIABLE_ARGS>
 	class  SmartPtrCallbackInterface : public SmartPtrCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>
 	{
-			FOUNDATION_CORE_OBJECT_TYPEINFO;
+			DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		/**
 		* @todo modificar al estilo de las cosas de mpl para permitir const F&
@@ -87,13 +87,13 @@ namespace core
 
 
 	template <class TRet,class F,VARIABLE_ARGS_NODEFAULT>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface <TRet coma F coma VARIABLE_ARGS_DECL >,SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface <TRet coma F coma VARIABLE_ARGS_DECL >,SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >);
 
 #else
 	template<class TRet, class F, VARIABLE_ARGS>
 	class  SmartPtrCallbackInterface_Base<TRet,F,VARIABLE_ARGS_DECL,void> : public CallbackInterface<TRet, VARIABLE_ARGS_DECL>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	protected:
 		SmartPtr<F> mFunction;
 
@@ -127,12 +127,12 @@ namespace core
 
 	};
 	template <class TRet,class F,VARIABLE_ARGS>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
 
 	template<class TRet, class F,VARIABLE_ARGS>
 	class  SmartPtrCallbackInterface<TRet,F,VARIABLE_ARGS_DECL,void> : public SmartPtrCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		SmartPtrCallbackInterface( F* function) : SmartPtrCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>( function ){}
 		SmartPtrCallbackInterface( const SmartPtrCallbackInterface& ev2 ) : SmartPtrCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>( ev2 ){}
@@ -151,7 +151,7 @@ namespace core
 	}
 
 	template <class TRet,class F, VARIABLE_ARGS>
-	FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface <TRet coma F coma VARIABLE_ARGS_DECL>,SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >);
+	DABAL_CORE_OBJECT_TYPEINFO_IMPL(SmartPtrCallbackInterface <TRet coma F coma VARIABLE_ARGS_DECL>,SmartPtrCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >);
 
 
 #endif

@@ -3,7 +3,7 @@ using parameter::SimpleParameterList;
 #include <core/Exception.h>
 using core::Exception;
 
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(SimpleParameterList,ParameterList);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL(SimpleParameterList,ParameterList);
 
 bool SimpleParameterList::onAddParameter( BaseParameter* p )
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <core/Type.h>
 using core::Type;
 
@@ -77,12 +77,12 @@ namespace core
 	struct KillEvent
 	{
 	};
-	class FOUNDATION_API Process :
+	class DABAL_API Process :
 		public std::enable_shared_from_this<Process>,
 		public MThreadAttributtes,
 		private CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>>  //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT;
+		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	
 		//!should be implemented in platform-dependent code
         static void _switchProcess( ) OPTIMIZE_FLAGS ;

@@ -13,9 +13,9 @@ namespace parameter
 	/**
 	* ParameterList specialization for possibly repeated parameters. Internally use a list
 	*/
-	class FOUNDATION_API SimpleParameterList : public ParameterList
+	class DABAL_API SimpleParameterList : public ParameterList
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		typedef list< SmartPtr<BaseParameter> >	ListType;
 		inline const ListType& getParameters() const;

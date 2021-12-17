@@ -89,9 +89,9 @@ namespace core
 	* IllegalStateException maybe raised to calling threads when a new code execution is
 	* made and there is not enough room for the request.
 	*/
-	class FOUNDATION_API Runnable
+	class DABAL_API Runnable
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT;
+		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	private:
 		struct RunnableInfo
 		{
@@ -134,7 +134,7 @@ namespace core
 	protected:
 	private:
 		static RunnableInfo* _getCurrentRunnableInfo();
-		class FOUNDATION_API RunnableTask : public GenericProcess
+		class DABAL_API RunnableTask : public GenericProcess
 		{
 		public:
 		
@@ -607,7 +607,7 @@ namespace core
 				ei->exc = e.clone();
 				ei->isPointer = false;*/
 				auto ei = new Future_Base::ErrorInfo;
-				ei->error = ERRORCODE_EXCEPTION;
+				ei->error = Runnable::ERRORCODE_EXCEPTION;
 				ei->errorMsg = e.what();
 				f.setError( ei );	
 			}
@@ -617,7 +617,7 @@ namespace core
 				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
 				ei->errorMsg = "Unknown exception";*/
 				auto ei = new Future_Base::ErrorInfo;
-				ei->error = ERRORCODE_UNKNOWN_EXCEPTION;
+				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
 				ei->errorMsg = "Unknown exception";
 				f.setError( ei );	
 			}

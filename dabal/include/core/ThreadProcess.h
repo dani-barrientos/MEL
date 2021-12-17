@@ -25,7 +25,7 @@ namespace core
 	* killing it
 	*
 	*/
-	class FOUNDATION_API ThreadProcess : public Process
+	class DABAL_API ThreadProcess : public Process
 	{
 	public:
 		/**

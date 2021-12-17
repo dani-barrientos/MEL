@@ -7,7 +7,7 @@ namespace core
 	/**
 	* not multihread safe
 	*/
-	class FOUNDATION_API CriticalSection_mthread
+	class DABAL_API CriticalSection_mthread
 	{
 	public:
 		CriticalSection_mthread();

@@ -8,9 +8,9 @@ namespace parameter
 	* Parameter list spezilization for no repeated parameters, so
 	* can eficiently be accessed by name (internally use a map)
 	*/
-	class FOUNDATION_API UniqueParameterList :  public ParameterList
+	class DABAL_API UniqueParameterList :  public ParameterList
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		UniqueParameterList(){};
 		UniqueParameterList( const string& name );

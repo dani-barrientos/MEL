@@ -18,10 +18,10 @@ using mpl::link1st;
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
 namespace core {
-	FOUNDATION_API unsigned int getNumProcessors();
-	FOUNDATION_API uint64_t getProcessAffinity();
+	DABAL_API unsigned int getNumProcessors();
+	DABAL_API uint64_t getProcessAffinity();
 	//!Set affinity for current thread.
-	FOUNDATION_API bool setAffinity(uint64_t);  
+	DABAL_API bool setAffinity(uint64_t);  
 	using std::string;
 	/**
 	 * @class Thread_Impl
@@ -44,7 +44,7 @@ namespace core {
 	 * 
 	 * You can subscribe callback to thread end. It will be thrown just before onThreadEnd is called
 	 */
-	class FOUNDATION_API Thread : public Runnable, public CallbackSubscriptor<Int2Type<0>(),false,void,Thread*>
+	class DABAL_API Thread : public Runnable, public CallbackSubscriptor<Int2Type<0>(),false,void,Thread*>
 	{
 
 #ifdef _WINDOWS
@@ -53,7 +53,7 @@ namespace core {
 		friend void* _threadProc(void* param);
 #endif
 
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 		public:
 			enum YieldPolicy {
 				YP_ANY_THREAD_ANY_PROCESSOR=0,

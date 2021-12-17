@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <core/SmartPtr.h>
 #include <mpl/Type2Type.h>
 using mpl::Type2Type;

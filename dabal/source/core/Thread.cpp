@@ -169,7 +169,7 @@ bool setAffinity(uint64_t affinity)
     return _setAffinity(affinity,gettid());
 #endif
 }
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(Thread,Runnable);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL(Thread,Runnable);
 
 #ifdef _WINDOWS
 	DWORD WINAPI _threadProc(void* lpParameter)

@@ -1,5 +1,5 @@
 #pragma once
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <cstddef>
 #include <new>
 #include <memory>
@@ -9,7 +9,7 @@ namespace core {
 	 * Platform-independent critical section implementation.
 	 * Do I really need to explain anything else here? :P
 	 */
-	class FOUNDATION_API CriticalSection {
+	class DABAL_API CriticalSection {
 		public:
 			CriticalSection():
 				mData(::std::make_shared<CriticalSectionData>()) {
@@ -85,7 +85,7 @@ namespace core {
 	*		... all method is thread-safe using the mCS CriticalSection...
 	*	}
 	*/
-	class FOUNDATION_API Lock
+	class DABAL_API Lock
 	{
 		public:
 			Lock( CriticalSection& cs ): mCs( cs )

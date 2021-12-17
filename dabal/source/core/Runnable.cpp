@@ -77,7 +77,7 @@ void Runnable::RunnableTask::operator delete( void* ptr )
 			ownerRunnable->_removePool( block->owner );
 	}
 }
-FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
 
 Runnable::RTMemPool* Runnable::_addNewPool()
 {

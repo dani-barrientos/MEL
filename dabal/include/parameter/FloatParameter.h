@@ -4,9 +4,9 @@ using parameter::BaseParameter;
 
 namespace parameter
 {
-	class FOUNDATION_API FloatParameter : public BaseParameter
+	class DABAL_API FloatParameter : public BaseParameter
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		FloatParameter( const string& name, float value );
 		inline void setValue( float value);

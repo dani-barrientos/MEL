@@ -1,5 +1,5 @@
 #pragma once
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <list>
 #include <core/Process.h>
 #include <core/Callback.h>
@@ -15,7 +15,7 @@ namespace core
 	* Note: Process using it must be stored in SmartPtr because internally holds a SmartPtr list
 	* 
 	*/
-	class FOUNDATION_API Event_mthread
+	class DABAL_API Event_mthread
 	{
 	public:
 		enum EWaitCode {EVENTMT_WAIT_OK,EVENTMT_WAIT_TIMEOUT,EVENTMT_WAIT_ERROR,EVENTMT_WAIT_KILL};

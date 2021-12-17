@@ -4,9 +4,9 @@ using parameter::BaseParameter;
 
 namespace parameter
 {
-	class FOUNDATION_API BoolParameter : public BaseParameter
+	class DABAL_API BoolParameter : public BaseParameter
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		BoolParameter( const string& name, bool value );
 		inline void setValue( bool value);

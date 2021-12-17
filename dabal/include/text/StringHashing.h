@@ -1,4 +1,4 @@
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 
 #include <string>
 using std::string;
@@ -14,11 +14,11 @@ namespace text
 	* @param str string to be hashed
 	* @return hash code
 	*/
-	int FOUNDATION_API HashString(const char *str);
+	int DABAL_API HashString(const char *str);
 	/**
 	* Generates a hash code for the string provided
 	* @param str string to be hashed
 	* @return hash code
 	*/
-	int FOUNDATION_API HashString(const string &str);
+	int DABAL_API HashString(const string &str);
 }

@@ -140,7 +140,7 @@ namespace parallelism
 	/**
 	* parallelized iteration, begin:end (end not included)
 	*/
-	class FOUNDATION_API For
+	class DABAL_API For
 	{
 	private:
 		

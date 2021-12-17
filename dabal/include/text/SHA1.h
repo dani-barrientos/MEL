@@ -70,7 +70,7 @@
 	SHA1(A million repetitions of "a") =
 		34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #ifndef ___SHA1_HDR___
 #define ___SHA1_HDR___
 
@@ -156,7 +156,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Declare SHA-1 workspace
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 
 typedef union
 {
@@ -164,7 +164,7 @@ typedef union
 	UINT_32 l[16];
 } SHA1_WORKSPACE_BLOCK;
 
-class FOUNDATION_API CSHA1
+class DABAL_API CSHA1
 {
 public:
 #ifdef SHA1_UTILITY_FUNCTIONS

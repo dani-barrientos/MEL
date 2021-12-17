@@ -1,5 +1,5 @@
 #pragma once
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <stdint.h>
 #ifdef WIN32
 #elif defined (_IOS) || defined(_MACOSX)
@@ -12,7 +12,7 @@
 struct tm; //predeclaration
 namespace core
 {
-	class FOUNDATION_API Timer 
+	class DABAL_API Timer 
 	{
 
 	public:

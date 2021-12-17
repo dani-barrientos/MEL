@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <cstdint>
 
 namespace core
@@ -19,7 +19,7 @@ namespace core
 	* must use StateTemplte to create concrete states
 	*/
 
-	class FOUNDATION_API State 
+	class DABAL_API State 
 	{
 	public:
 		State(void);

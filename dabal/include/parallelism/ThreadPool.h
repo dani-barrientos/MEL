@@ -17,7 +17,7 @@ using mpl::addParam;
 #include <limits>
 namespace parallelism
 {
-	class FOUNDATION_API ThreadPool
+	class DABAL_API ThreadPool
 	{
 	public:
 		enum SchedulingPolicy {

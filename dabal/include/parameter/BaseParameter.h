@@ -1,5 +1,5 @@
 #pragma once
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <core/IRefCount.h>
 #include <string>
 using std::string;
@@ -8,9 +8,9 @@ namespace parameter
 	/**
 	* TODO
 	*/
-	class FOUNDATION_API BaseParameter : virtual public ::core::IRefCount
+	class DABAL_API BaseParameter : virtual public ::core::IRefCount
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		BaseParameter(){};
 		BaseParameter( const string& name );

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 
 namespace core {
 
@@ -9,7 +9,7 @@ namespace core {
 	 * Can be used in multi-threaded scenarios to create simple semaphore-like
 	 * locks on which clients can wait and notify in order to synchronize execution flows.
 	 */
-	class FOUNDATION_API Event {
+	class DABAL_API Event {
 		public:
 			enum EWaitCode {EVENT_WAIT_OK,EVENT_WAIT_TIMEOUT,EVENT_WAIT_ERROR};
 #if defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)

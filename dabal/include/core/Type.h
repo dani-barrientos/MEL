@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FoundationLibType.h>
+#include <DabalLibType.h>
 #include <string>
 #include <map>
 
@@ -11,7 +11,7 @@
  * Just place this macro right after the class declaration it will automatically
  * define any attributes and methods for making the class "runtime type-aware".
  */
-#define FOUNDATION_CORE_OBJECT_TYPEINFO_ROOT \
+#define DABAL_CORE_OBJECT_TYPEINFO_ROOT \
 	private: \
 	static const ::core::Type TYPE; \
 	public: \
@@ -19,7 +19,7 @@
 	virtual const ::core::Type &getMyType() const {return TYPE;} \
 	private:
 
-#define FOUNDATION_CORE_OBJECT_TYPEINFO \
+#define DABAL_CORE_OBJECT_TYPEINFO \
 	private: \
 	static const ::core::Type TYPE; \
 	public: \
@@ -36,7 +36,7 @@
 * @param _type_ the type of the class you want to implement the runtime type methods. It 
 * MUST be a valid class name (i.e. a name that can be resolved by the C++ compiler)
 */
-#define FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL_ROOT(_type_) \
+#define DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(_type_) \
 	const ::core::Type _type_::TYPE(#_type_); 
 
 /**
@@ -48,16 +48,16 @@
 * MUST be a valid class name (i.e. a name that can be resolved by the C++ compiler)
 * @param _ancestorType_ the type the super class. It MUST be a valid class name too.
 */
-#define FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL(_type_,_ancestorType_) \
+#define DABAL_CORE_OBJECT_TYPEINFO_IMPL(_type_,_ancestorType_) \
 	const ::core::Type _type_::TYPE(#_type_,&_ancestorType_::type());
 
-#define FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL2(_type_,_ancestorType1_,_ancestorType2_) \
+#define DABAL_CORE_OBJECT_TYPEINFO_IMPL2(_type_,_ancestorType1_,_ancestorType2_) \
 	const ::core::Type _type_::TYPE(#_type_,&_ancestorType1_::type(),&_ancestorType2_::type() );
 
-#define FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL3(_type_,_ancestorType1_,_ancestorType2_,_ancestorType3_) \
+#define DABAL_CORE_OBJECT_TYPEINFO_IMPL3(_type_,_ancestorType1_,_ancestorType2_,_ancestorType3_) \
 	const ::core::Type _type_::TYPE(#_type_,&_ancestorType1_::type(),&_ancestorType2_::type(),&_ancestorType3_::type() );
 
-#define FOUNDATION_CORE_OBJECT_TYPEINFO_IMPL4(_type_,_ancestorType1_,_ancestorType2_,_ancestorType3_,_ancestorType4_) \
+#define DABAL_CORE_OBJECT_TYPEINFO_IMPL4(_type_,_ancestorType1_,_ancestorType2_,_ancestorType3_,_ancestorType4_) \
 	const ::core::Type _type_::TYPE(#_type_,&_ancestorType1_::type(),&_ancestorType2_::type(),&_ancestorType3_::type(),&_ancestorType4_::type() );
 
 
@@ -73,10 +73,10 @@ namespace core {
 	 * It allows up to four base clases (multiple inheritance)
 	 */
 
-	class FOUNDATION_API Type {
+	class DABAL_API Type {
 		private:
 
-			class FOUNDATION_API ReflectionMap
+			class DABAL_API ReflectionMap
 			{
 				friend class Type;
 			public:

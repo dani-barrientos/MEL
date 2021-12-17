@@ -7,9 +7,9 @@ namespace parameter
 	/**
 	* TODO
 	*/
-	class FOUNDATION_API StringParameter : public BaseParameter
+	class DABAL_API StringParameter : public BaseParameter
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		StringParameter( const string& name, const string& value );
 		inline void setValue( const char* value );

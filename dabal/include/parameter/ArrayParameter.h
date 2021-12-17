@@ -7,9 +7,9 @@ namespace parameter
 {
 	using std::vector;
 	using ::core::SmartPtr;
-	class FOUNDATION_API ArrayParameter : public BaseParameter
+	class DABAL_API ArrayParameter : public BaseParameter
 	{
-		FOUNDATION_CORE_OBJECT_TYPEINFO;
+		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
 		typedef vector<SmartPtr<BaseParameter> > ArrayType;
 
