@@ -1,6 +1,7 @@
 ﻿// sample.cpp : Defines the entry point for the application.
 //
 #include "sample.h"
+#include <iostream>
 #include <core/GenericThread.h>
 using core::GenericThread;
 using namespace std;
@@ -15,7 +16,7 @@ int main()
 	Thread::sleep(2000);  //@todo patraña, todo esto lo tengo mal estructuradp
 	Future<int> result = th1->execute<int>(::std::function<int()>(
 		[]() {
-			return 10;
+			return 15;
 		})
 		);
 	result.wait();

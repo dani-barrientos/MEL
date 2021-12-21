@@ -1,0 +1,85 @@
+{
+    "version": 2,    
+    "configurePresets": [
+        {
+          "name": "Windows Base",
+          "description": "Common things for Windows build",
+          "hidden": true,
+          "generator": "Visual Studio 16 2019",
+          "architecture": {
+            "value": "Win32",
+            "strategy": "external"
+          },
+          "binaryDir": "${sourceDir}/out/build/${presetName}",
+          "cacheVariables": {
+            "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+          },
+          "vendor": {
+            "microsoft.com/VisualStudioSettings/CMake/1.0": {
+              "hostOS": [
+                "Windows"
+              ]
+            }
+          }
+        },
+        {
+            "name": "x86-debug",
+            "displayName": "Windows x86 Debug",
+            "description": "Target Windows with the Visual Studio development environment.",
+            "inherits": "Windows Base",        
+            "cacheVariables": {
+              "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x86-release",
+            "displayName": "Windows x86 Release",
+            "description": "Target Windows with the Visual Studio development environment.",
+            "inherits": "Windows Base",   
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "WSL GCC X64",
+            "generator": "Unix Makefiles",
+            "displayName": "GCC 9.3.0 x86_64-linux-gnu",
+            "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-9, CXX = /bin/x86_64-linux-gnu-g++-9",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-9",
+                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-9",
+                "_x86_GCC":true
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Clang WSL",
+            "displayName": "Clang 10.0.0 x86_64-pc-linux-gnu",
+            "generator": "Unix Makefiles",
+            "description": "Using compilers: C = /bin/clang-10, CXX = /bin/clang++-10",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/bin/clang-10",
+                "CMAKE_CXX_COMPILER": "/bin/clang++-10"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        }
+    ]
+}

@@ -10,7 +10,7 @@ namespace core
 	/**
 	* @class Callback
 	* @brief create Callback from functor
-	* @todo no está implementado el considerar cosas distintas a Functores, y posiblemente no sea necesario
+	* @todo no estï¿½ implementado el considerar cosas distintas a Functores, y posiblemente no sea necesario
 	*/
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
 		struct use_functor_t
@@ -39,8 +39,8 @@ namespace core
 		{
 			static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T&& functor)
 			{
-				throw std::runtime_exe
-				return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
+				throw std::runtime_error("SmartPtrCallbackInterface not implemented");
+				//return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
 			}
 		};
 
@@ -224,7 +224,8 @@ struct _CallbackCreator<true,T,TRet,VARIABLE_ARGS_DECL,void>
 	}*/
     static CallbackInterface<TRet,VARIABLE_ARGS_DECL>* create( T&& functor )
     {
-        return new SmartPtrCallbackInterface<TRet,typename mpl::TypeTraits<T>::PointeeType,VARIABLE_ARGS_DECL>(::std::forward<T>(functor) );
+		throw std::runtime_error("SmartPtrCallbackInterface not implemented");
+        //return new SmartPtrCallbackInterface<TRet,typename mpl::TypeTraits<T>::PointeeType,VARIABLE_ARGS_DECL>(::std::forward<T>(functor) );
     }
 };
 

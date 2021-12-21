@@ -1,8 +1,3 @@
-﻿// sample.h : Include file for standard system include files,
-// or project specific include files.
+﻿// sample.h : Header file for your target.
 
 #pragma once
-
-#include <iostream>
-
-// TODO: Reference additional headers your program requires here.

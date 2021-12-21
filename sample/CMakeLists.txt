@@ -2,10 +2,19 @@
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.8)
-
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add source to this project's executable.
 add_compile_definitions(DABAL_IMPORTS)
+add_compile_definitions(${_x86_GCC}) pruebas
+
+
+#necesito pasar macros dependientes del build syustem. estoy probando inventandome variables, que entiendo tendré que
+#pasar desde el cmakesettings.jsob
+#add_compile_definitions(${TARGET_SYSTEM})
 add_executable (sample "sample.cpp" "sample.h")
+
+
 
 target_link_libraries(sample "dabal")
 add_custom_command(TARGET sample POST_BUILD        # Adds a post-build event to MyTest
@@ -14,3 +23,4 @@ add_custom_command(TARGET sample POST_BUILD        # Adds a post-build event to 
         $<TARGET_FILE_DIR:sample>)                 # <--this is out-file path
 
 # TODO: Add tests and install targets if needed.
+
