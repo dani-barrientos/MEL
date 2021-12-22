@@ -13,7 +13,7 @@ bool TLS::createKey(TLSKey& key ) {
 	key = result;
 	return (result!=TLS_OUT_OF_INDEXES);
 
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 	int ok=pthread_key_create(&key,NULL);
 	return ok==0;
 #endif
@@ -24,7 +24,7 @@ bool TLS::deleteKey(mpl::TypeTraits<TLSKey>::ParameterType key) {
 	BOOL ok= TlsFree(key);
 	return ok!=0;
 
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 	int ok=pthread_key_delete(key);
 	return ok==0;
 #endif
@@ -35,7 +35,7 @@ bool TLS::setValue(mpl::TypeTraits<TLSKey>::ParameterType key, const void* value
 	BOOL ok=TlsSetValue( key, (LPVOID)value );
 	return ok!=0;
 
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 	int ok=pthread_setspecific(key,value);
 	return ok==0;
 #endif
@@ -45,7 +45,7 @@ void* TLS::getValue(mpl::TypeTraits<TLSKey>::ParameterType key) {
 #ifdef _WINDOWS
 	return TlsGetValue( key );
 
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 	return pthread_getspecific(key);
 #endif
 }

@@ -49,7 +49,7 @@ namespace core {
 #ifdef _WINDOWS
 				CRITICAL_SECTION mCS;
 #endif
-#if defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 				pthread_mutex_t mCS;
 #endif
 			};
@@ -122,14 +122,6 @@ namespace core {
 }
 #ifdef _WINDOWS
 #include <core/CriticalSection_win32.inl>
-#elif defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
-#include <core/CriticalSection_macosx.inl>
-#elif defined(_AIRPLAY)
-//TODO. Vacías por compatibilidad. Hacerlas
-core::CriticalSection::CriticalSection(){};
-core::CriticalSection::~CriticalSection(){}
-void core::CriticalSection::enter(){}
-bool core::CriticalSection::tryEnter(){return true;}
-void core::CriticalSection::leave(){}
-
+#elif defined(DABAL_POSIX)
+#include <core/CriticalSection_posix.inl>
 #endif

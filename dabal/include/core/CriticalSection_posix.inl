@@ -1,6 +1,7 @@
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
 #include <errno.h>
 #include <assert.h>
+#include <pthread.h>
 
 namespace core {
 

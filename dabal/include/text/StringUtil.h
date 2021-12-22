@@ -331,17 +331,12 @@ namespace text {
 	inline char* StringUtil::duplicate( const char* str )
 	{
 		//strdup no es standard, aunque en MAC funciona
-#ifdef _WINDOWS
-		return str?_strdup( str ):NULL;
-#elif defined(_MACOSX) || defined(_IOS) || defined(_ANDROID) || defined( _AIRPLAY)
 		return str?strdup( str ):NULL;
-#endif
-
 	}
 	int32_t StringUtil::compareIgnoreCase(const char *str1, const char *str2) {
 #ifdef _WINDOWS
 		return _stricmp(str1,str2);
-#elif defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 		return strcasecmp(str1,str2);
 #else
 		return strcmp(str1,str2);

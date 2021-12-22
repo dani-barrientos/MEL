@@ -1,4 +1,4 @@
-#ifdef _ANDROID
+#ifdef DABAL_ANDROID
 
 #include <core/Process.h>
 using core::Process;
@@ -19,12 +19,12 @@ using core::MThreadAttributtes;
 volatile void Process::checkMicrothread(uint64_t msegs )
 {
 	volatile MThreadAttributtes* thisAux = this;
-	asm volatile( "ldr r4,%[v]"::[v] "m" (thisAux):"r4","r0","r1" ); //tengo que engañarle aqui para que tenga en cuenta que se modifican, ya que se hace cuando se produce un cambio de contexto
+	asm volatile( "ldr r4,%[v]"::[v] "m" (thisAux):"r4","r0","r1" ); //tengo que engaï¿½arle aqui para que tenga en cuenta que se modifican, ya que se hace cuando se produce un cambio de contexto
 
 	asm volatile( "str sp, [r4,%[v]]":: [v] "i" (mIniSPOFF) ); 
 
 	asm volatile( "add r4,r4,%[v]":: [v] "i" (mRegistersOFF):"r4" );
-	//asm volatile( "stmia r4!,{r0-r12}");  //->en version iOS, está mal ajustado el r4, debe apuntar a uno más
+	//asm volatile( "stmia r4!,{r0-r12}");  //->en version iOS, estï¿½ mal ajustado el r4, debe apuntar a uno mï¿½s
 	//bloque funcional android
 	asm volatile("stmia r4,{r0-r12}");
 	//ajuste de posicion
@@ -121,7 +121,7 @@ volatile void Process::checkMicrothread(uint64_t msegs)
 	
 	volatile MThreadAttributtes* thisAux = this;
 	void* ptr = &&continueexecuting; //direccion absoluta de etiqueta.
-	asm volatile("ldr x10,%[v]"::[v] "m" (thisAux) : "x10", "x0", "x1"); //tengo que engañarle aqui para que tenga en cuenta que se modifican, ya que se hace cuando se produce un cambio de contexto (y desde su punto de vista no hay nada de eso, por lo que el compilador podría no salvagaurdar estos y por tanto error al usarlos al retornar)
+	asm volatile("ldr x10,%[v]"::[v] "m" (thisAux) : "x10", "x0", "x1"); //tengo que engaï¿½arle aqui para que tenga en cuenta que se modifican, ya que se hace cuando se produce un cambio de contexto (y desde su punto de vista no hay nada de eso, por lo que el compilador podrï¿½a no salvagaurdar estos y por tanto error al usarlos al retornar)
 																		 //store return label address in local x11. Can be calcualted directly as a constant because address calculation if mor complicated, involving adr instruction
 	asm volatile("ldr x11,%[v]"::[v] "m" (ptr) : "x11");
 	asm volatile("mov x9,sp"); //sp to auxiliar register
@@ -171,7 +171,7 @@ volatile void Process::checkMicrothread(uint64_t msegs)
 	asm volatile("ldp lr,x19,[sp],#16");
 
 	//jump to context switch point
-	asm volatile("br lr"); //si hago ret valdría??
+	asm volatile("br lr"); //si hago ret valdrï¿½a??
 
 
 	asm volatile("2:");
@@ -237,7 +237,7 @@ volatile void fakeFunction()
 
 	//now return to start point
 	asm volatile("ldr x2,[x0,%[v]]"::[v] "i" (mLROFF));
-	asm volatile("br x2 "); //no estoy seguro si RET x2 me valdría o sería el correcto
+	asm volatile("br x2 "); //no estoy seguro si RET x2 me valdrï¿½a o serï¿½a el correcto
 	
 }
 void Process::_switchProcess()

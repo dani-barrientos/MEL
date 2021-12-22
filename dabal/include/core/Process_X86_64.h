@@ -1,29 +1,29 @@
 #pragma once
-TAL VEZ NO HAGA FALTA
+
 namespace core
 {
     struct MThreadAttributtes;
 }
 using core::MThreadAttributtes;
 #ifdef _MSC_VER
-	extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSize ) ;
+extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSize ) ;
 #else
-	extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
+extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #endif
 namespace core
 {
     struct MThreadAttributtes
     {
-     public:
+    public:
         volatile bool mSwitched;
-        //volatile void* mLR;
-        volatile void* mActualSP;// +4
-        volatile void* mIniSP;//+8
-        volatile void* mStackEnd; //+12
-        volatile unsigned short	  mStackSize;//+16
-        volatile unsigned char* mStack; //+20
-        volatile void* mIniBP; //+24
+        volatile void* mIniSP;
+        volatile void* mStackEnd;
+        volatile unsigned int  mStackSize;
+        volatile unsigned char* mStack;
+        volatile void* mIniRBP;
+        volatile void* mIniRBX;
+        volatile void* mRegisters[4]; //r12.r15
         volatile unsigned int mCapacity;
+
     };
 }
-

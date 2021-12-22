@@ -18,11 +18,13 @@ static CriticalSection gCurrrentThreadCS;
 #import <sys/sysctl.h>
 #include <pthread.h>
 #import <mach/thread_act.h>
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
-#import <sys/syscall.h>
+	#ifdef DABAL_ANDROID
+	#import <sys/syscall.h>
+	#endif
 #endif
 #if defined _WINDOWS && defined _CRASHRPT
 #include <CrashRpt.h>
@@ -54,7 +56,7 @@ unsigned int getNumProcessors()
 	if (sysctlbyname("hw.ncpu", &result, &size, NULL, 0))
 		result = 1;
 	return result;
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 	unsigned int count = 1;
 	count = sysconf(_SC_NPROCESSORS_ONLN);
 	return count;
@@ -102,7 +104,7 @@ uint64_t getProcessAffinity()
 #define HANDLETYPE HANDLE
 #elif defined(_MACOSX) || defined(_IOS)
 #define HANDLETYPE core::ThreadId
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 #define HANDLETYPE pid_t
 #endif
 //!helper
@@ -135,7 +137,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
     }
      */
     return true;
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	for (size_t i = 0; i < sizeof(affinity) * 8; ++i)
@@ -151,7 +153,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	if (!result)
 	{
 		int err = errno;
-		Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
+		//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
 	}
 	
 #endif
@@ -165,7 +167,7 @@ bool setAffinity(uint64_t affinity)
     return _setAffinity(affinity,h);
 #elif defined(_MACOSX) || defined(_IOS)
     return _setAffinity(affinity,0);  //i don't know how to get current thread id on macos, but it doesn't matter because affinity in this sense can't be modified
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
     return _setAffinity(affinity,gettid());
 #endif
 }
@@ -192,7 +194,7 @@ DABAL_CORE_OBJECT_TYPEINFO_IMPL(Thread,Runnable);
 		return result;
 	}
 #endif
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 	void* _threadProc (void * param) {
 		Thread* t=(Thread*)param;
 		assert(t && "NULL Thread!");
@@ -227,7 +229,7 @@ Thread::Thread(const char *name,unsigned int maxTaskSize):
 	mID(0),
 #endif
 	mState( THREAD_INIT ),
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
 	mJoined(false),
 #endif
 #if defined (_MACOSX) || defined(_IOS)
@@ -314,7 +316,7 @@ Thread::Thread(const char *name,unsigned int maxTaskSize):
 #if defined (_MACOSX) || defined(_IOS) 
 	mPriorityMin = sched_get_priority_min(SCHED_RR);
 	mPriorityMax = sched_get_priority_max(SCHED_RR);
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 	mPriorityMin=sched_get_priority_min(SCHED_OTHER);
 	mPriorityMax=sched_get_priority_max(SCHED_OTHER);
 #endif
@@ -331,7 +333,7 @@ Thread::~Thread()
 	}
 	mID=0;
 #endif
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
 	if (mState==THREAD_RUNNING && !mJoined) {
 		join();
 	}
@@ -342,7 +344,7 @@ void Thread::sleep(const unsigned int millis) {
 #ifdef _WINDOWS
 	Sleep(millis);
 #endif
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
 	struct timespec req={0},rem={0};
 	time_t sec=(int)(millis/1000);
 	long millisec=millis-(sec*1000);
@@ -352,7 +354,7 @@ void Thread::sleep(const unsigned int millis) {
 #endif
 }
 
-#if defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 	switch (tp) {
 		case TP_HIGHEST:
@@ -382,52 +384,50 @@ void Thread::start() {
 		}
 	}
 #endif
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
+using namespace ::std::string_literals;
 	pthread_attr_t  attr;
 	int err;
 	//Then we setup thread attributes as "joinable"
 	if ((err=pthread_attr_init(&attr))) {
-		throw Exception("Unable to initialize thread attributes: err=%d",err);
+		throw std::runtime_error( "Unable to initialize thread attributes: err="s+ std::to_string(err));
 	}
 	if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE)) { //PTHREAD_CREATE_DETACHED
 		pthread_attr_destroy(&attr);
-		throw Exception("Unable to set detached state!");
+		throw std::runtime_error("Unable to set detached state!");
 	}
 
 	sched_param sp;
 	sp.sched_priority=priority2pthread(mPriority,mPriorityMin,mPriorityMax);
 	if (pthread_attr_setschedparam(&attr,&sp)) {
 		pthread_attr_destroy(&attr);
-		throw Exception("Unable to set thread priority!");
+		throw std::runtime_error("Unable to set thread priority!");
 	}
 
 	err = pthread_create(&mHandle, &attr, _threadProc, this);
 	if (err != 0) {
-		throw Exception("Unable to spawn new thread: err=%d",err);
+		throw std::runtime_error("Unable to spawn new thread: err="s+ std::to_string(err));
 	}
 	
 	if ((err=pthread_attr_destroy(&attr))) {
 		#ifndef _ANDROID
 		pthread_cancel(mHandle);
 		#endif
-		throw Exception("Unable to destroy thread attribute!");
+		throw std::runtime_error("Unable to destroy thread attribute!");
 	}	
 #endif
 }
 
-//#if defined(_MACOSX) || defined(_IOS)
 bool Thread::suspendInternal(uint64_t millis,Process* proc, ::core::EGenericProcessState) {
 	mPauseEV.wait();
 	return true;
 }
-//#endif
-
 unsigned int Thread::suspend()
 {
 	if ( mState == THREAD_RUNNING )
 	{
 		post(makeMemberEncapsulate(&Thread::suspendInternal,this),HIGH_PRIORITY_TASK); //post as the first task for next iteration
-		mState=THREAD_SUSPENDED; //aunque todavía no se haya hecho el wait,
+		mState=THREAD_SUSPENDED; //aunque todavï¿½a no se haya hecho el wait,
 								 //por la forma en que funcionan los eventos da igual, porque si se hace
 								 //un resume justo antes de procesarse la tarea "suspendInternal", implica que el set
 								 //hace que el siguiente wait no espere, lo cual es lo correcto
@@ -446,13 +446,11 @@ unsigned int Thread::resume() {
 	//return mHandle?sc:0;
 	return 1;
 #endif
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
 		mPauseEV.set();
 	}
 	return 1;
-#elif defined(_AIRPLAY)
-	} //TODO
-	return 1;
+
 #endif
 }
 
@@ -465,7 +463,7 @@ void Thread::terminate(unsigned int exitCode)
 		resume();
 	}else if ( mState == THREAD_INIT )
 	{
-		//TODO vigilar, esto no está bien. Puede ocurrir que en este momento esté arrancado el hilo
+		//TODO vigilar, esto no estï¿½ bien. Puede ocurrir que en este momento estï¿½ arrancado el hilo
 		#ifdef _WINDOWS
 		//in Windows we need to ResumeThread if it wasn't started. Other way it won't be removed from memory( I don't know why..)
 		ResumeThread( mHandle );
@@ -494,25 +492,19 @@ bool Thread::join(unsigned int millis) const
 	//if ( !(mState & (THREAD_INIT | THREAD_FINISHED) ) )
 	{
 	#ifdef _WINDOWS
-		//@todo por qué no usar WaitForSingleObject?
+		//@todo por quï¿½ no usar WaitForSingleObject?
 		DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
 		return status!=WAIT_TIMEOUT;
 	#endif
-	#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+	#if defined (DABAL_POSIX)
 		int err = pthread_join(mHandle, NULL/*result*/);
 		mJoined=!err;
 		if (err) {
-			Logger::getLogger()->warnf("Error joining thread: err=%d", 1, err);
+		//	Logger::getLogger()->warnf("Error joining thread: err=%d", 1, err);
 		}
-		return mJoined;
-
-	#elif defined(_AIRPLAY)
-		return true; //TODO
+		return mJoined;	
 	#endif
-	}/*else
-	{
-		return true;
-	}*/
+	}
 }
 
 void Thread::yield(YieldPolicy yp) {
@@ -560,7 +552,7 @@ void Thread::setPriority(ThreadPriority tp) {
 	assert(r==TRUE);
 }
 #endif
-#if defined(_MACOSX ) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 void Thread::setPriority(ThreadPriority tp) {
 	if (mPriority==tp)
 		return;
@@ -612,7 +604,7 @@ bool Thread::setAffinity(uint64_t affinity)
         _setAffinity(affinity, mHandle);
     }else
         return true; //@todo
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 	mAffinity = affinity;
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
@@ -631,7 +623,7 @@ bool Thread::setAffinity(uint64_t affinity)
 		if (!result)
 		{
 			int err = errno;
-			Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
+			//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
 		}
 	}
 	else

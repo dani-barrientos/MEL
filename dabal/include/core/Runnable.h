@@ -352,7 +352,7 @@ namespace core
 		* @param millis timeout (milliseconds)
 		* @return `true+  if the task is complished before the timeout expires. `false` otherwise
 		* @remarks if task was not completed this is taken off scheduler
-		* @todo esta funcion no es muy coherente aquí, ya que no se puede saber si está en otro thread
+		* @todo esta funcion no es muy coherente aquï¿½, ya que no se puede saber si estï¿½ en otro thread
 		* @deprecated Use futures. This function might disappear in future versions
 		*/
 #ifndef _WINDOWS
@@ -455,7 +455,7 @@ namespace core
 		Future<TRet> future;
 		if ( forcePost || mOwnerThread != ::core::getCurrentThreadId())
 		{
-			//@todo no usada la version con linkfunctor porque tendría que hacer yo el std::move cuando sea y demás, y resulta más fácil verlo (y sobretodo depurarlo) sin ello
+			//@todo no usada la version con linkfunctor porque tendrï¿½a que hacer yo el std::move cuando sea y demï¿½s, y resulta mï¿½s fï¿½cil verlo (y sobretodo depurarlo) sin ello
 			//y que el propio ExecuteTask lo resuelva en el constructor
 			//post(
 			//	RUNNABLE_CREATETASK
@@ -486,7 +486,7 @@ namespace core
 	
 		}else
 		{
-			_sleep( delay ); //@todo ñapa para evitar incluir Thread.h
+			_sleep( delay ); //@todo ï¿½apa para evitar incluir Thread.h
 			//same calling thread that this thread, execute directly
 			ExecuteTask<TRet, typename ::std::decay<F>::type>(::std::forward<F>(function))( future);
 		}
@@ -518,7 +518,7 @@ namespace core
 		}
 		else
 		{
-			_sleep(delay); //@todo ñapa para evitar incluir Thread.h
+			_sleep(delay); //@todo ï¿½apa para evitar incluir Thread.h
 						   //same calling thread that this thread, execute directly
 			ExecuteTask<TRet, std::function< TRet()> > rt;
 			rt(function, future);
@@ -643,26 +643,16 @@ namespace core
 				f.setValue( );
 			}
 			//check chances of Exception
-			catch( Exception& e )
+			catch( std::exception& e )
 			{
-				Runnable::ExecuteErrorInfo* ei = new Runnable::ExecuteErrorInfo;
+				auto ei = new Future_Base::ErrorInfo;
 				ei->error = Runnable::ERRORCODE_EXCEPTION;
-				ei->exc = e.clone();
-				ei->isPointer = false;
+				ei->errorMsg = e.what();
 				f.setError( ei );	
-			}catch ( Exception* e )
-			{
-				
-				Runnable::ExecuteErrorInfo* ei = new Runnable::ExecuteErrorInfo;
-				ei->error = Runnable::ERRORCODE_EXCEPTION;
-				ei->exc = e->clone();
-				ei->isPointer = true;
-				f.setError( ei );	
-				delete e;
 			}
 			catch(...)
 			{
-				Future_Base::ErrorInfo* ei = new Future_Base::ErrorInfo; 
+				auto ei = new Future_Base::ErrorInfo;
 				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
 				ei->errorMsg = "Unknown exception";
 				f.setError( ei );	

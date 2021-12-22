@@ -12,7 +12,7 @@ namespace core {
 	class DABAL_API Event {
 		public:
 			enum EWaitCode {EVENT_WAIT_OK,EVENT_WAIT_TIMEOUT,EVENT_WAIT_ERROR};
-#if defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 			static const int EVENT_WAIT_INFINITE = -1;
 #elif defined(_WIN32)		
 			static const int EVENT_WAIT_INFINITE = INFINITE;
@@ -53,7 +53,7 @@ namespace core {
 
 		private:
 			Event( const Event& ev2 ){}
-#if defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 			mutable bool mSignaled;
 			bool mAutoRelease;
 			mutable pthread_mutex_t _mutex;

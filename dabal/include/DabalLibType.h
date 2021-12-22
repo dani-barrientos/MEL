@@ -1,8 +1,8 @@
-	// El siguiente bloque ifdef muestra la forma estándar de crear macros que facilitan
-// la exportación de archivos DLL. Todos los archivos de este archivo DLL se compilan con el símbolo JCORE_EXPORTS
-// definido en la línea de comandos. Este símbolo no se debe definir en ningún proyecto
-// que utilice este archivo DLL. De este modo, otros proyectos cuyos archivos de código fuente incluyan el archivo
-// interpretan que las funciones JCORE_API se importan de un archivo DLL, mientras que este archivo DLL interpreta los símbolos
+	// El siguiente bloque ifdef muestra la forma estï¿½ndar de crear macros que facilitan
+// la exportaciï¿½n de archivos DLL. Todos los archivos de este archivo DLL se compilan con el sï¿½mbolo JCORE_EXPORTS
+// definido en la lï¿½nea de comandos. Este sï¿½mbolo no se debe definir en ningï¿½n proyecto
+// que utilice este archivo DLL. De este modo, otros proyectos cuyos archivos de cï¿½digo fuente incluyan el archivo
+// interpretan que las funciones JCORE_API se importan de un archivo DLL, mientras que este archivo DLL interpreta los sï¿½mbolos
 // definidos en esta macro como si fueran exportados.
 #pragma once
 
@@ -27,6 +27,6 @@
 #define DABAL_API_STL
 #endif
 
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (_MACOSX) || defined(_IOS) || defined(DABAL_POSIX)
 #include <pthread.h>
 #endif

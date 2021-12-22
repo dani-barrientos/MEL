@@ -15,12 +15,11 @@ using core::Callback;
 #if defined(_IOS) || defined(_MACOSX)
 #include <TargetConditionals.h>
 #endif
-#if defined(_X86_GCC) || TARGET_CPU_X86 ||  _MSC_VER
+#if defined(DABAL_X86_GCC) || TARGET_CPU_X86 ||  _MSC_VER
 #include <core/Process_X86.h>
 #elif TARGET_CPU_X86_64
     #include <core/Process_x86_64_MAC.h>
 #elif TARGET_CPU_ARM64
-
     #include <core/Process_ARM64_IPhone.h>
 #elif defined (_ARM_GCC) && (!defined(_IOS))
 #include <core/Process_ARM_GCC.h>
@@ -38,13 +37,16 @@ using core::Callback;
 	#endif
 #elif defined (_ANDROID)
 	#include <core/Process_ARM_Android.h>
+#elif defined (DABAL_X64_GCC)
+	#include <core/Process_X86_64.h>
 #endif
-#if defined(_IOS) || defined(_MACOSX)
+#if defined(_IOS) || defined(_MACOSX) || defined(_LINUX)
     #define OPTIMIZE_FLAGS
-#elif defined(_ANDROID)
+#elif defined(_ANDROID) 
 	#define OPTIMIZE_FLAGS
-#elif defined(_ARM_GCC) || defined(_X86_GCC)
+#elif defined(_ARM_GCC) || defined(DABAL_X86_GCC) ||defined(DABAL_X64_GCC)
 	#define OPTIMIZE_FLAGS __attribute__((optimize(0)))
+	//#define OPTIMIZE_FLAGS lo anterior no funciona en GCC?? por el atribute
 #elif defined(_MSC_VER)
 	#define OPTIMIZE_FLAGS
 #endif
@@ -80,7 +82,7 @@ namespace core
 	class DABAL_API Process :
 		public std::enable_shared_from_this<Process>,
 		public MThreadAttributtes,
-		private CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>>  //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
+		private CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>>  //TODO que poco me gusta esta herencia, incrementa el tamaï¿½o de los Process y quisiera que fuesen mï¿½s ligeros
 	{
 		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	
@@ -90,7 +92,7 @@ namespace core
 		/**
 		* Process states.
 		* These states are not exclusive, so some of them can be simultaneous
-		* PREPARADO: está creado pero todavía no se inició INICIADO: se inició y se está
+		* PREPARADO: estï¿½ creado pero todavï¿½a no se iniciï¿½ INICIADO: se iniciï¿½ y se estï¿½
 		* ejecutando PAUSADO: eso mismo MUERTO: eso mismo.  Ya se encuentra fuera del
 		* planificador
 		* @created 28-mar-2005 16:20:24
@@ -162,7 +164,7 @@ namespace core
 		* @param[in] force if true, then killing is without regarding previous explained process, so
 		* Process go inmediately to PREPARED_TO_DIE
 		*
-		* @remarks not multithread safe, kill should be done in the owner thread context (se abordará en el futuro)
+		* @remarks not multithread safe, kill should be done in the owner thread context (se abordarï¿½ en el futuro)
 		*/
 		inline void kill( bool force = false );
 		/**
@@ -339,7 +341,7 @@ namespace core
 		void execute(uint64_t msegs) OPTIMIZE_FLAGS;
 
 		/**
-		* @warning no la tengo muy clara si realmente se podrá evitar
+		* @warning no la tengo muy clara si realmente se podrï¿½ evitar
 		*/
 		void setFinished( bool );
 
@@ -479,7 +481,7 @@ namespace core
 	}
 	void Process::kill( bool force )
 	{
-		//TODO esta funcion no está un pijo bien, hay que revisarla junto con el Process::execute
+		//TODO esta funcion no estï¿½ un pijo bien, hay que revisarla junto con el Process::execute
 
 		if ( !(mState & DEAD) ) 
 		{

@@ -1,16 +1,14 @@
-#ifdef _X86_GCC
+#ifdef DABAL_X86_GCC
 
+
+No vale. usar la de x64 que ya esta no tiene mucho sentido ademas
 #include <core/Process.h>
 using core::Process;
 using core::MThreadAttributtes;
 
 #include <core/ProcessScheduler.h>
 
-/*TODO:
-      version ARM
-    intentar compilarlo en AirPlay....
-    - hacer los sleep, wait, syncobject..
-*/
+
 #define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)
 #define mIniSPOFF offsetof( MThreadAttributtes,mIniSP)
 //#define mLROFF offsetof( MThreadAttributtes,mLR)
@@ -21,7 +19,7 @@ using core::MThreadAttributtes;
 #define mIniBPOFF offsetof( MThreadAttributtes,mIniBP)
 
 
-volatile void Process::checkMicrothread( unsigned int msegs )
+volatile void Process::checkMicrothread( uint64_t msegs ) 
 {
 
 int tamanoActual;
@@ -38,7 +36,7 @@ int tamanoActual;
         asm volatile( "mov eax,%0"::"m" (realThis) :"eax","memory");
 		asm volatile( "mov [eax + %[v]],esp"::[v] "J" (mIniSPOFF):"eax" );//guardo sp en spIni
         asm volatile( "mov [eax + %[v]],ebp"::[v] "J" (mIniBPOFF):"eax"  );//guardo el ebp
-        asm volatile( "cmp dword ptr [eax+%[v]], 0"::[v] "J" (mSwitchedOFF):"eax" ); //¿false?
+        asm volatile( "cmp dword ptr [eax+%[v]], 0"::[v] "J" (mSwitchedOFF):"eax" ); //ï¿½false?
         //asm volatile( "jz $%[v]"::[v] "J" (+38) );  //sigue ejecutando
         //asm volatile( "jz $+38" );  //sigue ejecutando
         asm volatile( "jz continueExecuting");
@@ -55,7 +53,7 @@ int tamanoActual;
 
         asm volatile( "mov esp,edi":::"esp" );
         asm volatile( "add esp,4":::"esp" );//ya que edi queda decrementado
-        asm volatile( "cld" );  //parece ser que por defecto está así..¿seguro?
+        asm volatile( "cld" );  //parece ser que por defecto estï¿½ asï¿½..ï¿½seguro?
         asm volatile( "pop edi":::"edi" );
         asm volatile( "pop esi":::"edi" );
         asm volatile( "pop ebx":::"ebx" );
@@ -65,11 +63,11 @@ int tamanoActual;
 
 
         execute( msegs );
-      	//chapuza, hacerlo más óptimo
+      	//chapuza, hacerlo mï¿½s ï¿½ptimo
 		asm volatile( "mov eax,%0"::"m" (realThis):"eax","memory");
         asm volatile( "mov ecx,[eax + %[v]]"::[v] "J" (mIniSPOFF):"eax","eax");
 			//sub ecx,4
-        asm volatile( "sub ecx,esp":::"ecx","esp" );   //me da el tamaño nuevo
+        asm volatile( "sub ecx,esp":::"ecx","esp" );   //me da el tamaï¿½o nuevo
         asm volatile( "mov edx, [eax + %[v]]"::[v] "J" (mStackEndOFF):"eax" );
 			//sub edx,4
         asm volatile( "sub edx,ecx":::"edx","ecx" );
@@ -112,20 +110,20 @@ volatile void fakeFunction()
         );
     asm volatile(
 		"std\n"  //decrementa
-		"shr ecx,2\n" //tamaño en dwords
+		"shr ecx,2\n" //tamaï¿½o en dwords
 		:::"ecx"
 		);
     asm volatile(
 		"mov edi,dword ptr [eax + %[v]]\n"::[v] "J" (mStackEndOFF):"edi" );
     asm volatile(
-        "sub edi,4\n"  //uff que cutre me está quedando
+        "sub edi,4\n"  //uff que cutre me estï¿½ quedando
 		"rep movsd\n"
-		"cld\n" //parece ser que por defecto está así..Mirar calling_conventions.pdf
+		"cld\n" //parece ser que por defecto estï¿½ asï¿½..Mirar calling_conventions.pdf
 		"add edi,4\n"  // ya que se queda decrementado el edi
 		:::"edi"
     );
     asm volatile(
-    		//tengo comprobado que está bien copiada la pila y la cima correcta.
+    		//tengo comprobado que estï¿½ bien copiada la pila y la cima correcta.
 		"mov dword ptr [eax + %[v]],edi\n"::[v] "J" (mActualSPOFF)
         :"eax","edi"
 		);
@@ -140,12 +138,12 @@ volatile void fakeFunction()
 		"pop ebx\n"
 		:::"edi","esi","ebx");
     asm volatile(
-		"mov esp, dword ptr [eax + %[v]]\n"::[v] "J" (mIniBPOFF) //así me cepillo las variables locales
+		"mov esp, dword ptr [eax + %[v]]\n"::[v] "J" (mIniBPOFF) //asï¿½ me cepillo las variables locales
             :"eax"
 		);
     asm volatile(
 		"pop ebp\n"
-		"ret 4\n"  //desapila el parametro msegs-->¡las func miembro son stdcall!
+		"ret 4\n"  //desapila el parametro msegs-->ï¿½las func miembro son stdcall!
     );
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 #ifdef _WINDOWS
 #include <Windows.h>
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 #include <pthread.h>
 #endif
 #include <DabalLibType.h>
@@ -19,7 +19,7 @@ namespace core
 	public:
 #ifdef _WINDOWS 
 	typedef DWORD TLSKey;
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 	typedef pthread_key_t TLSKey;
 #elif defined(_AIRPLAY)
 	typedef int TLSKey; //TODO

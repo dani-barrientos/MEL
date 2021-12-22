@@ -67,7 +67,7 @@ void Timer::resume()
 		QueryPerformanceCounter((LARGE_INTEGER*)&mReference);
 #elif defined(_IOS) || defined(_MACOSX)
 		mReference=mach_absolute_time();
-#elif defined(_ANDROID)
+#elif defined(DABAL_POSIX)
 	timespec ts;
 	if (!clock_gettime(CLOCK_MONOTONIC,&ts))
 		mReference=ts.tv_sec * 1000 + (ts.tv_nsec/1000000);

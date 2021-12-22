@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DabalLibType.h>
-#ifdef _ANDROID
+#ifdef DABAL_ANDROID
 //NULL is not defined at this point on Android
 #include <stddef.h>
 #endif

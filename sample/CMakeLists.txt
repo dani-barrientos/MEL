@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add source to this project's executable.
 add_compile_definitions(DABAL_IMPORTS)
-add_compile_definitions(${_x86_GCC}) pruebas
+
 
 
 #necesito pasar macros dependientes del build syustem. estoy probando inventandome variables, que entiendo tendré que
@@ -14,13 +14,14 @@ add_compile_definitions(${_x86_GCC}) pruebas
 #add_compile_definitions(${TARGET_SYSTEM})
 add_executable (sample "sample.cpp" "sample.h")
 
-
-
-target_link_libraries(sample "dabal")
+#add_link_options()
+target_link_libraries(sample "dabal" "pthread")
+#copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
+if(DABAL_OS STREQUAL "DABAL_WINDOWS")
 add_custom_command(TARGET sample POST_BUILD        # Adds a post-build event to MyTest
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
         $<TARGET_FILE_DIR:dabal>"/dabal.dll"      # <--this is in-file
         $<TARGET_FILE_DIR:sample>)                 # <--this is out-file path
-
+endif()
 # TODO: Add tests and install targets if needed.
 

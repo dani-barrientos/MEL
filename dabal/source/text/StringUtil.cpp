@@ -28,7 +28,7 @@ char* StringUtil::copy(char* aDestination, const char* aSource, int32_t aSourceS
         return strcpy(aDestination, aSource);
     #endif
 		return aDestination;
-#elif defined(_MACOSX) || defined(_IOS) || defined(_ANDROID) || defined(_AIRPLAY) 
+#elif defined(DABAL_POSIX)
 		return strcpy(aDestination, aSource);
 #endif
 	}

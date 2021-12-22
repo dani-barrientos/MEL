@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef DABAL_MACOS
 namespace core
 {
     struct MThreadAttributtes;
@@ -27,4 +27,5 @@ namespace core
 
     };
 }
+#endif
 

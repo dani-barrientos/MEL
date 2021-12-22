@@ -8,11 +8,13 @@
           "generator": "Visual Studio 16 2019",
           "architecture": {
             "value": "Win32",
-            "strategy": "external"
+            "strategy": "set"
           },
           "binaryDir": "${sourceDir}/out/build/${presetName}",
           "cacheVariables": {
-            "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+            "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",            
+            "DABAL_OS":"DABAL_WINDOWS",            
+            "DABAL_ARQ":"DABAL_X86_MSVC"
           },
           "vendor": {
             "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -51,7 +53,9 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-9",
                 "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-9",
-                "_x86_GCC":true
+                "DABAL_OS":"DABAL_LINUX",
+                "DABAL_API":"DABAL_POSIX", 
+                "DABAL_ARQ":"DABAL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -71,8 +75,15 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/bin/clang-10",
-                "CMAKE_CXX_COMPILER": "/bin/clang++-10"
+                "CMAKE_CXX_COMPILER": "/bin/clang++-10",
+                "DABAL_OS":"DABAL_LINUX",
+                "DABAL_API":"DABAL_POSIX", 
+                "DABAL_ARQ":"DABAL_X64_GCC"
             },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+              },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
                     "hostOS": [

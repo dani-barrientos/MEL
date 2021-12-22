@@ -1,4 +1,4 @@
-#if defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined(DABAL_POSIX)
 #include <core/Event.h>
 #include <pthread.h>
 #include <sys/time.h>

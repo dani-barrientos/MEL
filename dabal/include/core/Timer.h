@@ -4,11 +4,11 @@
 #ifdef WIN32
 #elif defined (_IOS) || defined(_MACOSX)
 #include <mach/mach_time.h>
-#elif defined (_ANDROID)
+#elif defined (DABAL_POSIX)
 #include <time.h>
 #endif
 #include <core/CriticalSection.h>	
-
+#include <cassert>
 struct tm; //predeclaration
 namespace core
 {
@@ -71,10 +71,10 @@ namespace core
 #ifdef WIN32
 		uint64_t mFrequency;
 		mutable uint64_t mLastTime; //!last measured time in milliseconds
-#elif defined (_IOS) || defined(_MACOSX)
+#elif defined (_IOS) || defined(_MACOSX) 
 		mach_timebase_info_data_t mTimeBase;
 		mutable uint64_t mLastTime;
-#elif defined (_ANDROID)
+#elif defined (DABAL_POSIX)
 		mutable uint64_t mLastTime;
 #endif
 		uint64_t   mMsActive; //! active time in milliseconds
@@ -94,7 +94,7 @@ namespace core
 			uint64_t tmp=mach_absolute_time();
 			uint64_t elapsed=tmp-mReference;
 			result = (elapsed * mTimeBase.numer )/mTimeBase.denom;
-		#elif defined(_ANDROID)
+		#elif defined(DABAL_POSIX)
 			timespec ts;
 			uint64_t tmp;
 			int chk(clock_gettime(CLOCK_MONOTONIC, &ts));
@@ -113,7 +113,7 @@ namespace core
 	}
 	uint64_t Timer::getLastMilliseconds() const
 	{
-		//@todo no me gusta nada esta conversion y tal vez algún día tengamos problemas, pero devolver 64bits es
+		//@todo no me gusta nada esta conversion y tal vez algï¿½n dï¿½a tengamos problemas, pero devolver 64bits es
 		//muy ineficiente ahrora
 		return (unsigned long)mLastTime;
 	}

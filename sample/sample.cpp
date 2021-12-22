@@ -8,7 +8,7 @@ using namespace std;
 
 int main()
 {
-	cout << "Hello CMake." << endl;
+	cout << "Hello CMake" << endl;
 	auto th1 = GenericThread::createEmptyThread();
 	th1->start();
 
@@ -21,9 +21,9 @@ int main()
 		);
 	result.wait();
 	if (result.getValid())
-		std::cout << result.getValue();
+		cout << result.getValue() << endl;
 	else
-		std::cout << result.getError()->errorMsg;
+		cout << result.getError()->errorMsg << endl;
 	th1->finish();
 	th1->join();
 	return 0;

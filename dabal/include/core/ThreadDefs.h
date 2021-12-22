@@ -4,7 +4,7 @@ using mpl::binary;
 
 #ifdef WIN32
 	#include <Windows.h>
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined (DABAL_POSIX)
 	#include <pthread.h>
 #endif 
 /**
@@ -34,10 +34,8 @@ namespace core
 #ifdef WIN32
 	typedef DWORD ThreadId;
 #endif
-#if defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#if defined (DABAL_POSIX)
 	typedef pthread_t ThreadId;
-#elif defined( _AIRPLAY)
-	typedef int ThreadId; //TODO
 #endif
 
 	/**
@@ -47,10 +45,8 @@ namespace core
 	{
 	#ifdef _WINDOWS
 		return GetCurrentThreadId();
-	#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
-		return pthread_self();
-	#elif defined (_AIRPLAY)
-		return 0;
+	#elif defined (DABAL_POSIX)
+		return pthread_self();	
 	#endif
 	}
 }

@@ -49,7 +49,7 @@ namespace core {
 
 #ifdef _WINDOWS
 		friend DWORD WINAPI _threadProc(void* /*__in LPVOID*/);
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID) ||defined( _AIRPLAY)
+#elif defined (DABAL_POSIX)
 		friend void* _threadProc(void* param);
 #endif
 
@@ -113,7 +113,7 @@ namespace core {
 			/**
 			* overridden from Runnable for compatibility
 			* It calls terminate 
-			* @todo revisar no está nada claro
+			* @todo revisar no estï¿½ nada claro
 			*/
 			void finish() override { terminate(); }
 			/**
@@ -201,7 +201,7 @@ namespace core {
 
 			uint64_t getAffinity() const;
 			/**
-			* @todo no está protegido frente a llamada con el hilo iniciandose
+			* @todo no estï¿½ protegido frente a llamada con el hilo iniciandose
 			*/
 			bool setAffinity(uint64_t);
 
@@ -217,7 +217,7 @@ namespace core {
 			*/
 			constexpr static unsigned getMinimunSleepTime()
 			{
-				//@todo por ahora pongo tiempo fijo "típico" para que se pueda usar y ya trataremos de que sea automático o al menos más flexible
+				//@todo por ahora pongo tiempo fijo "tï¿½pico" para que se pueda usar y ya trataremos de que sea automï¿½tico o al menos mï¿½s flexible
 				constexpr unsigned MINIMUM_SLEEP = 10;
 				return MINIMUM_SLEEP;
 			}
@@ -227,18 +227,18 @@ namespace core {
 #ifdef _WINDOWS
 			HANDLE mHandle;
 			DWORD mID;
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID) || defined( _AIRPLAY)
-			ThreadId mHandle = 0;
-        #if _ANDROID
-			pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc
-        #endif
+			
+#elif defined (DABAL_POSIX)
+		ThreadId mHandle = 0;
+        #if !defined (DABAL_MACOSX) && !defined(DABAL_IOS)
+		pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc
+		#endif
 			mutable bool mJoined;
 			int	mPriorityMin;
 			int mPriorityMax;
 			uint64_t mAffinity = 0; //affinity to set on start. if 0, is ignored
-
 #endif
-#if defined (_MACOSX) || defined(_IOS)
+#if defined (DABAL_MACOSX) || defined(DABAL_IOS)
 			void* mARP; //The autorelease pool as an opaque-type
 #endif
 			Event mPauseEV;
@@ -310,7 +310,7 @@ namespace core {
 	{
 #ifdef _WINDOWS
 		return mID;
-#elif defined (_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#else
 		return mHandle;
 #endif
 	}

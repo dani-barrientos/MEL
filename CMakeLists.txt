@@ -4,7 +4,9 @@
 cmake_minimum_required (VERSION 3.8)
 
 project ("dabal")
-
+add_compile_definitions(${DABAL_OS})
+add_compile_definitions(${DABAL_API})
+add_compile_definitions(${DABAL_ARQ})
 # Include sub-projects.
 add_subdirectory("dabal")
 add_subdirectory ("sample")
