@@ -1,0 +1,1 @@
+/bin/clang++-11  -g   CMakeFiles/sample.dir/sample.cpp.o  -o sample  -Wl,-rpath,"/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal" ../dabal/libdabal.so -lpthread 

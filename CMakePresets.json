@@ -1,43 +1,43 @@
 {
-    "version": 2,    
+    "version": 2,
     "configurePresets": [
         {
-          "name": "Windows Base",
-          "description": "Common things for Windows build",
-          "hidden": true,
-          "generator": "Visual Studio 16 2019",
-          "architecture": {
-            "value": "Win32",
-            "strategy": "set"
-          },
-          "binaryDir": "${sourceDir}/out/build/${presetName}",
-          "cacheVariables": {
-            "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",            
-            "DABAL_OS":"DABAL_WINDOWS",            
-            "DABAL_ARQ":"DABAL_X86_MSVC"
-          },
-          "vendor": {
-            "microsoft.com/VisualStudioSettings/CMake/1.0": {
-              "hostOS": [
-                "Windows"
-              ]
+            "name": "Windows Base",
+            "description": "Common things for Windows build",
+            "hidden": true,
+            "generator": "Visual Studio 16 2019",
+            "architecture": {
+                "value": "Win32",
+                "strategy": "set"
+            },
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "DABAL_OS": "DABAL_WINDOWS",
+                "DABAL_ARQ": "DABAL_X86_MSVC"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ]
+                }
             }
-          }
         },
         {
             "name": "x86-debug",
             "displayName": "Windows x86 Debug",
             "description": "Target Windows with the Visual Studio development environment.",
-            "inherits": "Windows Base",        
+            "inherits": "Windows Base",
             "cacheVariables": {
-              "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
             "name": "x86-release",
             "displayName": "Windows x86 Release",
             "description": "Target Windows with the Visual Studio development environment.",
-            "inherits": "Windows Base",   
+            "inherits": "Windows Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
@@ -53,9 +53,9 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-9",
                 "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-9",
-                "DABAL_OS":"DABAL_LINUX",
-                "DABAL_API":"DABAL_POSIX", 
-                "DABAL_ARQ":"DABAL_X64_GCC"
+                "DABAL_OS": "DABAL_LINUX",
+                "DABAL_API": "DABAL_POSIX",
+                "DABAL_ARQ": "DABAL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -76,14 +76,14 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/bin/clang-10",
                 "CMAKE_CXX_COMPILER": "/bin/clang++-10",
-                "DABAL_OS":"DABAL_LINUX",
-                "DABAL_API":"DABAL_POSIX", 
-                "DABAL_ARQ":"DABAL_X64_GCC"
+                "DABAL_OS": "DABAL_LINUX",
+                "DABAL_API": "DABAL_POSIX",
+                "DABAL_ARQ": "DABAL_X64_GCC"
             },
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
-              },
+            },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
                     "hostOS": [
@@ -91,6 +91,33 @@
                     ]
                 }
             }
+        },
+        {
+            "name": "Clang Linux",
+            "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu",
+            "description": "Using compilers: C = /bin/clang-11, CXX = /bin/clang++-11",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/bin/clang-11",
+                "CMAKE_CXX_COMPILER": "/bin/clang++-11",
+                "DABAL_OS": "DABAL_LINUX",
+                "DABAL_API": "DABAL_POSIX",
+                "DABAL_ARQ": "DABAL_X64_GCC"
+            },
+            "architecture": {
+              "value": "x64",
+              "strategy": "external"
+            },
+            "vendor": {
+              "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                  "hostOS": [
+                      "Linux"
+                  ]
+              }
+          }
         }
     ]
 }
