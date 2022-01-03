@@ -6,16 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add source to this project's executable.
 add_compile_definitions(DABAL_IMPORTS)
-
-
-
-#necesito pasar macros dependientes del build syustem. estoy probando inventandome variables, que entiendo tendré que
-#pasar desde el cmakesettings.jsob
-#add_compile_definitions(${TARGET_SYSTEM})
 add_executable (sample "sample.cpp" "sample.h")
 
 #add_link_options()
-target_link_libraries(sample "dabal" "pthread")
+target_link_libraries(sample "dabal")
+if(DABAL_API STREQUAL "DABAL_POSIX")
+    target_link_libraries(sample "pthread")
+endif()
 #copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
 if(DABAL_OS STREQUAL "DABAL_WINDOWS")
 add_custom_command(TARGET sample POST_BUILD        # Adds a post-build event to MyTest
