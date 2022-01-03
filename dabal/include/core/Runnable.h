@@ -54,16 +54,7 @@ namespace core
 #define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<bool(uint64_t, Process*, ::core::EGenericProcessState)>(lambda)
 //useful macro to declare task parameters
 #define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::core::EGenericProcessState s
-	struct RTMemBlock2
-		{
-			enum EMemState { FREE = 0,USED = 1 } ;							
-			//RTMemBlock2():memState( FREE ){};
 
-			unsigned char	memState;  
-			//__declspec( align(RUNNABLE_TASK_ALIGNMENT) ) char task[ sizeof( RunnableTask ) ];
-			//char task[ sizeof( RunnableTask ) ];
-			void* task;
-	};
 	template <class TRet, class F> struct ExecuteTask; //predeclaration
 	/**
 	* @class Runnable
@@ -134,7 +125,7 @@ namespace core
 	protected:
 	private:
 		static RunnableInfo* _getCurrentRunnableInfo();
-		class DABAL_API RunnableTask : public GenericProcess
+		class DABAL_API RunnableTask final: public GenericProcess
 		{
 		public:
 		
@@ -153,13 +144,10 @@ namespace core
 		struct RTMemPool; //predeclaration
 		struct RTMemBlock
 		{
-			enum EMemState { FREE = 0,USED = 1 } ;							
-			RTMemBlock():memState( FREE ){};
-
-			unsigned char	memState;  
-			//__declspec( align(RUNNABLE_TASK_ALIGNMENT) ) char task[ sizeof( RunnableTask ) ];
-			//char task[ sizeof( RunnableTask ) ];
-			RunnableTask task;
+			enum class EMemState:uint8_t { FREE = 0,USED = 1 } ;							
+			EMemState	memState = EMemState::FREE;  
+			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( RunnableTask ) ] ;
+			//RunnableTask task;
 			RTMemPool*	owner;
 		};
 		typedef list<RTMemPool> MemZoneList;
@@ -168,9 +156,7 @@ namespace core
 			RTMemPool():pool(0),count(0){}
 			RTMemBlock*	pool; //array to memory blocks
 			Runnable* owner;
-			//long count;
 			size_t count;
-			//void*	iterator; //iterator to element in MemZoneList
 			MemZoneList::iterator iterator;
 		};
 		MemZoneList mRTZone;

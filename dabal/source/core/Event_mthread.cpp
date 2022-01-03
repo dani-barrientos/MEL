@@ -40,10 +40,10 @@ Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs )
 			switchResult = ::core::Process::wait( msecs );
 		switch ( switchResult )
 		{
-		case Process::ESWITCH_KILL:
+		case Process::ESwitchResult::ESWITCH_KILL:
 			result = EVENTMT_WAIT_KILL;
 			break;
-		case Process::ESWITCH_WAKEUP:
+		case Process::ESwitchResult::ESWITCH_WAKEUP:
 			result = EVENTMT_WAIT_OK; 
 			break;
 		default:

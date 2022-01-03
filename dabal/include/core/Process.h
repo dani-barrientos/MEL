@@ -37,16 +37,18 @@ using core::Callback;
 	#endif
 #elif defined (_ANDROID)
 	#include <core/Process_ARM_Android.h>
-#elif defined (DABAL_X64_GCC)
+#elif defined (DABAL_X64_GCC) ||defined (DABAL_X64_CLANG)
 	#include <core/Process_X86_64.h>
 #endif
 #if defined(_IOS) || defined(_MACOSX) || defined(_LINUX)
     #define OPTIMIZE_FLAGS
 #elif defined(_ANDROID) 
 	#define OPTIMIZE_FLAGS
-#elif defined(_ARM_GCC) || defined(DABAL_X86_GCC) ||defined(DABAL_X64_GCC)
-	#define OPTIMIZE_FLAGS __attribute__((optimize(0)))
+#elif defined(_ARM_GCC) || defined(DABAL_X86_GCC) ||defined(DABAL_X64_GCC) 
+	#define OPTIMIZE_FLAGS __attribute__ ((optimize(0)))
 	//#define OPTIMIZE_FLAGS lo anterior no funciona en GCC?? por el atribute
+#elif defined(DABAL_X64_CLANG)
+	#define OPTIMIZE_FLAGS __attribute__ ((optnone))
 #elif defined(_MSC_VER)
 	#define OPTIMIZE_FLAGS
 #endif
@@ -121,7 +123,7 @@ namespace core
 			DEAD = binary<1000000>::value
 		} EProcessState;
 		//! reason why Process returns for context switch
-		enum ESwitchResult{ ESWITCH_OK,ESWITCH_WAKEUP,ESWITCH_KILL };
+		enum class ESwitchResult{ ESWITCH_OK,ESWITCH_WAKEUP,ESWITCH_KILL };
 		/**
 		* nontrustworthy. Don't use yet still
 		*/
@@ -299,7 +301,7 @@ namespace core
 		* @remarks not multithread-safe
 		*/
 		template <class F>
-		static ESwitchResult sleepAndDo( F postSleep ) OPTIMIZE_FLAGS
+		static ESwitchResult sleepAndDo( F postSleep )
 		{
 			return _sleep( new Callback<void,void>( postSleep,::core::use_functor ) );
 		}
@@ -309,12 +311,13 @@ namespace core
 		* @see sleep
 		* @remarks not multithread-safe
 		*/
+		// template <class F>
+		// static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS
+		// {
+		// 	return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
+		// }
 		template <class F>
-		static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS
-		{
-			return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
-		}
-
+		static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS;
 		/**
 		* stop process. To reactivate you must use wakeUp
 		* @return true if process received kill signal
@@ -584,5 +587,9 @@ namespace core
 	{
 		return mPausedTime;
 	}
+	template <class F> Process::ESwitchResult Process::waitAndDo( unsigned int msegs,F postWait )
+		{
+			return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
+		}
 }
 

@@ -275,13 +275,13 @@ Process::ESwitchResult Process::wait( unsigned int msegs )
 {
 	return _wait( msegs, NULL );
 }
-Process::ESwitchResult Process::switchProcess( bool v ) OPTIMIZE_FLAGS
+Process::ESwitchResult Process::switchProcess( bool v )
 {
 	ESwitchResult result;
 	auto p = ProcessScheduler::getCurrentProcess();
 	auto state = p->getState();
 	if (state == EProcessState::PREPARED_TO_DIE || state == EProcessState::DEAD)
-		result = ESWITCH_KILL;
+		result = ESwitchResult::ESWITCH_KILL;
 	else
 	{
 		unsigned int currentPeriod = p->getPeriod();
@@ -291,18 +291,18 @@ Process::ESwitchResult Process::switchProcess( bool v ) OPTIMIZE_FLAGS
 
 		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despert� por wakeup
 		if (p->getState() == WAITING_FOR_SCHEDULED)
-			result = ESWITCH_KILL;
+			result = ESwitchResult::ESWITCH_KILL;
 		else if (p->mWakeup)
 		{
-			result = ESWITCH_WAKEUP;
+			result = ESwitchResult::ESWITCH_WAKEUP;
 		}
 		else
-			result = ESWITCH_OK;
+			result = ESwitchResult::ESWITCH_OK;
 		p->mWakeup = false;
 	}
 	return result;
 }
-Process::ESwitchResult Process::sleep( ) OPTIMIZE_FLAGS
+Process::ESwitchResult Process::sleep( )
 {
 	return _sleep( NULL );
 }
@@ -325,12 +325,12 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 		result = switchProcess(false);
 	}
 	else {
-		result = ESWITCH_OK;
+		result = ESwitchResult::ESWITCH_OK;
 	}
 	p->setPeriod( currentPeriod );
 	return result;
 }
-Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* postWait ) OPTIMIZE_FLAGS
+Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* postWait ) 
 {
 	auto p = ProcessScheduler::getCurrentProcess();
 	unsigned int currentPeriod = p->getPeriod();

@@ -27,7 +27,7 @@ namespace core
 		* @param signaled flag indicating the initial status of the event. If set to true, the event will
 		* be created as "signaled" meaning the next wait operation will return immediately.
 		*
-		* TODO hacer subscripción a eventos
+		* TODO hacer subscripciï¿½n a eventos
 		*/
 		Event_mthread(bool autoRelease=true, bool signaled=false);
 		~Event_mthread();
@@ -90,10 +90,10 @@ namespace core
 					switchResult = ::core::Process::waitAndDo( msecs,postSleep );
 				switch ( switchResult )
 				{
-				case Process::ESWITCH_KILL:
+				case Process::ESwitchResult::ESWITCH_KILL:
 					result = EVENTMT_WAIT_KILL;
 					break;
-				case Process::ESWITCH_WAKEUP:
+				case Process::ESwitchResult::ESWITCH_WAKEUP:
 					result = EVENTMT_WAIT_OK; 
 					break;
 				default:
@@ -108,7 +108,7 @@ namespace core
 			}
 			else
 			{
-				//El evento ya se señaló, pero ejecutamos igualmente el "post sleep"
+				//El evento ya se seï¿½alï¿½, pero ejecutamos igualmente el "post sleep"
 				postSleep();
 			}
 			return result;

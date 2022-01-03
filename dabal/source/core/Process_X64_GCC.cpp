@@ -1,5 +1,5 @@
 //version para MAC y simulador de IPhone y IPad
-#ifdef DABAL_X64_GCC
+#if defined(DABAL_X64_GCC) ||defined(DABAL_X64_CLANG)
 #include <core/Process.h>
 
 using core::Process;

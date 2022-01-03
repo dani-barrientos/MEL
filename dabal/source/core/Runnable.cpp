@@ -43,9 +43,9 @@ void* Runnable::RunnableTask::operator new( size_t s,Runnable* owner )
 		//find first free block
 		for ( unsigned int i = 0; i < owner->mMaxTaskSize; i++ )
 		{
-			if ( selectedPool->pool[i].memState == RTMemBlock::FREE )
+			if ( selectedPool->pool[i].memState == RTMemBlock::EMemState::FREE )
 			{
-				selectedPool->pool[i].memState = RTMemBlock::USED;
+				selectedPool->pool[i].memState = RTMemBlock::EMemState::USED;
 				++selectedPool->count;
 				return &selectedPool->pool[i].task;
 			}
@@ -59,7 +59,7 @@ void* Runnable::RunnableTask::operator new( size_t s,Runnable* owner )
 void Runnable::RunnableTask::operator delete( void* ptr, Runnable* )
 {
 	Runnable::RTMemBlock* mBlock = (Runnable::RTMemBlock*)((char*)ptr - offsetof( Runnable::RTMemBlock, task));
-	mBlock->memState = Runnable::RTMemBlock::FREE;
+	mBlock->memState = Runnable::RTMemBlock::EMemState::FREE;
 }
 void Runnable::RunnableTask::operator delete( void* ptr )
 {
@@ -69,7 +69,7 @@ void Runnable::RunnableTask::operator delete( void* ptr )
 // 	long newCount = core::atomicDecrement( &block->owner->count ); 
 	ownerRunnable = block->owner->owner;
 	Lock lck(ownerRunnable->mMemPoolCS);
-	block->memState = Runnable::RTMemBlock::FREE;
+	block->memState = Runnable::RTMemBlock::EMemState::FREE;
 	if (--block->owner->count == 0 )
 	{
 		//remove pool only if it's not the first pool
@@ -93,7 +93,7 @@ Runnable::RTMemPool* Runnable::_addNewPool()
 	result = &(*poolIterator);
 	for ( unsigned int i = 0; i < mMaxTaskSize; ++i )
 	{
-		result->pool[i].memState = RTMemBlock::FREE;
+		result->pool[i].memState = RTMemBlock::EMemState::FREE;
 		result->pool[i].owner = result;
 	}
 	return result;
@@ -142,7 +142,7 @@ Runnable* Runnable::getCurrentRunnable()
 
 Runnable::Runnable(unsigned int maxTaskSize):
 	mMaxTaskSize(maxTaskSize),
-	mOwnerThread(0),  //¡assume 0 is invalid thread id!!
+	mOwnerThread(0),  //ï¿½assume 0 is invalid thread id!!
 	mCurrentInfo(nullptr)
 {
 	
@@ -205,7 +205,7 @@ unsigned int Runnable::run()
 	RunnableInfo* ri = _getCurrentRunnableInfo();
 	if (ri == NULL)
 	{
-		ri = new RunnableInfo; //@todo ahora quedará esta perdida de memoria
+		ri = new RunnableInfo; //@todo ahora quedarï¿½ esta perdida de memoria
 		TLS::setValue(gCurrentRunnableKey, ri);
 	}
 	mCurrentInfo = ri;
@@ -291,7 +291,7 @@ bool Runnable::waitFor(const unsigned int taskId,const unsigned int millis)
 		millicount += 10; //  muy impreciso
 	}
 	while ( !taskCompleted && (millicount<millis));
-	//@todo atención. Aquí puede haber muchos problemas de concurrencia
+	//@todo atenciï¿½n. Aquï¿½ puede haber muchos problemas de concurrencia
 
 	return taskCompleted;
 

@@ -43,9 +43,9 @@
             }
         },
         {
-            "name": "WSL GCC X64",
+            "name": "WSL GCC X64 (Debug)",
             "generator": "Unix Makefiles",
-            "displayName": "GCC 9.3.0 x86_64-linux-gnu",
+            "displayName": "GCC 9.3.0 x86_64-linux (Debug)",
             "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-9, CXX = /bin/x86_64-linux-gnu-g++-9",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
@@ -57,6 +57,10 @@
                 "DABAL_API":"DABAL_POSIX", 
                 "DABAL_ARQ":"DABAL_X64_GCC"
             },
+            "architecture": {
+              "value": "x64",
+              "strategy": "external"
+            },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
                     "hostOS": [
@@ -66,8 +70,35 @@
             }
         },
         {
-            "name": "Clang WSL",
-            "displayName": "Clang 10.0.0 x86_64-pc-linux-gnu",
+          "name": "WSL GCC X64 (Release)",
+          "generator": "Unix Makefiles",
+          "displayName": "GCC 9.3.0 x86_64-linux (Release)",
+          "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-9, CXX = /bin/x86_64-linux-gnu-g++-9",
+          "binaryDir": "${sourceDir}/out/build/${presetName}",
+          "cacheVariables": {
+              "CMAKE_BUILD_TYPE": "Release",
+              "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+              "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-9",
+              "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-9",
+              "DABAL_OS":"DABAL_LINUX",
+              "DABAL_API":"DABAL_POSIX", 
+              "DABAL_ARQ":"DABAL_X64_GCC"
+          },
+          "architecture": {
+            "value": "x64",
+            "strategy": "external"
+          },
+          "vendor": {
+              "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                  "hostOS": [
+                      "Linux"
+                  ]
+              }
+          }
+      },
+        {
+            "name": "Clang WSL x64 (Debug)",
+            "displayName": "Clang 10.0.0 x86_64-pc-linux (64 bits, Debug)",
             "generator": "Unix Makefiles",
             "description": "Using compilers: C = /bin/clang-10, CXX = /bin/clang++-10",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -78,7 +109,34 @@
                 "CMAKE_CXX_COMPILER": "/bin/clang++-10",
                 "DABAL_OS":"DABAL_LINUX",
                 "DABAL_API":"DABAL_POSIX", 
-                "DABAL_ARQ":"DABAL_X64_GCC"
+                "DABAL_ARQ":"DABAL_X64_CLANG"
+            },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+              },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Clang WSL x64 (Release)",
+            "displayName": "Clang 10.0.0 x86_64-pc-linux (64 bits, Release)",
+            "generator": "Unix Makefiles",
+            "description": "Using compilers: C = /bin/clang-10, CXX = /bin/clang++-10",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/bin/clang-10",
+                "CMAKE_CXX_COMPILER": "/bin/clang++-10",
+                "DABAL_OS":"DABAL_LINUX",
+                "DABAL_API":"DABAL_POSIX", 
+                "DABAL_ARQ":"DABAL_X64_CLANG"
             },
             "architecture": {
                 "value": "x64",
