@@ -1,6 +1,5 @@
 ﻿// sample.cpp : Defines the entry point for the application.
 //
-#include "sample.h"
 #include "test_callbacks/test.h"
 #include "test_threading/test.h"
 

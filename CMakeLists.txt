@@ -9,7 +9,7 @@ add_compile_definitions(${DABAL_API})
 add_compile_definitions(${DABAL_ARQ})
 # Include sub-projects.
 add_subdirectory("dabal")
-add_subdirectory ("sample")
+add_subdirectory ("tests")
 
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
 #enable_testing()
