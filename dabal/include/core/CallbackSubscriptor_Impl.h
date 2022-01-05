@@ -3,19 +3,16 @@ namespace core
 	/**
 	* base class for classes with callback subscription functionality
 	* template arguments:
-	* @tparam postSubscription[in] If true, then TRet(which must be bool) is interpreted as a value for unsubscription after
-	* executing
-	*
-	* @todo now very simple and in pañales, but useful to save time: allow container selection, allow pointer-to-CallbackListType or object selection 
+	* @todo now very simple and in paï¿½ales, but useful to save time: allow container selection, allow pointer-to-CallbackListType or object selection 
 	* @todo VERSION CHAPUCERA DEL MULTITHREADED A LA ESPERA DE TENER COMPLETAS LAS HERRAMIENTAS NECESARIAS
 
 	*/
-#if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
-	template <bool multithreaded, class TRet, VARIABLE_ARGS >
+#if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS	
+	template <class ThreadingPolicy, VARIABLE_ARGS >
 	class CallbackSubscriptor_Base
 	{
-	public:
-		typedef Callback<TRet, VARIABLE_ARGS_DECL> CallbackType;
+	public:		
+		typedef Callback<ECallbackResult, VARIABLE_ARGS_DECL> CallbackType;
 
 	protected:
 		struct CallbackInfo
@@ -37,7 +34,6 @@ namespace core
 
 	public:
 		CallbackSubscriptor_Base() :mCurrId(0), mTriggering(false){};
-		//typedef list< CallbackType* > CallbackListType;
 		typedef list< CallbackInfo > CallbackListType;
 		virtual ~CallbackSubscriptor_Base()
 		{
@@ -47,7 +43,7 @@ namespace core
 		inline size_t getNumCallbacks() const{ return mCallbacks.size(); }
 		void removeCallbacks()
 		{
-			if (multithreaded)
+			if constexpr ( mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );			
 				mCallbacks.clear();
@@ -62,11 +58,11 @@ namespace core
 		{
 			return subscribeCreatedCallback(new CallbackType(std::forward<U>(callback), ::core::use_functor), se);
 		}
-		int subscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>&& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(std::function< ECallbackResult (VARIABLE_ARGS_DECL)>&& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return subscribeCreatedCallback(new CallbackType(std::move(callback), ::core::use_function), se);
 		}
-		int subscribeCallback(const std::function< TRet(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(const std::function< ECallbackResult (VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return subscribeCreatedCallback(new CallbackType(callback, ::core::use_function), se);
 		}
@@ -74,16 +70,14 @@ namespace core
 		{
 			return subscribeCreatedCallback(new CallbackType(callback, ::core::use_function), se);
 		}*/
-		//removed because unimplemented, so linker error
-		bool unsubscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>&& callback)
-		{
-			return false; //Can't unsubscribe function<>
-		}
-		
+		/**
+		* std::function lacks operator ==, so need to use unsubscribecallback(int id) or use any other mpl function capabilities
+		*/
+		bool unsubscribeCallback(std::function< ECallbackResult(VARIABLE_ARGS_DECL)>&& callback) = delete;		
 		template <class U>
 		bool unsubscribeCallback( U&& callback )
 		{
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				CallbackType* auxiliar = new CallbackType(::std::forward<U>(callback), ::core::use_functor );
@@ -98,10 +92,9 @@ namespace core
 		bool unsubscribeCallback(int id)
 		{
 			bool result = false;
-			//ESTÁN MAL LOS LOCKS
-			if (multithreaded)
+			//@todo revisar locks
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
-
 				Lock lck(mSC);
 				if (mTriggering)
 				{
@@ -172,7 +165,7 @@ namespace core
 		int subscribeCreatedCallback(CallbackType* cb, SubscriptionEmplacement se=SE_BACK)
 		{
 			int result;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck(mSC);
 				result = ++mCurrId;
@@ -181,17 +174,17 @@ namespace core
 					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
 					PendingOperation po;
 					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
-					po.info = std::move(CallbackInfo(cb, result));
+					po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 					po.emplacement = se;
 					mPendingOperation.push_back(std::move(po));
 				}
 				else
 				{
 					if (se == SE_BACK) {
-						mCallbacks.push_back(CallbackInfo(cb, result));
+						mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 					}
 					else {
-						mCallbacks.push_front(CallbackInfo(cb, result));
+						mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 					}
 				}
 			}
@@ -202,18 +195,17 @@ namespace core
 					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
 					PendingOperation po;
 					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
-					po.info = std::move(CallbackInfo(cb, result));
+					po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 					po.emplacement = se;
-					mPendingOperation.push_back(std::move(po));
-					
+					mPendingOperation.push_back(std::move(po));					
 				}
 				else
 				{
 					if (se == SE_BACK) {
-						mCallbacks.push_back(CallbackInfo(cb, result));
+						mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 					}
 					else {
-						mCallbacks.push_front(CallbackInfo(cb, result));
+						mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 					}
 				}
 			}
@@ -228,7 +220,7 @@ namespace core
 		bool unsubscribeCreatedCallback( std::shared_ptr<CallbackType> cb  )
 		{
 			bool result = false;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				if (mTriggering)
@@ -242,7 +234,7 @@ namespace core
 						{
 							PendingOperation po;
 							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(cb, -1));
+							po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
 							mPendingOperation.push_back(std::move(po));
 							result = true;
 							break;
@@ -284,7 +276,7 @@ namespace core
 						{
 							PendingOperation po;
 							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(cb, -1));
+							po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
 							mPendingOperation.push_back(std::move(po));
 							result = true;
 							break;
@@ -323,7 +315,7 @@ namespace core
 
 		CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 		{
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				for( typename CallbackListType::iterator i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 			
@@ -365,49 +357,10 @@ namespace core
 
 	};
 
-	template <bool multithreaded,bool postSubscription,class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptorNotTyped : public CallbackSubscriptor_Base<multithreaded,TRet,VARIABLE_ARGS_DECL>
+	template <class ThreadingPolicy, VARIABLE_ARGS >
+	class CallbackSubscriptorNotTyped: public CallbackSubscriptor_Base<ThreadingPolicy,VARIABLE_ARGS_DECL>
 	{
-		typedef CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL> BaseType;
-	public:
-
-		void triggerCallbacks( VARIABLE_ARGS_IMPL )
-		{
-			if (BaseType::mTriggering)
-			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				return;
-			}
-			BaseType::mTriggering = true;
-			if (multithreaded)
-			{
-
-				Lock lck( BaseType::mSC );
-				for( typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin(),j = BaseType::mCallbacks.end(); i != j; ++i )
-					(*i->cb)(VARIABLE_ARGS_USE);
-				BaseType::mTriggering = false;
-				if ( !BaseType::mPendingOperation.empty() )
-					BaseType::_applyPendingOperations();
-			}
-			else
-			{
-				for( typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin(), j = BaseType::mCallbacks.end(); i != j; ++i )
-					(*i->cb)(VARIABLE_ARGS_USE);
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}			
-			
-		}
-	protected:
-		CallbackSubscriptorNotTyped():BaseType(){}
-		CallbackSubscriptorNotTyped( const CallbackSubscriptorNotTyped& o2 ):BaseType( o2 ){}
-	};
-	//specialization for postSubscription == true
-	template <bool multithreaded,class TRet, VARIABLE_ARGS_NODEFAULT >
-	class CallbackSubscriptorNotTyped<multithreaded,true,TRet,VARIABLE_ARGS_DECL> : public CallbackSubscriptor_Base<multithreaded,TRet,VARIABLE_ARGS_DECL>
-	{
-		typedef CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL> BaseType;
+		typedef CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL> BaseType;
 	public:
 		void triggerCallbacks( VARIABLE_ARGS_IMPL )
 		{
@@ -417,15 +370,14 @@ namespace core
 				return;
 			}
 			BaseType::mTriggering = true;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( BaseType::mSC );
 				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
 				auto j = BaseType::mCallbacks.end();
 				while( i != j )
 				{
-					if ( (*i->cb)(VARIABLE_ARGS_USE) )
-					//if ( (**i)( VARIABLE_ARGS_USE ) )
+					 if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
 					{
 						i = BaseType::mCallbacks.erase( i );
 					}else
@@ -443,8 +395,7 @@ namespace core
 				auto j = BaseType::mCallbacks.end();
 				while( i != j )
 				{
-					if ( (*i->cb)(VARIABLE_ARGS_USE) )
-					//if ( (**i)( VARIABLE_ARGS_USE ) )
+					if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
 					{
 						i = BaseType::mCallbacks.erase( i );
 					}else
@@ -463,48 +414,12 @@ namespace core
 
 	};
 
-	////specialization for void arguments
-	template <bool multithreaded,bool postSubscription,class TRet >
-	class CallbackSubscriptorNotTyped<multithreaded,postSubscription,TRet,void> : public CallbackSubscriptor_Base<multithreaded,TRet,void>
+	
+	////specialization for void arguments 
+	template <class ThreadingPolicy>
+	class CallbackSubscriptorNotTyped<ThreadingPolicy,void> : public CallbackSubscriptor_Base<ThreadingPolicy,void>
 	{
-		typedef CallbackSubscriptor_Base<multithreaded, TRet,void> BaseType;
-	public:
-		void triggerCallbacks(  )
-		{
-			if (BaseType::mTriggering)
-			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				return;
-			}
-			BaseType::mTriggering = true;
-			if (multithreaded)
-			{
-				Lock lck( BaseType::mSC );
-				for( typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin(),j = BaseType::mCallbacks.end(); i != j; ++i )
-					(*i->cb)();
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-			else
-			{
-				for( typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin(),j = BaseType::mCallbacks.end(); i != j; ++i )
-					(*i->cb)();
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-		}
-	protected:
-		CallbackSubscriptorNotTyped():BaseType(){}
-		CallbackSubscriptorNotTyped( const CallbackSubscriptorNotTyped& o2 ):BaseType( o2 ){}
-
-	};
-	////specialization for void arguments and postsubscription = true
-	template <bool multithreaded,class TRet >
-	class CallbackSubscriptorNotTyped<multithreaded,true,TRet,void> : public CallbackSubscriptor_Base<multithreaded,TRet,void>
-	{
-		typedef CallbackSubscriptor_Base<multithreaded, TRet,void> BaseType;
+		typedef CallbackSubscriptor_Base<ThreadingPolicy,void> BaseType;
 	public:
 
 		void triggerCallbacks(  )
@@ -515,15 +430,14 @@ namespace core
 				return;
 			}
 			BaseType::mTriggering = true;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( BaseType::mSC );
 				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
 				auto j = BaseType::mCallbacks.end();
 				while( i != j )
 				{
-					//if ( (**i)(  ) )
-					if ( (*i->cb)() )
+					 if ( (*i->cb)() == ECallbackResult::UNSUBSCRIBE )
 					{
 						i = BaseType::mCallbacks.erase( i );
 					}else
@@ -541,8 +455,7 @@ namespace core
 				auto j = BaseType::mCallbacks.end();
 				while( i != j )
 				{
-					//if ( (**i)(  ) )
-					if ( (*i->cb)() )
+					if ( (*i->cb)() == ECallbackResult::UNSUBSCRIBE)
 					{
 						i = BaseType::mCallbacks.erase( i );
 					}else
@@ -561,28 +474,29 @@ namespace core
 		CallbackSubscriptorNotTyped( const CallbackSubscriptorNotTyped& o2 ):BaseType( o2 ){}
 
 	};
-	template <class TCallback, bool postSubscription,class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptor : public CallbackSubscriptorNotTyped <false,postSubscription, TRet, VARIABLE_ARGS_DECL>
+
+	template < class ThreadingPolicy,VARIABLE_ARGS >
+	class CallbackSubscriptor : public CallbackSubscriptorNotTyped < ThreadingPolicy,VARIABLE_ARGS_DECL>
 	{
-        typedef CallbackSubscriptorNotTyped <false,postSubscription, TRet, VARIABLE_ARGS_DECL> BaseType;
+        typedef CallbackSubscriptorNotTyped <ThreadingPolicy,VARIABLE_ARGS_DECL> BaseType;
 	public:
 		CallbackSubscriptor():BaseType(){}
 		CallbackSubscriptor( const CallbackSubscriptor& o2 ):BaseType(o2) {}
 
 	};
 	//specialization for void arguments
-	template <class TCallback, bool postSubscription, class TRet >
-	class CallbackSubscriptor<TCallback, postSubscription, TRet,void> : public CallbackSubscriptorNotTyped <false, postSubscription, TRet, void>
+	template <class ThreadingPolicy >
+	class CallbackSubscriptor<ThreadingPolicy,void> : public CallbackSubscriptorNotTyped <ThreadingPolicy,void>
 	{
-		typedef CallbackSubscriptorNotTyped <false, postSubscription, TRet> BaseType;
+		typedef CallbackSubscriptorNotTyped<ThreadingPolicy,void> BaseType;
 	public:
 		CallbackSubscriptor() :BaseType() {}
 		CallbackSubscriptor(const CallbackSubscriptor& o2) :BaseType(o2) {}
-		int subscribeCallback(std::function< TRet()>&& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback( std::function< ECallbackResult()>&& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(std::move(callback), ::core::use_function), se);
 		}
-		int subscribeCallback(const std::function< TRet()>& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(const std::function< ECallbackResult()>& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
 		}
@@ -595,11 +509,10 @@ namespace core
 		{
 			return BaseType::subscribeCallback(::std::forward<U>(callback), se);
 		}
-		//left unimplemented
-		bool unsubscribeCallback(std::function< TRet()>&& callback)
-		{
-			return false; //can't unsubscribe function<>, hasn't operator ==
-		}
+		/**
+		* std::function lacks operator ==, so need to use unsubscribecallback(int id) or use any other mpl function capabilities
+		*/
+		bool unsubscribeCallback(std::function< ECallbackResult()>&& callback) = delete;		
 		template <class U>
 		bool unsubscribeCallback(U&& callback)
 		{
@@ -610,72 +523,14 @@ namespace core
 			return BaseType::unsubscribeCallback(id);
 		}
 	};
-	//MultithreadCallbackSusbscriptor. Concurrent accesses are protected
-/*	template <class TCallback, class TRet, VARIABLE_ARGS_NODEFAULT >
-	class MTCallbackSubscriptor<TCallback, true, TRet, VARIABLE_ARGS_DECL> : public CallbackSubscriptorNotTyped <true, true, TRet, VARIABLE_ARGS_DECL>
-	{
-		typedef CallbackSubscriptorNotTyped <true, true, TRet, VARIABLE_ARGS_DECL> BaseType;
-	public:
-		MTCallbackSubscriptor() {}
-		MTCallbackSubscriptor(const MTCallbackSubscriptor& o2) :BaseType(o2) {}
-
-	};*/
-	template <class TCallback, bool postSubscription,class TRet, VARIABLE_ARGS >
-	class MTCallbackSubscriptor : public CallbackSubscriptorNotTyped <true,postSubscription, TRet, VARIABLE_ARGS_DECL>
-	{
-        typedef CallbackSubscriptorNotTyped <true,postSubscription, TRet, VARIABLE_ARGS_DECL> BaseType;
-	public:
-		MTCallbackSubscriptor():BaseType(){}
-		MTCallbackSubscriptor( const MTCallbackSubscriptor& o2 ):BaseType(o2) {}
-		
-	};
-	//specialization for void arguments
-	template <class TCallback, bool postSubscription, class TRet >
-	class MTCallbackSubscriptor<TCallback, postSubscription, TRet, void> : public CallbackSubscriptorNotTyped <true, postSubscription, TRet, void>
-	{
-		typedef CallbackSubscriptorNotTyped <true, postSubscription, TRet> BaseType;
-	public:
-		MTCallbackSubscriptor():BaseType() {}
-		MTCallbackSubscriptor(const MTCallbackSubscriptor& o2) :BaseType(o2) {}
-		int subscribeCallback(std::function< TRet()>&& callback, SubscriptionEmplacement se = SE_BACK)
-		{
-			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(std::move(callback), ::core::use_function), se);
-		}
-		int subscribeCallback(const std::function< TRet()>& callback, SubscriptionEmplacement se = SE_BACK)
-		{
-			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
-		}
-		/*int subscribeCallback(std::function< TRet()>& callback, SubscriptionEmplacement se)
-		{
-			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
-		}*/
-		template <class U>
-		int subscribeCallback(U&& callback, SubscriptionEmplacement se = SE_BACK)
-		{
-			return BaseType::subscribeCallback(::std::forward<U>(callback), se);
-		}
-		//left unimplemented
-		bool unsubscribeCallback(std::function< TRet()>&& callback)
-		{
-			return false; //can't unsubscribe function<>, hasn't operator ==
-		}
-		template <class U>
-		bool unsubscribeCallback(U&& callback)
-		{
-			return BaseType::unsubscribeCallback(::std::forward<U>(callback));
-		}
-		bool unsubscribeCallback(int id)
-		{
-			return BaseType::unsubscribeCallback(id);
-		}
-	};
+	
 		
 #else
-	template <bool multithreaded, class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL,void>
+	template <class ThreadingPolicy , VARIABLE_ARGS >
+	class CallbackSubscriptor_Base<ThreadingPolicy , VARIABLE_ARGS_DECL,void>
 	{
 	public:
-		typedef Callback<TRet, VARIABLE_ARGS_DECL> CallbackType;
+		typedef Callback<ECallbackResult, VARIABLE_ARGS_DECL> CallbackType;
 	protected:
 		struct CallbackInfo
 		{
@@ -703,7 +558,7 @@ namespace core
 		inline size_t getNumCallbacks() const{ return mCallbacks.size(); }
 		void removeCallbacks()
 		{
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				mCallbacks.clear();
@@ -727,7 +582,7 @@ namespace core
 		int subscribeCreatedCallback( CallbackType* cb, SubscriptionEmplacement se=SE_BACK )
 		{			
 			int result;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				result = ++mCurrId;
@@ -754,7 +609,6 @@ namespace core
 				result = ++mCurrId;
 				if (mTriggering)
 				{
-					//(::
 //					::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
 					PendingOperation po;
 					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
@@ -779,7 +633,7 @@ namespace core
 		bool unsubscribeCallback( U&& callback )
 		{
 			bool result = false;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				CallbackType* auxiliar = new CallbackType( std::forward<U>(callback), ::core::use_functor );
@@ -795,8 +649,8 @@ namespace core
 		bool unsubscribeCallback(int id)
 		{
 			bool result = false;
-			//ESTÁN MAL LOS LOCKS
-			if (multithreaded)
+			//ESTï¿½N MAL LOS LOCKS
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck(mSC);
 				if (mTriggering)
@@ -870,7 +724,7 @@ namespace core
 		bool unsubscribeCreatedCallback(std::shared_ptr<CallbackType> cb  )
 		{
 			bool result = false;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck(mSC);
 				if (mTriggering)
@@ -965,7 +819,7 @@ namespace core
 		CriticalSection mSC;
 		CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 		{
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( mSC );
 				typename CallbackListType::const_iterator i,j;
@@ -1007,11 +861,10 @@ namespace core
 			mPendingOperation.clear();
 		}
 	};
-
-	template <bool multithreaded,bool postSubscription,class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptorNotTyped<multithreaded,postSubscription,TRet,VARIABLE_ARGS_DECL,void> : public CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL>
+	template < class ThreadingPolicy, VARIABLE_ARGS >
+	class CallbackSubscriptorNotTyped<ThreadingPolicy,VARIABLE_ARGS_DECL> : public CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL>
 	{
-		typedef CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL> BaseType;
+		typedef CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL> BaseType;
 	public:
 
 		void triggerCallbacks( VARIABLE_ARGS_IMPL )
@@ -1022,62 +875,14 @@ namespace core
 				return;
 			}
 			BaseType::mTriggering = true;
-			if (multithreaded)
-			{
-				Lock lck( BaseType::mSC );
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				auto j = BaseType::mCallbacks.end();
-				while( i != j ) 
-				{
-					(*i->cb)(VARIABLE_ARGS_USE);
-					++i;
-				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-			else
-			{
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				auto j = BaseType::mCallbacks.end();
-				while( i != j ) 
-				{
-					(*i->cb)(VARIABLE_ARGS_USE);
-					++i;
-				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-		}
-	protected:
-		CallbackSubscriptorNotTyped():BaseType(){}
-		CallbackSubscriptorNotTyped( const CallbackSubscriptorNotTyped& o2 ):BaseType( o2 ){}
-
-	};
-	//specialization for postSubscription == true
-	template < bool multithreaded,class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptorNotTyped<multithreaded,true,TRet,VARIABLE_ARGS_DECL> : public CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL>
-	{
-		typedef CallbackSubscriptor_Base<multithreaded, TRet,VARIABLE_ARGS_DECL> BaseType;
-	public:
-
-		void triggerCallbacks( VARIABLE_ARGS_IMPL )
-		{
-			if (BaseType::mTriggering)
-			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				return;
-			}
-			BaseType::mTriggering = true;
-			if (multithreaded)
+			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
 			{
 				Lock lck( BaseType::mSC );
 				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
 				while( i != BaseType::mCallbacks.end() )
 				{
 					//if ( (**i)( VARIABLE_ARGS_USE ) )
-					if ( (*i->cb)(VARIABLE_ARGS_USE) )
+					if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
 					{
 						i = BaseType::mCallbacks.erase( i );
 					}else
@@ -1095,7 +900,7 @@ namespace core
 				while( i != BaseType::mCallbacks.end() )
 				{
 					//if ( (**i)( VARIABLE_ARGS_USE ) )
-					if ( (*i->cb)(VARIABLE_ARGS_USE) )
+					if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
 					{
 						i = BaseType::mCallbacks.erase( i );
 					}else
@@ -1114,18 +919,18 @@ namespace core
 		CallbackSubscriptorNotTyped( const CallbackSubscriptorNotTyped& o2 ):BaseType( o2 ){}
 	};
 
-	template <class TCallback, bool postSubscription,class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptor<TCallback, postSubscription,TRet,VARIABLE_ARGS_DECL,void> : public CallbackSubscriptorNotTyped<false,postSubscription,TRet,VARIABLE_ARGS_DECL,void>
+	template < class ThreadingPolicy, VARIABLE_ARGS >
+	class CallbackSubscriptor<ThreadingPolicy,VARIABLE_ARGS_DECL,void> : public CallbackSubscriptorNotTyped<ThreadingPolicy,VARIABLE_ARGS_DECL,void>
 	{
-        typedef CallbackSubscriptorNotTyped<false,postSubscription,TRet,VARIABLE_ARGS_DECL,void> BaseType;
+        typedef CallbackSubscriptorNotTyped<ThreadingPolicy,VARIABLE_ARGS_DECL,void> BaseType;
 	public:
 		CallbackSubscriptor():BaseType(){}
 		CallbackSubscriptor( const CallbackSubscriptor& o2 ):BaseType( o2 ){}
-		int subscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>&& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(std::function< ECallbackResult (VARIABLE_ARGS_DECL)>&& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(std::move(callback), ::core::use_function), se);
 		}
-		int subscribeCallback(const std::function< TRet(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(const std::function< ECallbackResult(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
 		}
@@ -1138,10 +943,15 @@ namespace core
 		{
 			return BaseType::subscribeCallback(std::forward<U>(functor), se );
 		}
-		bool unsubscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>&& callback)
-		{
-			return false; //can't unsubscribe function
-		}
+		/**
+		* std::function lacks operator ==, so need to use unsubscribecallback(int id) or use any other mpl function capabilities
+		*/
+		bool unsubscribeCallback(std::function< ECallbackResult(VARIABLE_ARGS_DECL)>&& callback) = delete;
+		// {
+		// 	//MPL_STATIC_ASSERT(true, PEPE)
+		// 	//static_assert(false,"can't unsubscribe std::function<>. unsubscribe by id or use mpl function utilities")
+		// 	return false; //can't unsubscribe function
+		// }
 		template <class U>
 		bool unsubscribeCallback(U&& callback)
 		{
@@ -1151,65 +961,6 @@ namespace core
 		{
 			return BaseType::unsubscribeCallback(id);
 		}
-	};
-	/*
-	template <class TCallback, class TRet, VARIABLE_ARGS >
-	class CallbackSubscriptor<TCallback,true,TRet,VARIABLE_ARGS_DECL> : public CallbackSubscriptorNotTyped<false,true,TRet,VARIABLE_ARGS_DECL>
-	{
-        typedef CallbackSubscriptorNotTyped<false,true,TRet,VARIABLE_ARGS_DECL> BaseType;
-	public:
-		CallbackSubscriptor():BaseType(){}
-		CallbackSubscriptor( const CallbackSubscriptor& o2 ):BaseType( o2 ){}
-	};*/
-	/**
-	* reentrant version
-	*/
-	template <class TCallback, bool postSubscription,class TRet, VARIABLE_ARGS >
-	class MTCallbackSubscriptor<TCallback, postSubscription,TRet,VARIABLE_ARGS_DECL,void> : public CallbackSubscriptorNotTyped<true,postSubscription,TRet,VARIABLE_ARGS_DECL,void>
-	{
-        typedef CallbackSubscriptorNotTyped<true,postSubscription,TRet,VARIABLE_ARGS_DECL,void> BaseType;
-	public:
-		MTCallbackSubscriptor():BaseType(){}
-		MTCallbackSubscriptor( const MTCallbackSubscriptor& o2 ):BaseType( o2 ){}
-		int subscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>&& callback, SubscriptionEmplacement se = SE_BACK)
-		{
-			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(std::move(callback), ::core::use_function), se);
-		}
-		int subscribeCallback(const std::function< TRet(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se = SE_BACK)
-		{
-			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
-		}
-
-		/*int subscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
-		{
-			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
-		}*/
-		template <class U> int subscribeCallback(U&& functor, SubscriptionEmplacement se = SE_BACK)
-		{
-			return BaseType::subscribeCallback(std::forward<U>(functor), se);
-		}
-		bool unsubscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>&& callback)
-		{
-			return false; //can't unsubscribe function
-		}
-		template <class U>
-		bool unsubscribeCallback(U&& callback)
-		{
-			return BaseType::unsubscribeCallback(callback);
-		}
-		bool unsubscribeCallback(int id)
-		{
-			return BaseType::unsubscribeCallback(id);
-		}
-	};
-	
-	/*template <class TCallback, class TRet, VARIABLE_ARGS >
-	class MTCallbackSubscriptor<TCallback,true,TRet,VARIABLE_ARGS_DECL> : public CallbackSubscriptorNotTyped<true,true,TRet,VARIABLE_ARGS_DECL>
-	{
-        typedef CallbackSubscriptorNotTyped<true,true,TRet,VARIABLE_ARGS_DECL> BaseType;
-	public:
-		MTCallbackSubscriptor():BaseType(){}
-		MTCallbackSubscriptor( const MTCallbackSubscriptor& o2 ):BaseType( o2 ){}
-	};*/
+	};	
 #endif
 }

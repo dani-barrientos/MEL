@@ -78,13 +78,12 @@ namespace core
 	* it will not be a problema, but in Windows (maybe other Operating Systems?) there is a exploitation prevent system (called SEHOP, see https://blogs.technet.microsoft.com/srd/2009/02/02/preventing-the-exploitation-of-structured-exception-handler-seh-overwrites-with-sehop/) )that will make the app crash
 	* because Windows interpret it as a hack process. This option is disabled in worksations but enabled for Windows Server- To disable it, go to HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/Session Manager/Kernel/DisableExceptionChainValidation
 	*/
-	struct KillEvent
-	{
-	};
+	class Process;
+	typedef CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>> KillEventSubscriptor;
 	class DABAL_API Process :
 		public std::enable_shared_from_this<Process>,
 		public MThreadAttributtes,
-		private CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>>  //TODO que poco me gusta esta herencia, incrementa el tama�o de los Process y quisiera que fuesen m�s ligeros
+		private KillEventSubscriptor  //TODO que poco me gusta esta herencia, incrementa el tama�o de los Process y quisiera que fuesen m�s ligeros
 	{
 		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	
@@ -351,7 +350,6 @@ namespace core
 	private:
 		static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
-		typedef CallbackSubscriptor<KillEvent,true,bool, std::shared_ptr<Process>> KillEventSubscriptor;
 		EProcessState mState;
 		EProcessState mPreviousState;
 		unsigned int mPeriod;

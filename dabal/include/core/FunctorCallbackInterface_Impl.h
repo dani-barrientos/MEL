@@ -21,7 +21,7 @@ namespace core
 		FunctorCallbackInterface_Base( const FunctorCallbackInterface_Base& ev2 ) : mFunction( ev2.mFunction )
 		{
 		}
-		bool operator==(const CallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>& ev2) const
+		bool operator==(const CallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>& ev2) const override
 		{
 			const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL> *ev;
 			if ( getMyType().instanceOf( ev2.getMyType() ) )
@@ -51,7 +51,7 @@ namespace core
 		FunctorCallbackInterface( F&& function) : FunctorCallbackInterface_Base<TRet,F,VARIABLE_ARGS_DECL>(::std::forward<F>(function)){}
 
 		FunctorCallbackInterface( const FunctorCallbackInterface& ev2 ) : FunctorCallbackInterface_Base<TRet,F,VARIABLE_ARGS_DECL>( ev2 ){}
-		TRet operator()(VARIABLE_ARGS_IMPL)
+		TRet operator()(VARIABLE_ARGS_IMPL) override
 		{
 			return FunctorCallbackInterface_Base<TRet,F,VARIABLE_ARGS_DECL>::mFunction( VARIABLE_ARGS_USE );
 		}
@@ -59,7 +59,7 @@ namespace core
 		{
 			return FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>::operator ==( ev2 );
 		}
-		CallbackInterface<TRet, VARIABLE_ARGS_DECL> * clone() const;
+		CallbackInterface<TRet, VARIABLE_ARGS_DECL> * clone() const override;
 	};
 	template <class TRet, class F, VARIABLE_ARGS_NODEFAULT >
 	CallbackInterface<TRet, VARIABLE_ARGS_DECL> * FunctorCallbackInterface<TRet, F, VARIABLE_ARGS_DECL>::clone() const
@@ -77,15 +77,15 @@ namespace core
 		FunctorCallbackInterface(F&& function) : FunctorCallbackInterface_Base<TRet, F, void>(::std::forward<F>(function)) {}
 
 		FunctorCallbackInterface( const FunctorCallbackInterface& ev2 ) : FunctorCallbackInterface_Base<TRet,F,void>( ev2 ){}
-		TRet operator()()
+		TRet operator()() override
 		{
 			return FunctorCallbackInterface_Base<TRet,F,void>::mFunction( );
 		}
-		bool operator==(const FunctorCallbackInterface<TRet, F,void>& ev2) const
+		bool operator==(const FunctorCallbackInterface<TRet, F,void>& ev2) const 
 		{
 			return FunctorCallbackInterface_Base<TRet, F,void>::operator ==( ev2 );
 		}
-		CallbackInterface<TRet, void> * clone() const {
+		CallbackInterface<TRet, void> * clone() const override{
 			return new FunctorCallbackInterface<TRet, F, void>(*(FunctorCallbackInterface<TRet, F, void>*)this);
 		}
 	};
@@ -151,11 +151,11 @@ namespace core
 		FunctorCallbackInterface( F&& function) : FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>( ::std::forward<F>(function)) {}
 
 		FunctorCallbackInterface( const FunctorCallbackInterface& ev2 ) : FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>( ev2 ){}
-		TRet operator()(VARIABLE_ARGS_IMPL) override
+		TRet operator()(VARIABLE_ARGS_IMPL) override 
 		{
 			return FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>::mFunction( VARIABLE_ARGS_USE );
 		}
-		bool operator==(const FunctorCallbackInterface<TRet,F,VARIABLE_ARGS_DECL,void>& ev2) const
+		bool operator==(const FunctorCallbackInterface<TRet,F,VARIABLE_ARGS_DECL,void>& ev2) const 
 		{
 			return FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>::operator ==( ev2 );
 		}

@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add source to this project's executable.
 add_compile_definitions(DABAL_IMPORTS)
 add_executable (sample "sample.cpp" "sample.h")
+target_sources(sample PRIVATE "test_callbacks/test.cpp" "test_threading/test.cpp")
 
 #add_link_options()
 target_link_libraries(sample "dabal")

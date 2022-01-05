@@ -318,8 +318,7 @@ template< class TRet, VARIABLE_ARGS >
 		TRet operator()( VARIABLE_ARGS_IMPL )
 		{
 			return (*Callback_Base< TRet,VARIABLE_ARGS_DECL >::mCallBack)( VARIABLE_ARGS_USE );
-		}
-		Callback(){ Callback_Base< TRet,VARIABLE_ARGS_DECL >::mCallBack = 0;};
+		}		
 
 		/**
 		* contructor from functor
@@ -332,6 +331,8 @@ template< class TRet, VARIABLE_ARGS >
 		{
 			return new Callback<TRet,VARIABLE_ARGS_DECL>( *this );
 		}
+		private:
+		Callback(){ Callback_Base< TRet,VARIABLE_ARGS_DECL >::mCallBack = 0;};
 
 	};
 #endif

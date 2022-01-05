@@ -1,6 +1,7 @@
 /**
 * Callback interface for objects with SmartPtr capability.
 * It's used by Callback class when it's constructed from a IRefCount pointer (or with same interface for SmartPtr)
+* IrefCount and SmartPtr is no more available, so this class has any sense. Maybe it could be applicable to shared_ptr??
 */
 namespace core
 {

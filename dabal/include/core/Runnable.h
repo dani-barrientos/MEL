@@ -169,7 +169,7 @@ namespace core
 		CriticalSection	mMemPoolCS;
 		::core::ThreadId	mOwnerThread;//thread executing Runnable
 		//typedef Callback<void,Runnable*>	TFinishEvent;
-		CallbackSubscriptor<Int2Type<0>, false, void, Runnable*> mFinishEvents;
+		CallbackSubscriptor<::core::NoMultithreadPolicy, Runnable*> mFinishEvents;
 		//list< TFinishEvent* >	mFinishEvents;
 
 		void executeFinishEvents();

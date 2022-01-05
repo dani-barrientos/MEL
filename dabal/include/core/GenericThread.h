@@ -70,7 +70,7 @@ namespace core
 		*/
 		GenericThread():Thread_Impl<GenericThread>(""){}
 	private:
-		bool _processAwaken(std::shared_ptr<Process> p);
+		::core::ECallbackResult _processAwaken(std::shared_ptr<Process> p);
 		Callback< bool, Thread*,bool >*	mThreadFunction;
 		bool						mAutoDestroy;
 		bool						mTerminateAccepted;

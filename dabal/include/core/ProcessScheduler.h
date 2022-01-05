@@ -29,27 +29,27 @@ using core::Timer;
 using core::CallbackSubscriptor;
 #include <mpl/Int2Type.h>
 using ::mpl::Int2Type;
-
+#include <utility>
 namespace core
 {
-	typedef CallbackSubscriptor<mpl::Int2Type<0>, true, bool, std::shared_ptr<Process>> SleepSubscriptor;
-	typedef CallbackSubscriptor<mpl::Int2Type<1>, true, bool, std::shared_ptr<Process>> WakeSubscriptor;
-	typedef CallbackSubscriptor<mpl::Int2Type<2>, true, bool, std::shared_ptr<Process>> EvictSubscriptor;
+	typedef std::pair<mpl::Int2Type<0>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> SleepSubscriptor;
+	typedef std::pair<mpl::Int2Type<1>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> WakeSubscriptor;
+	typedef std::pair<mpl::Int2Type<2>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> EvictSubscriptor;
     /**
     * Process manager. It can be seen as a task scheduler
     * @version 1.0
     * @remarks as is explained in Process, temporization is used with a Timer but getting only the 32 bit low part of the
     * 64 bits time returned, for efficiency reasons.
     */
-	class DABAL_API ProcessScheduler : private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tamaño de los Process y quisiera que fuesen más ligeros
+	class DABAL_API ProcessScheduler : private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tamaï¿½o de los Process y quisiera que fuesen mï¿½s ligeros
 		,private WakeSubscriptor
 		,private EvictSubscriptor
 	{
 		typedef unsigned int ThreadID;
 	public:
 		typedef list< std::shared_ptr<Process> > TProcessList;
-		//!todo lo de las prioridades muy primitivo, por eso está aquí fuleramente
-		//!en realidad ahora sólo significan si el proceso se ejecuta el primero de la lista, en el medio o al final
+		//!todo lo de las prioridades muy primitivo, por eso estï¿½ aquï¿½ fuleramente
+		//!en realidad ahora sï¿½lo significan si el proceso se ejecuta el primero de la lista, en el medio o al final
 		enum EProcessPriority
 		{
 			HIGH = 0,NORMAL,LOW
@@ -106,7 +106,7 @@ namespace core
 		*/
 		void activateProcesses();
 		/**
-		* send processes kill signal. It doesn´t kill inmediately, it's done at execution cycle begin, so
+		* send processes kill signal. It doesnï¿½t kill inmediately, it's done at execution cycle begin, so
 		* you need to continue processing until no more process are pending (getProcessCount() == 0)
 		* @param[in] deferred If true, then kill will be posted as a new process. If False, it's done inmediately.
 		* First type is when done into Scheduler context and second form is when done from another thread
@@ -130,7 +130,7 @@ namespace core
 		inline const TProcessList& getInitialProcesses() const;
 		inline const TProcessList& getFinalProcesses() const;
 		/**
-		* @todo tengo que revisar estas funciones que no me convencen un pijo así
+		* @todo tengo que revisar estas funciones que no me convencen un pijo asï¿½
 		*/
 		inline TProcessList& getProcesses();
 		/**
@@ -186,35 +186,35 @@ namespace core
 		*/
 		template <class F> int susbcribeSleepEvent(F&& f)
 		{
-			return SleepSubscriptor::subscribeCallback(std::forward<F>(f));
+			return SleepSubscriptor::second.subscribeCallback(std::forward<F>(f));
 		}
 		template <class F> void unsusbcribeSleepEvent(F&& f)
 		{
-			SleepSubscriptor::unsubscribeCallback(std::forward<F>(f));
+			SleepSubscriptor::second.unsubscribeCallback(std::forward<F>(f));
 		}
 		void unsusbcribeSleepEvent(int id)
 		{
-			SleepSubscriptor::unsubscribeCallback(id);
+			SleepSubscriptor::second.unsubscribeCallback(id);
 		}
 		template <class F> int susbcribeWakeEvent(F&& f)
 		{
-			return WakeSubscriptor::subscribeCallback(std::forward<F>(f));
+			return WakeSubscriptor::second.subscribeCallback(std::forward<F>(f));
 		}
 		template <class F> void unsusbcribeWakeEvent(F&& f)
 		{
-			WakeSubscriptor::unsubscribeCallback(std::forward<F>(f));
+			WakeSubscriptor::second.unsubscribeCallback(std::forward<F>(f));
 		}
 		template <class F> int subscribeProcessEvicted(F&& f)
 		{
-			return EvictSubscriptor::subscribeCallback(std::forward<F>(f));
+			return EvictSubscriptor::second.subscribeCallback(std::forward<F>(f));
 		}
 		template <class F> void unsubscribeProcessEvicted(F&& f)
 		{
-			EvictSubscriptor::unsubscribeCallback(std::forward<F>(f));
+			EvictSubscriptor::second.unsubscribeCallback(std::forward<F>(f));
 		}
 		void unsubscribeProcessEvicted(int id)
 		{
-			EvictSubscriptor::unsubscribeCallback(id);
+			EvictSubscriptor::second.unsubscribeCallback(id);
 		}
 	private:
 		struct ProcessInfo  //for TLS
@@ -358,7 +358,7 @@ namespace core
 	}
 	unsigned int ProcessScheduler::getProcessCount() const
 	{
-		//accediendo al size de cada lista puede dar una condición de carrera
+		//accediendo al size de cada lista puede dar una condiciï¿½n de carrera
 		/*return (unsigned int)(mNewProcesses.size() + mNewFinalProcesses.size() + mNewInitialProcesses.size() +
 			mProcessList.size() + mFinalProcesses.size() + mInitialProcesses.size());
 			*/

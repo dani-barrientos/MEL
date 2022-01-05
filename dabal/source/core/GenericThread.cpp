@@ -91,7 +91,7 @@ unsigned int GenericThread::onPostTask(std::shared_ptr<Process> process,ETaskPri
 	unsigned int result;
 	/*//PENSAR QUE PASARIA SI HUBIESE MAS DE UN suspend ENCADENADO
 	mSuspendCS.enter();
-	//también se recibe un onPostTask en el suspend, pero tal y como esta hecho (ver Thread) el mState se fija después del post
+	//tambiï¿½n se recibe un onPostTask en el suspend, pero tal y como esta hecho (ver Thread) el mState se fija despuï¿½s del post
 	if ( getState() == THREAD_SUSPENDED )
 	{
 		cout << "RESUMO\n";
@@ -127,7 +127,7 @@ void GenericThread::terminate(unsigned int exitCode)
 	mWaitForTasksCond.notify_one();
 #endif
 }
-bool GenericThread::_processAwaken(std::shared_ptr<Process> p)
+::core::ECallbackResult GenericThread::_processAwaken(std::shared_ptr<Process> p)
 {	
 #ifdef USE_CUSTOM_EVENT
 	mWaitForTasks.set();
@@ -138,13 +138,13 @@ bool GenericThread::_processAwaken(std::shared_ptr<Process> p)
 	}
 	mWaitForTasksCond.notify_one();
 #endif
-	return false;
+	return ECallbackResult::NO_UNSUBSCRIBE;
 }
 void GenericThread::onCycleEnd()
 {
 	/*@todo Esto es por compatibilidad. Mejorarlo cuando este listo lo del empty thread
-	la idea final es que no se aporte ninguna función de thread y todo sea e nbase a lanzar tareas y que se quede dormido cuando no haya. Requisitos:
-	 - los Process han de avisar de alguna forma cuando están en wait para no parar el hilo si hay alguno pendiente-
+	la idea final es que no se aporte ninguna funciï¿½n de thread y todo sea e nbase a lanzar tareas y que se quede dormido cuando no haya. Requisitos:
+	 - los Process han de avisar de alguna forma cuando estï¿½n en wait para no parar el hilo si hay alguno pendiente-
 	 - si un Process recibe un wakeup tiene que avisar el hilo
 	*/
 	unsigned int count = 0;
@@ -154,7 +154,7 @@ void GenericThread::onCycleEnd()
 		{
 			mTerminateAccepted = (*mThreadFunction)(this, mEnd);
 			//realmente no veo necesidad de "restaurar" el mEnd, ya que el terminateRequest() es quien manda
-			//además de que hay problemas de concurrencia
+			//ademï¿½s de que hay problemas de concurrencia
 			//mEnd = mTerminateAccepted; //only exit if thread function want it
 		}
 	}
@@ -184,9 +184,9 @@ void GenericThread::onCycleEnd()
 	if ( !mEnd )
 	{
 no vale ya que el processTask viene despues y puede haber un mEnd
-creo que esta funcion debería mandar siempre, por lo que si se hace desde fuera un mEnd, que esta lo cambie
+creo que esta funcion deberï¿½a mandar siempre, por lo que si se hace desde fuera un mEnd, que esta lo cambie
 
-debería avisar a la function de si se pide terminacion
+deberï¿½a avisar a la function de si se pide terminacion
 			end = (*mThreadFunction)( this );
 			mEnd = (mEnd || end); //maybe mEnd is changed inside threadfunction
 		}*/

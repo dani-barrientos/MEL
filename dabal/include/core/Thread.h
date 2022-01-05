@@ -44,7 +44,7 @@ namespace core {
 	 * 
 	 * You can subscribe callback to thread end. It will be thrown just before onThreadEnd is called
 	 */
-	class DABAL_API Thread : public Runnable, public CallbackSubscriptor<Int2Type<0>(),false,void,Thread*>
+	class DABAL_API Thread : public Runnable, public CallbackSubscriptor<::core::NoMultithreadPolicy,Thread*>
 	{
 
 #ifdef _WINDOWS

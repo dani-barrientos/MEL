@@ -3,7 +3,10 @@
 #include <cstddef>
 #include <new>
 #include <memory>
-
+/**
+ * @deprecated 
+ * use std::mutex and related instead
+ **/
 namespace core {
 	/**
 	 * Platform-independent critical section implementation.
