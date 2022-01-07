@@ -2,11 +2,50 @@
 //
 #include "test_callbacks/test.h"
 #include "test_threading/test.h"
+#include <CommandLine.h>
+using tests::CommandLine;
+#include <TestManager.h>
+using tests::TestManager;
+#include <iostream>
 
-typedef int (*Test)();
-int main(int argc, char* argv[])
+#define LIST_OPTION "list"
+#define TEST_OPTION "t"
+/**
+ * main tests execution.
+ * command line:
+ *  -list list all available test
+ *  -t <NAME>  execute given test
+ * eachs test has it's own command line arguments
+ **/
+int main(int argc, const char* argv[])
 {
- //@todo sistema genérico de test decente	
-	Test currTest = test_callbacks::test;
-	return currTest();
+  	std::cout << "Running main with "<<argc<<" arguments:\n";
+	for(int i =0;i<argc;++i)
+	{
+		std::cout << '\t'<< argv[i] << '\n';
+	}
+	CommandLine::createSingleton(argc,argv);
+	// const char* arg[] = {"kk","-list","-t","callbacks"};	
+	// CommandLine::createSingleton(4,arg);
+	test_callbacks::registerTest();
+	test_threading::registerTest(); 
+
+	if ( CommandLine::getSingleton().getOption(LIST_OPTION) != std::nullopt )
+	{
+		const auto& testmap = TestManager::getSingleton().getTests();
+		for(const auto& [key,val]:testmap)
+		{
+			std::cout << key << " -> " << val.first <<'\n';
+		}
+	}
+	auto testOpt = CommandLine::getSingleton().getOption(TEST_OPTION);
+	if (  testOpt != std::nullopt )
+	{
+		const string& name = testOpt.value();
+		auto currTest = TestManager::getSingleton().getTest(name);
+		std::cout << "Running test: " << name << '\n';
+		return currTest();
+	}
+	return 0;
+	
 }

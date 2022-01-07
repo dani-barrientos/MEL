@@ -5,14 +5,16 @@
 // CLASS FOR SINGLETONS THAT ARE ABSTRACT CLASSES
 // YOU MUST IMPLEMENT A CREATION FUNCITON: See createSingleton at this file.
 //
-// TODO no está bien del todo el lock/unlock en los accessos. REVISAR DETENIDAMENTE
+// TODO no estï¿½ bien del todo el lock/unlock en los accessos. REVISAR DETENIDAMENTE
 // You can use Singleton with a SmartPtr. See template parameters
 ///////////////////////////////////////////////////////////
 
 #pragma once
 
 #include <DabalLibType.h>
-#include <core/SmartPtr.h>
+#include <memory>
+#include <stdexcept>
+//#include <core/SmartPtr.h>
 #include <mpl/Type2Type.h>
 using mpl::Type2Type;
 #include <mpl/_If.h>
@@ -38,7 +40,7 @@ namespace core
 	 *    class A: public Singleton<A,isAbstract,true>
 	 * In that case, you can safety use SmartPtr's to singletons, but when you do deleteSingleton
 	 * all other references to object should be removed.
-	 * @todo probablemente debería pasar el tipo de puntero, pero así lo facilito un poco
+	 * @todo probablemente deberï¿½a pasar el tipo de puntero, pero asï¿½ lo facilito un poco
 	 */
 
 	///@cond HIDDEN_SYMBOLS
@@ -50,7 +52,7 @@ namespace core
                 return mObject != 0;
             }
         protected:
-            typedef typename _if< useSmartPtr, SmartPtr<T> ,T*>::Result Tpointer;
+            typedef typename _if< useSmartPtr, std::shared_ptr<T> ,T*>::Result Tpointer;
             //typedef typename _if< Conversion< T,IRefCount*>::Exists, SmartPtr<T> ,T*>::Result Tpointer;
 			typedef typename ThreadingPolicy<Tpointer>::VolatileType  InstanceType;
             static InstanceType mObject; //TODO considerar el VolatileType, importante
@@ -72,13 +74,13 @@ namespace core
 	//specialization for SmartPtr
 	template <class T> struct GetObjectPtr<T,true>
 	{
-		static T* get( SmartPtr<T>& p){ return p.getPtr();}
+		static T* get( std::shared_ptr<T>& p){ return p.get();}
 	};
 
     template <class T,bool,bool,template<class> class> class Singleton; //predeclaration
     //version for non-abstract singletons
     template <class T,template<class> class ThreadingPolicy,bool useSmartPtr,bool isAbstract>
-    class Singleton_Middle : public Singleton_Base<T,useSmartPtr,ThreadingPolicy>  //¡nombre cutre!!
+    class Singleton_Middle : public Singleton_Base<T,useSmartPtr,ThreadingPolicy>  //ï¿½nombre cutre!!
     {
         public:
 			typedef ThreadingPolicy<T> TThreadingPolicy;
@@ -98,7 +100,7 @@ namespace core
     };
     //specialization for abstract
     template <class T,template<class> class ThreadingPolicy,bool useSmartPtr>
-    class Singleton_Middle<T,ThreadingPolicy,useSmartPtr,true> : public Singleton_Base<T,useSmartPtr,ThreadingPolicy>  //¡nombre cutre!!
+    class Singleton_Middle<T,ThreadingPolicy,useSmartPtr,true> : public Singleton_Base<T,useSmartPtr,ThreadingPolicy>  //ï¿½nombre cutre!!
     {
         public:
             inline static T& getSingleton()
@@ -171,12 +173,12 @@ namespace core
         {
             //deleter for SmartPtr
             public:
-                static void doDelete( SmartPtr<U>* obj)
+                static void doDelete( std::shared_ptr<U>* obj)
                 {
                     //throw exception if obj has other references
                     if ( obj->getPtr() && (*obj)->getRefCount() > 1 )
                     {
-                        throw Exception( "Singleton::deleteSingleton. Other references to obj still alive" );
+                        throw std::runtime_error( "Singleton::deleteSingleton. Other references to obj still alive" );
                     }
                     *obj = 0;
                 }

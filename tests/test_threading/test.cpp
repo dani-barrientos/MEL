@@ -3,7 +3,9 @@
 #include <core/GenericThread.h>
 using core::GenericThread;
 using namespace std;
-int test_threading::test()
+#include <TestManager.h>
+using tests::TestManager;
+static int test()
 {
 cout << "Hello CMake" << endl;
 	auto th1 = GenericThread::createEmptyThread();
@@ -24,4 +26,8 @@ cout << "Hello CMake" << endl;
 	th1->finish();
 	th1->join();
 	return 0;
+}
+void test_threading::registerTest()
+{
+    TestManager::getSingleton().registerTest("threading","threading tests",test);
 }

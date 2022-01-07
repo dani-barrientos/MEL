@@ -2,8 +2,10 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_definitions(DABAL_EXPORTS)
-#add_compile_definitions(_LINUX)
-#add_compile_definitions(_X86_GCC)
+#[[
+find_package(spdlog CONFIG REQUIRED)
+target_link_libraries(main PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
+]]
 
 add_library(dabal SHARED "source/core/atomics.cpp" "source/core/CriticalSection_mthread.cpp"
 "source/core/Event_mthread.cpp" "source/core/Process.cpp"

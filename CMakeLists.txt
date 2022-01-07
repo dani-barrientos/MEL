@@ -2,7 +2,16 @@
 # and include sub-projects here.
 #
 cmake_minimum_required (VERSION 3.8)
-
+#[[
+if(NOT DEFINED ENV{VCPKG_ROOT})
+  message("mal")
+endif()
+if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  message("Using vcpkg")
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "")
+endif()
+]]
 project ("dabal")
 add_compile_definitions(${DABAL_OS})
 add_compile_definitions(${DABAL_API})
