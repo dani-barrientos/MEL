@@ -22,7 +22,8 @@ add_custom_command(TARGET tests POST_BUILD        # Adds a post-build event to M
         $<TARGET_FILE_DIR:dabal>"/dabal.dll"      # <--this is in-file
         $<TARGET_FILE_DIR:tests>)                 # <--this is out-file path
 endif()
-
+find_package(spdlog CONFIG REQUIRED)
+target_link_libraries(tests spdlog::spdlog spdlog::spdlog_header_only)
 enable_testing()
 add_test(NAME Run1 COMMAND tests -t callbacks)
 add_test(NAME Run2 COMMAND tests -t callbacks)

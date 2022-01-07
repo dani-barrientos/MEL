@@ -7,6 +7,10 @@ using tests::CommandLine;
 #include <TestManager.h>
 using tests::TestManager;
 #include <iostream>
+#include <spdlog/spdlog.h>
+#include <spdlog/cfg/env.h>  // support for loading levels from the environment variable
+#include <spdlog/fmt/ostr.h> // support for user defined types
+
 
 #define LIST_OPTION "list"
 #define TEST_OPTION "t"
@@ -19,6 +23,13 @@ using tests::TestManager;
  **/
 int main(int argc, const char* argv[])
 {
+	//ver cómo furrula y 
+	//tebngo que ver que tenga funcionalidad similar a los appedern, por el tema de redirigir la salida a donde quiera->creo que son los sink
+	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+	spdlog::error("Prueba error");
+	spdlog::set_level(spdlog::level::err); // Set global log level to debug
+	spdlog::info("otra prueba");
+	spdlog::error("Prueba error 2");
   	std::cout << "Running main with "<<argc<<" arguments:\n";
 	for(int i =0;i<argc;++i)
 	{

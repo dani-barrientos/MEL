@@ -24,6 +24,7 @@ namespace core {
 #include <memory>
 #include <functional>
 #include <mpl/IsSame.h>
+#include <spdlog/spdlog.h>
 #undef INCLUDE_PATH
 #define INCLUDE_PATH <core/CallbackSubscriptor_Impl.h>
 #include <mpl/VarArgs.h>
