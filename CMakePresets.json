@@ -153,7 +153,7 @@
         },
         {
             "name": "Clang Linux",
-            "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu",
+            "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu (Debug)",
             "description": "Using compilers: C = /bin/clang-11, CXX = /bin/clang++-11",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "generator": "Unix Makefiles",

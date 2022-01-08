@@ -2,6 +2,7 @@
 # and include sub-projects here.
 #
 cmake_minimum_required (VERSION 3.8)
+
 if(NOT DEFINED ENV{VCPKG_ROOT})
   message("vcpkg is missing!!")
 endif()
