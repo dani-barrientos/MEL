@@ -139,10 +139,6 @@ core/GenericProcessDefs.h
 -
 core/Process.h
 -
-core/Callback.h
--
-utility
--
 functional
 -
 
@@ -554,12 +550,6 @@ xchar.h
 format-inl.h
 /home/dani/programs/vcpkg/installed/x64-linux/include/fmt/format-inl.h
 
-/home/dani/programs/vcpkg/installed/x64-linux/include/fmt/ostream.h
-ostream
--
-format.h
-/home/dani/programs/vcpkg/installed/x64-linux/include/fmt/format.h
-
 /home/dani/programs/vcpkg/installed/x64-linux/include/fmt/xchar.h
 cwchar
 -
@@ -567,40 +557,6 @@ tuple
 -
 format.h
 /home/dani/programs/vcpkg/installed/x64-linux/include/fmt/format.h
-
-/home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/cfg/env.h
-spdlog/cfg/helpers.h
--
-spdlog/details/registry.h
--
-spdlog/details/os.h
--
-
-/home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/cfg/helpers-inl.h
-spdlog/cfg/helpers.h
--
-spdlog/spdlog.h
--
-spdlog/details/os.h
--
-spdlog/details/registry.h
--
-algorithm
--
-string
--
-utility
--
-sstream
--
-
-/home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/cfg/helpers.h
-spdlog/common.h
--
-unordered_map
--
-helpers-inl.h
-/home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/cfg/helpers-inl.h
 
 /home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/common-inl.h
 spdlog/common.h
@@ -852,12 +808,6 @@ fmt/core.h
 fmt/format.h
 -
 
-/home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/fmt/ostr.h
-spdlog/fmt/bundled/ostream.h
--
-fmt/ostream.h
--
-
 /home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/fmt/xchar.h
 spdlog/fmt/bundled/xchar.h
 -
@@ -1068,40 +1018,6 @@ spdlog-inl.h
 
 /home/dani/programs/vcpkg/installed/x64-linux/include/spdlog/version.h
 
-/home/dani/trabajo/proyectos/dabal/tests/main.cpp
-test_callbacks/test.h
-/home/dani/trabajo/proyectos/dabal/tests/test_callbacks/test.h
-test_threading/test.h
-/home/dani/trabajo/proyectos/dabal/tests/test_threading/test.h
-CommandLine.h
--
-TestManager.h
--
-iostream
--
-spdlog/spdlog.h
--
-spdlog/cfg/env.h
--
-spdlog/fmt/ostr.h
--
-
-/home/dani/trabajo/proyectos/dabal/tests/test_callbacks/test.cpp
-test.h
-/home/dani/trabajo/proyectos/dabal/tests/test_callbacks/test.h
-iostream
--
-core/CallbackSubscriptor.h
--
-mpl/Int2Type.h
--
-TestManager.h
--
-
-/home/dani/trabajo/proyectos/dabal/tests/test_callbacks/test.h
-string
--
-
 /home/dani/trabajo/proyectos/dabal/tests/test_threading/test.cpp
 test.h
 /home/dani/trabajo/proyectos/dabal/tests/test_threading/test.h
@@ -1110,6 +1026,10 @@ iostream
 core/GenericThread.h
 -
 TestManager.h
+-
+spdlog/spdlog.h
+-
+CommandLine.h
 -
 
 /home/dani/trabajo/proyectos/dabal/tests/test_threading/test.h

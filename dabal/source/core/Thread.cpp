@@ -1,11 +1,11 @@
 #include <assert.h>
 #include <core/Thread.h>
-//#include <logging/Logger.h>
 #include <mpl/MemberEncapsulate.h>
 
 using mpl::makeMemberEncapsulate;
 #include <core/TLS.h>
 using core::TLS;
+#include <spdlog/spdlog.h>
 
 static TLS::TLSKey gCurrentThreadKey;
 static bool gCurrentThreadKeyCreated = false;
@@ -374,6 +374,11 @@ int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 #endif
 
 void Thread::start() {
+	if ( mState != THREAD_INIT )
+	{
+		spdlog::warn("Thread has been already stared!!");
+		return;
+	}
 	mState = THREAD_RUNNING;
 #ifdef _WINDOWS
 	if (mHandle) {
@@ -474,11 +479,13 @@ void Thread::terminate(unsigned int exitCode)
 
 unsigned int Thread::runInternal() {
 
+
 	TLS::setValue( gCurrentThreadKey, this );
 	if ( !mEnd )
 	{
 		//don't run loop if it's finished. It could be possible to terminate a thread before is started, so it
 		//won't be executed
+		spdlog::debug("Thread::runInternal");
 		mResult=run();
 		//Triger finalization callbacks and invoke onThreadEnd 
 		threadEnd();

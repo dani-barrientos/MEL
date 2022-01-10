@@ -197,6 +197,7 @@ tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: ../../../dabal/include/mpl
 tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: ../../../dabal/include/mpl/typelist/Length.h
 tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: ../../../dabal/include/mpl/typelist/TypeList.h
 tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: ../../../dabal/include/preprocessor/params.h
+tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: ../../../tests/common/include/CommandLine.h
 tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: ../../../tests/common/include/TestManager.h
 tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: /home/dani/programs/vcpkg/installed/x64-linux/include/fmt/core.h
 tests/CMakeFiles/tests.dir/test_threading/test.cpp.o: /home/dani/programs/vcpkg/installed/x64-linux/include/fmt/format-inl.h

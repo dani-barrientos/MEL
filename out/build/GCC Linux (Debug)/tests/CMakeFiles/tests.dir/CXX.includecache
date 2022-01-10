@@ -452,6 +452,16 @@ mpl/IsSame.h
 
 ../../../dabal/include/preprocessor/params.h
 
+../../../tests/common/include/CommandLine.h
+core/Singleton.h
+-
+unordered_map
+-
+string
+-
+optional
+-
+
 ../../../tests/common/include/TestManager.h
 core/Singleton.h
 -
@@ -1018,6 +1028,8 @@ core/GenericThread.h
 TestManager.h
 -
 spdlog/spdlog.h
+-
+CommandLine.h
 -
 
 /home/dani/trabajo/proyectos/dabal/tests/test_threading/test.h

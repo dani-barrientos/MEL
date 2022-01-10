@@ -1,0 +1,102 @@
+[
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/atomics.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/atomics.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/atomics.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/CriticalSection_mthread.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/CriticalSection_mthread.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/CriticalSection_mthread.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Event_mthread.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Event_mthread.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Event_mthread.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Process.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Process.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Process.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/GenericProcess.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/GenericProcess.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/GenericProcess.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/ProcessScheduler.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/ProcessScheduler.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/ProcessScheduler.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Runnable.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Runnable.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Runnable.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Timer.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Timer.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Timer.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Type.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Type.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Type.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Thread.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Thread.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Thread.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/GenericThread.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/GenericThread.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/GenericThread.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/TLS.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/TLS.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/TLS.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Event_win32.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Event_win32.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Event_win32.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Event_posix.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Event_posix.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Event_posix.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal",
+  "command": "/bin/clang++-11 -DDABAL_EXPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -Ddabal_EXPORTS -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -fPIC -std=gnu++17 -o CMakeFiles/dabal.dir/source/core/Process_X64_GCC.cpp.o -c /home/dani/trabajo/proyectos/dabal/dabal/source/core/Process_X64_GCC.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/dabal/source/core/Process_X64_GCC.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests",
+  "command": "/bin/clang++-11 -DDABAL_IMPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/dani/trabajo/proyectos/dabal/tests/common/include -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -std=gnu++17 -o CMakeFiles/tests.dir/main.cpp.o -c /home/dani/trabajo/proyectos/dabal/tests/main.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/tests/main.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests",
+  "command": "/bin/clang++-11 -DDABAL_IMPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/dani/trabajo/proyectos/dabal/tests/common/include -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -std=gnu++17 -o CMakeFiles/tests.dir/common/source/CommandLine.cpp.o -c /home/dani/trabajo/proyectos/dabal/tests/common/source/CommandLine.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/tests/common/source/CommandLine.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests",
+  "command": "/bin/clang++-11 -DDABAL_IMPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/dani/trabajo/proyectos/dabal/tests/common/include -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -std=gnu++17 -o CMakeFiles/tests.dir/common/source/TestManager.cpp.o -c /home/dani/trabajo/proyectos/dabal/tests/common/source/TestManager.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/tests/common/source/TestManager.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests",
+  "command": "/bin/clang++-11 -DDABAL_IMPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/dani/trabajo/proyectos/dabal/tests/common/include -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -std=gnu++17 -o CMakeFiles/tests.dir/test_callbacks/test.cpp.o -c /home/dani/trabajo/proyectos/dabal/tests/test_callbacks/test.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/tests/test_callbacks/test.cpp"
+},
+{
+  "directory": "/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests",
+  "command": "/bin/clang++-11 -DDABAL_IMPORTS -DDABAL_LINUX -DDABAL_POSIX -DDABAL_X64_CLANG -DFMT_LOCALE -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/dani/trabajo/proyectos/dabal/tests/common/include -I/home/dani/trabajo/proyectos/dabal/dabal/include -isystem /home/dani/programs/vcpkg/installed/x64-linux/include -g -std=gnu++17 -o CMakeFiles/tests.dir/test_threading/test.cpp.o -c /home/dani/trabajo/proyectos/dabal/tests/test_threading/test.cpp",
+  "file": "/home/dani/trabajo/proyectos/dabal/tests/test_threading/test.cpp"
+}
+]
