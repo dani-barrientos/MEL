@@ -50,28 +50,11 @@ mProcessInfo(nullptr)
 ProcessScheduler::~ProcessScheduler(void)
 {
 	TProcessList::iterator	i;
-
-	for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
-	{
-		(*i)->setProcessScheduler( NULL );
-
-	}
 	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 	{
 		(*i)->setProcessScheduler( NULL );
 	}
-	for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
-	{
-		(*i)->setProcessScheduler( NULL );
-
-	}
-
 }
-
-
-
-
-
 /**
 * =============================================================================
 */
@@ -92,12 +75,9 @@ void ProcessScheduler::executeProcesses()
 		mProcessInfo = pi;
 	}
 	auto previousProcess = mProcessInfo->current;
-	//Process* previousProcess = (Process*)TLS::getValue( gTLSCurrentProcessKey ); //TODO por alguna raz�n en VTS lo hac�a en cada executeProcesses..
-	
 	assert(	mTimer != NULL );
 	uint64_t time= mTimer->getMilliseconds();
 	//inserto procesos pendientes
-	//mNew.clear();
 	mCS.enter();
 	end = mNewProcesses.end();
 	for( i = mNewProcesses.begin(); i != end; ++i )
@@ -106,38 +86,13 @@ void ProcessScheduler::executeProcesses()
 		(*i)->mLastTime = time;
 		(*i)->setProcessScheduler( this );
 	}
-	mNewProcesses.clear();
-	end = mNewInitialProcesses.end();
-	for( i = mNewInitialProcesses.begin(); i != end; ++i )
-	{
-		mInitialProcesses.push_back( *i );
-		(*i)->setProcessScheduler( this );
-		(*i)->mLastTime = time;
-	}
-	mNewInitialProcesses.clear();
-	end = mNewFinalProcesses.end();
-	for( i = mNewFinalProcesses.begin(); i != end; ++i )
-	{
-		mFinalProcesses.push_back( *i );
-		(*i)->setProcessScheduler( this );
-		(*i)->mLastTime = time;
-	}
-	mNewFinalProcesses.clear();
+	mNewProcesses.clear();	
 	mCS.leave();
-
-	executeProcesses( time,mInitialProcesses);
-	executeProcesses( time,mProcessList);
-	executeProcesses( time,mFinalProcesses);
-
-	/*for (auto p : mNew)
-	{
-		insertProcess(p, NORMAL);
-	}	*/
-	//TLS::setValue( gTLSCurrentProcessKey,previousProcess);
+	_executeProcesses( time,mProcessList);
 	mProcessInfo->current = previousProcess;
 }
 
-void ProcessScheduler::executeProcesses( uint64_t time,TProcessList& processes )
+void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes )
 {
 	std::shared_ptr<Process> p;
 
@@ -145,17 +100,41 @@ void ProcessScheduler::executeProcesses( uint64_t time,TProcessList& processes )
 	{
 		TProcessList::iterator i = processes.begin();
 		TProcessList::iterator end = processes.end();
+		Process::EProcessState state;
 		while( i != end )
 		{
 			p = *i;
+			
+			//@todo el sleeped no debería ser un estado?? eso de un boleano no cuadra mucho
+			if ( p->getAsleep())
+				continue;
+			mProcessInfo->current = p;
+			state = p->getState();			
+			if ( state == Process::EProcessState::TRYING_TO_KILL )
+			{
+				//call kill again
+				p->kill();
+			}
+			unsigned int lap = (unsigned int)((time-p->getLastTime())-p->getPausedTime());
+			const auto mask = Process::EProcessState::PREPARED | Process::EProcessState::PREPARED_TO_DIE/* | TRYING_TO_KILL*/;
+			//TODO creo que esto es un fallo conceptual importante..ya que llama al update tanto si se cumple el per�odo como si se est� TRYING_TO_KILL. No parece que tenga sentido
+			if (  ( state == Process::EProcessState::PREPARED && lap >= p->getStartTime() ) ||
+				( !(state & mask) && lap >= p->getPeriod() ) ) //TODO tal vez tenga sentido que si est� TRYING_TO_KILL y cumple el periodo si lo ejecute
+			{
+				p->update(time);
+			}
+			mProcessInfo->current = nullptr;				
+
+			/*
 			if( p->getActive() ) //si no est� activo paso de �l
 			{			
 				mProcessInfo->current = p;
 				p->onUpdate( time );
 				mProcessInfo->current = nullptr;				
 			}
+			*/
 			//check if Process is trying to kill, then retry kill
-			if ( p->getState() == Process::TRYING_TO_KILL )
+			if ( p->getState() == Process::EProcessState::TRYING_TO_KILL )
 			{
 				p->kill();
 			}
@@ -191,23 +170,11 @@ void ProcessScheduler::executeProcesses( uint64_t time,TProcessList& processes )
 void ProcessScheduler::pauseProcesses()
 {
 	TProcessList::iterator	i;
-
-	for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
-	{
-		(*i)->pause();
-	}
 	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 	{
 		(*i)->pause();
 	}
-	for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
-	{
-		(*i)->pause();
-	}
-
 }
-
-
 
 /**
 * =============================================================================
@@ -215,55 +182,25 @@ void ProcessScheduler::pauseProcesses()
 void ProcessScheduler::activateProcesses()
 {
 	TProcessList::iterator	i;
-
-	for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
-	{
-		(*i)->activate();
-	}
 	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 	{
 		(*i)->activate();
 	}
-	for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
-	{
-		(*i)->activate();
-	}
-
 }
 
-
-/**
-* =============================================================================
-*/
-void ProcessScheduler::killTask()
+void ProcessScheduler::_killTasks()
 {
 	TProcessList::iterator	i;
-
-	for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
-	{
-		(*i)->kill();
-	}
 	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
-	{
-		(*i)->kill();
-	}
-	for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
 	{
 		(*i)->kill();
 	}
 	mCS.enter();
-	for( i = mNewInitialProcesses.begin(); i != mNewInitialProcesses.end(); ++i)
-	{
-		(*i)->kill();
-	}
 	for( i = mNewProcesses.begin(); i != mNewProcesses.end(); ++i)
 	{
 		(*i)->kill();
 	}
-	for( i = mNewFinalProcesses.begin(); i != mNewFinalProcesses.end(); ++i)
-	{
-		(*i)->kill();
-	}
+
 	mCS.leave();
 	mKillingProcess = false;
 }
@@ -279,75 +216,47 @@ void ProcessScheduler::killProcesses( bool deferred )
 		mKillingProcess = true;
 		auto task = std::make_shared<GenericProcess>();
 		task->setProcessCallback(
-			addParam<bool,::core::EGenericProcessState, uint64_t,Process*,void>
+			addParam<::core::EGenericProcessResult,::core::EGenericProcessState, uint64_t,Process*,void>
 			(
-				addParam<bool,Process*, uint64_t,void>
+				addParam<::core::EGenericProcessResult,Process*, uint64_t,void>
 				(
-					addParam<bool, uint64_t,void>
+					addParam<::core::EGenericProcessResult, uint64_t,void>
 					(
 						returnAdaptor<void>
 						(
-							makeMemberEncapsulate( &ProcessScheduler::killTask, this )
-							,true
+							makeMemberEncapsulate( &ProcessScheduler::_killTasks, this )
+							,::core::EGenericProcessResult::KILL
 						)
 					)
 				)
 			)
 		);
-		insertProcess( task,HIGH );
+		insertProcess( task);
 
 	}
 	else
 	{
-		killTask();
+		_killTasks();
 	}
 }
 
 void ProcessScheduler::destroyAllProcesses()
 {
 	list< std::shared_ptr<Process> >::iterator i;
-	for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
-	{
-		(*i)->setProcessScheduler( NULL );
-
-	}
 	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 	{
 		(*i)->setProcessScheduler( NULL );
 	}
-	for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
-	{
-		(*i)->setProcessScheduler( NULL );
-
-	}
-	mInitialProcesses.clear();
 	mProcessList.clear();
-	mFinalProcesses.clear();
-	mNewInitialProcesses.clear();
 	mNewProcesses.clear();
-	mNewFinalProcesses.clear();
 }
 
-unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process,EProcessPriority priority )
+unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process)
 {
 	TProcessList::iterator	i;
-	TProcessList* usedList;
-
-	switch( priority )
-	{
-	case HIGH:
-		usedList = &mNewInitialProcesses;
-		break;
-	case NORMAL:
-		usedList = &mNewProcesses;
-		break;
-	case LOW:
-		usedList = &mNewFinalProcesses;
-		break;
-	}
 	unsigned int newId;
 
-	if (process == 0)
+	if (process == nullptr)
 		return 0;
 	mCS.enter();
 	//mark process as pending for execution
@@ -357,13 +266,12 @@ unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process,EP
 	auto pos = mPendingIdTasks.find( process->getId() );
 	if ( pos == mPendingIdTasks.end() )
 	{
-		//no exist�a el proceso
 		newId = ++mRequestedTaskCount;
 
 		process->setId( newId );
 		mPendingIdTasks.insert({ newId, process });
 		mProcessCount++;
-		usedList->push_back( process );
+		mNewProcesses.push_back( process );
 	}else
 	{
 		//ya exist�a!
@@ -375,12 +283,6 @@ unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process,EP
 	return newId;
 }
 
-
-
-void ProcessScheduler::ini()
-{
-	//@todo mTimer = Timer::getSingletonPtr();
-}
 
 void ProcessScheduler::setTimer(std::shared_ptr<Timer> timer )
 {

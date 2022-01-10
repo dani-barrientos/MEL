@@ -54,7 +54,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
 	}
 	
 
-    execute( msegs );
+    _execute( msegs );
 	/*
 	_asm
 	{

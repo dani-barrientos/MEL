@@ -185,7 +185,6 @@ Runnable::Runnable(unsigned int maxTaskSize):
 	
 	gCurrrentRunnableCS.leave();
 	_addNewPool();
-	mTasks.ini();
 }
 
 Runnable::~Runnable() {
@@ -236,28 +235,12 @@ void Runnable::setTimer(std::shared_ptr<Timer> timer )
 }
 
 
-unsigned int Runnable::onPostTask(std::shared_ptr<Process> process, ETaskPriority priority )
+unsigned int Runnable::onPostTask(std::shared_ptr<Process> process )
 {
 	assert( process && "is NULL");
 	unsigned int taskId;
-	taskId = mTasks.insertProcess( process,(ProcessScheduler::EProcessPriority)priority );
+	taskId = mTasks.insertProcess( process );
 	return taskId;
-/*	assert( process && "is NULL");
-	unsigned int taskId;
-	bool ok =(mTasks.getProcessCount() <= mMaxTaskSize);
-	if ( ok  )
-	{
-		taskId = mTasks.insertProcess( process,(ProcessScheduler::EProcessPriority)priority );
-
-	}
-	else
-	{
-		SmartPtr<Process> auxiliar( process ); //para provocar que se destruya si es necesario el objeto
-		throw IllegalStateException("Task queue overflow");
-	}
-
-	return taskId;
-	*/
 }
 
 
@@ -342,9 +325,9 @@ Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& 
                 returnAdaptor<void>
                 (
                 linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
-                ,true
+                ,::core::EGenericProcessResult::KILL
                 )
-                ),autoKill, ::core::Runnable::NORMAL_PRIORITY_TASK, 0, 0, extraInfo
+                ),autoKill/* , ::core::Runnable::NORMAL_PRIORITY_TASK */, 0, 0, extraInfo
              );
         return info;
     }else

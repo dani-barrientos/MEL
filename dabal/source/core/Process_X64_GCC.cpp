@@ -52,7 +52,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
                   "pop %rbp");
      asm volatile ("ret" );
      asm volatile("continueExecuting:" );
-     execute( msegs );
+     _execute( msegs );
 }
 
 volatile void fakeFunction()

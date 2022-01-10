@@ -28,7 +28,7 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 	mProcessId(0),
 	mOwnerProcessScheduler( 0 ),
 	//mExecuteNextAfterFinish(false),
-	mState(PREPARED),
+	mState(EProcessState::PREPARED),
 	mSleeped(false),
 	mWaiting(false),
 	mWakeup(false),
@@ -79,7 +79,7 @@ void Process::setProcessScheduler(ProcessScheduler* const gestor)
 {
 	mOwnerProcessScheduler = gestor;
 	//attached paused
-	if ( mState == PAUSED )
+	if ( mState == EProcessState::PAUSED )
 		mPauseTime = mOwnerProcessScheduler->getTimer()->getMilliseconds();
 }	
 
@@ -91,10 +91,10 @@ void Process::setProcessScheduler(ProcessScheduler* const gestor)
 */
 void Process::pause( bool resetPreviousTime )
 {
-	if ( mState != PAUSED )
+	if ( mState != EProcessState::PAUSED )
 	{
 		mPreviousState = mState;
-		mState = PAUSED;
+		mState = EProcessState::PAUSED;
 		mResetPreviousTime = resetPreviousTime;
 
 		//if process is not atached to scheduler, doesn't matter pause time
@@ -107,7 +107,7 @@ void Process::pause( bool resetPreviousTime )
 */
 void Process::activate(  )
 {
-	if( mState == PAUSED )
+	if( mState == EProcessState::PAUSED )
 	{
 		mState = mPreviousState;
 		if ( mOwnerProcessScheduler )
@@ -121,7 +121,7 @@ void Process::activate(  )
 
 void Process::reset()
 {
-	mState = PREPARED;
+	mState = EProcessState::PREPARED;
 	mLastTime = (unsigned int)((mOwnerProcessScheduler!=NULL)?mOwnerProcessScheduler->getTimer()->getMilliseconds():0);
 	mPreviousTime = 0;
 }
@@ -139,36 +139,47 @@ Process::EProcessState Process::getState() const
 *
 * @param msegs    msegs
 */
-void Process::onUpdate(uint64_t msegs)
-{
-	if( mSleeped )
-		return; 
-	unsigned int lap = (unsigned int)((msegs-mLastTime)-mPausedTime);
-	//TODO se est� enrevesando ya esta comparaci�n. Revisarla para simplificarla si se puede
-	unsigned int mask = PREPARED | PREPARED_TO_DIE/* | TRYING_TO_KILL*/;
-	if ( mState == TRYING_TO_KILL )
-	{
-		//call kill again
-		kill();
-	}
-	//TODO creo que esto es un fallo conceptual importante..ya que llama al update tanto si se cumple el per�odo como si se est� TRYING_TO_KILL. No parece que tenga sentido
-	if (  ( mState == PREPARED && lap >= mStartTime ) ||
-		( !(mState & mask) && lap >= mPeriod ) ) //TODO tal vez tenga sentido que si est� TRYING_TO_KILL y cumple el periodo si lo ejecute
-	{
-		mUpdateTime = msegs;
-		/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no s� si vale hacerlo despu�s
-				SI EL checkMicrothread HICISE OTRO WAIT, CREO QUE NO FURRULARIA*/
-		checkMicrothread( msegs ); 
-		mPausedTime = 0;
-		mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
-		mPreviousTime = msegs;
+// void Process::update(uint64_t msegs)
+// {
+// 	if( mSleeped )
+// 		return; 
+// 	unsigned int lap = (unsigned int)((msegs-mLastTime)-mPausedTime);
+// 	//TODO se est� enrevesando ya esta comparaci�n. Revisarla para simplificarla si se puede
+// 	auto mask = EProcessState::PREPARED | EProcessState::PREPARED_TO_DIE/* | TRYING_TO_KILL*/;
+// 	if ( mState == EProcessState::TRYING_TO_KILL )
+// 	{
+// 		//call kill again
+// 		kill();
+// 	}
+// 	//TODO creo que esto es un fallo conceptual importante..ya que llama al update tanto si se cumple el per�odo como si se est� TRYING_TO_KILL. No parece que tenga sentido
+// 	if (  ( mState == EProcessState::PREPARED && lap >= mStartTime ) ||
+// 		( !(mState & mask) && lap >= mPeriod ) ) //TODO tal vez tenga sentido que si est� TRYING_TO_KILL y cumple el periodo si lo ejecute
+// 	{
+// 		mUpdateTime = msegs;
+// 		/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no s� si vale hacerlo despu�s
+// 				SI EL checkMicrothread HICISE OTRO WAIT, CREO QUE NO FURRULARIA*/
+// 		checkMicrothread( msegs ); 
+// 		mPausedTime = 0;
+// 		mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
+// 		mPreviousTime = msegs;
 
-	}
-	//los procesos asociados se ejecutan independientemente de que este proceso entre en ejecuci�n
-	/*if ( mAttachedProcesses )
-	{
-		mAttachedProcesses->executeProcesses();		
-	}*/
+// 	}
+// 	// //los procesos asociados se ejecutan independientemente de que este proceso entre en ejecuci�n
+// 	// if ( mAttachedProcesses )
+// 	// {
+// 	// 	mAttachedProcesses->executeProcesses();		
+// 	// }
+// }
+void Process::update(uint64_t msegs)
+{
+	mUpdateTime = msegs;
+	/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no s� si vale hacerlo despu�s
+			SI EL checkMicrothread HICISE OTRO WAIT, CREO QUE NO FURRULARIA*/
+	checkMicrothread( msegs ); 
+	mPausedTime = 0;
+	//@todo mirar bien la diferencia entre estos dos. Supongo que este mLastTime es diferente cuando hay cambios de contexto??? en principio no..
+	mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
+	mPreviousTime = msegs;
 }
 //void Process::attachProcess( Process* p )
 //{
@@ -201,23 +212,23 @@ void Process::setFinished(bool value)
 *
 * @param msegs    msegs
 */
-void Process::execute(uint64_t msegs){
+void Process::_execute(uint64_t msegs){
 
 	switch ( mState )
 	{
-	case PREPARED:
+	case EProcessState::PREPARED:
 		mFinished = false;
 		//ya que en este momento ya tiene que estar creado el temporizador
 		//mLastTime = msegs;
 		mPreviousTime = msegs;
 		mBeginTime = msegs;
-		mState = INITIATED;
+		mState = EProcessState::INITIATED;
 		onInit( msegs );   //por si se quiere hacer alguna inicializacion
-		update( msegs );  //maybe update wants change state (through kill, for example)
+		onUpdate( msegs );  //maybe update wants change state (through kill, for example)
 
 		break;
-	case INITIATED:
-	case TRYING_TO_KILL:
+	case EProcessState::INITIATED:
+	case EProcessState::TRYING_TO_KILL:
 		//llamamos a la funci�n de comportamiento del objeto particular
 		//TODO no s� si esto est� bien colocado del todo aqui. La pretensi�n es
 		//que no corra el tiempo si no se desea al pausar
@@ -226,13 +237,13 @@ void Process::execute(uint64_t msegs){
 			mPreviousTime = msegs;
 			mResetPreviousTime = false;
 		}
-		update( msegs );
+		onUpdate( msegs );
 		break;
-	case WAITING_FOR_SCHEDULED:
+	case EProcessState::WAITING_FOR_SCHEDULED:
 //		TEMAS: �REDUCIR PER�ODO?�avisar de alguna forma?
 		//process was in "switched" state. Now It can be killed
 		KillEventSubscriptor::triggerCallbacks( shared_from_this() );
-		mState = PREPARED_TO_DIE;
+		mState = EProcessState::PREPARED_TO_DIE;
 		killDone();
 		break;
     default:
@@ -290,7 +301,7 @@ Process::ESwitchResult Process::switchProcess( bool v )
 		_switchProcess(); //@todo quitar este par�metro del _switchProcess
 
 		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despert� por wakeup
-		if (p->getState() == WAITING_FOR_SCHEDULED)
+		if (p->getState() == EProcessState::WAITING_FOR_SCHEDULED)
 			result = ESwitchResult::ESWITCH_KILL;
 		else if (p->mWakeup)
 		{

@@ -4,9 +4,6 @@
 #include <core/Process.h>
 using core::Process;
 
-#include <core/Callback.h>
-using core::Callback;
-#include <utility>
 #include <functional>
 namespace core
 {
@@ -21,11 +18,13 @@ namespace core
 	{
 		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
-		typedef Callback< bool, uint64_t, Process*, EGenericProcessState > GenericCallback;
+		//typedef Callback< bool, uint64_t, Process*, EGenericProcessState > GenericCallback;
+		typedef std::function<EGenericProcessResult (uint64_t,Process*,EGenericProcessState)> GenericCallback;
 	private:
-		GenericCallback*		mProcessCallback;
+		//GenericCallback*		mProcessCallback;
+		GenericCallback			mProcessCallback;
 		EGenericProcessState	mCurrentState;
-		volatile bool			mKillAccepted;
+		volatile EGenericProcessResult			mUpdateResult;
 		bool					mAutoKill;
 
 	public:
@@ -42,10 +41,10 @@ namespace core
 		* @param[in] functor A functor with signature bool f(unsigned int msegs, Process*, EGenericProcessState )
 		*/
 		template <class F> void setProcessCallback( F&& functor );
-		void setProcessCallback( std::function< bool(uint64_t,Process*,EGenericProcessState)>&& );
+		/*void setProcessCallback( std::function< bool(uint64_t,Process*,EGenericProcessState)>&& );
 		void setProcessCallback(const std::function< bool(uint64_t, Process*, EGenericProcessState)>&);
-		void setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&);
-		inline GenericProcess::GenericCallback* getProcessCallback() const;
+		void setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&);*/
+		inline const GenericProcess::GenericCallback& getProcessCallback() const;
 		/**
 		* set if process will be atomatically killed when kill signal is received
 		* instead waiting for internal callback to terminate.
@@ -78,15 +77,16 @@ namespace core
 		* @param msegs    msegs
 		* @remarks If callback method return false. Process is killed.
 		*/
-		void update(uint64_t msegs) override;
+		void onUpdate(uint64_t msegs) override;
 
 	};
 	template <class F> void GenericProcess::setProcessCallback( F&& functor )
 	{
-		delete mProcessCallback;
-		mProcessCallback = new GenericCallback( ::std::forward<F>(functor),::core::use_functor );
+		// delete mProcessCallback;
+		// mProcessCallback = new GenericCallback( ::std::forward<F>(functor),::core::use_functor );
+		mProcessCallback = std::forward<F>(functor);
 	}
-	GenericProcess::GenericCallback* GenericProcess::getProcessCallback() const
+	const GenericProcess::GenericCallback& GenericProcess::getProcessCallback() const
 	{
 		return mProcessCallback;
 	}

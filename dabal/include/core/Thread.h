@@ -255,7 +255,7 @@ namespace core {
 			/**
 			* suspend inmediately, can be called only from same thread execution
 			*/
-			bool suspendInternal(uint64_t millis,Process* proc,::core::EGenericProcessState);
+			::core::EGenericProcessResult suspendInternal(uint64_t millis,Process* proc,::core::EGenericProcessState);
 			/**
 			* called when thread begins to run
 			*/

@@ -27,9 +27,10 @@ int main(int argc, const char* argv[])
 	//tebngo que ver que tenga funcionalidad similar a los appedern, por el tema de redirigir la salida a donde quiera->creo que son los sink
 	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 	spdlog::error("Prueba error");
-	spdlog::set_level(spdlog::level::err); // Set global log level to debug
+	spdlog::set_level(spdlog::level::err); // Set global log level to err
 	spdlog::info("otra prueba");
 	spdlog::error("Prueba error 2");
+	spdlog::set_level(spdlog::level::debug); // Set global log level to debug
   	std::cout << "Running main with "<<argc<<" arguments:\n";
 	for(int i =0;i<argc;++i)
 	{
@@ -49,14 +50,19 @@ int main(int argc, const char* argv[])
 			std::cout << key << " -> " << val.first <<'\n';
 		}
 	}
+	TestManager::TestType currTest = nullptr;
 	auto testOpt = CommandLine::getSingleton().getOption(TEST_OPTION);
 	if (  testOpt != std::nullopt )
 	{
 		const string& name = testOpt.value();
-		auto currTest = TestManager::getSingleton().getTest(name);
+		currTest = TestManager::getSingleton().getTest(name);
 		std::cout << "Running test: " << name << '\n';
+		
+	}else
+		currTest = TestManager::getSingleton().getTest(test_threading::TEST_NAME);
+	
+	if (currTest)
 		return currTest();
-	}
-	return 0;
+	else return 0;
 	
 }

@@ -1,0 +1,8 @@
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/CMakeFiles/rebuild_cache.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/CMakeFiles/edit_cache.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal/CMakeFiles/rebuild_cache.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal/CMakeFiles/edit_cache.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/dabal/CMakeFiles/dabal.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests/CMakeFiles/rebuild_cache.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests/CMakeFiles/edit_cache.dir
+/home/dani/trabajo/proyectos/dabal/out/build/Clang Linux/tests/CMakeFiles/tests.dir

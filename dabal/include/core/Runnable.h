@@ -47,11 +47,11 @@ namespace core
 	//so you need to do RUNNABLE_CREATETASK( (link1st<false,void>( xxx )) ) or RUNNABLE_CREATETASK( link1st<false coma void>( xxx ) )
 	//to show de preprocessor that the ',' is not a parameter separator sign
 #define RUNNABLE_CREATETASK( f ) \
-	addParam< bool,::core::EGenericProcessState,uint64_t,Process*,void >( \
-	addParam< bool,Process*,uint64_t,void > \
-	(addParam< bool,uint64_t,void >( f ) ) )
+	addParam< ::core::EGenericProcessResult,::core::EGenericProcessState,uint64_t,Process*,void >( \
+	addParam< ::core::EGenericProcessResult,Process*,uint64_t,void > \
+	(addParam< ::core::EGenericProcessResult,uint64_t,void >( f ) ) )
 //macro to simplify task creation from lambda expression
-#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<bool(uint64_t, Process*, ::core::EGenericProcessState)>(lambda)
+#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::core::EGenericProcessResult (uint64_t, Process*, ::core::EGenericProcessState)>(lambda)
 //useful macro to declare task parameters
 #define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::core::EGenericProcessState s
 
@@ -90,10 +90,6 @@ namespace core
 		};
 	public:			
 		static const unsigned int DEFAULT_POOL_SIZE = 512;
-		enum ETaskPriority {
-			HIGH_PRIORITY_TASK = ProcessScheduler::HIGH, 
-			NORMAL_PRIORITY_TASK = ProcessScheduler::NORMAL, 
-			LOW_PRIORITY_TASK = ProcessScheduler::LOW} ;
 		
 		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
 		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
@@ -200,7 +196,7 @@ namespace core
 		*/
 
 		virtual unsigned int onRun() = 0;
-		virtual unsigned int onPostTask(std::shared_ptr<Process> process,ETaskPriority priority);
+		virtual unsigned int onPostTask(std::shared_ptr<Process> process);
 
 		/**
 		* set callback to call when a task is added
@@ -224,7 +220,7 @@ namespace core
 		* @return an integer being the internal task id just created
 		* @internally, it calls protected onPostTask, so children can override default behaviour
 		*/
-		inline unsigned int postTask(std::shared_ptr<Process> process,ETaskPriority priority);
+		inline unsigned int postTask(std::shared_ptr<Process> process);
 
 		/**
 		* Creates a new runnable object.
@@ -264,7 +260,7 @@ namespace core
 		std::shared_ptr<Process> post(
 			F&& task_proc,
 			bool autoKill = false,
-			ETaskPriority priority = NORMAL_PRIORITY_TASK,
+			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
 			unsigned int period = 0,unsigned int startTime = 0,void* extraInfo = NULL);
 		/**
 		* executes a function in a context of the Runnable.
@@ -391,7 +387,7 @@ namespace core
 	std::shared_ptr<Process> Runnable::post(
 		F&& task_proc,
 		bool autoKill,
-		ETaskPriority priority ,
+		// ETaskPriority priority ,
 		unsigned int period,unsigned int startTime,void* extraInfo  )
 	{
 		::std::shared_ptr<RunnableTask> p (new (this)RunnableTask());
@@ -401,7 +397,7 @@ namespace core
 		p->setStartTime( startTime );
 		p->setExtraInfo( extraInfo );
 		p->setAutoKill( autoKill );
-		postTask(p,priority);
+		postTask(p);
 		return p;
 	}
 
@@ -465,7 +461,7 @@ namespace core
 						, true
 						)
 				), false/*@todo esto tengo que poder configurarlo*/
-				, NORMAL_PRIORITY_TASK
+				/* , NORMAL_PRIORITY_TASK */
 				, 0, delay, extraInfo
 
 			);
@@ -538,9 +534,9 @@ namespace core
 		
 		return result;
 	}
-	unsigned int Runnable::postTask(std::shared_ptr<Process> process,Runnable::ETaskPriority priority)
+	unsigned int Runnable::postTask(std::shared_ptr<Process> process)
 	{
-		return onPostTask( process, priority );
+		return onPostTask( process );
 	}
 	template <class F>
 	Runnable::FutureTriggerInfo* Runnable::triggerOnDone( const ::core::Future_Base& future, F&& functor,bool autoKill, void* extraInfo)
@@ -557,7 +553,7 @@ namespace core
 						linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
 						,true
 					)
-				),autoKill,::core::Runnable::NORMAL_PRIORITY_TASK,0,0,extraInfo
+				),autoKill/* ,::core::Runnable::NORMAL_PRIORITY_TASK*/,0,0 ,extraInfo
 			);
 			return info;
 		}else

@@ -30,7 +30,7 @@ int tamanoActual;
     MThreadAttributtes* realThis = this;
 	
     asm volatile( "movl %[v],%%eax"::[v] "m" (realThis):"%eax","%ebx" ); //force ebx save	
-    //lo de poner una P es una patra–a del GCC para que no pongo el $
+    //lo de poner una P es una patraï¿½a del GCC para que no pongo el $
 
     asm volatile( "movl %%esp,(%P[v])(%%eax)"::[v] "i" (mIniSPOFF)); 
     asm volatile( "mov %%ebp,(%P[v])(%%eax)"::[v] "i" (mIniBPOFF));
@@ -58,8 +58,8 @@ int tamanoActual;
     asm volatile("continueExecuting:" );
 
  
-        execute( msegs );
-     	//chapuza, hacerlo más óptimo
+        _execute( msegs );
+     	//chapuza, hacerlo mï¿½s ï¿½ptimo
     asm volatile("movl %P[v],%%eax"::[v] "m" (realThis));
     asm volatile("movl (%P[v])(%%eax),%%ecx"::[v] "i" (mIniSPOFF):"%ecx");
     asm volatile("sub %esp,%ecx");
@@ -71,7 +71,7 @@ int tamanoActual;
 
 
 }
-//!@note: optimize attribute ignored by clangºº
+//!@note: optimize attribute ignored by clangï¿½ï¿½
 //volatile void fakeFunction() __attribute__((optimize(0)));
 volatile void fakeFunction()
 {

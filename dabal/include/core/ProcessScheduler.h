@@ -30,6 +30,13 @@ using core::CallbackSubscriptor;
 #include <mpl/Int2Type.h>
 using ::mpl::Int2Type;
 #include <utility>
+
+// temas que quiero:
+//  - quitar esas prioridades. meter un objeto de propiedades en el post donde se indiquen cosas, si es que las quiero meter
+//   - ¿poder insertar al principio o al final?->¿de verdad tiene sentido? al final es un bucle infinito donde no importa. Lo que si puede
+//   importar es insertar antes o después que otra¿¿??
+
+
 namespace core
 {
 	typedef std::pair<mpl::Int2Type<0>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> SleepSubscriptor;
@@ -46,33 +53,20 @@ namespace core
 		,private EvictSubscriptor
 	{
 		typedef unsigned int ThreadID;
+		friend class Process;
 	public:
 		typedef list< std::shared_ptr<Process> > TProcessList;
-		//!todo lo de las prioridades muy primitivo, por eso est� aqu� fuleramente
-		//!en realidad ahora s�lo significan si el proceso se ejecuta el primero de la lista, en el medio o al final
-		enum EProcessPriority
-		{
-			HIGH = 0,NORMAL,LOW
-		};
-		/**
-		* @todo gestionarPrioridades
-		*/
-		ProcessScheduler();
-		/**
-		*/
-		virtual ~ProcessScheduler(void);
-		void ini();
-
+		ProcessScheduler();		
+		~ProcessScheduler(void);
 
 		/**
 		* =============================================================================
 		*
 		* @param process insert new process in scheduler
-		* @param priority process priority
 		* @warning 	if process is already inserted behaviour is unpredictable
 		* @return taks identifier.
 		*/
-		unsigned int insertProcess( std::shared_ptr<Process> process,EProcessPriority priority);
+		unsigned int insertProcess( std::shared_ptr<Process> process);
 
 
 		/**
@@ -95,12 +89,12 @@ namespace core
 		* Pauses proceses matching the given predicate
 		*
 		* @param predicate predicate
+		* @todo no me gusta, hay que generalizarlo mejor. Como obtener los procesos que cunplen algo y actuar sobre ellos
 		*/
 		template <class T>
 		void pauseProcesses(T& predicate);
 
-		// REHACER CORRECTAMENTE PARA CONJUNTOS DE Type
-		//void pauseProcesses(const set<int>& tipos);
+		
 		/**
 		* =============================================================================
 		*/
@@ -110,6 +104,7 @@ namespace core
 		* you need to continue processing until no more process are pending (getProcessCount() == 0)
 		* @param[in] deferred If true, then kill will be posted as a new process. If False, it's done inmediately.
 		* First type is when done into Scheduler context and second form is when done from another thread
+		@todo no me gusta
 		*/
 		void killProcesses( bool deferred );
 
@@ -126,19 +121,8 @@ namespace core
 		* return Process pointer for given task id. YOu can't take ownership
 		*/
 		inline std::shared_ptr<Process> getProcessForId( unsigned int taskId ) const;
-
-		inline const TProcessList& getInitialProcesses() const;
-		inline const TProcessList& getFinalProcesses() const;
-		/**
-		* @todo tengo que revisar estas funciones que no me convencen un pijo as�
-		*/
 		inline TProcessList& getProcesses();
-		/**
-		* get new processigs to be scheduled (recently inserted)
-		*/
 		inline TProcessList& getPendingProcesses();
-		inline TProcessList& getPendingInitialProcesses();
-		inline TProcessList& getPendingFinalProcesses();
 		/**
 		* do pred for each process in scheduler.
 		* @param[in] pred function of type: bool f(Process*)
@@ -171,16 +155,7 @@ namespace core
         * get current executing process in current thread
         */
 		static std::shared_ptr<Process> getCurrentProcess();
-		/**
-		* internal method intended to be used by Process to notify was awakened
-		* @todo maybe this will be deprecated in favor of another mechanism (CallbackSubscriptor, etc)
-		*/
-		void processAwakened(std::shared_ptr<Process>);
-		/**
-		* internal method intended to be used by Process to notify was asleep
-		* @todo maybe this will be deprecated in favor of another mechanism (CallbackSubscriptor, etc)
-		*/
-		void processAsleep(std::shared_ptr<Process>);
+		
 		/**
 		* subscribe to process sleep event
 		*/
@@ -223,12 +198,8 @@ namespace core
 		};
 		ProcessInfo*	mProcessInfo;
 		TProcessList mProcessList;
-		TProcessList mFinalProcesses;
-		TProcessList mInitialProcesses;
 		//new processes to insert next time
 		TProcessList mNewProcesses;
-		TProcessList mNewInitialProcesses;
-		TProcessList mNewFinalProcesses;
 
 		mutable CriticalSection	mCS;
 		mutable CriticalSection	mPendingIdTasksCS;
@@ -247,12 +218,22 @@ namespace core
 		/**
 		* helper function
 		*/
-		void executeProcesses(uint64_t time,TProcessList& processes) OPTIMIZE_FLAGS;
+		void _executeProcesses(uint64_t time,TProcessList& processes) OPTIMIZE_FLAGS;
 
-		void killTask();
+		void _killTasks();
 		void _triggerSleepEvents(std::shared_ptr<Process> p);
 		void _triggerWakeEvents(std::shared_ptr<Process> p);
 		static ProcessInfo* _getCurrentProcessInfo();
+		/**
+		* internal method intended to be used by Process to notify was awakened
+		* @todo maybe this will be deprecated in favor of another mechanism (CallbackSubscriptor, etc)
+		*/
+		void processAwakened(std::shared_ptr<Process>);
+		/**
+		* internal method intended to be used by Process to notify was asleep
+		* @todo maybe this will be deprecated in favor of another mechanism (CallbackSubscriptor, etc)
+		*/
+		void processAsleep(std::shared_ptr<Process>);
 	};
 	std::shared_ptr<Process> ProcessScheduler::getProcessForId( unsigned int taskId ) const
 	{
@@ -272,14 +253,7 @@ namespace core
 	void ProcessScheduler::pauseProcesses(T& predicate)
 	{
 		TProcessList::iterator	i;
-
-		for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i)
-		{
-			if ( predicate( *i ) )
-			{
-				(*i)->pause();
-			}
-		}
+	
 		for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 		{
 			if ( predicate( *i ) )
@@ -287,14 +261,6 @@ namespace core
 				(*i)->pause();
 			}
 		}
-		for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i)
-		{
-			if ( predicate( *i ) )
-			{
-				(*i)->pause();
-			}
-		}
-
 	}
 	bool ProcessScheduler::checkFor(const unsigned int taskId)
 	{
@@ -304,14 +270,6 @@ namespace core
 		mPendingIdTasksCS.leave();
 		return taskCompleted;
 	}
-	const ProcessScheduler::TProcessList& ProcessScheduler::getInitialProcesses() const
-	{
-		return mInitialProcesses;
-	}
-	const ProcessScheduler::TProcessList& ProcessScheduler::getFinalProcesses() const
-	{
-		return mFinalProcesses;
-	}
 	ProcessScheduler::TProcessList& ProcessScheduler::getProcesses() 
 	{
 		return mProcessList;
@@ -320,27 +278,15 @@ namespace core
 	{
 		return mNewProcesses;
 	}
-	ProcessScheduler::TProcessList& ProcessScheduler::getPendingInitialProcesses()
-	{
-		return mNewInitialProcesses;
-	}
-	ProcessScheduler::TProcessList& ProcessScheduler::getPendingFinalProcesses()
-	{
-		return mFinalProcesses;
-	}
+	
 	template <class Predicado> bool ProcessScheduler::forEach( Predicado pred)
 	{
 		TProcessList::const_iterator i;
-		const TProcessList *processArray[6];
+		const TProcessList *processArray[2];
 		const TProcessList* aux;
-		processArray[0] = &getInitialProcesses();
-		processArray[1] = &getFinalProcesses();
-		processArray[2] = &getProcesses();
-		processArray[3] = &mNewProcesses;
-		processArray[4] = &mNewInitialProcesses;
-		processArray[5] = &mNewFinalProcesses;
+		processArray[0] = &getProcesses();
+		processArray[1] = &mNewProcesses;
 		bool res = false;
-
 		int count = 0;
 		while( count < 6 )
 		{
@@ -380,17 +326,6 @@ namespace core
 			if ( function( *i ) )
 				processList.push_back( *i );
 		}
-		for( i = mInitialProcesses.begin(); i != mInitialProcesses.end(); ++i )
-		{
-			if ( function( *i ) )
-				processList.push_back( *i );
-		}
-		for( i = mFinalProcesses.begin(); i != mFinalProcesses.end(); ++i )
-		{
-			if ( function( *i ) )
-				processList.push_back( *i );
-		}
-
 	}
 	const std::shared_ptr<Timer> ProcessScheduler::getTimer() const
 	{

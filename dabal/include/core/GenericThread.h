@@ -96,7 +96,7 @@ namespace core
 		/**
 		* overriden from Runnable
 		*/
-		unsigned int onPostTask(std::shared_ptr<Process> process,ETaskPriority priority) override;
+		unsigned int onPostTask(std::shared_ptr<Process> process) override;
 		//! overriden from Thread
 		void terminate(unsigned int exitCode) override;
 	};

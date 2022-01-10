@@ -14,6 +14,7 @@ There are 3 diferent macros that guide compilation based on target platform.
  Por tanto, tengo que "undefinir" esa variable de entorno al ir a instalar un paquete o usarlo..qué raro
  Mirar https://github.com/microsoft/vcpkg/blob/master/docs/users/config-environment.md
  Resulta que si defino esa variable con export desde terminal, va bien. El problema es definiendola en el /etc/environment
+ Definiendola en el $HOME/.profile con export, funciona todo ya bien
  # testing
  execute ctest in out/build/[required configuration]/tests
  

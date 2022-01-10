@@ -65,7 +65,9 @@ using core::CallbackSubscriptor;
 namespace core
 {
 
-	
+// meter los processprops o similar
+// o bien esto se pasará en el Runnable y éste asignará los atributos necesarios según los props??casi mnejor	
+// lo de usar binary tampco vale para mucho
 	class ProcessScheduler;  //predeclaration
 	/**
 	* @brief a periodic task
@@ -99,34 +101,19 @@ namespace core
 		* @created 28-mar-2005 16:20:24
 		* @version 1.0
 		*/
-		typedef enum
+		enum EProcessState : uint8_t
 		{
-			/**
-			* Process created but not executed
-			*/
-			PREPARED = binary<1>::value,
-			/**
-			* executing process normally
-			*/
-			INITIATED = binary<10>::value,
-			PAUSED = binary<100>::value,
-			/**
-			* it's going to die, but process manager doesn't discard it
-			*/
-			PREPARED_TO_DIE = binary<1000>::value,
-			TRYING_TO_KILL = binary<10000>::value,
-			WAITING_FOR_SCHEDULED = binary<100000>::value,
-			/**
-			* process is out of process manager
-			*/
-			DEAD = binary<1000000>::value
-		} EProcessState;
+			PREPARED = binary<1>::value, //!< Process created but not executed
+			INITIATED = binary<10>::value, //!< executing process normally
+			PAUSED = binary<100>::value, //!< paused
+			PREPARED_TO_DIE = binary<1000>::value, //!< it's going to die, but process manager doesn't discard it
+			TRYING_TO_KILL = binary<10000>::value, //!< sending kill signal but no accepted yet
+			WAITING_FOR_SCHEDULED  = binary<100000>::value, //!< switched and no shceduled yet
+			DEAD = binary<1000000>::value //!< process is out of process manager
+		};
 		//! reason why Process returns for context switch
 		enum class ESwitchResult{ ESWITCH_OK,ESWITCH_WAKEUP,ESWITCH_KILL };
-		/**
-		* nontrustworthy. Don't use yet still
-		*/
-		//Process( const Process& proc2 );
+		
 		/**
 		*
 		*
@@ -143,7 +130,7 @@ namespace core
 		*
 		* @param gestor    gestor
 		*/
-		void setProcessScheduler(ProcessScheduler*const  gestor);
+		void setProcessScheduler( ProcessScheduler* const  gestor);
 		/**
 		* pause this process
 		*/
@@ -194,7 +181,7 @@ namespace core
 		inline void setPeriod(unsigned int value);
 
 		EProcessState getState() const;
-		inline bool getActive() const;
+		//inline bool getActive() const;
 		/**
 		* it's process out of process manager?
 		*/
@@ -219,6 +206,8 @@ namespace core
 		* @return time in previous iteration
 		*/
 		inline uint64_t getPreviousTime() const;
+		//@todo revisar esto que no tiene mucho sentido frente al anterior..
+		inline uint64_t getLastTime() const;
 		/**
 		* @return time of execution for current iteration (i.e. time passed at update function )
 		*/
@@ -230,7 +219,7 @@ namespace core
 		* @param msegs    msegs
 		*/
 
-		void onUpdate(uint64_t msegs) OPTIMIZE_FLAGS;
+		void update(uint64_t msegs) OPTIMIZE_FLAGS;
 
 		/**
 		* gets ProcessScheduler which holds this Process
@@ -332,16 +321,7 @@ namespace core
 		/**
 		* scheduler in which is inserted
 		*/
-		ProcessScheduler* mOwnerProcessScheduler;
-
-		/**
-		* main execution block
-		*
-		*
-		* @param msegs    msegs
-		*/
-		void execute(uint64_t msegs) OPTIMIZE_FLAGS;
-
+		ProcessScheduler* mOwnerProcessScheduler;		
 		/**
 		* @warning no la tengo muy clara si realmente se podr� evitar
 		*/
@@ -384,7 +364,13 @@ namespace core
 		//SmartPtr<Process>	mNext; //next process in chain. It's scheduled when killed
 		//Callback<void,Process*>* mKillCallback;
 
-
+		/**
+		* main execution block
+		*
+		*
+		* @param msegs    msegs
+		*/
+		void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
 		volatile void checkMicrothread(uint64_t msegs ) OPTIMIZE_FLAGS;
 
 	protected:
@@ -394,7 +380,7 @@ namespace core
 		*
 		* @param msecs milliseconds
 		*/
-		virtual void update(uint64_t msecs) = 0;
+		virtual void onUpdate(uint64_t msecs) = 0;
 		/**
 		* called when process inits
 		*
@@ -436,24 +422,24 @@ namespace core
 
 	void Process::setDead()
 	{
-		mState = DEAD;
+		mState = EProcessState::DEAD;
 	}
 	ProcessScheduler *const Process::getProcessScheduler() const
 	{
 		return mOwnerProcessScheduler;
 	}
 
-	bool Process::getActive() const
+/*	bool Process::getActive() const
 	{
-		return (mState!= PAUSED) && !mSleeped;  //quitar la condicion de mSleeped?? no es ortogonal
-	}
+		return (mState!= EProcessState::PAUSED) && !mSleeped;  //quitar la condicion de mSleeped?? no es ortogonal
+	}*/
 	bool Process::getDead() const
 	{
-		return (mState == DEAD );
+		return (mState ==EProcessState:: DEAD );
 	}
 	bool Process::getPreparedToDie() const
 	{
-		return (mState == PREPARED_TO_DIE);
+		return (mState == EProcessState::PREPARED_TO_DIE);
 	}
 	unsigned int Process::getPeriod() const
 	{
@@ -466,7 +452,7 @@ namespace core
 	}
 	bool Process::getInitiated() const
 	{
-		return ( mState == INITIATED );
+		return ( mState == EProcessState::INITIATED );
 	}
 	void Process::resetTime()
 	{
@@ -476,6 +462,11 @@ namespace core
 	{
 		return mPreviousTime;
 	}
+	
+	uint64_t Process::getLastTime() const
+	{
+		return mLastTime;
+	}
 	uint64_t Process::getUpdateTime() const
 	{
 		return mUpdateTime;
@@ -484,17 +475,17 @@ namespace core
 	{
 		//TODO esta funcion no est� un pijo bien, hay que revisarla junto con el Process::execute
 
-		if ( !(mState & DEAD) ) 
+		if ( mState != EProcessState::DEAD ) 
 		{
 			if ( force )
 			{
 				if ( mSwitched )
 				{
-					mState = WAITING_FOR_SCHEDULED;
+					mState = EProcessState::WAITING_FOR_SCHEDULED;
 					wakeUp();
 				}else
 				{
-					mState = PREPARED_TO_DIE;
+					mState = EProcessState::PREPARED_TO_DIE;
 					killDone();
 				}
 			}else
@@ -504,20 +495,20 @@ namespace core
 				{
 					if ( mSwitched )
 					{
-						mState = WAITING_FOR_SCHEDULED;
+						mState = EProcessState::WAITING_FOR_SCHEDULED;
 						wakeUp();
 					}else
 					{
-						mState = PREPARED_TO_DIE;
+						mState = EProcessState::PREPARED_TO_DIE;
 						killDone();
 					}
 				}else
 				{
-					mState = TRYING_TO_KILL;
+					mState = EProcessState::TRYING_TO_KILL;
 				}
 
 			}
-			if ( mState & PREPARED_TO_DIE  )	
+			if ( mState == EProcessState::PREPARED_TO_DIE )	
 			{
 				KillEventSubscriptor::triggerCallbacks( shared_from_this() );
 			}

@@ -1,21 +1,18 @@
 #include <core/GenericProcess.h>
 using core::GenericProcess;
+using ::core::EGenericProcessState;
+using ::core::EGenericProcessResult;
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL(GenericProcess,Process);
 GenericProcess::GenericProcess() :
 	mProcessCallback( 0 )
-	,mCurrentState( INIT )
-	,mKillAccepted( false )
+	,mCurrentState( EGenericProcessState::INIT )
+	,mUpdateResult( EGenericProcessResult::CONTINUE )
 	,mAutoKill( false )
 	{
 	}
 GenericProcess::~GenericProcess()
 {
-	//OutputDebugStringA( "DESTRUYO GENERICPROCESS" ); problemas de corrupcion de memoria en AQTime
-	//OutputDebugStringA( "VOY A DESTRUIR CALLBACK" );
-	delete mProcessCallback;
-	//OutputDebugStringA( "DESTRUIDO CALLBACK" );
-	
 }
 
 void GenericProcess::onInit(uint64_t msegs)
@@ -27,7 +24,7 @@ void GenericProcess::onInit(uint64_t msegs)
 	if ( mKillAccepted )
 	{
 		kill();		
-		mCurrentState = KILL;//because onInit doesn't generate onKill call TODO ¿cambiarlo?
+		mCurrentState = KILL;//because onInit doesn't generate onKill call TODO ï¿½cambiarlo?
 	}else
 	{
 		mCurrentState = RUN;
@@ -37,23 +34,24 @@ void GenericProcess::onInit(uint64_t msegs)
 bool GenericProcess::onKill()
 {
 
-	mCurrentState = KILL;
-	return mKillAccepted || mAutoKill/* || (mKillAccepted = (*mProcessCallback)( getUpdateTime(), this,mCurrentState ) )*/;
+	mCurrentState = EGenericProcessState::KILL;
+	return mUpdateResult==(EGenericProcessResult::KILL) || mAutoKill;
 }
-void GenericProcess::update(uint64_t msegs)
+void GenericProcess::onUpdate(uint64_t msegs)
 {
-	if ( !mKillAccepted )
+	if ( mUpdateResult == EGenericProcessResult::CONTINUE)
 	{
-		mKillAccepted = (*mProcessCallback)( msegs, this,mCurrentState );
-		if ( mCurrentState == INIT )
-			mCurrentState = RUN;
-		if (  mKillAccepted  )
+		mUpdateResult = mProcessCallback( msegs, this,mCurrentState );
+		if ( mCurrentState == EGenericProcessState::INIT )
+			mCurrentState = EGenericProcessState::RUN;
+		if (  mUpdateResult == EGenericProcessResult::KILL  )
 		{
 			kill();
 		}
 	}
 	
 }
+/*
 void GenericProcess::setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&& f)
 {
 	delete mProcessCallback;
@@ -69,3 +67,4 @@ void GenericProcess::setProcessCallback(std::function< bool(uint64_t, Process*, 
 	delete mProcessCallback;
 	mProcessCallback = new GenericCallback(f, ::core::use_function);
 }
+*/

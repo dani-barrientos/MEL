@@ -418,15 +418,15 @@ using namespace ::std::string_literals;
 #endif
 }
 
-bool Thread::suspendInternal(uint64_t millis,Process* proc, ::core::EGenericProcessState) {
+::core::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc, ::core::EGenericProcessState) {
 	mPauseEV.wait();
-	return true;
+	return ::core::EGenericProcessResult::KILL;
 }
 unsigned int Thread::suspend()
 {
 	if ( mState == THREAD_RUNNING )
 	{
-		post(makeMemberEncapsulate(&Thread::suspendInternal,this),HIGH_PRIORITY_TASK); //post as the first task for next iteration
+		post(makeMemberEncapsulate(&Thread::suspendInternal,this)/* ,HIGH_PRIORITY_TASK */); //post as the first task for next iteration
 		mState=THREAD_SUSPENDED; //aunque todav�a no se haya hecho el wait,
 								 //por la forma en que funcionan los eventos da igual, porque si se hace
 								 //un resume justo antes de procesarse la tarea "suspendInternal", implica que el set

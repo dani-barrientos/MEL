@@ -62,7 +62,7 @@ int tamanoActual;
         asm volatile( "continueExecuting:":::"memory");
 
 
-        execute( msegs );
+        _execute( msegs );
       	//chapuza, hacerlo m�s �ptimo
 		asm volatile( "mov eax,%0"::"m" (realThis):"eax","memory");
         asm volatile( "mov ecx,[eax + %[v]]"::[v] "J" (mIniSPOFF):"eax","eax");
