@@ -1,8 +1,0 @@
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/CMakeFiles/rebuild_cache.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/CMakeFiles/edit_cache.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/dabal/CMakeFiles/rebuild_cache.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/dabal/CMakeFiles/edit_cache.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/dabal/CMakeFiles/dabal.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/tests/CMakeFiles/rebuild_cache.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/tests/CMakeFiles/edit_cache.dir
-/home/dani/trabajo/proyectos/dabal/out/build/GCC Linux (Debug)/tests/CMakeFiles/tests.dir
