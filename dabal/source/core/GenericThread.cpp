@@ -86,7 +86,7 @@ bool GenericThread::terminateRequest()
 		return Thread_Impl< GenericThread >::terminateRequest();
 }
 
-unsigned int GenericThread::onPostTask(std::shared_ptr<Process> process)
+void GenericThread::onPostTask(std::shared_ptr<Process> process)
 {
 	unsigned int result;
 	/*//PENSAR QUE PASARIA SI HUBIESE MAS DE UN suspend ENCADENADO
@@ -101,7 +101,7 @@ unsigned int GenericThread::onPostTask(std::shared_ptr<Process> process)
 	mSuspendCS.leave();
 	*/
 //@remarks. If post is done before thread start running, the event is set before wait, so when task finish, event will be set and thread don't stop on event and will do an extrga cycle
-	result = Thread_Impl< GenericThread >::onPostTask( process);
+//	result = Thread_Impl< GenericThread >::onPostTask( process,startTime);
 	
 #ifdef USE_CUSTOM_EVENT
 	mWaitForTasks.set();
@@ -112,7 +112,6 @@ unsigned int GenericThread::onPostTask(std::shared_ptr<Process> process)
 	}
 	mWaitForTasksCond.notify_one();
 #endif	
-	return result;
 }
 void GenericThread::terminate(unsigned int exitCode)
 {

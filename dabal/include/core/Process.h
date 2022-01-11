@@ -56,12 +56,6 @@ using core::Callback;
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
 
-// #include <core/ProcessException.h>
-// using core::ProcessException;
-/**
-* @namespace core
-*/
-
 namespace core
 {
 
@@ -81,28 +75,20 @@ namespace core
 	* because Windows interpret it as a hack process. This option is disabled in worksations but enabled for Windows Server- To disable it, go to HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/Session Manager/Kernel/DisableExceptionChainValidation
 	*/
 	class Process;
-	typedef CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>> KillEventSubscriptor;
+//	typedef CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>> KillEventSubscriptor; @todo lo pasaré a ProcessScheduler
 	class DABAL_API Process :
 		public std::enable_shared_from_this<Process>,
-		public MThreadAttributtes,
-		private KillEventSubscriptor  //TODO que poco me gusta esta herencia, incrementa el tama�o de los Process y quisiera que fuesen m�s ligeros
+		public MThreadAttributtes		
+		//private KillEventSubscriptor  //TODO que poco me gusta esta herencia, incrementa el tama�o de los Process y quisiera que fuesen m�s ligeros
 	{
 		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	
 		//!should be implemented in platform-dependent code
         static void _switchProcess( ) OPTIMIZE_FLAGS ;
-	public:
-		/**
-		* Process states.
-		* These states are not exclusive, so some of them can be simultaneous
-		* PREPARADO: est� creado pero todav�a no se inici� INICIADO: se inici� y se est�
-		* ejecutando PAUSADO: eso mismo MUERTO: eso mismo.  Ya se encuentra fuera del
-		* planificador
-		* @created 28-mar-2005 16:20:24
-		* @version 1.0
-		*/
+	public:		
 		enum EProcessState : uint8_t
 		{
+			/*
 			PREPARED = binary<1>::value, //!< Process created but not executed
 			INITIATED = binary<10>::value, //!< executing process normally
 			PAUSED = binary<100>::value, //!< paused
@@ -110,9 +96,22 @@ namespace core
 			TRYING_TO_KILL = binary<10000>::value, //!< sending kill signal but no accepted yet
 			WAITING_FOR_SCHEDULED  = binary<100000>::value, //!< switched and no shceduled yet
 			DEAD = binary<1000000>::value //!< process is out of process manager
+			*/
+			PREPARED, //!< Process created but not executed
+			INITIATED , //!< executing process normally
+			ASLEEP, //!< sleeping. Waiting for a wakeup
+			PREPARED_TO_DIE, //!< it's going to die, but process manager doesn't discard it
+			TRYING_TO_KILL, //!< sending kill signal but no accepted yet
+			WAITING_FOR_SCHEDULED , //!< switched and no shceduled yet
+			DEAD  //!< process is out of process manager
 		};
 		//! reason why Process returns for context switch
-		enum class ESwitchResult{ ESWITCH_OK,ESWITCH_WAKEUP,ESWITCH_KILL };
+		enum class ESwitchResult{
+			ESWITCH_OK,  //return from context switch was ok
+			ESWITCH_WAKEUP,  //return from context switch was because a wakeup
+			ESWITCH_ERROR,  //switch couldn't be done
+			ESWITCH_KILL //return from context switch because a kill
+			};
 		
 		/**
 		*
@@ -134,11 +133,8 @@ namespace core
 		/**
 		* pause this process
 		*/
-		virtual void pause( bool resetPreviousTime = false );
-		/**
-		* activate this process (exit from pause state)
-		*/
-		virtual void activate( );
+		void pause( );
+		
 		/**
 		* mark this process to be eliminated by the process manager.
 		* Internally, kill calls virtual onKill, which returns true if kill can be acomplished or not.
@@ -154,7 +150,7 @@ namespace core
 		*
 		* @remarks not multithread safe, kill should be done in the owner thread context (se abordar� en el futuro)
 		*/
-		inline void kill( bool force = false );
+		void kill( bool force = false );
 		/**
 		*  set callback to call after process receives the kill signal and goes to PREPARED_TO_DIE (will be removed
 		* from scheduler next iteration)
@@ -162,13 +158,13 @@ namespace core
 		* only triggered in this last case
 		* callback signature: void f( Process* )
 		*/
-		template <class F>
-		void subscribeKillCallback( F functor );
+		// template <class F>
+		// void subscribeKillCallback( F functor );
 		/** **********************************************************************/
 		/*  removes kill callback set with setKillCallback
 		*/
-		template <class F>
-		void unsubscribeKillCallback( F functor ); 
+		// template <class F>
+		// void unsubscribeKillCallback( F functor ); 
 		/**
 		* sets process in init state
 		*/
@@ -180,7 +176,7 @@ namespace core
 		*/
 		inline void setPeriod(unsigned int value);
 
-		EProcessState getState() const;
+		EProcessState getState() const{ return mState;}
 		//inline bool getActive() const;
 		/**
 		* it's process out of process manager?
@@ -201,17 +197,16 @@ namespace core
 		* returns time elapsed during this iteration 
 		*/
 		unsigned int getElapsedTime() const;
-		inline unsigned int getPausedTime() const;
 		/**
 		* @return time in previous iteration
 		*/
-		inline uint64_t getPreviousTime() const;
-		//@todo revisar esto que no tiene mucho sentido frente al anterior..
-		inline uint64_t getLastTime() const;
+		//inline uint64_t getPreviousTime() const;
+		//inline uint64_t getLastTime() const;
 		/**
-		* @return time of execution for current iteration (i.e. time passed at update function )
+		* @return time when task was executed in last iteration, when onUpdate is called: 
+		* @note context switches or waits inside code doesn't modify update time.
 		*/
-		inline uint64_t getUpdateTime() const;
+		inline uint64_t getLastUpdateTime() const;
 		inline void resetTime();
 		/**
 		* execution function. It calls update() when time > mPeriod
@@ -235,14 +230,7 @@ namespace core
 
 		/**
 		* set next process to execute. It's appended to the end of the list.
-		* Each process can have only one next process.
-		* @remarks It's stored as SmartPtr
-		*/
-		//void setNext( Process* );
-		//inline Process* getNext();
-
-		inline void setExtraInfo( void* );
-		inline void* getExtraInfo() const;
+		* Each process can have ons 88 nfo() const;
 
 		/**
 		*  get Task ID provided by its processcheduler
@@ -251,8 +239,8 @@ namespace core
 		/**
 		* time after wich Process will start
 		*/
-		inline void setStartTime( unsigned int );
-		inline unsigned int getStartTime( ) const;
+		// inline void setStartTime( unsigned int );
+		// inline unsigned int getStartTime( ) const;
 		// get time when process began
 		inline uint64_t getBeginTime() const;
 
@@ -284,7 +272,7 @@ namespace core
 		/**
 		* stop process. To reactivate you must use wakeUp
 		* @param[in] postSleep functor (signature <void,void>) to execute just in the moment when Process go to sleep
-		* @return resulting state of the operation
+		* @return resulting state of thes 88 operation
 		* @see sleep
 		* @remarks not multithread-safe
 		*/
@@ -307,67 +295,46 @@ namespace core
 		template <class F>
 		static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS;
 		/**
-		* stop process. To reactivate you must use wakeUp
+		* pause ##current## process. To reactivate you must use wakeUp
 		* @return true if process received kill signal
 		* @see switchProcess for comments
 		*/
 		static ESwitchResult sleep( ) OPTIMIZE_FLAGS;
 		inline bool getAsleep() const;
-		inline bool getWaiting() const;
+		/**
+		 * wakeup an asleep process or an evicted process (that process having called swtich or wait)
+		 */
 		void wakeUp();
 
-	protected:
-
-		/**
-		* scheduler in which is inserted
-		*/
-		ProcessScheduler* mOwnerProcessScheduler;		
-		/**
-		* @warning no la tengo muy clara si realmente se podr� evitar
-		*/
-		void setFinished( bool );
+		
+		//void setFinished( bool );
 
 	private:
 		static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
 		EProcessState mState;
 		EProcessState mPreviousState;
-		unsigned int mPeriod;
-		volatile bool mSleeped;
+		//volatile bool mAsleep;
 		volatile bool mWakeup; //temp value to know if context switch comes from a wakeup
-		volatile bool mWaiting; //true when in a wait operation @todo en realidad ahora no me sirve para nada, lo dejo por si acaso hasta tenerlo claro, pero es conveniente quitarlo
-
-		/**
-		* si es true indica que fue terminado correctamente y no "forzado"
-		*/
-		bool	mFinished;
-		bool	mResetPreviousTime;
-		/**
-		* time at process execution
-		*/
-		uint64_t mLastTime;
-		uint64_t mUpdateTime;
-		/**
-		* time at previous iteration
-		*/		
-		//ProcessScheduler*	mAttachedProcesses;
-		unsigned int mProcessId;
+		//bool	mFinished; //@todo no creo que valga para nada
+		bool 	mPauseReq;
+		unsigned int mPeriod;
+		unsigned int 	mProcessId; 
+		//unsigned int	mStartTime; //!when to start process since insertion in scheduler (default = 0)
+		uint64_t mLastUpdateTime; //!<time at process execution
+		ProcessScheduler* mOwnerProcessScheduler; //!<scheduler in which is inserted
+		//uint64_t mLastTime;
 
 
 		//extra data passed to Process for custom processing TODO temporal hasta tener el extradata bien
-		void*			mExtrainfo;		
-		uint64_t		mPreviousTime;
-		uint64_t		mBeginTime;  //time stored at init
-		uint64_t		mPauseTime;  //time when process was paused
-		unsigned int	mStartTime; //!when to start process since insertion in scheduler (default = 0)
-		unsigned int	mPausedTime;  
+		//void*			mExtrainfo;		
+		//uint64_t		mPreviousTime;
+		//uint64_t		mBeginTime;  //time stored at init
 		//SmartPtr<Process>	mNext; //next process in chain. It's scheduled when killed
 		//Callback<void,Process*>* mKillCallback;
 
 		/**
 		* main execution block
-		*
-		*
 		* @param msegs    msegs
 		*/
 		void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
@@ -394,6 +361,15 @@ namespace core
 		* @remarks it's only called when kill if called with force = false
 		*/
 		virtual bool onKill(){ return true;};
+		/**
+		 * @brief Called when a process is paused. 
+		 */
+		virtual void onPause(){};
+		/**
+		 * @brief Called when process is woken up
+		 * 
+		 */
+		virtual void onWakeUp(){}
 		/**
 		* called when kill is definitively done
 		*/
@@ -428,11 +404,6 @@ namespace core
 	{
 		return mOwnerProcessScheduler;
 	}
-
-/*	bool Process::getActive() const
-	{
-		return (mState!= EProcessState::PAUSED) && !mSleeped;  //quitar la condicion de mSleeped?? no es ortogonal
-	}*/
 	bool Process::getDead() const
 	{
 		return (mState ==EProcessState:: DEAD );
@@ -446,96 +417,52 @@ namespace core
 		return mPeriod;
 	}
 
-	bool Process::getFinished() const
-	{
-		return mFinished;
-	}
+	// bool Process::getFinished() const
+	// {
+	// 	return mFinished;
+	// }
 	bool Process::getInitiated() const
 	{
 		return ( mState == EProcessState::INITIATED );
 	}
 	void Process::resetTime()
 	{
-		mLastTime = 0;
+		mLastUpdateTime = 0;
 	}
-	uint64_t Process::getPreviousTime() const
+	// uint64_t Process::getPreviousTime() const
+	// {
+	// 	return mPreviousTime;
+	// }
+	
+	// uint64_t Process::getLastTime() const
+	// {
+	// 	return mLastTime;
+	// }
+	uint64_t Process::getLastUpdateTime() const
 	{
-		return mPreviousTime;
+		return mLastUpdateTime;
 	}
 	
-	uint64_t Process::getLastTime() const
-	{
-		return mLastTime;
-	}
-	uint64_t Process::getUpdateTime() const
-	{
-		return mUpdateTime;
-	}
-	void Process::kill( bool force )
-	{
-		//TODO esta funcion no est� un pijo bien, hay que revisarla junto con el Process::execute
-
-		if ( mState != EProcessState::DEAD ) 
-		{
-			if ( force )
-			{
-				if ( mSwitched )
-				{
-					mState = EProcessState::WAITING_FOR_SCHEDULED;
-					wakeUp();
-				}else
-				{
-					mState = EProcessState::PREPARED_TO_DIE;
-					killDone();
-				}
-			}else
-			{
-				bool ok = onKill();
-				if ( ok )
-				{
-					if ( mSwitched )
-					{
-						mState = EProcessState::WAITING_FOR_SCHEDULED;
-						wakeUp();
-					}else
-					{
-						mState = EProcessState::PREPARED_TO_DIE;
-						killDone();
-					}
-				}else
-				{
-					mState = EProcessState::TRYING_TO_KILL;
-				}
-
-			}
-			if ( mState == EProcessState::PREPARED_TO_DIE )	
-			{
-				KillEventSubscriptor::triggerCallbacks( shared_from_this() );
-			}
-
-		}
-
-	}
-	void Process::setExtraInfo( void* info )
-	{
-		mExtrainfo = info;
-	}
-	void* Process::getExtraInfo() const
-	{
-		return mExtrainfo;
-	}
-	void Process::setStartTime( unsigned int st )
-	{
-		mStartTime = st;
-	}
-	unsigned int Process::getStartTime( ) const
-	{
-		return mStartTime;
-	}
-	uint64_t Process::getBeginTime() const
-	{
-		return mBeginTime;
-	}
+	// void Process::setExtraInfo( void* info )
+	// {
+	// 	mExtrainfo = info;
+	// }
+	// void* Process::getExtraInfo() const
+	// {
+	// 	return mExtrainfo;
+	// }
+	// void Process::setStartTime( unsigned int st )
+	// {
+	// 	mStartTime = st;
+	// }
+	// unsigned int Process::getStartTime( ) const
+	// {
+	// 	return mStartTime;
+	// }
+	// uint64_t Process::getBeginTime() const
+	// {
+	// 	return mBeginTime;
+	// }
 	/*Process* Process::getNext()
 	{
 		return mNext.getPtr();
@@ -554,31 +481,24 @@ namespace core
 		mKillCallback=NULL;
 	}
 */
-	template <class F>
-	void Process::subscribeKillCallback( F functor )
-	{
-		KillEventSubscriptor::subscribeCallback( functor );
-	}
-	template <class F>
-	void Process::unsubscribeKillCallback( F functor )
-	{
-		KillEventSubscriptor::unsubscribeCallback( functor );
-	}
+	// template <class F>
+	// void Process::subscribeKillCallback( F functor )
+	// {
+	// 	KillEventSubscriptor::subscribeCallback( functor );
+	// }
+	// template <class F>
+	// void Process::unsubscribeKillCallback( F functor )
+	// {
+	// 	KillEventSubscriptor::unsubscribeCallback( functor );
+	// }
 	bool Process::getAsleep() const
 	{
-		return mSleeped;
+		return mState == EProcessState::ASLEEP;
 	}
-	bool Process::getWaiting() const
-	{
-		return mWaiting;
-	}
-	unsigned int Process::getPausedTime() const
-	{
-		return mPausedTime;
-	}
+	
 	template <class F> Process::ESwitchResult Process::waitAndDo( unsigned int msegs,F postWait )
-		{
-			return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
-		}
+	{
+		return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
+	}
 }
 

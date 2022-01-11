@@ -376,7 +376,7 @@ int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 void Thread::start() {
 	if ( mState != THREAD_INIT )
 	{
-		spdlog::warn("Thread has been already stared!!");
+		spdlog::warn("Thread has been already started!!");
 		return;
 	}
 	mState = THREAD_RUNNING;

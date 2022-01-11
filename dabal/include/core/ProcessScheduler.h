@@ -55,7 +55,7 @@ namespace core
 		typedef unsigned int ThreadID;
 		friend class Process;
 	public:
-		typedef list< std::shared_ptr<Process> > TProcessList;
+		typedef list< std::pair<std::shared_ptr<Process>,unsigned int> > TProcessList; //pairs of processes and starttime
 		ProcessScheduler();		
 		~ProcessScheduler(void);
 
@@ -63,10 +63,11 @@ namespace core
 		* =============================================================================
 		*
 		* @param process insert new process in scheduler
+		* @param starttime msecs to wait to start it
 		* @warning 	if process is already inserted behaviour is unpredictable
 		* @return taks identifier.
 		*/
-		unsigned int insertProcess( std::shared_ptr<Process> process);
+		unsigned int insertProcess( std::shared_ptr<Process> process,unsigned int startTime = 0);
 
 
 		/**
@@ -199,7 +200,7 @@ namespace core
 		ProcessInfo*	mProcessInfo;
 		TProcessList mProcessList;
 		//new processes to insert next time
-		TProcessList mNewProcesses;
+		 TProcessList  mNewProcesses;
 
 		mutable CriticalSection	mCS;
 		mutable CriticalSection	mPendingIdTasksCS;
@@ -252,13 +253,11 @@ namespace core
 	template <class T>
 	void ProcessScheduler::pauseProcesses(T& predicate)
 	{
-		TProcessList::iterator	i;
-	
-		for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
+		for(auto i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 		{
 			if ( predicate( *i ) )
 			{
-				(*i)->pause();
+				(*i).first->pause();
 			}
 		}
 	}
@@ -323,8 +322,8 @@ namespace core
 		TProcessList::iterator i;
 		for( i = mProcessList.begin(); i != mProcessList.end(); ++i )
 		{
-			if ( function( *i ) )
-				processList.push_back( *i );
+			if ( function( i->first ) )
+				processList.push_back( i->first );
 		}
 	}
 	const std::shared_ptr<Timer> ProcessScheduler::getTimer() const

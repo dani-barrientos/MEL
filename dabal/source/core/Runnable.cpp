@@ -234,12 +234,12 @@ void Runnable::setTimer(std::shared_ptr<Timer> timer )
 	mTasks.setTimer( timer );
 }
 
-
-unsigned int Runnable::onPostTask(std::shared_ptr<Process> process )
+unsigned int Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime)
 {
 	assert( process && "is NULL");
 	unsigned int taskId;
-	taskId = mTasks.insertProcess( process );
+	taskId = mTasks.insertProcess( process,startTime );
+	onPostTask( process );
 	return taskId;
 }
 
@@ -327,7 +327,7 @@ Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& 
                 linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
                 ,::core::EGenericProcessResult::KILL
                 )
-                ),autoKill/* , ::core::Runnable::NORMAL_PRIORITY_TASK */, 0, 0, extraInfo
+                ),autoKill/* , ::core::Runnable::NORMAL_PRIORITY_TASK */, 0, 0/*, extraInfo*/
              );
         return info;
     }else

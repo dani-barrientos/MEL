@@ -196,7 +196,7 @@ namespace core
 		*/
 
 		virtual unsigned int onRun() = 0;
-		virtual unsigned int onPostTask(std::shared_ptr<Process> process);
+		virtual void onPostTask(std::shared_ptr<Process> process){};
 
 		/**
 		* set callback to call when a task is added
@@ -218,9 +218,9 @@ namespace core
 		* generates a new internal task id.
 		* @param[in] process structure containing execution data.
 		* @return an integer being the internal task id just created
-		* @internally, it calls protected onPostTask, so children can override default behaviour
+		* @internally, it calls protected onPostTask, so children can add custom behaviour
 		*/
-		inline unsigned int postTask(std::shared_ptr<Process> process);
+		unsigned int postTask(std::shared_ptr<Process> process,unsigned int startTime);
 
 		/**
 		* Creates a new runnable object.
@@ -261,7 +261,7 @@ namespace core
 			F&& task_proc,
 			bool autoKill = false,
 			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
-			unsigned int period = 0,unsigned int startTime = 0,void* extraInfo = NULL);
+			unsigned int period = 0,unsigned int startTime = 0/*,void* extraInfo = NULL*/);
 		/**
 		* executes a function in a context of the Runnable.
 		* If this Runnable is in the same thread than caller then, depending on forcepost parameter, the functor
@@ -273,9 +273,7 @@ namespace core
 		* @param[in] extraInfo Same as in #post
 		*/
 		template <class TRet,class F> 
-			Future<TRet> execute( F&& function,unsigned int delay = 0, bool forcePost = false, void* extraInfo = NULL );
-		//template <class TRet>
-		//	Future<TRet> execute(std::function< TRet()>&& function, unsigned int delay = 0, bool forcePost = false, void* extrainfo = NULL );
+			Future<TRet> execute( F&& function,unsigned int delay = 0, bool forcePost = false/*, void* extraInfo = NULL */);
 
 		/**
 		* evaluate condition on this Runnable
@@ -388,16 +386,15 @@ namespace core
 		F&& task_proc,
 		bool autoKill,
 		// ETaskPriority priority ,
-		unsigned int period,unsigned int startTime,void* extraInfo  )
+		unsigned int period,unsigned int startTime/*,void* extraInfo */ )
 	{
 		::std::shared_ptr<RunnableTask> p (new (this)RunnableTask());
 		//GenericProcess* p = new GenericProcess();
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
-		p->setStartTime( startTime );
-		p->setExtraInfo( extraInfo );
+		//p->setExtraInfo( extraInfo );
 		p->setAutoKill( autoKill );
-		postTask(p);
+		postTask(p,startTime);
 		return p;
 	}
 
@@ -431,7 +428,7 @@ namespace core
 		mFinishEvents.subscribeCallback(std::forward<F>(functor));
 	}
 	template <class TRet,class F> 
-	Future<TRet> Runnable::execute( F&& function,unsigned int delay,bool forcePost, void* extraInfo)
+	Future<TRet> Runnable::execute( F&& function,unsigned int delay,bool forcePost/*, void* extraInfo*/)
 	{
 		assert(mOwnerThread != 0);
 		Future<TRet> future;
@@ -462,7 +459,7 @@ namespace core
 						)
 				), false/*@todo esto tengo que poder configurarlo*/
 				/* , NORMAL_PRIORITY_TASK */
-				, 0, delay, extraInfo
+				, 0, delay/*, extraInfo*/
 
 			);
 	
@@ -534,10 +531,7 @@ namespace core
 		
 		return result;
 	}
-	unsigned int Runnable::postTask(std::shared_ptr<Process> process)
-	{
-		return onPostTask( process );
-	}
+	
 	template <class F>
 	Runnable::FutureTriggerInfo* Runnable::triggerOnDone( const ::core::Future_Base& future, F&& functor,bool autoKill, void* extraInfo)
 	{
@@ -553,7 +547,7 @@ namespace core
 						linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
 						,true
 					)
-				),autoKill/* ,::core::Runnable::NORMAL_PRIORITY_TASK*/,0,0 ,extraInfo
+				),autoKill/* ,::core::Runnable::NORMAL_PRIORITY_TASK*/,0,0 /*,extraInfo*/
 			);
 			return info;
 		}else

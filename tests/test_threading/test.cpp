@@ -7,6 +7,9 @@ using namespace std;
 using tests::TestManager;
 #include <spdlog/spdlog.h>
 #include <CommandLine.h>
+#include <mpl/LinkArgs.h>
+#include <mpl/Ref.h>
+#include <string>
 /**
  * @todo pensar en test neceasrios:
  *  - mono hilo + microhilos
@@ -17,52 +20,103 @@ using tests::TestManager;
  */
 class MyProcess : public Process
 {
+	public:
+		MyProcess(int& var):Process(),mVar(var){}
 	private:
-	void onUpdate(uint64_t) override
-	{
-		spdlog::debug("MyProcess");
-		::core::Process::wait(750);
-	}	
+		void onUpdate(uint64_t) override
+		{
+			int aux = mVar;
+			++mVar;
+			spdlog::debug("MyProcess");
+			::core::Process::wait(70050);
+			mVar = aux;
+		}	
+		int& mVar;
+
 };
 class MyTask
 {
 	public:
+	MyTask(Process* target,int& var):mTarget(target),mVar(var){}
 	::core::EGenericProcessResult operator()(uint64_t,Process*,::core::EGenericProcessState)
 	{
 		spdlog::debug("MyTask");
+		++mVar;
+		if ( mTarget )
+			mTarget->pause();
 		core::Process::wait(213);
+		if ( mTarget )
+			mTarget->wakeUp();
 		return ::core::EGenericProcessResult::CONTINUE;
 	}
+	private:
+	Process* mTarget;
+	int& mVar;
 };
-::core::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS)
+::core::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
 {
+	++var;
 	spdlog::debug("staticFuncTask");
 	return ::core::EGenericProcessResult::CONTINUE;
 }
+static Timer sTimer;
 /**
  * objetivo: muchas tareas concurrentes pero que al final un resultado no debe ser modificado, por lo que el test
  * se pasará si el valor sigue manteniendose
  */
+
+uint64_t constexpr TIME_MARGIN = 10;
+void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
+{
+	auto elapsed = std::abs((int64_t)t1-(int64_t)t0);
+	if ( elapsed > TIME_MARGIN)
+		spdlog::warn("Margin time overcome {}. Info: {}",elapsed,text);
+}
 static int _testMicroThreadingMonoThread()
 {
+	using namespace std::string_literals;
+	size_t s1 = sizeof(Process);
+	size_t s2 = sizeof(GenericProcess);
+	size_t s3 = sizeof(MThreadAttributtes);
+	spdlog::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 	int result;
+	int sharedVar = 0;
 	auto th1 = GenericThread::createEmptyThread();
-	th1->start();
-//@todo esto del sleep es una mierda. Tengo que diseñar bien para que no pasen estas cosas
-	//Thread::sleep(2000);  //@todo patraña, todo esto lo tengo mal estructurado, si no no se pueden postear cosas todavia
-	th1->post( [](RUNNABLE_TASK_PARAMS)
+	th1->start();	
+	//probar starttime
+	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
 	{
-		spdlog::debug("Task1");
-		::core::Process::wait(1550);
+		int aux = sharedVar;
+		sharedVar++;
+		spdlog::debug("Lambda");
+		auto t1 = p->getElapsedTime();
+		CHECK_TIME(t1,p->getPeriod(),"check period"s);
+		auto t0 = sTimer.getMilliseconds();
+		unsigned int waittime = 3550;
+		::core::Process::wait(waittime);
+		t1 = sTimer.getMilliseconds();
+		CHECK_TIME(t1-t0,waittime,"check wait 1"s);
+		waittime = 67;
+		::core::Process::wait(waittime);
+		auto t2 = sTimer.getMilliseconds();
+		CHECK_TIME(t2-t1,waittime,"check wait 2"s);
+		sharedVar = aux;
 		return ::core::EGenericProcessResult::CONTINUE;
-	},true,2000);
-	th1->post(MyTask(),true,1500);
-	th1->post(staticFuncTask,true,1200);
-	auto p = make_shared<MyProcess>();
-	p->setPeriod(2500);
-	th1->postTask(p);
+	},true,2000,000);
+	// th1->post(
+	// 	::mpl::linkFunctor<::core::EGenericProcessResult,TYPELIST(uint64_t,Process*,::core::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
+	// 	,true,4200);
+	// auto p = make_shared<MyProcess>(sharedVar);
+	// p->setPeriod(0);
+	// th1->postTask(p);
+	// th1->post(MyTask(p.get(),sharedVar),true,1200);
 
-	Thread::sleep(30000);
+/*
+preparar bien el test: quiero que los procesos actúa sobre algún objeto y tenga una salida precedible, por ejemplo:
+ - incrementar/dec variable de forma que deba siempre ser isgreaterequal
+- 
+*/
+	Thread::sleep(300000);
 	th1->finish();
 	th1->join();
 	return result;

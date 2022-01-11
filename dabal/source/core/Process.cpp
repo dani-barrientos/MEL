@@ -11,6 +11,7 @@ using core::MThreadAttributtes;
 #undef max
 #include <limits>
 #include <assert.h>
+#include <spdlog/spdlog.h>
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 
@@ -20,25 +21,20 @@ DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 * @param tipo
 */
 Process::Process( bool reserveStack,unsigned short capacity  )
-	: mLastTime(0),
+	: 
+	//mLastTime(0),
 	mPeriod(0),
-	mFinished(false),
-	mPreviousTime(0),
-	mResetPreviousTime(false),	
+	//mFinished(false),
+	mPauseReq(false),
+	//mPreviousTime(0),
+	mLastUpdateTime(0),
 	mProcessId(0),
 	mOwnerProcessScheduler( 0 ),
-	//mExecuteNextAfterFinish(false),
 	mState(EProcessState::PREPARED),
-	mSleeped(false),
-	mWaiting(false),
-	mWakeup(false),
-	mExtrainfo(0),
-	mStartTime(0),
-	mPausedTime(0)
-	//,mNext( NULL )
-	//,mKillCallback(0)
-	{
-
+	mWakeup(false)
+//	,mExtrainfo(0)
+//	,mStartTime(0)
+{
 	mSwitched = false;
     mStackSize = 0;
 	if ( reserveStack )
@@ -78,59 +74,19 @@ Process::~Process(void)
 void Process::setProcessScheduler(ProcessScheduler* const gestor)
 {
 	mOwnerProcessScheduler = gestor;
-	//attached paused
-	if ( mState == EProcessState::PAUSED )
-		mPauseTime = mOwnerProcessScheduler->getTimer()->getMilliseconds();
 }	
-
-
-
-
-/**
-* pause this process
-*/
-void Process::pause( bool resetPreviousTime )
+void Process::pause( )
 {
-	if ( mState != EProcessState::PAUSED )
-	{
-		mPreviousState = mState;
-		mState = EProcessState::PAUSED;
-		mResetPreviousTime = resetPreviousTime;
-
-		//if process is not atached to scheduler, doesn't matter pause time
-		if ( mOwnerProcessScheduler )
-			mPauseTime = mOwnerProcessScheduler->getTimer()->getMilliseconds();
-	}
-}
-/**
-* activate this process
-*/
-void Process::activate(  )
-{
-	if( mState == EProcessState::PAUSED )
-	{
-		mState = mPreviousState;
-		if ( mOwnerProcessScheduler )
-		{
-			uint64_t currTime = mOwnerProcessScheduler->getTimer()->getMilliseconds();
-			mPausedTime += (unsigned int)(currTime-mPauseTime); //I supposed pause time won't be more thant unsigned int..
-		}
-		mPauseTime = 0;
-	}
+	mPauseReq = true;// atomico?? no quiero que la lectura sea atómica	
+	onPause();
 }
 
 void Process::reset()
 {
 	mState = EProcessState::PREPARED;
-	mLastTime = (unsigned int)((mOwnerProcessScheduler!=NULL)?mOwnerProcessScheduler->getTimer()->getMilliseconds():0);
-	mPreviousTime = 0;
-}
-
-
-Process::EProcessState Process::getState() const
-{
-
-	return  mState;
+	mLastUpdateTime = 0;
+	//mLastTime = (unsigned int)((mOwnerProcessScheduler!=NULL)?mOwnerProcessScheduler->getTimer()->getMilliseconds():0); ??
+//	mPreviousTime = 0;
 }
 
 
@@ -171,15 +127,12 @@ Process::EProcessState Process::getState() const
 // 	// }
 // }
 void Process::update(uint64_t msegs)
-{
-	mUpdateTime = msegs;
-	/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no s� si vale hacerlo despu�s
-			SI EL checkMicrothread HICISE OTRO WAIT, CREO QUE NO FURRULARIA*/
+{	
 	checkMicrothread( msegs ); 
-	mPausedTime = 0;
+	mLastUpdateTime = msegs;
 	//@todo mirar bien la diferencia entre estos dos. Supongo que este mLastTime es diferente cuando hay cambios de contexto??? en principio no..
-	mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
-	mPreviousTime = msegs;
+//	mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
+	//mPreviousTime = msegs;
 }
 //void Process::attachProcess( Process* p )
 //{
@@ -198,11 +151,11 @@ void Process::update(uint64_t msegs)
 /**
 * indicates this process that was succesfully finished
 */
-void Process::setFinished(bool value)
-{
+// void Process::setFinished(bool value)
+// {
 
-	mFinished = value;
-}
+// 	mFinished = value;
+// }
 
 
 
@@ -212,37 +165,28 @@ void Process::setFinished(bool value)
 *
 * @param msegs    msegs
 */
-void Process::_execute(uint64_t msegs){
-
+void Process::_execute(uint64_t msegs)
+{
+	if ( mPauseReq)
+	{
+		mPauseReq = false;
+		mState = EProcessState::ASLEEP;
+	}
 	switch ( mState )
 	{
 	case EProcessState::PREPARED:
-		mFinished = false;
-		//ya que en este momento ya tiene que estar creado el temporizador
-		//mLastTime = msegs;
-		mPreviousTime = msegs;
-		mBeginTime = msegs;
+		//mFinished = false;
+		//mPreviousTime = msegs;
+		//mBeginTime = msegs;
 		mState = EProcessState::INITIATED;
-		onInit( msegs );   //por si se quiere hacer alguna inicializacion
-		onUpdate( msegs );  //maybe update wants change state (through kill, for example)
-
-		break;
+		onInit( msegs );   	
 	case EProcessState::INITIATED:
-	case EProcessState::TRYING_TO_KILL:
-		//llamamos a la funci�n de comportamiento del objeto particular
-		//TODO no s� si esto est� bien colocado del todo aqui. La pretensi�n es
-		//que no corra el tiempo si no se desea al pausar
-		if ( mResetPreviousTime )
-		{
-			mPreviousTime = msegs;
-			mResetPreviousTime = false;
-		}
+	case EProcessState::TRYING_TO_KILL:		
 		onUpdate( msegs );
 		break;
 	case EProcessState::WAITING_FOR_SCHEDULED:
-//		TEMAS: �REDUCIR PER�ODO?�avisar de alguna forma?
 		//process was in "switched" state. Now It can be killed
-		KillEventSubscriptor::triggerCallbacks( shared_from_this() );
+		//KillEventSubscriptor::triggerCallbacks( shared_from_this() );
 		mState = EProcessState::PREPARED_TO_DIE;
 		killDone();
 		break;
@@ -253,7 +197,7 @@ void Process::_execute(uint64_t msegs){
 
 unsigned int Process::getElapsedTime() const
 {
-	return (unsigned int)(mOwnerProcessScheduler->getTimer()->getMilliseconds() - (uint64_t)mUpdateTime);
+	return (unsigned int)(mOwnerProcessScheduler->getTimer()->getMilliseconds() - (uint64_t)mLastUpdateTime);
 }
 
 
@@ -298,9 +242,8 @@ Process::ESwitchResult Process::switchProcess( bool v )
 		unsigned int currentPeriod = p->getPeriod();
 		if (v)
 			p->setPeriod(0);
-		_switchProcess(); //@todo quitar este par�metro del _switchProcess
-
-		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despert� por wakeup
+		_switchProcess();
+		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despertó por wakeup
 		if (p->getState() == EProcessState::WAITING_FOR_SCHEDULED)
 			result = ESwitchResult::ESWITCH_KILL;
 		else if (p->mWakeup)
@@ -322,7 +265,13 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 {
 	ESwitchResult result;
 	auto p = ProcessScheduler::getCurrentProcess();
-	p->mSleeped = true;
+	const auto state = p->getState();
+	if ( state == EProcessState::ASLEEP ) //it hasn't any sense, but just in case this condition could be reached
+	{
+		spdlog::warn("Process_sleep: process is already asleep");
+		return ESwitchResult::ESWITCH_ERROR;
+	}
+	p->mPreviousState = state;
 	p->mOwnerProcessScheduler->processAsleep(p);
 	unsigned int currentPeriod = p->getPeriod();
 	p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
@@ -339,6 +288,7 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 		result = ESwitchResult::ESWITCH_OK;
 	}
 	p->setPeriod( currentPeriod );
+	p->mState = p->mPreviousState;
 	return result;
 }
 Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* postWait ) 
@@ -346,7 +296,6 @@ Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* 
 	auto p = ProcessScheduler::getCurrentProcess();
 	unsigned int currentPeriod = p->getPeriod();
 	p->setPeriod( msegs );
-	p->mWaiting = true;  
 	//trigger callback
 	if ( postWait )
 	{
@@ -355,18 +304,63 @@ Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* 
 	}
 	ESwitchResult result = switchProcess( false );		
 	p->setPeriod( currentPeriod );
-	p->mWaiting = false;
 	return result;
 }
 void Process::wakeUp()
 {
-    if ( mSleeped || mSwitched ) 
-    {
-		if ( mSleeped )
+	//@todo termina verificar que está pausado y tal y poner estado anterior y todo eso..
+	if ( mSwitched || mState == EProcessState::ASLEEP) 
+	{	
+		if ( mState == EProcessState::ASLEEP )
 			//notify scheduler
 			mOwnerProcessScheduler->processAwakened( shared_from_this() );
-        setPeriod( 0 );
-        mSleeped = false;
-        mWakeup = true;        
-    }
+		setPeriod( 0 );
+		mState = mPreviousState;
+		mWakeup = true;        
+		onWakeUp();
+	}
 }
+void Process::kill( bool force )
+	{
+		//TODO esta funcion no est� un pijo bien, hay que revisarla junto con el Process::execute
+
+		if ( mState != EProcessState::DEAD ) 
+		{
+			if ( force )
+			{
+				if ( mSwitched )
+				{
+					mState = EProcessState::WAITING_FOR_SCHEDULED;
+					wakeUp();
+				}else
+				{
+					mState = EProcessState::PREPARED_TO_DIE;
+					killDone();
+				}
+			}else
+			{
+				bool ok = onKill();
+				if ( ok )
+				{
+					if ( mSwitched )
+					{
+						mState = EProcessState::WAITING_FOR_SCHEDULED;
+						wakeUp();
+					}else
+					{
+						mState = EProcessState::PREPARED_TO_DIE;
+						killDone();
+					}
+				}else
+				{
+					mState = EProcessState::TRYING_TO_KILL;
+				}
+
+			}
+			if ( mState == EProcessState::PREPARED_TO_DIE )	
+			{
+			//	KillEventSubscriptor::triggerCallbacks( shared_from_this() );
+			}
+
+		}
+	}
