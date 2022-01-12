@@ -18,6 +18,47 @@ using tests::TestManager;
  * 
  * @return int 
  */
+
+class CustomProcessType : public GenericProcess
+{
+	public:
+
+	//testing custom operator new. Now do the default but could have my own pool
+	static void* operator new( size_t s,Runnable* owner )
+	{
+		return ::operator new (s);
+	}
+
+	static void operator delete( void* ptr )
+	{
+		::operator delete(ptr);
+	}
+	CustomProcessType()
+	{
+		spdlog::debug("CustomProcessType constructor");
+	}
+	~CustomProcessType()
+	{
+		spdlog::debug("CustomProcessType destructor");
+	}
+	private:
+	int tema;
+	/*
+	no es necesario sobreescribirla
+	virtual void onUpdate(uint64_t msecs) override
+	{
+		GenericProcess::onUpdate(msecs);
+	}
+	*/
+};
+//custom allocator for CustomProcessType
+struct MyAllocator
+{
+	static CustomProcessType* allocate(Runnable* _this)
+	{
+		return new (_this)CustomProcessType();
+	}
+};
 class MyProcess : public Process
 {
 	public:
@@ -84,39 +125,40 @@ static int _testMicroThreadingMonoThread()
 	auto th1 = GenericThread::createEmptyThread();
 	th1->start();	
 	//probar starttime
-	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
-	{
-		int aux = sharedVar;
-		sharedVar++;
-		spdlog::debug("Lambda");
-		auto t1 = p->getElapsedTime();
-		CHECK_TIME(t1,p->getPeriod(),"check period"s);
-		auto t0 = sTimer.getMilliseconds();
-		unsigned int waittime = 3550;
-		::core::Process::wait(waittime);
-		t1 = sTimer.getMilliseconds();
-		CHECK_TIME(t1-t0,waittime,"check wait 1"s);
-		waittime = 67;
-		::core::Process::wait(waittime);
-		auto t2 = sTimer.getMilliseconds();
-		CHECK_TIME(t2-t1,waittime,"check wait 2"s);
-		sharedVar = aux;
-		return ::core::EGenericProcessResult::CONTINUE;
-	},true,2000,000);
-	// th1->post(
-	// 	::mpl::linkFunctor<::core::EGenericProcessResult,TYPELIST(uint64_t,Process*,::core::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
-	// 	,true,4200);
+	// th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
+	// {
+	// 	int aux = sharedVar;
+	// 	sharedVar++;
+	// 	spdlog::debug("Lambda");
+	// 	auto t1 = p->getElapsedTime();
+	// 	CHECK_TIME(t1,p->getPeriod(),"check period"s);
+	// 	auto t0 = sTimer.getMilliseconds();
+	// 	unsigned int waittime = 3550;
+	// 	::core::Process::wait(waittime);
+	// 	t1 = sTimer.getMilliseconds();
+	// 	CHECK_TIME(t1-t0,waittime,"check wait 1"s);
+	// 	waittime = 67;
+	// 	::core::Process::wait(waittime);
+	// 	auto t2 = sTimer.getMilliseconds();
+	// 	CHECK_TIME(t2-t1,waittime,"check wait 2"s);
+	// 	sharedVar = aux;
+	// 	return ::core::EGenericProcessResult::CONTINUE;
+	// },true,2000,000);
+	th1->post<CustomProcessType,MyAllocator>(
+		::mpl::linkFunctor<::core::EGenericProcessResult,TYPELIST(uint64_t,Process*,::core::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
+		,true,4200);
 	// auto p = make_shared<MyProcess>(sharedVar);
 	// p->setPeriod(0);
 	// th1->postTask(p);
-	// th1->post(MyTask(p.get(),sharedVar),true,1200);
+	 //th1->post(MyTask(p.get(),sharedVar),true,1200);
+	// th1->post(MyTask(nullptr,sharedVar),true,1200);
 
 /*
 preparar bien el test: quiero que los procesos actúa sobre algún objeto y tenga una salida precedible, por ejemplo:
  - incrementar/dec variable de forma que deba siempre ser isgreaterequal
 - 
 */
-	Thread::sleep(300000);
+	Thread::sleep(15000);
 	th1->finish();
 	th1->join();
 	return result;
@@ -178,4 +220,83 @@ void test_threading::registerTest()
 }
 
 
+/*
 
+pegar esto en compiler explorer para pruebas operator new
+puedo falsear el operator new para que haga el new nrmal, pero no mola
+
+#include <iostream>
+#include <cstddef>
+#include <memory>
+#include <string>
+
+struct Pepe
+{
+
+};
+Pepe sPepe;
+class MyClass1
+{
+
+};
+class MyClass2
+{
+    public:
+    MyClass2()
+    {
+        std::cout << "Class2 constructor\n";
+    }
+    ~MyClass2()
+    {
+        std::cout << "Class2 destructor\n";
+    }
+    void* operator new( size_t s,Pepe*)
+    {
+        std::cout << "Class2 operator new\n";
+        return ::operator new(s);
+    }
+	void operator delete( void* ptr, Pepe* )
+    {
+        std::cout << "Class2 operator delete1\n";
+        ::operator delete(ptr);
+    }
+	void operator delete( void* ptr )
+    {
+        std::cout << "Class2 operator delete2\n";
+        ::operator delete(ptr);
+    }
+};
+template <class T>
+struct Allocator
+{
+    static T* allocate()
+    {
+        return new T();
+    }
+};
+template <>
+struct Allocator<MyClass2>
+{
+    static MyClass2* allocate()
+    {        
+        return new (&sPepe)MyClass2();
+    }
+};
+
+template <class PT = MyClass1,class AllocatorType = Allocator<PT>, class F> PT* testAllocate(F&& f)
+{
+    auto p = AllocatorType::allocate();
+    return p;
+}
+int main()
+{
+    auto p1 = testAllocate<MyClass1,Allocator<MyClass1>>(main);
+    auto p2 = testAllocate<MyClass1>(main);
+    auto p3 = testAllocate<MyClass2>(main);
+
+    delete p1;
+    delete p2;
+    delete p3;
+    return 0;
+}
+*/

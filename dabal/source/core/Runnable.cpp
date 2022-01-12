@@ -2,7 +2,9 @@
 using core::Thread;
 #include <core/Runnable.h>
 using core::Runnable;
-
+using ::core::_private::RTMemPool;
+using ::core::_private::RTMemBlock;
+using ::core::_private::MemZoneList;
 
 
 #include <core/Timer.h>
@@ -15,21 +17,18 @@ using mpl::linkFunctor;
 #include <algorithm>
 using std::for_each;
 
-//#include <logging/Logger.h>
-//using logging::Logger;
-
 #include <core/TLS.h>
 using core::TLS;
 static TLS::TLSKey gCurrentRunnableKey;
 static bool gCurrentRunnableKeyCreated = false;
 static CriticalSection gCurrrentRunnableCS;
 
-void* Runnable::RunnableTask::operator new( size_t s,Runnable* owner )
+void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner ) 
 {
 	Lock lck(owner->mMemPoolCS);
 	RTMemPool* selectedPool = NULL;
 	//run over memory zones looking for free one
-	for( Runnable::MemZoneList::iterator i = owner->mRTZone.begin();i != owner->mRTZone.end() && !selectedPool;++i )
+	for(MemZoneList::iterator i = owner->mRTZone.begin();i != owner->mRTZone.end() && !selectedPool;++i )
 	{
 		if ( i->count < owner->mMaxTaskSize )
 		{
@@ -53,23 +52,17 @@ void* Runnable::RunnableTask::operator new( size_t s,Runnable* owner )
 	}
 	//Logger::getLogger()->fatal( "Runnable::not enough memory" );
 	throw std::bad_alloc();
-	//throw Exception( "Runnable::not enough memory" );
 }
 
-void Runnable::RunnableTask::operator delete( void* ptr, Runnable* )
-{
-	Runnable::RTMemBlock* mBlock = (Runnable::RTMemBlock*)((char*)ptr - offsetof( Runnable::RTMemBlock, task));
-	mBlock->memState = Runnable::RTMemBlock::EMemState::FREE;
-}
-void Runnable::RunnableTask::operator delete( void* ptr )
+void ::core::_private::RunnableTask::operator delete( void* ptr ) noexcept
 {
 	Runnable* ownerRunnable;
-	Runnable::RTMemBlock* block = (Runnable::RTMemBlock*)((char*)ptr - offsetof( Runnable::RTMemBlock, task));
+	RTMemBlock* block = (RTMemBlock*)((char*)ptr - offsetof( RTMemBlock, task));
 // 	NO VALE EL INCREMENTO ATOMICO, HAY QUE PROTEGER
 // 	long newCount = core::atomicDecrement( &block->owner->count ); 
 	ownerRunnable = block->owner->owner;
 	Lock lck(ownerRunnable->mMemPoolCS);
-	block->memState = Runnable::RTMemBlock::EMemState::FREE;
+	block->memState = RTMemBlock::EMemState::FREE;
 	if (--block->owner->count == 0 )
 	{
 		//remove pool only if it's not the first pool
@@ -79,7 +72,7 @@ void Runnable::RunnableTask::operator delete( void* ptr )
 }
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
 
-Runnable::RTMemPool* Runnable::_addNewPool()
+RTMemPool* Runnable::_addNewPool()
 {
 	RTMemPool* result;
 	RTMemPool auxPool;
@@ -145,34 +138,7 @@ Runnable::Runnable(unsigned int maxTaskSize):
 	mOwnerThread(0),  //�assume 0 is invalid thread id!!
 	mCurrentInfo(nullptr)
 {
-	
-	//post( RUNNABLE_CREATETASK( (linkFunctor<bool,TYPELIST()>( test,5 )) ));
-	//int a = 6;
-	//linkFunctor<void,TYPELIST(),const int&>( funcion, a );
-// 	MPL_STATIC_ASSERT( TypeTraits<Pepe>::isClass,CACA );
-// 	MPL_STATIC_ASSERT( (mpl::isSame< TypeTraits<float>::ParameterType,float>::result),CACA );
-// 	MPL_STATIC_ASSERT( (mpl::isSame< TypeTraits<const float&>::ParameterType,const float&>::result),CACA );
-// 	MPL_STATIC_ASSERT( (mpl::isSame< TypeTraits<Pepe>::ParameterType,Pepe>::result),CACA );
-// 	MPL_STATIC_ASSERT( (mpl::isSame< TypeTraits<Pepe2>::ParameterType,const Pepe2&>::result),CACA );
-//initing memory pool
-	//Logger::getLogger( "Initializing Runnable memory pool" );
-
-/*	//TEst
-	linkFunctor<void, TYPELIST(int,int,float) >(fDani,6.7f,6,mpl::_v1,mpl::_v2,mpl::_v3,'g')(8,6,2.1f);
-	Pepe p;
-	//linkFunctor<void, TYPELIST(int) >( makeMemberEncapsulate(&Pepe::f,&p),6.7f,mpl::_v1)(8);
-	Sleep(0); //para que pete en MAC si se me olvida quitar esto
-	//end test
-*/
 		
-
-/*	mRTMemPool = (RTMemBlock*)malloc( maxTaskSize*sizeof( RTMemBlock ) );
-	for( unsigned int i = 0; i < maxTaskSize; i++ )
-	{
-		mRTMemPool[i].memState = RTMemBlock::FREE ;
-		//	mRMTTMemPool[i].memState = RMTTMemBlock::FREE ;
-	}
-	*/
 	//create one default pool
 	gCurrrentRunnableCS.enter();
 	

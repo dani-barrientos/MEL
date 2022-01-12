@@ -17,7 +17,6 @@ GenericProcess::~GenericProcess()
 
 void GenericProcess::onInit(uint64_t msegs)
 {
-
 /*	mCurrentState = INIT;
 	mKillAccepted = false; //it's important because maybe mProcessCallback use microthread behaviour
 	mKillAccepted = (*mProcessCallback)( msegs, this,INIT );

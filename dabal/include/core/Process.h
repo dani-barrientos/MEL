@@ -226,11 +226,7 @@ namespace core
 		* @brief this Process will be executed at its own period but will be paused and killed
 		*  when parent Process will be
 		*/
-		//void attachProcess( Process* );
-
-		/**
-		* set next process to execute. It's appended to the end of the list.
-		* Each process can have ons 88 nfo() const;
+		//void attachProcess( Process* );		
 
 		/**
 		*  get Task ID provided by its processcheduler

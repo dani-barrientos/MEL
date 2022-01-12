@@ -21,7 +21,6 @@ namespace core
 		//typedef Callback< bool, uint64_t, Process*, EGenericProcessState > GenericCallback;
 		typedef std::function<EGenericProcessResult (uint64_t,Process*,EGenericProcessState)> GenericCallback;
 	private:
-		//GenericCallback*		mProcessCallback;
 		GenericCallback			mProcessCallback;
 		EGenericProcessState	mCurrentState;
 		volatile EGenericProcessResult			mUpdateResult;

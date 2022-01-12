@@ -54,7 +54,56 @@ namespace core
 #define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::core::EGenericProcessResult (uint64_t, Process*, ::core::EGenericProcessState)>(lambda)
 //useful macro to declare task parameters
 #define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::core::EGenericProcessState s
-
+	class Runnable; //predeclaration
+	namespace _private
+	{
+		class DABAL_API RunnableTask final: public GenericProcess
+		{
+		public:		
+			//throws bad_alloc oif no enoguh memory
+			static void* operator new( size_t s,Runnable* owner );
+			static void operator delete( void* ptr ) noexcept;			
+			RunnableTask(){}
+		private:
+		};
+		//default allocator for new tasks (through post) doing a simple new 
+		template <class T>
+		struct Allocator
+		{
+			static T* allocate(Runnable* _this)
+			{
+				return new T();
+			}
+		};
+			//special allocator for RunnableTask using internal pool
+		template <>
+		struct Allocator<RunnableTask>
+		{
+			static RunnableTask* allocate(Runnable* _this)
+			{        
+				return new (_this)RunnableTask();
+			}
+		};
+		struct RTMemPool; //predeclaration
+		struct RTMemBlock
+		{
+			enum class EMemState:uint8_t { FREE = 0,USED = 1 } ;							
+			EMemState	memState = EMemState::FREE;  
+			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( ::core::_private::RunnableTask ) ] ;
+			//RunnableTask task;
+			RTMemPool*	owner;
+		};
+		typedef list<RTMemPool> MemZoneList;
+		struct RTMemPool
+		{
+			RTMemPool():pool(0),count(0){}
+			RTMemBlock*	pool; //array to memory blocks
+			Runnable* owner;
+			size_t count;
+			MemZoneList::iterator iterator;
+		};
+	}
+	
 	template <class TRet, class F> struct ExecuteTask; //predeclaration
 	/**
 	* @class Runnable
@@ -119,47 +168,20 @@ namespace core
 		inline void setOwnerThreadId(::core::ThreadId tid) {mOwnerThread=tid;}
 		static Runnable* getCurrentRunnable();
 	protected:
+	public:  //por temas de depuracion
+
 	private:
 		static RunnableInfo* _getCurrentRunnableInfo();
-		class DABAL_API RunnableTask final: public GenericProcess
-		{
-		public:
-		
-			void* operator new( size_t s,Runnable* owner );
-			void operator delete( void* ptr, Runnable* );
-			void operator delete( void* ptr );			
-			RunnableTask(){}
-		private:
-		};
-
-		friend class RunnableTask;
+		friend class::core::_private:: RunnableTask;
 		RunnableInfo* mCurrentInfo;
 		ProcessScheduler	mTasks;
 		unsigned int		mMaxTaskSize;
 
-		struct RTMemPool; //predeclaration
-		struct RTMemBlock
-		{
-			enum class EMemState:uint8_t { FREE = 0,USED = 1 } ;							
-			EMemState	memState = EMemState::FREE;  
-			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( RunnableTask ) ] ;
-			//RunnableTask task;
-			RTMemPool*	owner;
-		};
-		typedef list<RTMemPool> MemZoneList;
-		struct RTMemPool
-		{
-			RTMemPool():pool(0),count(0){}
-			RTMemBlock*	pool; //array to memory blocks
-			Runnable* owner;
-			size_t count;
-			MemZoneList::iterator iterator;
-		};
-		MemZoneList mRTZone;
+		::core::_private::MemZoneList mRTZone;
 		//! helper function. Create new pool and append it at front
-		RTMemPool* _addNewPool();
+		::core::_private::RTMemPool* _addNewPool();
 		//! helper function to remove pool. Internally at least one pool remains, so maybe pool is not removed
-		void _removePool( RTMemPool* );
+		void _removePool( ::core::_private::RTMemPool* );
 
 		//RTMemBlock*		mRTMemPool;
 		CriticalSection	mMemPoolCS;
@@ -211,6 +233,7 @@ namespace core
 	public:
 
 
+	
 
 
 		/**
@@ -246,17 +269,16 @@ namespace core
 		* The execution is NOT guaranteed to be taken into account inmediatly.
 		* If caller needs to know whether the code has actualy been run, he must
 		* call Runnable::checkFor(...) or Runnable::waitFor(...).
+		* By default, a ::core::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons.wich also can
+		* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
+		* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::core::_private::Allocator for interfaz needed to your custom allocator
 		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*,::core::EGenericProcessState)
 		* @param[in] priority process priority
 		* @param[in] period Milliseconds
 		* @param[in] startTime milliseconds to begin task
-		* @param[in] extraInfo Passed to internal created process on setExtraInfo. @todo temporal hasta que haya un extradata en foundation. Problemas con compatibilidad judaica
-		*		where first parameter is schedulre time (in milliseconds) and second is envelope Process.
-		*		This function must return true if is finished
 		* @return the process created for this task
 		*/
-
-		template <class F>
+		template <class ProcessType = ::core::_private::RunnableTask,class AllocatorType = ::core::_private::Allocator<ProcessType>, class F>
 		std::shared_ptr<Process> post(
 			F&& task_proc,
 			bool autoKill = false,
@@ -379,17 +401,15 @@ namespace core
 		static void _sleep( unsigned int);
 
 	};
-
 	
-	template <class F>
+	template <class ProcessType,class AllocatorType,class F>
 	std::shared_ptr<Process> Runnable::post(
 		F&& task_proc,
 		bool autoKill,
 		// ETaskPriority priority ,
 		unsigned int period,unsigned int startTime/*,void* extraInfo */ )
 	{
-		::std::shared_ptr<RunnableTask> p (new (this)RunnableTask());
-		//GenericProcess* p = new GenericProcess();
+		::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
 		//p->setExtraInfo( extraInfo );
@@ -433,22 +453,7 @@ namespace core
 		assert(mOwnerThread != 0);
 		Future<TRet> future;
 		if ( forcePost || mOwnerThread != ::core::getCurrentThreadId())
-		{
-			//@todo no usada la version con linkfunctor porque tendr�a que hacer yo el std::move cuando sea y dem�s, y resulta m�s f�cil verlo (y sobretodo depurarlo) sin ello
-			//y que el propio ExecuteTask lo resuelva en el constructor
-			//post(
-			//	RUNNABLE_CREATETASK
-			//	(
-			//		returnAdaptor<void>
-			//		(				
-			//			linkFunctor<void,TYPELIST()>( ExecuteTask<TRet,typename ::std::decay<F>::type>(),function,future )
-			//			,true
-			//		)
-			//	),false/*@todo esto tengo que poder configurarlo*/
-			//	,NORMAL_PRIORITY_TASK
-			//	,0,delay, extraInfo
-
-			//);
+		{			
 			post(
 				RUNNABLE_CREATETASK
 				(
@@ -472,42 +477,7 @@ namespace core
 
 		return future;
 	}
-	/*template <class TRet>
-	Future<TRet> Runnable::execute(std::function< TRet()>&& function, unsigned int delay, bool forcePost, void* extraInfo)
-	{
-		assert(mOwnerThread != 0);
-		Future<TRet> future;
-		if (forcePost || mOwnerThread != ::core::getCurrentThreadId())
-		{
-			post(
-				std::function< bool( unsigned int, Process*, ::core::EGenericProcessState) >(
-				RUNNABLE_CREATETASK
-				(
-					returnAdaptor<void>
-					(
-						linkFunctor<void, TYPELIST()>(ExecuteTask<TRet, typename std::function< TRet()> >(), function, future)
-						, true
-						)
-				)), false
-				, NORMAL_PRIORITY_TASK
-				, 0, delay, extraInfo
-
-			);
-
-		}
-		else
-		{
-			_sleep(delay); //@todo �apa para evitar incluir Thread.h
-						   //same calling thread that this thread, execute directly
-			ExecuteTask<TRet, std::function< TRet()> > rt;
-			rt(function, future);
-		}
-		return future;
-	}*/
-/*	template <class Condition> bool _ch(Condition& cond,Future<void>&)
-	{
-		return true;
-	}*/
+	
 	template <class Condition> 
 	Future<void> Runnable::checkCondition( Condition cond,unsigned int checkPeriod )
 	{
