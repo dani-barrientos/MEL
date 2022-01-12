@@ -32,7 +32,7 @@ int main(int argc, const char* argv[])
 	spdlog::error("Prueba error 2");
 	spdlog::set_level(spdlog::level::debug); // Set global log level to debug
   	std::cout << "Running main with "<<argc<<" arguments:\n";
-	for(int i =0;i<argc;++i)
+	for(int i =0;i<argc;++i)	
 	{
 		std::cout << '\t'<< argv[i] << '\n';
 	}
@@ -58,8 +58,9 @@ int main(int argc, const char* argv[])
 		currTest = TestManager::getSingleton().getTest(name);
 		std::cout << "Running test: " << name << '\n';
 		
-	}else
-		currTest = TestManager::getSingleton().getTest(test_threading::TEST_NAME);
+	}
+	// else
+	// 	currTest = TestManager::getSingleton().getTest(test_threading::TEST_NAME);
 	
 	if (currTest)
 		return currTest();

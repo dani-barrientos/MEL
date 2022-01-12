@@ -35,11 +35,11 @@ class CustomProcessType : public GenericProcess
 	}
 	CustomProcessType()
 	{
-		spdlog::debug("CustomProcessType constructor");
+		//spdlog::debug("CustomProcessType constructor");
 	}
 	~CustomProcessType()
 	{
-		spdlog::debug("CustomProcessType destructor");
+		//spdlog::debug("CustomProcessType destructor");
 	}
 	private:
 	int tema;
@@ -120,30 +120,30 @@ static int _testMicroThreadingMonoThread()
 	size_t s2 = sizeof(GenericProcess);
 	size_t s3 = sizeof(MThreadAttributtes);
 	spdlog::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
-	int result;
+	int result = 0;
 	int sharedVar = 0;
 	auto th1 = GenericThread::createEmptyThread();
 	th1->start();	
-	//probar starttime
-	// th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
-	// {
-	// 	int aux = sharedVar;
-	// 	sharedVar++;
-	// 	spdlog::debug("Lambda");
-	// 	auto t1 = p->getElapsedTime();
-	// 	CHECK_TIME(t1,p->getPeriod(),"check period"s);
-	// 	auto t0 = sTimer.getMilliseconds();
-	// 	unsigned int waittime = 3550;
-	// 	::core::Process::wait(waittime);
-	// 	t1 = sTimer.getMilliseconds();
-	// 	CHECK_TIME(t1-t0,waittime,"check wait 1"s);
-	// 	waittime = 67;
-	// 	::core::Process::wait(waittime);
-	// 	auto t2 = sTimer.getMilliseconds();
-	// 	CHECK_TIME(t2-t1,waittime,"check wait 2"s);
-	// 	sharedVar = aux;
-	// 	return ::core::EGenericProcessResult::CONTINUE;
-	// },true,2000,000);
+	
+	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
+	{
+		int aux = sharedVar;
+		sharedVar++;
+		spdlog::debug("Lambda");
+		auto t1 = p->getElapsedTime();
+		CHECK_TIME(t1,p->getPeriod(),"check period"s);
+		auto t0 = sTimer.getMilliseconds();
+		unsigned int waittime = 3550;
+		::core::Process::wait(waittime);
+		t1 = sTimer.getMilliseconds();
+		CHECK_TIME(t1-t0,waittime,"check wait 1"s);
+		waittime = 67;
+		::core::Process::wait(waittime);
+		auto t2 = sTimer.getMilliseconds();
+		CHECK_TIME(t2-t1,waittime,"check wait 2"s);
+		sharedVar = aux;
+		return ::core::EGenericProcessResult::CONTINUE;
+	},true,2000,000);
 	th1->post<CustomProcessType,MyAllocator>(
 		::mpl::linkFunctor<::core::EGenericProcessResult,TYPELIST(uint64_t,Process*,::core::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
 		,true,4200);
@@ -163,6 +163,66 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 	th1->join();
 	return result;
 }
+//check performance launching a lot of tasks
+//@todo habrái que hacerlo con un profiler, un sistema de benchmarking...
+int  _testPerformanceLotTasks()
+{
+	int result = 0;
+	constexpr int nIterations = 1;
+	constexpr int nTasks = 1000000;
+	auto th1 = GenericThread::createEmptyThread(true,true,nTasks);
+	th1->start();	
+	uint64_t t0,t1;
+	int count = 0;
+	t0 = sTimer.getMilliseconds();
+	auto steps = nTasks/th1->getMaxPoolTasks();
+	
+	for(int it = 0; it < nIterations; ++it)
+	{
+		for(int j = 0;j<steps;++j)
+		{
+			for(int i = 0; i < th1->getMaxPoolTasks(); ++i)
+			{
+				++count;
+				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
+				{
+					//spdlog::debug("Lambda {}",count);
+					return ::core::EGenericProcessResult::KILL;
+				},true,1000,0);		
+			}
+			::Thread::sleep(1) ;//to wait for taks
+		}
+		Thread::sleep(10);
+	}
+	t1 = sTimer.getMilliseconds();	
+	spdlog::info("Time launching {} tasks with global new: {} msecs",nTasks,t1-t0);
+	Thread::sleep(2000);
+	t0 = sTimer.getMilliseconds();	;
+	count = 0;
+	for(int it = 0; it < nIterations; ++it)
+	{
+		for(int j = 0;j<steps;++j)
+		{
+			for(int i = 0; i < th1->getMaxPoolTasks(); ++i)
+			{
+				++count;
+				th1->post( [count](RUNNABLE_TASK_PARAMS)
+				{
+					//spdlog::debug("Lambda {}",count);
+					return ::core::EGenericProcessResult::KILL;
+				},true,1000,0);
+			}	
+			::Thread::sleep(1) ;//wait for tasks finished
+		}
+		Thread::sleep(10);
+	}
+	t1 = sTimer.getMilliseconds();
+	spdlog::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
+	Thread::sleep(15000);
+	th1->finish();
+	th1->join();
+	return result;
+}
 /**
  * @brief Tasking tests
  * commandline options
@@ -173,6 +233,7 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 static int test()
 {
 	int result = 1;
+	TestManager::TestType defaultTest = _testPerformanceLotTasks;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
 	{
@@ -184,6 +245,9 @@ static int test()
 				case 0:
 					result = _testMicroThreadingMonoThread();
 					break;
+				case 1:
+					result = _testPerformanceLotTasks();
+					break;
 				default:;					
 			}
 		}
@@ -192,7 +256,8 @@ static int test()
 			std::cerr << e.what() << '\n';
 		}		
 	}else
-		result = _testMicroThreadingMonoThread(); //by default
+		result = defaultTest(); //by default
+		
 	
 	// th1->post( std::function<bool(uint64_t ,Process*,::core::EGenericProcessState)>([](RUNNABLE_TASK_PARAMS)
 	// {
@@ -216,7 +281,7 @@ static int test()
 }
 void test_threading::registerTest()
 {
-    TestManager::getSingleton().registerTest(TEST_NAME,"threading tests",test);
+    TestManager::getSingleton().registerTest(TEST_NAME,"threading tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",test);
 }
 
 

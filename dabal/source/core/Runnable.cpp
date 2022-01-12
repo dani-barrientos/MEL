@@ -26,27 +26,39 @@ static CriticalSection gCurrrentRunnableCS;
 void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner ) 
 {
 	Lock lck(owner->mMemPoolCS);
+	//std::lock_guard<std::mutex> lck(owner->mMemPoolCS);
 	RTMemPool* selectedPool = NULL;
 	//run over memory zones looking for free one
-	for(MemZoneList::iterator i = owner->mRTZone.begin();i != owner->mRTZone.end() && !selectedPool;++i )
+//muy lento, puede que sea el mutex, pero el de std es incluso más lento...
+//intentar pruebas sin esp
+
+	/*for( auto& i:owner->mRTZone.getList())
 	{
-		if ( i->count < owner->mMaxTaskSize )
+		if ( i.count < owner->mMaxTaskSize )
 		{
-			selectedPool = &(*i);
+			selectedPool = &i;
+			break;
 		}
 	}
+	*/
+	selectedPool = &owner->mRTZone.getList().front();  //PARA PRUEBAS
+	
 	if ( !selectedPool ) //no free pool, create new
+	{
+		spdlog::warn("New pool needed for Runnable!!");
 		selectedPool = owner->_addNewPool();
+	}
 	if ( selectedPool )
 	{
 		//find first free block
-		for ( unsigned int i = 0; i < owner->mMaxTaskSize; i++ )
+		auto pool = selectedPool->pool;
+		for ( unsigned int i = 0; i < owner->mMaxTaskSize; ++i )
 		{
-			if ( selectedPool->pool[i].memState == RTMemBlock::EMemState::FREE )
+			if ( pool[i].memState == RTMemBlock::EMemState::FREE )
 			{
-				selectedPool->pool[i].memState = RTMemBlock::EMemState::USED;
+				pool[i].memState = RTMemBlock::EMemState::USED;
 				++selectedPool->count;
-				return &selectedPool->pool[i].task;
+				return &pool[i].task;
 			}
 		}
 	}
@@ -62,6 +74,7 @@ void ::core::_private::RunnableTask::operator delete( void* ptr ) noexcept
 // 	long newCount = core::atomicDecrement( &block->owner->count ); 
 	ownerRunnable = block->owner->owner;
 	Lock lck(ownerRunnable->mMemPoolCS);
+	//std::lock_guard<std::mutex> lck(ownerRunnable->mMemPoolCS);
 	block->memState = RTMemBlock::EMemState::FREE;
 	if (--block->owner->count == 0 )
 	{
@@ -80,9 +93,10 @@ RTMemPool* Runnable::_addNewPool()
 	auxPool.owner = this;
 	auxPool.pool = (RTMemBlock*)malloc( sizeof(RTMemBlock)*mMaxTaskSize );
 	auxPool.count = 0;
-	mRTZone.push_front(auxPool);
-	MemZoneList::iterator poolIterator = mRTZone.begin();
-	poolIterator->iterator = poolIterator;
+	mRTZone.push_front(std::move(auxPool));
+	//@todo guardar iterador
+	auto poolIterator = mRTZone.getList().begin();
+	//poolIterator->iterator = poolIterator;
 	result = &(*poolIterator);
 	for ( unsigned int i = 0; i < mMaxTaskSize; ++i )
 	{
@@ -96,7 +110,8 @@ void Runnable::_removePool( RTMemPool* pool )
 	//store pool in auxiliar variable
 	RTMemBlock* memZone = pool->pool;
 	//remove from list
-	mRTZone.erase( pool->iterator );
+	mRTZone.remove(pool);
+	//mRTZone.erase( pool->iterator );
 	//free memory
 	free(memZone); 
 }
@@ -155,11 +170,12 @@ Runnable::Runnable(unsigned int maxTaskSize):
 
 Runnable::~Runnable() {
 	mTasks.destroyAllProcesses();
-	for( MemZoneList::iterator i = mRTZone.begin(); i != mRTZone.end(); ++i )
+	for( auto& i:mRTZone.getList())
 	{
-		//free memory
-		free( i->pool );
+		free(i.pool);
+		
 	}
+	
 }
 
 

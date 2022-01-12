@@ -31,6 +31,8 @@ using mpl::asPtr;
 using core::Future;
 #include <functional>
 #include <cassert>
+#include <forward_list>
+#include <mutex>
 
 #define RUNNABLE_TASK_ALIGNMENT 8
 
@@ -66,7 +68,7 @@ namespace core
 			RunnableTask(){}
 		private:
 		};
-		//default allocator for new tasks (through post) doing a simple new 
+		//default allocator for new tasks (through post) doing a simple new 	
 		template <class T>
 		struct Allocator
 		{
@@ -93,14 +95,40 @@ namespace core
 			//RunnableTask task;
 			RTMemPool*	owner;
 		};
-		typedef list<RTMemPool> MemZoneList;
+		struct MemZoneList
+		{
+			typedef std::forward_list<RTMemPool> ListType;
+			public:
+				MemZoneList():mSize(0){}
+				size_t size(){ return mSize;};
+				void push_front(RTMemPool&& pool)
+				{
+					mList.push_front(std::move(pool));
+					++mSize;
+				}
+				 ListType& getList(){ return mList;}
+				void remove(RTMemPool* pool )
+				{
+					//@todo hacer más eficiente teniendo iterador
+					mList.remove_if([pool](const RTMemPool& p)
+					{
+						auto r = (pool == &p);
+						return r;
+					});
+					--mSize; //todo no guaratee was removed. Since C++20 remove returns number of elements removed
+				}
+			private:
+				size_t mSize;
+				ListType mList;
+		};
+		//typedef std::forward_list<RTMemPool> MemZoneList;
 		struct RTMemPool
 		{
 			RTMemPool():pool(0),count(0){}
 			RTMemBlock*	pool; //array to memory blocks
 			Runnable* owner;
 			size_t count;
-			MemZoneList::iterator iterator;
+			//MemZoneList::iterator iterator; quitar
 		};
 	}
 	
@@ -175,7 +203,7 @@ namespace core
 		friend class::core::_private:: RunnableTask;
 		RunnableInfo* mCurrentInfo;
 		ProcessScheduler	mTasks;
-		unsigned int		mMaxTaskSize;
+		unsigned int		mMaxTaskSize;  //max number of tasks for each pool (the number of pools is dynamic)
 
 		::core::_private::MemZoneList mRTZone;
 		//! helper function. Create new pool and append it at front
@@ -185,11 +213,10 @@ namespace core
 
 		//RTMemBlock*		mRTMemPool;
 		CriticalSection	mMemPoolCS;
+		//std::mutex mMemPoolCS;
 		::core::ThreadId	mOwnerThread;//thread executing Runnable
 		//typedef Callback<void,Runnable*>	TFinishEvent;
 		CallbackSubscriptor<::core::NoMultithreadPolicy, Runnable*> mFinishEvents;
-		//list< TFinishEvent* >	mFinishEvents;
-
 		void executeFinishEvents();
 
 		/**
@@ -231,11 +258,6 @@ namespace core
 		//void setTaskAddedEvent( F functor );
 		//inline TTaskAddedEvent* getTaskAddedEvent() const;
 	public:
-
-
-	
-
-
 		/**
 		* Posts new execution request. Adds the request to the queue and
 		* generates a new internal task id.
@@ -393,6 +415,7 @@ namespace core
 		{
 			return (unsigned int)getTasksScheduler().getActiveProcessCount();
 		}
+		inline unsigned int getMaxPoolTasks() const{ return mMaxTaskSize;}
 	private:
 		/**
 		* helper for triggerOnDone
