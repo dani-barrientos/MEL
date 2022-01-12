@@ -167,9 +167,13 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 //@todo habrái que hacerlo con un profiler, un sistema de benchmarking...
 int  _testPerformanceLotTasks()
 {
+
+
+//algo tengo mal en los presets que en window dsrelease no tira, lo raro es que está gemnerando una caprta debug aunque sea relase
 	int result = 0;
 	constexpr int nIterations = 1;
-	constexpr int nTasks = 1000000;
+	constexpr int nTasks = 100000;
+
 	auto th1 = GenericThread::createEmptyThread(true,true,nTasks);
 	th1->start();	
 	uint64_t t0,t1;

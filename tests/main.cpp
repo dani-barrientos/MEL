@@ -23,6 +23,12 @@ using tests::TestManager;
  **/
 int main(int argc, const char* argv[])
 {
+	
+	#ifdef NDEBUG
+	spdlog::info( "ESTAMOS EN RELEASE");
+	#else
+	spdlog::info( "ESTAMOS EN DEBUG");
+	#endif
 	//ver cómo furrula y 
 	//tebngo que ver que tenga funcionalidad similar a los appedern, por el tema de redirigir la salida a donde quiera->creo que son los sink
 	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
@@ -34,7 +40,7 @@ int main(int argc, const char* argv[])
   	std::cout << "Running main with "<<argc<<" arguments:\n";
 	for(int i =0;i<argc;++i)	
 	{
-		std::cout << '\t'<< argv[i] << '\n';
+		spdlog::debug("\t{}\n",argv[i]);
 	}
 	CommandLine::createSingleton(argc,argv);
 	// const char* arg[] = {"kk","-list","-t","callbacks"};	

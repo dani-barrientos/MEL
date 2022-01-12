@@ -28,13 +28,13 @@
         {
             "name": "Linux Base",
             "description": "Common things for Linux build",
-            "hidden": true,            
+            "hidden": true,
             "generator": "Unix Makefiles",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",               
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "DABAL_OS": "DABAL_LINUX",
-                "DABAL_API": "DABAL_POSIX"               
+                "DABAL_API": "DABAL_POSIX"
             },
             "architecture": {
                 "value": "x64",
@@ -160,7 +160,7 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/bin/clang-10",
-                "CMAKE_CXX_COMPILER": "/bin/clang++-10",                
+                "CMAKE_CXX_COMPILER": "/bin/clang++-10",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "DABAL_OS": "DABAL_LINUX",
                 "DABAL_API": "DABAL_POSIX",
@@ -183,7 +183,7 @@
             "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu (Debug)",
             "description": "Using compilers: C = /bin/clang-11, CXX = /bin/clang++-11",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits":"Linux Base",
+            "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "/bin/clang-11",
@@ -196,7 +196,7 @@
             "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu (Release)",
             "description": "Using compilers: C = /bin/clang-11, CXX = /bin/clang++-11",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits":"Linux Base",
+            "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "/bin/clang-11",
@@ -209,11 +209,11 @@
             "displayName": "GCC 10.3.0 x86_64-linux-gnu (Debug)",
             "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-10, CXX = /bin/x86_64-linux-gnu-g++-10",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits":"Linux Base",
+            "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-10",
-                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",               
+                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",
                 "DABAL_ARQ": "DABAL_X64_GCC"
             }
         },
@@ -222,13 +222,21 @@
             "displayName": "GCC 10.3.0 x86_64-linux-gnu (Release)",
             "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-10, CXX = /bin/x86_64-linux-gnu-g++-10",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits":"Linux Base",
+            "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-10",
-                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",               
+                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",
                 "DABAL_ARQ": "DABAL_X64_GCC"
             }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Windows Release",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "x86-release"
         }
     ]
 }
