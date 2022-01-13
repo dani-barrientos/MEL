@@ -147,11 +147,11 @@ static int _testMicroThreadingMonoThread()
 	th1->post<CustomProcessType,MyAllocator>(
 		::mpl::linkFunctor<::core::EGenericProcessResult,TYPELIST(uint64_t,Process*,::core::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
 		,true,4200);
-	// auto p = make_shared<MyProcess>(sharedVar);
-	// p->setPeriod(0);
-	// th1->postTask(p);
-	 //th1->post(MyTask(p.get(),sharedVar),true,1200);
-	// th1->post(MyTask(nullptr,sharedVar),true,1200);
+	auto p = make_shared<MyProcess>(sharedVar);
+	p->setPeriod(0);
+	th1->postTask(p);
+	th1->post(MyTask(p.get(),sharedVar),true,1200);
+	//th1->post(MyTask(nullptr,sharedVar),true,1200);
 
 /*
 preparar bien el test: quiero que los procesos actúa sobre algún objeto y tenga una salida precedible, por ejemplo:
@@ -167,9 +167,8 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 //@todo habrái que hacerlo con un profiler, un sistema de benchmarking...
 int  _testPerformanceLotTasks()
 {
-
-
 //algo tengo mal en los presets que en window dsrelease no tira, lo raro es que está gemnerando una caprta debug aunque sea relase
+//parece ser que es por cosas del generador de MSVC que no sabe la configuracion
 	int result = 0;
 	constexpr int nIterations = 1;
 	constexpr int nTasks = 100000;

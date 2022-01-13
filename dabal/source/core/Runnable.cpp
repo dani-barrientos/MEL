@@ -25,14 +25,14 @@ static CriticalSection gCurrrentRunnableCS;
 
 void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner ) 
 {
+	return ::operator new(s);
+	/*
+	descartado hasta ahcer sistema eficiente
 	Lock lck(owner->mMemPoolCS);
 	//std::lock_guard<std::mutex> lck(owner->mMemPoolCS);
 	RTMemPool* selectedPool = NULL;
 	//run over memory zones looking for free one
-//muy lento, puede que sea el mutex, pero el de std es incluso más lento...
-//intentar pruebas sin esp
-
-	/*for( auto& i:owner->mRTZone.getList())
+	for( auto& i:owner->mRTZone.getList())
 	{
 		if ( i.count < owner->mMaxTaskSize )
 		{
@@ -40,8 +40,7 @@ void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner )
 			break;
 		}
 	}
-	*/
-	selectedPool = &owner->mRTZone.getList().front();  //PARA PRUEBAS
+
 	
 	if ( !selectedPool ) //no free pool, create new
 	{
@@ -64,14 +63,15 @@ void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner )
 	}
 	//Logger::getLogger()->fatal( "Runnable::not enough memory" );
 	throw std::bad_alloc();
+	*/
 }
 
 void ::core::_private::RunnableTask::operator delete( void* ptr ) noexcept
 {
+	::operator delete(ptr);
+	/*
 	Runnable* ownerRunnable;
 	RTMemBlock* block = (RTMemBlock*)((char*)ptr - offsetof( RTMemBlock, task));
-// 	NO VALE EL INCREMENTO ATOMICO, HAY QUE PROTEGER
-// 	long newCount = core::atomicDecrement( &block->owner->count ); 
 	ownerRunnable = block->owner->owner;
 	Lock lck(ownerRunnable->mMemPoolCS);
 	//std::lock_guard<std::mutex> lck(ownerRunnable->mMemPoolCS);
@@ -82,6 +82,7 @@ void ::core::_private::RunnableTask::operator delete( void* ptr ) noexcept
 		if ( ownerRunnable->mRTZone.size() > 1 )
 			ownerRunnable->_removePool( block->owner );
 	}
+	*/
 }
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
 
@@ -216,13 +217,11 @@ void Runnable::setTimer(std::shared_ptr<Timer> timer )
 	mTasks.setTimer( timer );
 }
 
-unsigned int Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime)
+void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime)
 {
 	assert( process && "is NULL");
-	unsigned int taskId;
-	taskId = mTasks.insertProcess( process,startTime );
+	mTasks.insertProcess( process,startTime );
 	onPostTask( process );
-	return taskId;
 }
 
 
@@ -243,25 +242,7 @@ void Runnable::processTasks()
 
 //#pragma optimize("",off)
 
-bool Runnable::waitFor(const unsigned int taskId,const unsigned int millis)
-{
-	bool taskCompleted;
-	unsigned int millicount=0;
-	do
-	{
-		taskCompleted = mTasks.checkFor(taskId);
 
-		//descargamos un breve tiempo el proceso para que no haga mucha espera activa
-		Thread::sleep( 10 ); //@forma horrible por la falta de tiempo de espera en eventos. No cuadra bien usar el sleep en Runnable
-		millicount += 10; //  muy impreciso
-	}
-	while ( !taskCompleted && (millicount<millis));
-	//@todo atenci�n. Aqu� puede haber muchos problemas de concurrencia
-
-	return taskCompleted;
-
-
-}
 void Runnable::executeFinishEvents()
 {
 	mFinishEvents.triggerCallbacks(this);

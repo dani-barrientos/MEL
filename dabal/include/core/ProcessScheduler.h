@@ -15,8 +15,6 @@ using std::set;
 using std::list;
 using core::Process;
 
-#include <unordered_map>
-using std::unordered_map;
 using std::pair;
 
 
@@ -30,6 +28,7 @@ using core::CallbackSubscriptor;
 #include <mpl/Int2Type.h>
 using ::mpl::Int2Type;
 #include <utility>
+#include <atomic>
 
 // temas que quiero:
 //  - quitar esas prioridades. meter un objeto de propiedades en el post donde se indiquen cosas, si es que las quiero meter
@@ -65,9 +64,8 @@ namespace core
 		* @param process insert new process in scheduler
 		* @param starttime msecs to wait to start it
 		* @warning 	if process is already inserted behaviour is unpredictable
-		* @return taks identifier.
 		*/
-		unsigned int insertProcess( std::shared_ptr<Process> process,unsigned int startTime = 0);
+		void insertProcess( std::shared_ptr<Process> process,unsigned int startTime = 0);
 
 
 		/**
@@ -116,12 +114,8 @@ namespace core
 		* @warning  this function is not thread-safe. If you need it you
 		*  must block executeprocess() and checkFor() with a critical section
 		*/
-		inline bool checkFor(unsigned int taskId);
+		//inline bool checkFor(unsigned int taskId);
 
-		/**
-		* return Process pointer for given task id. YOu can't take ownership
-		*/
-		inline std::shared_ptr<Process> getProcessForId( unsigned int taskId ) const;
 		inline TProcessList& getProcesses();
 		inline TProcessList& getPendingProcesses();
 		/**
@@ -202,18 +196,12 @@ namespace core
 		//new processes to insert next time
 		 TProcessList  mNewProcesses;
 
-		mutable CriticalSection	mCS;
-		mutable CriticalSection	mPendingIdTasksCS;
-		//mutable CriticalSection	mExecutionCS;
-
+		mutable CriticalSection	mCS;		
 		std::shared_ptr<Timer>			mTimer;
-		unsigned int			mRequestedTaskCount;
-		unsigned int			mProcessCount;
+		//unsigned int			mProcessCount;
+		std::atomic<unsigned int> mProcessCount;
 		volatile int32_t		mInactiveProcessCount;
-		unordered_map<unsigned int, std::shared_ptr<Process>>	mPendingIdTasks;
-		//list <std::shared_ptr<Process>>			mNew;
-
-		std::shared_ptr<Process>				mPreviousProcess;
+		std::shared_ptr<Process>	mPreviousProcess;
 		bool					mKillingProcess; //flag to mark when ther is a kill task pending
 
 		/**
@@ -236,7 +224,7 @@ namespace core
 		*/
 		void processAsleep(std::shared_ptr<Process>);
 	};
-	std::shared_ptr<Process> ProcessScheduler::getProcessForId( unsigned int taskId ) const
+	/*std::shared_ptr<Process> ProcessScheduler::getProcessForId( unsigned int taskId ) const
 	{
 		std::shared_ptr<Process> result = 0;
 		mPendingIdTasksCS.enter();
@@ -248,7 +236,7 @@ namespace core
 		mPendingIdTasksCS.leave();
 		return result;
 	}
-
+*/
 
 	template <class T>
 	void ProcessScheduler::pauseProcesses(T& predicate)
@@ -260,14 +248,6 @@ namespace core
 				(*i).first->pause();
 			}
 		}
-	}
-	bool ProcessScheduler::checkFor(const unsigned int taskId)
-	{
-		bool taskCompleted;
-		mPendingIdTasksCS.enter();
-		taskCompleted = (mPendingIdTasks.find( taskId ) == mPendingIdTasks.end() );
-		mPendingIdTasksCS.leave();
-		return taskCompleted;
 	}
 	ProcessScheduler::TProcessList& ProcessScheduler::getProcesses() 
 	{

@@ -144,10 +144,6 @@ namespace core
 	* The execution requests are internaly stored in a ProcessScheduler,and processed anytime
 	* after the call is made.
 	*
-	* Once the request is made, the caller caller is given a "task identifier" that will
-	* allow future queries about the task status, through Runnable::waitFor(...) and 
-	* Runnable::checkFor(...) methods,
-	*
 	* The first method simply blocks the calling thread until the requested task
 	* has been completed, or a timeout is reached. The second method just checks
 	* for task completion and returns inmediately.
@@ -265,7 +261,7 @@ namespace core
 		* @return an integer being the internal task id just created
 		* @internally, it calls protected onPostTask, so children can add custom behaviour
 		*/
-		unsigned int postTask(std::shared_ptr<Process> process,unsigned int startTime);
+		void postTask(std::shared_ptr<Process> process,unsigned int startTime = 0);
 
 		/**
 		* Creates a new runnable object.
@@ -289,8 +285,6 @@ namespace core
 		/**
 		* Posts a new execution request over a functor
 		* The execution is NOT guaranteed to be taken into account inmediatly.
-		* If caller needs to know whether the code has actualy been run, he must
-		* call Runnable::checkFor(...) or Runnable::waitFor(...).
 		* By default, a ::core::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons.wich also can
 		* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
 		* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::core::_private::Allocator for interfaz needed to your custom allocator
@@ -368,31 +362,12 @@ namespace core
 		*/
 		template <class F>
 		void subscribeFinishEvent( F&& functor);
-		
-		/**
-		* Blocks the caller until the given task has been executed by this object.
-		* This function must be called form a different Thread than in which this Runnable is executed.
-		* @param taskId the task to wait for
-		* @param millis timeout (milliseconds)
-		* @return `true+  if the task is complished before the timeout expires. `false` otherwise
-		* @remarks if task was not completed this is taken off scheduler
-		* @todo esta funcion no es muy coherente aqu�, ya que no se puede saber si est� en otro thread
-		* @deprecated Use futures. This function might disappear in future versions
-		*/
-#ifndef _WINDOWS
-		///@cond
-		__attribute__((deprecated))
-		///endcond
-#endif
-		bool waitFor(const unsigned int taskId, const unsigned int millis);
-
-
+				
 		/**
 		* Checks for a given task to be acomplished
 		* @param[in] taskId the task to check
 		* @return true if the task has already been executed. false otherwise
 		*/
-		inline bool checkFor(const unsigned int taskId);
 		inline const ProcessScheduler& getTasksScheduler() const;
 		inline ProcessScheduler& getTasksScheduler() ;
 
@@ -443,11 +418,7 @@ namespace core
 
 
 	
-	bool Runnable::checkFor(const unsigned int taskId) {
-		bool taskCompleted;
-		taskCompleted = mTasks.checkFor(taskId);
-		return taskCompleted;
-	}
+	
 	const ProcessScheduler& Runnable::getTasksScheduler() const
 	{
 		return mTasks;

@@ -177,16 +177,5 @@ void GenericThread::onCycleEnd()
 			mSignaled = false;	
 #endif
 		}
-	}
-	/*
-	bool end;
-	if ( !mEnd )
-	{
-no vale ya que el processTask viene despues y puede haber un mEnd
-creo que esta funcion deber�a mandar siempre, por lo que si se hace desde fuera un mEnd, que esta lo cambie
-
-deber�a avisar a la function de si se pide terminacion
-			end = (*mThreadFunction)( this );
-			mEnd = (mEnd || end); //maybe mEnd is changed inside threadfunction
-		}*/
+	}	
 }

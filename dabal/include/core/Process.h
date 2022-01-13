@@ -231,7 +231,7 @@ namespace core
 		/**
 		*  get Task ID provided by its processcheduler
 		*/
-		inline unsigned int getId() const;
+		//inline unsigned int getId() const;
 		/**
 		* time after wich Process will start
 		*/
@@ -379,10 +379,10 @@ namespace core
 		inline void setId( unsigned int id );
 	};
 	
-	unsigned int Process::getId() const
-	{
-		return mProcessId;
-	}
+	// unsigned int Process::getId() const
+	// {
+	// 	return mProcessId;
+	// }
 	void Process::setId( unsigned int id )
 	{
 		mProcessId = id;

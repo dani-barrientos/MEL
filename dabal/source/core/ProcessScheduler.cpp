@@ -30,12 +30,12 @@ static bool gTLSInited = false;
 static CriticalSection gPSCS;
 
 ProcessScheduler::ProcessScheduler():
-mRequestedTaskCount( 0 )
-,mTimer( NULL )
-,mProcessCount( 0 ),
-mInactiveProcessCount( 0 ),
-mKillingProcess( false ),
-mProcessInfo(nullptr)
+	mTimer( nullptr )
+	//mRequestedTaskCount( 0 )
+	,mProcessCount( 0 ),
+	mInactiveProcessCount( 0 ),
+	mKillingProcess( false ),
+	mProcessInfo(nullptr)
 {
 	gPSCS.enter();
 	if ( !gTLSInited )
@@ -78,16 +78,21 @@ void ProcessScheduler::executeProcesses()
 	assert(	mTimer != NULL );
 	uint64_t time= mTimer->getMilliseconds();
 	//inserto procesos pendientes
-	mCS.enter();
-	end = mNewProcesses.end();
-	for( i = mNewProcesses.begin(); i != end; ++i )
+
+	//don't block if no new processes. size member is not atomic, but if a new prodess is being inserted in this moment, it will be inserted in next iteration
+	if ( !mNewProcesses.empty())
 	{
-		mProcessList.push_back( *i );
-		(*i).first->mLastUpdateTime = time; 
-		(*i).first->setProcessScheduler( this );
+		mCS.enter();
+		end = mNewProcesses.end();
+		for( i = mNewProcesses.begin(); i != end; ++i )
+		{
+			mProcessList.push_back( *i );
+			(*i).first->mLastUpdateTime = time; 
+			(*i).first->setProcessScheduler( this );
+		}
+		mNewProcesses.clear();	
+		mCS.leave();
 	}
-	mNewProcesses.clear();	
-	mCS.leave();
 	_executeProcesses( time,mProcessList);
 	mProcessInfo->current = previousProcess;
 }
@@ -139,11 +144,13 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 			{
 				//proceso muerto, lo anoto para quitarlo
 				//removes this process from pending
-				mPendingIdTasksCS.enter();
+				//mPendingIdTasksCS.enter(); par aquçe es esto
 				p->setDead();
-				mPendingIdTasks.erase( p->getId() );
-				mProcessCount--;
-				mPendingIdTasksCS.leave();
+				//mPendingIdTasks.erase( p->getId() );
+				//mProcessCount--; proteger?? puedo usar un atomic pero es un poco ridiculo
+				mProcessCount.fetch_sub(1,::std::memory_order_relaxed);
+
+				//mPendingIdTasksCS.leave();
 				//get next Process in its chain (if any)
 				/*if ( p->getNext() )
 				{
@@ -246,36 +253,15 @@ void ProcessScheduler::destroyAllProcesses()
 	mNewProcesses.clear();
 }
 
-unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned int startTime)
+void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned int startTime)
 {
-	TProcessList::iterator	i;
-	unsigned int newId;
-
 	if (process == nullptr)
-		return 0;
-	mCS.enter();
-	//mark process as pending for execution
-	mPendingIdTasksCS.enter();
-	//mPendingIdTasks[ newId ] = process;
+		return;
+	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
 
-	auto pos = mPendingIdTasks.find( process->getId() );
-	if ( pos == mPendingIdTasks.end() )
-	{
-		newId = ++mRequestedTaskCount;
-
-		process->setId( newId );
-		mPendingIdTasks.insert({ newId, process });
-		mProcessCount++;
-		mNewProcesses.push_back( std::make_pair(process,startTime) );
-	}else
-	{
-		//ya exist�a!
-		newId = process->getId();
-	}
-
-	mPendingIdTasksCS.leave();
-	mCS.leave();
-	return newId;
+	Lock lck(mCS);  
+	//mProcessCount++;
+	mNewProcesses.push_back( std::make_pair(process,startTime) );
 }
 
 
