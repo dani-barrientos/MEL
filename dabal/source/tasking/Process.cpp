@@ -1,12 +1,12 @@
 	
-#include <core/Process.h>
-#include <core/ProcessScheduler.h>
+#include <tasking/Process.h>
+#include <tasking/ProcessScheduler.h>
 
 #include <stdlib.h>
 
-using core::Process;
-using core::ProcessScheduler;
-using core::MThreadAttributtes;
+using tasking::Process;
+using tasking::ProcessScheduler;
+using tasking::MThreadAttributtes;
 
 #undef max
 #include <limits>

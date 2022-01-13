@@ -1,16 +1,16 @@
 #pragma once
 
 #include <core/Callback.h>
-#include <core/ProcessScheduler.h>
-#include <core/GenericProcess.h>
+#include <tasking/ProcessScheduler.h>
+#include <tasking/GenericProcess.h>
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
 
 #include <map>
 using std::map;
 
-using core::ProcessScheduler;
-using core::GenericProcess;
+using tasking::ProcessScheduler;
+using tasking::GenericProcess;
 
 #include <mpl/ParamAdder.h>
 using mpl::addParam;
@@ -29,6 +29,7 @@ using mpl::asPtr;
 
 #include <core/Future.h>
 using core::Future;
+using core::Future_Base;
 #include <functional>
 #include <cassert>
 #include <forward_list>
@@ -36,11 +37,7 @@ using core::Future;
 
 #define RUNNABLE_TASK_ALIGNMENT 8
 
-
-
-
-
-namespace core 
+namespace tasking 
 {
 	//some macros to create task functors easily from bool f() functors
 	//note: be carefull with f forma, because if it has soma "," inside, maybe you
@@ -49,13 +46,13 @@ namespace core
 	//so you need to do RUNNABLE_CREATETASK( (link1st<false,void>( xxx )) ) or RUNNABLE_CREATETASK( link1st<false coma void>( xxx ) )
 	//to show de preprocessor that the ',' is not a parameter separator sign
 #define RUNNABLE_CREATETASK( f ) \
-	addParam< ::core::EGenericProcessResult,::core::EGenericProcessState,uint64_t,Process*,void >( \
-	addParam< ::core::EGenericProcessResult,Process*,uint64_t,void > \
-	(addParam< ::core::EGenericProcessResult,uint64_t,void >( f ) ) )
+	addParam< ::tasking::EGenericProcessResult,::tasking::EGenericProcessState,uint64_t,Process*,void >( \
+	addParam< ::tasking::EGenericProcessResult,Process*,uint64_t,void > \
+	(addParam< ::tasking::EGenericProcessResult,uint64_t,void >( f ) ) )
 //macro to simplify task creation from lambda expression
-#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::core::EGenericProcessResult (uint64_t, Process*, ::core::EGenericProcessState)>(lambda)
+#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::tasking::EGenericProcessResult (uint64_t, Process*, ::tasking::EGenericProcessState)>(lambda)
 //useful macro to declare task parameters
-#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::core::EGenericProcessState s
+#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::tasking::EGenericProcessState s
 	class Runnable; //predeclaration
 	namespace _private
 	{
@@ -91,7 +88,7 @@ namespace core
 		{
 			enum class EMemState:uint8_t { FREE = 0,USED = 1 } ;							
 			EMemState	memState = EMemState::FREE;  
-			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( ::core::_private::RunnableTask ) ] ;
+			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( ::tasking::_private::RunnableTask ) ] ;
 			//RunnableTask task;
 			RTMemPool*	owner;
 		};
@@ -196,16 +193,16 @@ namespace core
 
 	private:
 		static RunnableInfo* _getCurrentRunnableInfo();
-		friend class::core::_private:: RunnableTask;
+		friend class ::tasking::_private:: RunnableTask;
 		RunnableInfo* mCurrentInfo;
 		ProcessScheduler	mTasks;
 		unsigned int		mMaxTaskSize;  //max number of tasks for each pool (the number of pools is dynamic)
 
-		::core::_private::MemZoneList mRTZone;
+		::tasking::_private::MemZoneList mRTZone;
 		//! helper function. Create new pool and append it at front
-		::core::_private::RTMemPool* _addNewPool();
+		::tasking::_private::RTMemPool* _addNewPool();
 		//! helper function to remove pool. Internally at least one pool remains, so maybe pool is not removed
-		void _removePool( ::core::_private::RTMemPool* );
+		void _removePool( ::tasking::_private::RTMemPool* );
 
 		//RTMemBlock*		mRTMemPool;
 		CriticalSection	mMemPoolCS;
@@ -288,13 +285,13 @@ namespace core
 		* By default, a ::core::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons.wich also can
 		* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
 		* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::core::_private::Allocator for interfaz needed to your custom allocator
-		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*,::core::EGenericProcessState)
+		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*,::tasking::EGenericProcessState)
 		* @param[in] priority process priority
 		* @param[in] period Milliseconds
 		* @param[in] startTime milliseconds to begin task
 		* @return the process created for this task
 		*/
-		template <class ProcessType = ::core::_private::RunnableTask,class AllocatorType = ::core::_private::Allocator<ProcessType>, class F>
+		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F>
 		std::shared_ptr<Process> post(
 			F&& task_proc,
 			bool autoKill = false,

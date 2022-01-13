@@ -1,19 +1,19 @@
 #pragma once
 
 
-namespace core
+namespace tasking
 {
 	struct MThreadAttributtes;
 }
-using core::MThreadAttributtes;
+using tasking::MThreadAttributtes;
 
-//POR ÑAPA DEL AIRPLAY
+//POR ï¿½APA DEL AIRPLAY
 #ifndef I3D_ARCH_X86
 	extern "C" volatile void __attribute__ ((noinline)) resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #else
 extern "C" volatile void resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #endif
-namespace core
+namespace tasking
 {
 	struct MThreadAttributtes
 	{

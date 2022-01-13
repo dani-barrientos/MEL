@@ -1,11 +1,15 @@
+#if defined(_IOS) || defined(_MACOSX)
+#include <TargetConditionals.h>
+#endif
+
+#if (TARGET_IPHONE_SIMULATOR || TARGET_OS_MAC) && TARGET_CPU_X86_64
 //version para MAC y simulador de IPhone y IPad
-#if defined(DABAL_X64_GCC) ||defined(DABAL_X64_CLANG)
-#include <core/Process.h>
+#include <tasking/Process.h>
 
-using core::Process;
-using core::MThreadAttributtes;
+using tasking::Process;
+using tasking::MThreadAttributtes;
 
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 
 
 #define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)
@@ -75,7 +79,7 @@ volatile void fakeFunction()
     asm volatile("sub %rsp,%r13");
     asm volatile( "sub $8,%rsp" );
     asm volatile( "mov %r13,%rsi" );
-    asm volatile( "call resizeStack");
+    asm volatile( "call _resizeStack");
     asm volatile("mov %r13,%rcx");
     asm volatile("mov %r14,%rsi");
     
@@ -99,7 +103,7 @@ volatile void fakeFunction()
  
 void Process::_switchProcess( )
 {
-    auto p = ProcessScheduler::getCurrentProcess().get();
+    Process* p = ProcessScheduler::getCurrentProcess();
     MThreadAttributtes* mt = p;
     char needAlignment=false;
     asm volatile("test $0xf,%rsp");
@@ -114,5 +118,6 @@ void Process::_switchProcess( )
     asm volatile("endswitch:");
  
 }
+
 #endif
 

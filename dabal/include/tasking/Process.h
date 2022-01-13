@@ -16,19 +16,19 @@ using core::Callback;
 #include <TargetConditionals.h>
 #endif
 #if defined(DABAL_X86_GCC) || TARGET_CPU_X86 ||  _MSC_VER
-#include <core/Process_X86.h>
+#include <tasking/Process_X86.h>
 #elif TARGET_CPU_X86_64
-    #include <core/Process_x86_64_MAC.h>
+    #include <tasking/Process_x86_64_MAC.h>
 #elif TARGET_CPU_ARM64
-    #include <core/Process_ARM64_IPhone.h>
+    #include <tasking/Process_ARM64_IPhone.h>
 #elif defined (_ARM_GCC) && (!defined(_IOS))
-#include <core/Process_ARM_GCC.h>
+#include <tasking/Process_ARM_GCC.h>
 #elif defined(_IOS)
 	#if !TARGET_IPHONE_SIMULATOR
         #if defined(__arm__)
-            #include <core/Process_ARM_IPhone.h>
+            #include <tasking/Process_ARM_IPhone.h>
         #elif defined(__arm64__)
-            #include <core/Process_ARM64_IPhone.h>
+            #include <tasking/Process_ARM64_IPhone.h>
             #else
                 #pragma message "Unknown ARM architecture"
         #endif
@@ -38,7 +38,7 @@ using core::Callback;
 #elif defined (_ANDROID)
 	#include <core/Process_ARM_Android.h>
 #elif defined (DABAL_X64_GCC) ||defined (DABAL_X64_CLANG)
-	#include <core/Process_X86_64.h>
+	#include <tasking/Process_X86_64.h>
 #endif
 #if defined(_IOS) || defined(_MACOSX) || defined(_LINUX)
     #define OPTIMIZE_FLAGS
@@ -56,7 +56,7 @@ using core::Callback;
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
 
-namespace core
+namespace tasking
 {
 
 // meter los processprops o similar

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <core/GenericProcessDefs.h>
-#include <core/Process.h>
-using core::Process;
+#include <tasking/GenericProcessDefs.h>
+#include <tasking/Process.h>
+using tasking::Process;
 
 #include <functional>
-namespace core
+namespace tasking
 {
 	/**
 	* A Process constructed from a functor

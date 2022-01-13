@@ -1,6 +1,6 @@
 #pragma once
 
-namespace core
+namespace tasking
 {
 	struct MThreadAttributtes;
 }
@@ -8,7 +8,7 @@ using core::MThreadAttributtes;
 
 extern "C"  void __attribute__ ((noinline)) resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 
-namespace core
+namespace tasking
 {
 	struct MThreadAttributtes
 	{

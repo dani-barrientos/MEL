@@ -423,9 +423,9 @@ using namespace ::std::string_literals;
 #endif
 }
 
-::core::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc, ::core::EGenericProcessState) {
+::tasking::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc, ::tasking::EGenericProcessState) {
 	mPauseEV.wait();
-	return ::core::EGenericProcessResult::KILL;
+	return ::tasking::EGenericProcessResult::KILL;
 }
 unsigned int Thread::suspend()
 {

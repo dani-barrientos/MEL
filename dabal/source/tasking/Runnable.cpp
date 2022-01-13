@@ -1,10 +1,10 @@
 #include <core/Thread.h>
 using core::Thread;
-#include <core/Runnable.h>
-using core::Runnable;
-using ::core::_private::RTMemPool;
-using ::core::_private::RTMemBlock;
-using ::core::_private::MemZoneList;
+#include <tasking/Runnable.h>
+using tasking::Runnable;
+using ::tasking::_private::RTMemPool;
+using ::tasking::_private::RTMemBlock;
+using ::tasking::_private::MemZoneList;
 
 
 #include <core/Timer.h>
@@ -23,7 +23,7 @@ static TLS::TLSKey gCurrentRunnableKey;
 static bool gCurrentRunnableKeyCreated = false;
 static CriticalSection gCurrrentRunnableCS;
 
-void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner ) 
+void* ::tasking::_private::RunnableTask::operator new( size_t s,Runnable* owner ) 
 {
 	return ::operator new(s);
 	/*
@@ -66,7 +66,7 @@ void* ::core::_private::RunnableTask::operator new( size_t s,Runnable* owner )
 	*/
 }
 
-void ::core::_private::RunnableTask::operator delete( void* ptr ) noexcept
+void ::tasking::_private::RunnableTask::operator delete( void* ptr ) noexcept
 {
 	::operator delete(ptr);
 	/*
@@ -257,9 +257,9 @@ void Runnable::_triggerOnDone( const ::core::Future_Base& future, Callback<void,
 {
 	if ( !info->getCancel() )
 	{
-		FutureData_Base::EWaitResult waitResult = future.waitAsMThread();
+		core::FutureData_Base::EWaitResult waitResult = future.waitAsMThread();
 		if ( !info->getCancel() && 
-			waitResult != FutureData_Base::FUTURE_RECEIVED_KILL_SIGNAL )
+			waitResult != ::core::FutureData_Base::FUTURE_RECEIVED_KILL_SIGNAL )
 			(*cb)( future );
 		/*if ( !info->getCancel() &&
 			(!future.getError() || future.getError()->error != FutureData_Base::FUTURE_RECEIVED_KILL_SIGNAL))
@@ -288,7 +288,7 @@ Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& 
                 returnAdaptor<void>
                 (
                 linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
-                ,::core::EGenericProcessResult::KILL
+                ,::tasking::EGenericProcessResult::KILL
                 )
                 ),autoKill/* , ::core::Runnable::NORMAL_PRIORITY_TASK */, 0, 0/*, extraInfo*/
              );

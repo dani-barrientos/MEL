@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <core/Process.h>
+#include <tasking/Process.h>
 
 #include <set>
 using std::set;
 
 #include <list>
 using std::list;
-using core::Process;
+using tasking::Process;
 
 using std::pair;
 
@@ -36,7 +36,7 @@ using ::mpl::Int2Type;
 //   importar es insertar antes o después que otra¿¿??
 
 
-namespace core
+namespace tasking
 {
 	typedef std::pair<mpl::Int2Type<0>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> SleepSubscriptor;
 	typedef std::pair<mpl::Int2Type<1>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> WakeSubscriptor;

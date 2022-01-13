@@ -1,12 +1,13 @@
 #pragma once
 #include <DabalLibType.h>
 #include <list>
-#include <core/Process.h>
+#include <tasking/Process.h>
 #include <core/Callback.h>
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 
 namespace core
 {
+	using ::tasking::Process;
 	using std::list;
 	using core::Callback;
 	/**
@@ -78,16 +79,16 @@ namespace core
 			EWaitCode result = EVENTMT_WAIT_OK;
 			if ( !mSignaled )
 			{
-				auto p = ProcessScheduler::getCurrentProcess();
+				auto p = ::tasking::ProcessScheduler::getCurrentProcess();
                 mCS.enter();
 				mWaitingProcesses.push_back( p );
                 mCS.leave();
 				
                 Process::ESwitchResult switchResult;
 				if ( msecs == EVENTMT_WAIT_INFINITE )
-					switchResult = ::core::Process::sleepAndDo( postSleep );
+					switchResult = ::tasking::Process::sleepAndDo( postSleep );
 				else
-					switchResult = ::core::Process::waitAndDo( msecs,postSleep );
+					switchResult = ::tasking::Process::waitAndDo( msecs,postSleep );
 				switch ( switchResult )
 				{
 				case Process::ESwitchResult::ESWITCH_KILL:

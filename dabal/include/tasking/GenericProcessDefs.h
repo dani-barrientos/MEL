@@ -1,6 +1,6 @@
 #pragma once
 
-namespace core
+namespace tasking
 {
 	/**
 	* some definitions used by GenericProcess

@@ -5,14 +5,14 @@
 //  Created on:      29-mar-2005 10:00:12
 ///////////////////////////////////////////////////////////
 
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 #include <algorithm>
 #include <functional>
 
-using core::ProcessScheduler;
+using tasking::ProcessScheduler;
 
-#include <core/GenericProcess.h>
-using core::GenericProcess;
+#include <tasking/GenericProcess.h>
+using tasking::GenericProcess;
 
 #include <mpl/MemberEncapsulate.h>
 using mpl::makeMemberEncapsulate;
@@ -219,16 +219,16 @@ void ProcessScheduler::killProcesses( bool deferred )
 		mKillingProcess = true;
 		auto task = std::make_shared<GenericProcess>();
 		task->setProcessCallback(
-			addParam<::core::EGenericProcessResult,::core::EGenericProcessState, uint64_t,Process*,void>
+			addParam<::tasking::EGenericProcessResult,::tasking::EGenericProcessState, uint64_t,Process*,void>
 			(
-				addParam<::core::EGenericProcessResult,Process*, uint64_t,void>
+				addParam<::tasking::EGenericProcessResult,Process*, uint64_t,void>
 				(
-					addParam<::core::EGenericProcessResult, uint64_t,void>
+					addParam<::tasking::EGenericProcessResult, uint64_t,void>
 					(
 						returnAdaptor<void>
 						(
 							makeMemberEncapsulate( &ProcessScheduler::_killTasks, this )
-							,::core::EGenericProcessResult::KILL
+							,::tasking::EGenericProcessResult::KILL
 						)
 					)
 				)

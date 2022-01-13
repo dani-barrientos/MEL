@@ -1,9 +1,9 @@
 #ifdef _MSC_VER
-#include <core/Process.h>
-using core::Process;
-using core::MThreadAttributtes;
+#include <tasking/Process.h>
+using tasking::Process;
+using tasking::MThreadAttributtes;
 
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 #pragma optimize("",off)
 
 /*TODO:
@@ -24,8 +24,6 @@ volatile void Process::checkMicrothread( uint64_t msegs )
 	tamanoActual = (int)(( (char*)mStackEnd- (char*)mActualSP))>>2;
 	
     MThreadAttributtes* realThis = this;
-	//assert(false && "TODO");
-	/*@TODO
 	_asm
 	{
 		mov eax,realThis;
@@ -54,18 +52,29 @@ volatile void Process::checkMicrothread( uint64_t msegs )
 		ret;
 		continueExecuting:;
 	}
-	*/
+	
 
     _execute( msegs );
+	/*
+	_asm
+	{
+	mov eax,realThis;
+	mov ecx,[eax + MThreadAttributtes::mIniSP];
+    sub ecx,esp
+	mov edx, [eax + MThreadAttributtes::mStackEnd];
+    sub edx,ecx;
+    sub edx,8;
+    mov dword ptr [eax + MThreadAttributtes::mActualSP],edx;
+    mov esp, dword ptr [eax + MThreadAttributtes::mIniSP];
+	}
+	*/
 	return;
 	
 }
 
 //helper function to do switch
-void /*_declspec(naked)*/ switchHelper(MThreadAttributtes* mt)
+void _declspec( naked ) switchHelper( MThreadAttributtes* mt )
 {
-	//assert(false && "TODO");
-	/*@TODO
 	_asm
 	{
     push ebp;
@@ -101,13 +110,12 @@ void /*_declspec(naked)*/ switchHelper(MThreadAttributtes* mt)
 	pop ebp;
 	ret 8;
 	}
-	*/
 }
 
 void Process::_switchProcess( ) OPTIMIZE_FLAGS
 {
 
-	Process* p = ProcessScheduler::getCurrentProcess();
+	auto p = ProcessScheduler::getCurrentProcess().get();
     MThreadAttributtes* mt = p;
 	switchHelper( mt );
 

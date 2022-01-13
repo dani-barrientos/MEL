@@ -79,7 +79,7 @@ class MyTask
 {
 	public:
 	MyTask(Process* target,int& var):mTarget(target),mVar(var){}
-	::core::EGenericProcessResult operator()(uint64_t,Process*,::core::EGenericProcessState)
+	::tasking::EGenericProcessResult operator()(uint64_t,Process*,::tasking::EGenericProcessState)
 	{
 		spdlog::debug("MyTask");
 		++mVar;
@@ -88,17 +88,17 @@ class MyTask
 		core::Process::wait(213);
 		if ( mTarget )
 			mTarget->wakeUp();
-		return ::core::EGenericProcessResult::CONTINUE;
+		return ::tasking::EGenericProcessResult::CONTINUE;
 	}
 	private:
 	Process* mTarget;
 	int& mVar;
 };
-::core::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
+::tasking::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
 {
 	++var;
 	spdlog::debug("staticFuncTask");
-	return ::core::EGenericProcessResult::CONTINUE;
+	return ::tasking::EGenericProcessResult::CONTINUE;
 }
 static Timer sTimer;
 /**
@@ -142,10 +142,10 @@ static int _testMicroThreadingMonoThread()
 		auto t2 = sTimer.getMilliseconds();
 		CHECK_TIME(t2-t1,waittime,"check wait 2"s);
 		sharedVar = aux;
-		return ::core::EGenericProcessResult::CONTINUE;
+		return ::tasking::EGenericProcessResult::CONTINUE;
 	},true,2000,000);
 	th1->post<CustomProcessType,MyAllocator>(
-		::mpl::linkFunctor<::core::EGenericProcessResult,TYPELIST(uint64_t,Process*,::core::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
+		::mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
 		,true,4200);
 	auto p = make_shared<MyProcess>(sharedVar);
 	p->setPeriod(0);
@@ -190,7 +190,7 @@ int  _testPerformanceLotTasks()
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
 					//spdlog::debug("Lambda {}",count);
-					return ::core::EGenericProcessResult::KILL;
+					return ::tasking::EGenericProcessResult::KILL;
 				},true,1000,0);		
 			}
 			::Thread::sleep(1) ;//to wait for taks
@@ -212,7 +212,7 @@ int  _testPerformanceLotTasks()
 				th1->post( [count](RUNNABLE_TASK_PARAMS)
 				{
 					//spdlog::debug("Lambda {}",count);
-					return ::core::EGenericProcessResult::KILL;
+					return ::tasking::EGenericProcessResult::KILL;
 				},true,1000,0);
 			}	
 			::Thread::sleep(1) ;//wait for tasks finished

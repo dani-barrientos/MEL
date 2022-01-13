@@ -1,8 +1,8 @@
 #include <core/Event_mthread.h>
 using core::Event_mthread;
 
-#include <core/ProcessScheduler.h>
-using core::ProcessScheduler;
+#include <tasking/ProcessScheduler.h>
+using tasking::ProcessScheduler;
 
 Event_mthread::Event_mthread(bool autoRelease, bool signaled): 
 	mSignaled( signaled ),

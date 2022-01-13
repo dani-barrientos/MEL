@@ -1,8 +1,8 @@
 #pragma once
 
-#include <core/Runnable.h>
+#include <tasking/Runnable.h>
 #include <core/Event.h>
-using core::Runnable;
+using tasking::Runnable;
 
 #include <mpl/MemberEncapsulate.h>
 using mpl::makeMemberEncapsulate;
@@ -255,7 +255,7 @@ namespace core {
 			/**
 			* suspend inmediately, can be called only from same thread execution
 			*/
-			::core::EGenericProcessResult suspendInternal(uint64_t millis,Process* proc,::core::EGenericProcessState);
+			::tasking::EGenericProcessResult suspendInternal(uint64_t millis,Process* proc,::tasking::EGenericProcessState);
 			/**
 			* called when thread begins to run
 			*/

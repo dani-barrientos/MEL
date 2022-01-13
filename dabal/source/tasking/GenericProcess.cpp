@@ -1,7 +1,7 @@
-#include <core/GenericProcess.h>
-using core::GenericProcess;
-using ::core::EGenericProcessState;
-using ::core::EGenericProcessResult;
+#include <tasking/GenericProcess.h>
+using tasking::GenericProcess;
+using ::tasking::EGenericProcessState;
+using ::tasking::EGenericProcessResult;
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL(GenericProcess,Process);
 GenericProcess::GenericProcess() :

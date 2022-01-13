@@ -2,11 +2,11 @@
 
 
 No vale. usar la de x64 que ya esta no tiene mucho sentido ademas
-#include <core/Process.h>
-using core::Process;
-using core::MThreadAttributtes;
+#include <tasking/Process.h>
+using tasking::Process;
+using tasking::MThreadAttributtes;
 
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 
 
 #define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)

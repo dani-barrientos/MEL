@@ -1,8 +1,8 @@
 #include <core/CriticalSection_mthread.h>
 using ::core::CriticalSection_mthread;
 using ::core::Lock_mthread;
-#include <core/ProcessScheduler.h>
-using ::core::ProcessScheduler;
+#include <tasking/ProcessScheduler.h>
+using ::tasking::ProcessScheduler;
 #include <stdexcept>
 
 CriticalSection_mthread::CriticalSection_mthread() :
