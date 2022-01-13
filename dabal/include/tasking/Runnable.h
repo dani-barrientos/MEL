@@ -335,7 +335,6 @@ namespace tasking
 		private:
 			bool mCancel;
 		};
-		template <class F>
 		/**
 		* @param[in] future The future to wait for
 		* @param[in[ functor Callback called when triggered with signature <void,const Future_Base&>
@@ -343,7 +342,8 @@ namespace tasking
 		* @param extraInfo same as in #post
 		* @return reference to a FutureTriggerInfo (don't delete it)
 		*/
-		FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, F&& functor, bool autoKill = true, void* extraInfo = NULL);
+		//template <class F>
+	//	FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, F&& functor, bool autoKill = true, void* extraInfo = NULL);
 		/**
 		* @param[in] future The future to wait for
 		* @param[in] f an standard function to be called when triggered with signature <void,const Future_Base&>
@@ -351,7 +351,7 @@ namespace tasking
 		* @param extraInfo same as in #post
 		* @return reference to a FutureTriggerInfo (don't delete it)
 		*/
-		FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill = true, void* extraInfo = NULL);
+		//FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill = true, void* extraInfo = NULL);
         
 		/**
 		* subscribe to finish event. This event will be executed when Runnable finish,
@@ -492,7 +492,7 @@ namespace tasking
 		
 		return result;
 	}
-	
+	/*
 	template <class F>
 	Runnable::FutureTriggerInfo* Runnable::triggerOnDone( const ::core::Future_Base& future, F&& functor,bool autoKill, void* extraInfo)
 	{
@@ -508,7 +508,7 @@ namespace tasking
 						linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
 						,true
 					)
-				),autoKill/* ,::core::Runnable::NORMAL_PRIORITY_TASK*/,0,0 /*,extraInfo*/
+				),autoKill,0,0
 			);
 			return info;
 		}else
@@ -517,7 +517,7 @@ namespace tasking
 			return NULL;
 		}
 	}
-
+*/
 	///@cond HIDDEN_SYMBOLS
 	//helper class por request task to Runnable
 	template <class TRet, class F> struct ExecuteTask

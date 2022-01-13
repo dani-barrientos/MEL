@@ -2,37 +2,31 @@
 // #include <core/IRefCount.h>
 // using core::IRefCount;
 
-#include <core/Event.h>
-#include <core/Event_mthread.h>
+//#include <core/Event.h>
+//#include <core/Event_mthread.h>
 #include <mpl/TypeTraits.h>
 #include <memory>
-#include <core/CriticalSection.h>
-#include <mpl/MemberEncapsulate.h>
-using mpl::makeMemberEncapsulate;
+//#include <core/CriticalSection.h>
+//#include <mpl/MemberEncapsulate.h>
+//using mpl::makeMemberEncapsulate;
 #include <string>
-#include <core/atomics.h>
-/**
-*
-TODO el comportamiento microhilil está hecho un poco chapucero para mantener la compatibilidad con lo anterior y
-* no provocar una ruptura muy grande
-
-*/
+#include <memory>
+#include <core/CallbackSubscriptor.h>
 namespace core
 {
-	using core::Event;
-	using core::Event_mthread;
+	//using core::Event;
+	//using core::Event_mthread;
 	using core::CriticalSection;
 	using mpl::TypeTraits;
 	
 
-//nombnrarlos bien. ¿meter nuevo estado UNINITIALIZED?
+//nombnrarlos bien. ï¿½meter nuevo estado UNINITIALIZED?
 	enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
 	///@cond HIDDEN_SYMBOLS
 	/**
 	* internal data for Future
-	* It behaves as a IRefCount but the heritage is avoided in order to be more efficient
 	*/
-	class FutureData_Base /*: public IRefCount */
+	class FutureData_Base 
 	{
 	public:
 		/**
@@ -52,7 +46,7 @@ namespace core
 			FUTURE_WAIT_TIMEOUT = -2,
 			FUTURE_UNKNOWN_ERROR = -3};
 
-		FutureData_Base():mResultAvailable(false,false),mResultAvailableMThread(false,false),mState(NOTAVAILABLE),mRefCount(0)
+		FutureData_Base():/*mResultAvailable(false,false),mResultAvailableMThread(false,false),*/mState(NOTAVAILABLE)/*,mRefCount(0)*/
 		{}
 
 		virtual ~FutureData_Base() //no me gusta nada que sea virtual. Intentarlo sin ello
@@ -69,12 +63,13 @@ namespace core
 		* waits for value to be present
 
 		*/
+	/*
 		EWaitResult wait( unsigned int msecs ) const
 		{
 			if ( mResultAvailable.wait( msecs) == Event::EVENT_WAIT_TIMEOUT )
 			{
 				mSC.enter();	
-				//podría ocurrir que en este lapso de tiempo se estableciese correctamente el valor
+				//podrï¿½a ocurrir que en este lapso de tiempo se estableciese correctamente el valor
 				if( !getValid() )
 				{
 					return FUTURE_WAIT_TIMEOUT;
@@ -108,44 +103,39 @@ namespace core
 				}
 			}
 			return result;			
-		}
+		}*/
 		/**
 		* set error info. TAKES OWNSERHIP
 		*/
 		void setError( ErrorInfo* ei )
 		{
-			mSC.enter();	
+			//@todo tanto esto como el setValue, tal vez sÃ³lo deba ser ejecutado por uno y no necesitarÃ­a bloqueo,,
+			//mSC.enter();	
 			if ( mState == NOTAVAILABLE)
 			{
 				mErrorInfo.reset( ei  );
 				mState = INVALID;
-				mResultAvailable.set();
-				mResultAvailableMThread.set();
+				//mResultAvailable.set();
+				//mResultAvailableMThread.set();
 			}
 			else
 				delete ei;
-			mSC.leave();	
+			//mSC.leave();	
 		};
 
 		inline const ErrorInfo* getError() const { return mErrorInfo.get(); };
-
-
-
-		inline long getRefCount() const{ return mRefCount;}
-		inline long addRef(){ return atomicIncrement( &mRefCount ); };
-		inline long decRef(){ return atomicDecrement( &mRefCount ); };
 	protected:
-		Event	   mResultAvailable;
-		mutable Event_mthread	   mResultAvailableMThread; 
-		mutable CriticalSection	mSC; 
+		//Event	   mResultAvailable;
+		//mutable Event_mthread	   mResultAvailableMThread; 
+		//mutable CriticalSection	mSC; 
 		std::unique_ptr< ErrorInfo > mErrorInfo; //It will have content when error
-		volatile int32_t mRefCount;
 		EFutureState		mState;
 
 	};
 	template <typename ResultType>
-	class FutureData : public FutureData_Base
-	{
+	class FutureData : public FutureData_Base,
+					public 	CallbackSubscriptor<::core::MultithreadPolicy,typename ::mpl::TypeTraits<ResultType>::ParameterType>
+	{		
 	public:
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ParamType;
@@ -160,14 +150,13 @@ namespace core
 		FutureData( ParamType value ):
 		mValue(value){
 			FutureData_Base::mState = VALID;
-			FutureData_Base::mResultAvailable.set();
-			FutureData_Base::mResultAvailableMThread.set();
+//			FutureData_Base::mResultAvailable.set();
+//			FutureData_Base::mResultAvailableMThread.set();
 		}
 	
 
 		typename FutureData<ResultType>::ReturnType getValue() const;
 		void setValue( ParamType value );
-		
 
 	private:
 		ResultType mValue;
@@ -182,15 +171,16 @@ namespace core
 	template <typename ResultType>
 	void FutureData<ResultType>::setValue( ParamType value )
 	{
-		FutureData_Base::mSC.enter();	
+		//FutureData_Base::mSC.enter();	
 		if ( mState == NOTAVAILABLE)
 		{
 			mValue = value;
 			FutureData_Base::mState = VALID;
-			FutureData_Base::mResultAvailable.set();
-			FutureData_Base::mResultAvailableMThread.set();
+		//	FutureData_Base::mResultAvailable.set();
+	//		FutureData_Base::mResultAvailableMThread.set();
+			CallbackSubscriptor<::core::MultithreadPolicy, typename mpl::TypeTraits< ResultType >::ParameterType>::triggerCallbacks(value);
 		}
-		FutureData_Base::mSC.leave();	
+		//FutureData_Base::mSC.leave();	
 
 	}
 	//specialization for void type. It's intented for functions returning void but working in a different thread
@@ -210,14 +200,14 @@ namespace core
 		inline void setValue( void )
 		{
 
-			FutureData_Base::mSC.enter();	
+//			FutureData_Base::mSC.enter();	
 			if ( mState == NOTAVAILABLE)
 			{
 				FutureData_Base::mState = VALID;
-				FutureData_Base::mResultAvailable.set();
-				FutureData_Base::mResultAvailableMThread.set();
+//				FutureData_Base::mResultAvailable.set();
+//				FutureData_Base::mResultAvailableMThread.set();
 			}
-			FutureData_Base::mSC.leave();	
+//			FutureData_Base::mSC.leave();	
 
 		}
 	};
@@ -234,8 +224,8 @@ namespace core
 	*	- using wait and waitAsMThread functions
 	* should check getValid, in which case there is an error ( see getError )
 	* @todo por ahora un Future no es reaprovechable, es decir, una vez construido o establecido su valor o error
-	* ya no puede "resetearse". Ni siquiera sé si tiene sentido
-	* Además, no está pensado para ser usado por varios hilos a la vez (de nuevo, no creo que tenga sentido)
+	* ya no puede "resetearse". Ni siquiera sï¿½ si tiene sentido
+	* Ademï¿½s, no estï¿½ pensado para ser usado por varios hilos a la vez (de nuevo, no creo que tenga sentido)
 	*/
 	///@cond HIDDEN_SYMBOLS
 	/**
@@ -244,54 +234,47 @@ namespace core
 	class Future_Base
 	{
 	protected:
-		FutureData_Base*	mData;
-		Future_Base():mData(0){};
+		std::shared_ptr<FutureData_Base> mData;
+		Future_Base():mData(nullptr){};
 
 	public:
 		Future_Base( const Future_Base& f )
 		{
 			mData = f.mData; 
-			mData->addRef();
+		};
+		Future_Base( Future_Base&& f )
+		{
+			mData = std::move(f.mData); 
 		};
 
 		virtual ~Future_Base() //no me gusta un pijo que sea virtual, pero necesario si se quieren manejar los futures sin necesidad de saber el tipo, lo cual es muy importante
 		{
-			if( !mData->getRefCount() )
-			{
-				delete mData;
-			}else
-			{
-				mData->decRef();
-			}
 		}
 
 		typedef FutureData_Base::ErrorInfo ErrorInfo;
 		Future_Base& operator= ( const Future_Base& f )
 		{
-			if ( !mData->getRefCount() )
-			{
-				delete mData;
-			}else
-			{
-				mData->decRef();
-			}
-			mData = f.mData; 
-			mData->addRef();
+			mData = f.mData;
+			return *this;
+		};
+		Future_Base& operator= (  Future_Base&& f )
+		{
+			mData = std::move(f.mData);
 			return *this;
 		};
 		/**
 		* waits for value to be present in a thread context
 		* @param[in] msecs Milliseconds to wait for
 		*/
-		inline FutureData_Base::EWaitResult wait( unsigned int msecs = Event::EVENT_WAIT_INFINITE ) const { return mData->wait( msecs ); };
+		//inline FutureData_Base::EWaitResult wait( unsigned int msecs = Event::EVENT_WAIT_INFINITE ) const { return mData->wait( msecs ); };
 		/**
 		* waits in a Process context
 		* @return result codes. Any of EWaitResult
 		*/
-		inline FutureData_Base::EWaitResult waitAsMThread( unsigned int msecs = Event_mthread::EVENTMT_WAIT_INFINITE ) const
-		{
-			return mData->waitAsMThread( msecs );
-		}
+		// inline FutureData_Base::EWaitResult waitAsMThread( unsigned int msecs = Event_mthread::EVENTMT_WAIT_INFINITE ) const
+		// {
+		// 	return mData->waitAsMThread( msecs );
+		// }
 		/**
 		* return if data is valid
 		*/
@@ -301,7 +284,7 @@ namespace core
 		}
 		inline EFutureState getState() const
 		{
-			return mData->getState();;
+			return mData->getState();
 		}
 		//Check if given future points to same data
 		inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
@@ -318,6 +301,7 @@ namespace core
 			ei->errorMsg = msg;
 			mData->setError(ei); 
 		}
+		
 	};
 	template <typename ResultType>
 	class Future_Common : public Future_Base
@@ -325,36 +309,40 @@ namespace core
 	protected:
 		Future_Common()
 		{
-			mData = new FutureData<ResultType>;
+			mData = std::make_shared<FutureData<ResultType>>();
 		};
-		Future_Common( const Future_Common& f ):Future_Base( f ){}
-			
-
+		Future_Common( const Future_Common& f ):Future_Base( f ){}			
 	public:
-		
 		inline const FutureData<ResultType>& getData() const{ return *(FutureData<ResultType>*)mData; }
+		inline FutureData<ResultType>& getData(){ return *(FutureData<ResultType>*)mData.get(); }
 
 
-		inline  typename FutureData<ResultType>::ReturnType getValue() const{ return ((FutureData<ResultType>*)mData)->getValue();}
+		inline  typename FutureData<ResultType>::ReturnType getValue() const{ return ((FutureData<ResultType>*)mData.get())->getValue();}
 		
 		/**
 		* return if there is an error. NULL if not
 		*/
 // 		inline const FutureData_Base::ErrorInfo* getError() const { return mData->getError(); };
 // 		inline void setError( FutureData_Base::ErrorInfo* ei ){ ((FutureData<ResultType>*)mData)->setError( ei ); } 
-
+		template <class F> void subscribeCallback(F&& f) const						
+		{
+			//@todo no me gusta un pijo este cast, pero necesito que el subscribe actÃºa como mutable
+			const_cast<Future_Common<ResultType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
+		}
 	};
 	///@endcond
 	template <typename ResultType>
 	class Future : public Future_Common<ResultType>
 	{
 	public:
+		typedef typename mpl::TypeTraits< ResultType >::ParameterType ParamType;
+		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
 		Future(){};
 		Future( const Future& f ):Future_Common<ResultType>(f){};
 
 		inline void setValue( typename FutureData<ResultType>::ParamType value )
 		{
-		    ((FutureData<ResultType>*)Future_Common<ResultType>::mData)->setValue( value ); }
+		    ((FutureData<ResultType>*)Future_Common<ResultType>::mData.get())->setValue( value ); }
 	};
 
 	//specialization for void
@@ -362,10 +350,12 @@ namespace core
 	class Future<void> : public Future_Common<void>
 	{
 	public:
+		typedef void ParamType;
+		typedef void ReturnType;
 		Future(){};
 		Future(const Future& f):Future_Common<void>(f){};
 	
-		inline void setValue( void ){ ((FutureData<void>*)Future_Base::mData)->setValue( ); }
+		inline void setValue( void ){ ((FutureData<void>*)Future_Base::mData.get())->setValue( ); }
 	};
 
 

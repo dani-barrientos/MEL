@@ -251,7 +251,7 @@ void Runnable::executeFinishEvents()
 		(**i)( this );
 	}*/
 }
-
+/*
 void Runnable::_triggerOnDone( const ::core::Future_Base& future, Callback<void,const ::core::Future_Base&>* cb,
 	FutureTriggerInfo* info )
 {
@@ -261,22 +261,18 @@ void Runnable::_triggerOnDone( const ::core::Future_Base& future, Callback<void,
 		if ( !info->getCancel() && 
 			waitResult != ::core::FutureData_Base::FUTURE_RECEIVED_KILL_SIGNAL )
 			(*cb)( future );
-		/*if ( !info->getCancel() &&
-			(!future.getError() || future.getError()->error != FutureData_Base::FUTURE_RECEIVED_KILL_SIGNAL))
-		{
-			(*cb)( future );
-		}*/
+
 	}
 	delete cb;
 	delete info;
-}
+}*/
 void Runnable::_sleep( unsigned int msegs )
 {
 	Thread::sleep( msegs );
 }
 //#pragma optimize("",on)
 
-
+/*
 Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill,void* extraInfo) {
     if ( !future.getValid() )
     {
@@ -290,7 +286,7 @@ Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& 
                 linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
                 ,::tasking::EGenericProcessResult::KILL
                 )
-                ),autoKill/* , ::core::Runnable::NORMAL_PRIORITY_TASK */, 0, 0/*, extraInfo*/
+                ),autoKill, 0, 0
              );
         return info;
     }else
@@ -298,4 +294,4 @@ Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& 
         f( future );
         return NULL;
     }
-}
+}*/

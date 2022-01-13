@@ -20,7 +20,7 @@ using tests::TestManager;
 
 
 typedef std::pair<Int2Type<0>,CallbackSubscriptor<::core::NoMultithreadPolicy,float>> CS1; 
-typedef std::pair<Int2Type<1>,CallbackSubscriptor<::core::NoMultithreadPolicy,float>> CS2; 
+typedef std::pair<Int2Type<1>,CallbackSubscriptor<::core::NoMultithreadPolicy,float&>> CS2; 
 class Pepe : private CS1,
  private CS2
 {
@@ -54,13 +54,28 @@ class Pepe : private CS1,
          return CS2::second.triggerCallbacks(a);
      }
 };
-
+template <class F> void _subscribe( Pepe& obj,F&& f)
+{
+	obj.subscribe2(std::forward<F>(f));
+}
 static int test()
 {    
     Pepe pp;
     int s1 = pp.subscribe1(f1);
     pp.subscribe1(std::function<::core::ECallbackResult(float)>(f1));
+    pp.subscribe2(std::function<::core::ECallbackResult(float&)>(
+        [](float)
+        {
+            return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+        }
+    ));
     pp.subscribe2(std::function<::core::ECallbackResult(float)>(f2));
+    _subscribe(pp,std::function<::core::ECallbackResult(float&)>(
+        [](float)
+        {
+            return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+        }
+    ));
     // pp.subscribe2(
     //     [](float) 
     //     {
