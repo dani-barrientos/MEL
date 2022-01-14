@@ -90,7 +90,7 @@ namespace core {
 			 * Callers are encouraged to allways call Thread::join before attempting to query the
 			 * result value or even exiting the main application.
 			 */
-			virtual void start();
+			void start();
 			/**
 			 * Makes the main thread routine to be suspended.
 			 * If thread is no in THREAD_RUNNING, it hasn't effect
@@ -127,7 +127,7 @@ namespace core {
 			 * @param millis maximum milliseconds to wait for the thread.
 			 * @return true if the thread finished. false if timeout 
 			 */
-			bool join(unsigned int millis=0xFFFFFFFF/*TODO mac: INFINITE*/) const;
+			bool join(unsigned int millis=0xFFFFFFFF/*TODO mac: INFINITE*/);
 			/**
 			 * Get the thread execution result.
 			 * @return the requested result, that will only be meaningful if the
@@ -170,30 +170,12 @@ namespace core {
 			/**
 			* return handle for this thread
 			*/
-			inline ThreadId getThreadId() const;
-
-			/*
-			 * For a given task to be executed.
-			 * @param tid the task identifier for the task to wait for
-			 * @param millis the maximum number of millisecons to wait
-			 * @return status indicating whether the task has been completed or a timeout occurred.
-			 * @see post
-			 */
-			//TaskStatus waitForTask(const TaskID tid,unsigned int millis=100);
-			/*
-			 * Get the status of a task
-			 * @param tid the identifier of a previously posted task
-			 * @return status of the requested task. If the supplied id does not correspond
-			 * to any task, the result will be TS_PENDING.
-			 */
-			//inline TaskStatus getTaskStatus(const TaskID tid) const;
-
+			inline ThreadId getThreadId() const;			
 			/**
 			* Get thread state
 			* @return the thread's current state
 			*/
 			inline EThreadState getState() const;
-
 			/**
 			* returns if a terminate request is done (mEnd == true)
 			*/
@@ -233,7 +215,7 @@ namespace core {
         #if !defined (DABAL_MACOSX) && !defined(DABAL_IOS)
 		pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc
 		#endif
-			mutable bool mJoined;
+			bool mJoined;
 			int	mPriorityMin;
 			int mPriorityMax;
 			uint64_t mAffinity = 0; //affinity to set on start. if 0, is ignored
@@ -265,6 +247,11 @@ namespace core {
 			* delete thread if you want.
 			*/
 			virtual void onThreadEnd(){}; 
+			/**
+			 * @brief Called when join is done
+			 * 
+			 */
+			virtual void onJoined(){};
 
 			/**
 			* terminate request. It will be called in execution loop when
@@ -294,6 +281,7 @@ namespace core {
 				onThreadEnd();
 			}						
 	};
+	
 	bool Thread::getTerminateRequest() const
 	{
 		return mEnd;
@@ -399,6 +387,5 @@ namespace core {
 			oneIteration(); 
 		}
 		return 1; // != 0 no error
-
 	}
 }

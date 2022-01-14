@@ -137,6 +137,7 @@ void GenericThread::terminate(unsigned int exitCode)
 	}
 	mWaitForTasksCond.notify_one();
 #endif
+	//::spdlog::debug("GenericThread::_processWaken");
 	return ECallbackResult::NO_UNSUBSCRIBE;
 }
 void GenericThread::onCycleEnd()
@@ -159,10 +160,7 @@ void GenericThread::onCycleEnd()
 	}
 	else
 	{
-
-
 		count = getActiveTaskCount();
-		//count = getPendingTaskCount();
 		if (!mEnd && count == 0)
 		{
 #ifdef USE_CUSTOM_EVENT

@@ -12,9 +12,7 @@ namespace core
 	using core::Callback;
 	/**
 	* class similar to Event Class (which is for thread synchronization) but for Process (with Microthread behaviour)
-	* Not multithread safe
-	* Note: Process using it must be stored in SmartPtr because internally holds a SmartPtr list
-	* 
+	* Multithread safe
 	*/
 	class DABAL_API Event_mthread
 	{
@@ -77,18 +75,25 @@ namespace core
 		EWaitCode _waitAndDo( F postSleep,unsigned int msecs ) 
 		{
 			EWaitCode result = EVENTMT_WAIT_OK;
+			mCS.enter();
 			if ( !mSignaled )
 			{
 				auto p = ::tasking::ProcessScheduler::getCurrentProcess();
-                mCS.enter();
-				mWaitingProcesses.push_back( p );
-                mCS.leave();
+				mWaitingProcesses.push_back( p ); 
 				
-                Process::ESwitchResult switchResult;
+				Process::ESwitchResult switchResult;
 				if ( msecs == EVENTMT_WAIT_INFINITE )
-					switchResult = ::tasking::Process::sleepAndDo( postSleep );
+					switchResult = ::core::Process::sleepAndDo([this,postSleep]()
+					{
+						mCS.leave();
+						postSleep();
+					} );
 				else
-					switchResult = ::tasking::Process::waitAndDo( msecs,postSleep );
+					switchResult = ::core::Process::waitAndDo(msecs, [this,postSleep]()
+					{
+						mCS.leave();
+						postSleep();
+					});
 				switch ( switchResult )
 				{
 				case Process::ESwitchResult::ESWITCH_KILL:
@@ -103,15 +108,15 @@ namespace core
 				}
 				//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
 				//maybe other process do wait on this events
-                mCS.enter();
+				mCS.enter();
 				mWaitingProcesses.remove( p );
-                mCS.leave();
-			}
-			else
+				mCS.leave();
+			}else
 			{
-				//El evento ya se se�al�, pero ejecutamos igualmente el "post sleep"
+				mCS.leave();
 				postSleep();
 			}
+
 			return result;
 		}
 	};

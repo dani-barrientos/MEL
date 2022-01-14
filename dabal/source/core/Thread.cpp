@@ -420,7 +420,7 @@ using namespace ::std::string_literals;
 		#endif
 		throw std::runtime_error("Unable to destroy thread attribute!");
 	}	
-#endif
+#endif	
 }
 
 ::tasking::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc, ::tasking::EGenericProcessState) {
@@ -494,13 +494,14 @@ unsigned int Thread::runInternal() {
 	return mResult;
 }
 
-bool Thread::join(unsigned int millis) const
+bool Thread::join(unsigned int millis)
 {
 	//if ( !(mState & (THREAD_INIT | THREAD_FINISHED) ) )
 	{
 	#ifdef _WINDOWS
 		//@todo por qu� no usar WaitForSingleObject?
 		DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
+		onJoined();
 		return status!=WAIT_TIMEOUT;
 	#endif
 	#if defined (DABAL_POSIX)
@@ -509,6 +510,7 @@ bool Thread::join(unsigned int millis) const
 		if (err) {
 		//	Logger::getLogger()->warnf("Error joining thread: err=%d", 1, err);
 		}
+		onJoined();
 		return mJoined;	
 	#endif
 	}

@@ -9,7 +9,7 @@ using namespace std;
 #include <core/Event_mthread.h>
 
 
-template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T>& f,unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE)
+template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( int threadid,const core::Future<T>& f,unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE)
 {
 	using ::core::Event_mthread;
 	using ::core::FutureData_Base;
@@ -17,45 +17,36 @@ template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( con
 	struct _Receiver
 	{		
 		_Receiver():mEvent(false,false){}
-		FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
+		FutureData_Base::EWaitResult wait(int threadid,const core::Future<T>& f,unsigned int msecs)
 		{
-			//@todo revisar esto, que en el Future uso la seccion critica, pero creo que si lo anterior lo gestiono bien, no hace falta
-			// //@todo hacer aqui todo lo de saber el estado y tal. Puede que para eso necesite la seccion critica??			
-			FutureData_Base::EWaitResult result;
-			//first check if already set
-			if ( f.getState() != ::core::EFutureState::NOTAVAILABLE )
-			{
-				spdlog::debug("Future already available");
-				result = ::core::FutureData_Base::FUTURE_WAIT_OK; //means result is aviable, but doesn't men to be valid!!!
-			}
-			else
-			{
-				auto id = f.subscribeCallback(
-					std::function<::core::ECallbackResult( typename ::Future<T>::ParamType)>([this](typename ::Future<T>::ParamType ) 
-					{
-						mEvent.set();
-	//					spdlog::debug("Event was set");
-						return ::core::ECallbackResult::UNSUBSCRIBE; 
-					})
-				);
-				Event_mthread::EWaitCode eventresult;
-				//spdlog::debug("Waiting for event");
-				eventresult = mEvent.wait(msecs); 
-				spdlog::debug("Wait was done");
-				switch( eventresult )
-				{
-				case ::core::Event_mthread::EVENTMT_WAIT_KILL:
-					//event was triggered because a kill signal
-					result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
-					break;
-				case Event_mthread::EVENTMT_WAIT_TIMEOUT:
-					result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
-					break;
-				default:
-					result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
-					break;
-				}
-			}
+            FutureData_Base::EWaitResult result;            
+            Event_mthread::EWaitCode eventresult;
+           // spdlog::debug("Waiting for event in Thread {}",threadid);
+            eventresult = mEvent.waitAndDo([this,f,threadid]()
+            {
+             //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
+                f.subscribeCallback(
+                std::function<::core::ECallbackResult( typename ::Future<T>::ParamType)>([this,threadid](typename ::Future<T>::ParamType ) 
+                {
+                    mEvent.set();
+                 //   spdlog::debug("Event was set for Thread {}",threadid);
+                    return ::core::ECallbackResult::UNSUBSCRIBE; 
+                }));
+            },msecs); 
+          //  spdlog::debug("Wait was done in Thread {}",threadid);
+            switch( eventresult )
+            {
+            case ::core::Event_mthread::EVENTMT_WAIT_KILL:
+                //event was triggered because a kill signal
+                result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
+                break;
+            case Event_mthread::EVENTMT_WAIT_TIMEOUT:
+                result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
+                break;
+            default:
+                result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
+                break;
+            }			
 			return result;	
 	
 		}
@@ -64,21 +55,21 @@ template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( con
 
 	};
 	auto receiver = make_unique<_Receiver>();
-	auto result =  receiver->wait(f,msecs);	
+	auto result =  receiver->wait(threadid,f,msecs);	
 	return result;
 }
 
-template<> ::core::FutureData_Base::EWaitResult waitForFutureMThread<void>( const core::Future<void>& f,unsigned int msecs)
+template<> ::core::FutureData_Base::EWaitResult waitForFutureMThread<void>( int thId,const core::Future<void>& f,unsigned int msecs)
 {
 	//@todo cuando esté clara la otra
 	return ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK; 
 }
 
 template <size_t n>
-class MyThread : public GenericThread
+class MasterThread : public GenericThread
 {
 	public:
-		MyThread(Thread* producer,std::array<Thread*,n> consumers) : GenericThread(false,true),mConsumers(consumers),mProducer(producer)
+		MasterThread(Thread* producer,std::array<Thread*,n> consumers) : GenericThread(false,true),mConsumers(consumers),mProducer(producer)
 		{
 		}	
 	private:
@@ -88,7 +79,7 @@ class MyThread : public GenericThread
 		void onThreadStart() override
 		{
 			srand((unsigned)this->getTimer()->getMilliseconds());
-			post( ::mpl::makeMemberEncapsulate(&MyThread::_masterTask,this));			
+			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));			
 			//pruebas de tareas dummy
 			for(auto th:mConsumers)
 			{
@@ -106,6 +97,7 @@ class MyThread : public GenericThread
 			mResponses = 0;
 			auto prodIdx = rand()%(n+1);
 			spdlog::debug("Producer idx {} de {}",prodIdx,n);
+            spdlog:
 			
 			for(size_t i = 0; i < n; ++i)
 			{
@@ -113,27 +105,37 @@ class MyThread : public GenericThread
 				{
 					mProducer->post(
 						mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-							makeMemberEncapsulate(&MyThread::_producerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
+							makeMemberEncapsulate(&MasterThread::_producerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
 					);
 				}
 				mConsumers[i]->post(
 					mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-					makeMemberEncapsulate(&MyThread::_consumerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
+					makeMemberEncapsulate(&MasterThread::_consumerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel,i)
 				);		
 			}
 			if ( prodIdx == n)
 			{
 				mProducer->post(
 						mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-							makeMemberEncapsulate(&MyThread::_producerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
+							makeMemberEncapsulate(&MasterThread::_producerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
 					);
 			}
 			//Wait for all threads respond
 			int value;
+            unsigned time = 0;
+            constexpr unsigned MAX_TIME = 2000;
 			do
 			{
 				value = mResponses.load( std::memory_order_relaxed);
-				::tasking::Process::wait(100);
+				::tasking::Process::wait(50);
+                time+=50;
+                if ( time >= MAX_TIME)
+                {
+                    //test error
+                    spdlog::error("Time waiting for consumers response exceeeded maximum time!!");
+                    this->finish();
+                    return ::tasking::EGenericProcessResult::KILL; 
+                }
 			} while(value<n);
 			
 			return ::tasking::EGenericProcessResult::CONTINUE;
@@ -148,23 +150,24 @@ class MyThread : public GenericThread
 			output.setValue(value);
 			return ::tasking::EGenericProcessResult::KILL;
 		}
-		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input ) 
+		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input,int thId ) 
 		{
-			auto wr = waitForFutureMThread(input);
+			auto wr = waitForFutureMThread(thId,input);
 			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
 			{
-				auto thId = Thread::getCurrentThread()->getThreadId();
+//				auto thId = Thread::getCurrentThread()->getThreadId();
 				if (!input.getValid())				
 					spdlog::error("Thread {} gets error waiting for input: {}",thId,input.getError()->errorMsg);
 				else
 					spdlog::debug("Thread {} gets value {}",thId,input.getValue());
 			}else
-				spdlog::error("Thread {} gets error waiting for input",Thread::getCurrentThread()->getThreadId());
+				spdlog::error("Thread {} gets error waiting for input",thId);
 			mResponses.fetch_add(1,::std::memory_order_relaxed);
 			return ::tasking::EGenericProcessResult::KILL;
 		}
 		void onThreadEnd() override{
 			//finalizar el resto
+            mProducer->finish();
 			for(auto th:mConsumers)
 			{
 				th->finish();
@@ -173,23 +176,25 @@ class MyThread : public GenericThread
 		}
 		void onJoined() override
 		{
+            mProducer->join();
 			for(auto th:mConsumers)
 			{
 				th->join();
 			}
 		}
 };
-int  _testFutures()
+int test_threading::test_futures()
 {
 	int result = 0;
 	auto producer = GenericThread::createEmptyThread();
-	constexpr size_t n = 2;
+    spdlog::set_level(spdlog::level::warn); // Set global log level to err
+	constexpr size_t n = 10;
 	std::array<Thread*,n> consumers;
 	for(size_t i=0;i<n;++i)
 	{
 		consumers[i] = GenericThread::createEmptyThread();
 	}
-	auto master = new MyThread<n>(producer,consumers);
+	auto master = new MasterThread<n>(producer,consumers);
 	master->start();	
 			
 	Thread::sleep(3000000);

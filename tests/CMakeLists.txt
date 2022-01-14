@@ -8,7 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_definitions(DABAL_IMPORTS)
 add_executable (tests "main.cpp")
 target_include_directories(tests PUBLIC "common/include")
-target_sources(tests PRIVATE  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp")
+target_sources(tests PRIVATE  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
+"test_threading/future_tests.cpp"
+)
 
 #add_link_options()
 target_link_libraries(tests "dabal")

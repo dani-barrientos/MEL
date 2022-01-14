@@ -28,7 +28,6 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 	mPauseReq(false),
 	//mPreviousTime(0),
 	mLastUpdateTime(0),
-	mProcessId(0),
 	mOwnerProcessScheduler( 0 ),
 	mState(EProcessState::PREPARED),
 	mWakeup(false)
@@ -275,13 +274,15 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 	p->mOwnerProcessScheduler->processAsleep(p);
 	unsigned int currentPeriod = p->getPeriod();
 	p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
+	auto prevSwitch = p->mSwitched;
+	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
 	//trigger callback
 	if ( postSleep )
 	{
 		(*postSleep)();
 		delete postSleep;
 	}
-	if (!p->mSwitched) {//!no multithread safe!!
+	if (!prevSwitch) {//!no multithread safe!!
 		result = switchProcess(false);
 	}
 	else {
@@ -311,9 +312,8 @@ void Process::wakeUp()
 	//@todo termina verificar que está pausado y tal y poner estado anterior y todo eso..
 	if ( mSwitched || mState == EProcessState::ASLEEP) 
 	{	
-		if ( mState == EProcessState::ASLEEP )
-			//notify scheduler
-			mOwnerProcessScheduler->processAwakened( shared_from_this() );
+		//notify scheduler
+		mOwnerProcessScheduler->processAwakened( shared_from_this() ); 
 		setPeriod( 0 );
 		mState = mPreviousState;
 		mWakeup = true;        

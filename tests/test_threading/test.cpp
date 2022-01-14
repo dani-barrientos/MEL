@@ -10,7 +10,9 @@ using tests::TestManager;
 #include <mpl/LinkArgs.h>
 #include <mpl/Ref.h>
 #include <string>
- #include <core/Event_mthread.h>
+#include <tasking/Process.h>
+using tasking::Process;
+  #include "future_tests.h"
 /**
  * @todo pensar en test neceasrios:
  *  - mono hilo + microhilos
@@ -70,7 +72,7 @@ class MyProcess : public Process
 			int aux = mVar;
 			++mVar;
 			spdlog::debug("MyProcess");
-			::core::Process::wait(70050);
+			::tasking::Process::wait(70050);
 			mVar = aux;
 		}	
 		int& mVar;
@@ -86,7 +88,7 @@ class MyTask
 		++mVar;
 		if ( mTarget )
 			mTarget->pause();
-		core::Process::wait(213);
+		tasking::Process::wait(213);
 		if ( mTarget )
 			mTarget->wakeUp();
 		return ::tasking::EGenericProcessResult::CONTINUE;
@@ -115,69 +117,7 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 		spdlog::warn("Margin time overcome {}. Info: {}",elapsed,text);
 }
 
-//@todo intentar funcion static para esperar por future microhili
-//quiero: quitar toda dependencia de hilo, microhilo...en future.
-template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T>& f,unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE)
-{
-	// necesitaría:
-	//  sección critica y evento en el future para poder hacer eso... IDEAS:
-	//   - QUE EL FUTURE LANCE EVENTO, AQUI SUSCRIBIRME. SERÁ AQUÍ DONDE TENDRÉ UN OBJETO CON LA SC O LO NEFCESARIO
-	using ::core::Event_mthread;
-	using ::core::FutureData_Base;
-	struct _Receiver
-	{		
-		_Receiver():mEvent(false,false){}
-		FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
-		{
-			//@todo revisar esto, que en el Future uso la seccion critica, pero creo que si lo anterior lo gestiono bien, no hace falta
-			// //@todo hacer aqui todo lo de saber el estado y tal. Puede que para eso necesite la seccion critica??
-			f.subscribeCallback(
-				std::function<::core::ECallbackResult( typename ::Future<T>::ParamType)>([this](typename ::Future<T>::ParamType ) 
-				{
-					mEvent.set();
-					return ::core::ECallbackResult::UNSUBSCRIBE; 
-				})
-			);
-			FutureData_Base::EWaitResult result;
-			//first check if already set
-			if ( f.getState() != ::core::EFutureState::NOTAVAILABLE )
-				result = ::core::FutureData_Base::FUTURE_WAIT_OK;
-			else
-			{
-				//mSC.enter();
-				Event_mthread::EWaitCode eventresult;
-				//eventresult = mResultAvailableMThread.waitAndDo(makeMemberEncapsulate( &CriticalSection::leave, &mSC ), msecs );
-				eventresult = mEvent.wait(msecs); 
-				switch( eventresult )
-				{
-				case ::core::Event_mthread::EVENTMT_WAIT_KILL:
-					//event was triggered because a kill signal
-					result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
-					break;
-				case Event_mthread::EVENTMT_WAIT_TIMEOUT:
-					result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
-					break;
-				default:
-					result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
-					break;
-				}
-			}
-			return result;	
-	
-		}
-		private:
-		::core::Event_mthread mEvent;
 
-	};
-	auto receiver = make_unique<_Receiver>();
-	auto result =  receiver->wait(f,msecs);	
-	return result;
-}
-template<> ::core::FutureData_Base::EWaitResult waitForFutureMThread<void>( const core::Future<void>& f,unsigned int msecs)
-{
-	//@todo cuando esté clara la otra
-	return ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK; 
-}
 static int _testMicroThreadingMonoThread()
 {
 	using namespace std::string_literals;
@@ -199,11 +139,11 @@ static int _testMicroThreadingMonoThread()
 		CHECK_TIME(t1,p->getPeriod(),"check period"s);
 		auto t0 = sTimer.getMilliseconds();
 		unsigned int waittime = 3550;
-		::core::Process::wait(waittime);
+		::tasking::Process::wait(waittime);
 		t1 = sTimer.getMilliseconds();
 		CHECK_TIME(t1-t0,waittime,"check wait 1"s);
 		waittime = 67;
-		::core::Process::wait(waittime);
+		::tasking::Process::wait(waittime);
 		auto t2 = sTimer.getMilliseconds();
 		CHECK_TIME(t2-t1,waittime,"check wait 2"s);
 		sharedVar = aux;
@@ -292,44 +232,7 @@ int  _testPerformanceLotTasks()
 	return result;
 }
 
-int  _testFutures()
-{
-	int result = 0;
-	Future<int> fut;
-	Future<void> fut2;
-	waitForFutureMThread(fut2);
-	auto th1 = GenericThread::createEmptyThread();
-	th1->start();	
-	th1->post<CustomProcessType,MyAllocator>( [fut](RUNNABLE_TASK_PARAMS) mutable
-	{
-		::core::Process::wait(5000);
-		fut.setValue(7);
-		return ::tasking::EGenericProcessResult::CONTINUE;
-	},true,1000,0);		
-	th1->post( [fut](RUNNABLE_TASK_PARAMS)
-	{
-		if ( waitForFutureMThread(fut) == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
-		{
-			spdlog::debug("Valor obtenido 1: {} ",fut.getValue());
-		}else
-			spdlog::error("Error waiting for future {}",fut.getError()->errorMsg);
-		return ::tasking::EGenericProcessResult::CONTINUE;
-	},true,1000,0);						
-	th1->post( [fut](RUNNABLE_TASK_PARAMS)
-	{
-		if ( waitForFutureMThread(fut) == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
-		{
-			spdlog::debug("Valor obtenido 2: {} ",fut.getValue());
-		}else
-			spdlog::error("Error waiting for future {}",fut.getError()->errorMsg);
-		return ::tasking::EGenericProcessResult::CONTINUE;
-	},true,1000,0);
-	
-	Thread::sleep(15000);
-	th1->finish();
-	th1->join();
-	return result;
-}
+
 /**
  * @brief Tasking tests
  * commandline options
@@ -358,7 +261,7 @@ static int test()
 					result = _testPerformanceLotTasks();
 					break;
 				case 2:
-					result = _testFutures();
+					result = ::test_threading::test_futures();
 					break;
 				default:;					
 			}

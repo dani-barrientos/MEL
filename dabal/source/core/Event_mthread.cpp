@@ -15,6 +15,7 @@ Event_mthread::~Event_mthread()
 }
 void Event_mthread::set( bool sendToAll )
 {
+	core::Lock lck(mCS);
 	mSignaled = true;
 	_triggerActivation( sendToAll );
 	if ( mAutoRelease )
@@ -26,7 +27,43 @@ void Event_mthread::set( bool sendToAll )
 Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs ) 
 {
 	EWaitCode result = EVENTMT_WAIT_OK;
+	mCS.enter();
 	if ( !mSignaled )
+	{
+		auto p = ProcessScheduler::getCurrentProcess();
+		mWaitingProcesses.push_back( p ); //remember. not multithread-safe
+        
+		Process::ESwitchResult switchResult;
+		if ( msecs == EVENTMT_WAIT_INFINITE )
+			switchResult = ::core::Process::sleepAndDo([this]()
+			{
+				mCS.leave();
+			} );
+		else
+			switchResult = ::core::Process::waitAndDo(msecs, [this]()
+			{
+				mCS.leave();
+			});
+		switch ( switchResult )
+		{
+		case Process::ESwitchResult::ESWITCH_KILL:
+			result = EVENTMT_WAIT_KILL;
+			break;
+		case Process::ESwitchResult::ESWITCH_WAKEUP:
+			result = EVENTMT_WAIT_OK; 
+			break;
+		default:
+			result = EVENTMT_WAIT_TIMEOUT;
+			break;
+		}
+		//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
+		//maybe other process do wait on this events
+        mCS.enter();
+		mWaitingProcesses.remove( p );
+        mCS.leave();
+	}else
+		mCS.leave();
+	/*if ( !mSignaled )
 	{
 		auto p = ProcessScheduler::getCurrentProcess();
         mCS.enter();
@@ -56,6 +93,7 @@ Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs )
 		mWaitingProcesses.remove( p );
         mCS.leave();
 	}
+	*/
 	return result;
 }
 
@@ -66,7 +104,7 @@ void Event_mthread::reset()
 }
 void Event_mthread::_triggerActivation( bool sendToAll )
 {
-    core::Lock lck(mCS);
+    //core::Lock lck(mCS);
     
 	if ( sendToAll )
 	{

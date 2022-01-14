@@ -1,26 +1,18 @@
 #pragma once
-// #include <core/IRefCount.h>
-// using core::IRefCount;
 
-//#include <core/Event.h>
-//#include <core/Event_mthread.h>
 #include <mpl/TypeTraits.h>
 #include <memory>
-//#include <core/CriticalSection.h>
-//#include <mpl/MemberEncapsulate.h>
-//using mpl::makeMemberEncapsulate;
+#include <core/CriticalSection.h>
+
 #include <string>
 #include <memory>
 #include <core/CallbackSubscriptor.h>
 namespace core
 {
-	//using core::Event;
-	//using core::Event_mthread;
 	using core::CriticalSection;
 	using mpl::TypeTraits;
-	
 
-//nombnrarlos bien. �meter nuevo estado UNINITIALIZED?
+
 	enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
 	///@cond HIDDEN_SYMBOLS
 	/**
@@ -109,8 +101,7 @@ namespace core
 		*/
 		void setError( ErrorInfo* ei )
 		{
-			//@todo tanto esto como el setValue, tal vez sólo deba ser ejecutado por uno y no necesitaría bloqueo,,
-			//mSC.enter();	
+			Lock lck(mSC);
 			if ( mState == NOTAVAILABLE)
 			{
 				mErrorInfo.reset( ei  );
@@ -120,25 +111,23 @@ namespace core
 			}
 			else
 				delete ei;
-			//mSC.leave();	
 		};
 
 		inline const ErrorInfo* getError() const { return mErrorInfo.get(); };
 	protected:
-		//Event	   mResultAvailable;
-		//mutable Event_mthread	   mResultAvailableMThread; 
-		//mutable CriticalSection	mSC; 
+		mutable CriticalSection	mSC; 
 		std::unique_ptr< ErrorInfo > mErrorInfo; //It will have content when error
 		EFutureState		mState;
 
 	};
 	template <typename ResultType>
 	class FutureData : public FutureData_Base,
-					public 	CallbackSubscriptor<::core::MultithreadPolicy,typename ::mpl::TypeTraits<ResultType>::ParameterType>
+					private 	CallbackSubscriptor<::core::MultithreadPolicy,typename ::mpl::TypeTraits<ResultType>::ParameterType>
 	{		
 	public:
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ParamType;
+		typedef CallbackSubscriptor<::core::MultithreadPolicy,typename ::mpl::TypeTraits<ResultType>::ParameterType> Subscriptor;
 		/**
 		* default constructor
 		*/
@@ -157,6 +146,23 @@ namespace core
 
 		typename FutureData<ResultType>::ReturnType getValue() const;
 		void setValue( ParamType value );
+		/**
+		 * @brief Subscribe to future available
+		 * 
+		 * @tparam F functor with signature 
+		 * @param f 
+		 * @return auto 
+		 * @warning callback receiver shoudn't wait or do context switch and MUST NOT block
+		 */
+		template <class F> auto subscribeCallback(F&& f)
+		{
+			Lock lck(mSC);
+			if ( mState != NOTAVAILABLE)
+			{
+				f(mValue);
+			}
+			return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn be neccesary if mstate already avaialbe but for consistency
+		}
 
 	private:
 		ResultType mValue;
@@ -171,24 +177,25 @@ namespace core
 	template <typename ResultType>
 	void FutureData<ResultType>::setValue( ParamType value )
 	{
-		//FutureData_Base::mSC.enter();	
+		FutureData_Base::mSC.enter();	
 		if ( mState == NOTAVAILABLE)
 		{
 			mValue = value;
 			FutureData_Base::mState = VALID;
-		//	FutureData_Base::mResultAvailable.set();
-	//		FutureData_Base::mResultAvailableMThread.set();
-			CallbackSubscriptor<::core::MultithreadPolicy, typename mpl::TypeTraits< ResultType >::ParameterType>::triggerCallbacks(value);
-		}
-		//FutureData_Base::mSC.leave();	
+			FutureData_Base::mSC.leave();
+			Subscriptor::triggerCallbacks(value);
+		}else
+			FutureData_Base::mSC.leave();
 
 	}
 	//specialization for void type. It's intented for functions returning void but working in a different thread
 	//so user need to know when it finish
 	//TODO no estoy un pijo convencido...
 	template <>
-	class FutureData<void> : public FutureData_Base
+	class FutureData<void> : public FutureData_Base,
+		private CallbackSubscriptor<::core::MultithreadPolicy,void>
 	{
+		typedef CallbackSubscriptor<::core::MultithreadPolicy,void> Subscriptor;
 	public:
 		typedef void ReturnType;
 		typedef void ParamType;
@@ -196,19 +203,27 @@ namespace core
 		FutureData(){};
 		~FutureData(){};
 
+		template <class F> auto subscribeCallback(F&& f)
+		{
+			bool trigger = false;
+			Lock lck(FutureData_Base::mSC);
+			if ( mState != NOTAVAILABLE)
+			{
+				f();
+			}				
+			return Subscriptor::subscribeCallback(std::forward<F>(f));
+		}
 		inline void getValue() const{ return;}
 		inline void setValue( void )
 		{
-
-//			FutureData_Base::mSC.enter();	
+			FutureData_Base::mSC.enter();	
 			if ( mState == NOTAVAILABLE)
 			{
 				FutureData_Base::mState = VALID;
-//				FutureData_Base::mResultAvailable.set();
-//				FutureData_Base::mResultAvailableMThread.set();
-			}
-//			FutureData_Base::mSC.leave();	
-
+				FutureData_Base::mSC.leave();
+				CallbackSubscriptor<::core::MultithreadPolicy, void>::triggerCallbacks();
+			}else
+				FutureData_Base::mSC.leave();
 		}
 	};
 
@@ -293,7 +308,7 @@ namespace core
 		*/
 		inline const FutureData_Base::ErrorInfo* getError() const { return mData->getError(); };
  		inline void setError( FutureData_Base::ErrorInfo* ei ){ mData->setError( ei ); } 
-		//convenient overload getting errr code and msg
+		//convenient overload getting err code and msg
 		inline void setError( int code,const std::string& msg) 
 		{
 			ErrorInfo* ei = new ErrorInfo();
@@ -324,10 +339,10 @@ namespace core
 		*/
 // 		inline const FutureData_Base::ErrorInfo* getError() const { return mData->getError(); };
 // 		inline void setError( FutureData_Base::ErrorInfo* ei ){ ((FutureData<ResultType>*)mData)->setError( ei ); } 
-		template <class F> void subscribeCallback(F&& f) const						
+		template <class F> auto subscribeCallback(F&& f) const						
 		{
 			//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
-			const_cast<Future_Common<ResultType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
+			return const_cast<Future_Common<ResultType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
 		}
 	};
 	///@endcond

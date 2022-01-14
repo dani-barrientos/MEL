@@ -55,7 +55,7 @@ using core::Callback;
 
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
-
+#include <core/Future.h>
 namespace tasking
 {
 
@@ -152,20 +152,6 @@ namespace tasking
 		*/
 		void kill( bool force = false );
 		/**
-		*  set callback to call after process receives the kill signal and goes to PREPARED_TO_DIE (will be removed
-		* from scheduler next iteration)
-		* A Process can receive a kill signal but it goes to PREAPARED_TO_DIE if onKill returns true, so this callback is
-		* only triggered in this last case
-		* callback signature: void f( Process* )
-		*/
-		// template <class F>
-		// void subscribeKillCallback( F functor );
-		/** **********************************************************************/
-		/*  removes kill callback set with setKillCallback
-		*/
-		// template <class F>
-		// void unsubscribeKillCallback( F functor ); 
-		/**
 		* sets process in init state
 		*/
 		virtual void reset();
@@ -177,7 +163,6 @@ namespace tasking
 		inline void setPeriod(unsigned int value);
 
 		EProcessState getState() const{ return mState;}
-		//inline bool getActive() const;
 		/**
 		* it's process out of process manager?
 		*/
@@ -186,22 +171,15 @@ namespace tasking
 		* it's process prepared to be eliminated from process manager?
 		*/
 		inline bool getPreparedToDie() const;
-		inline unsigned int getPeriod() const;
-		//inline bool getAutoDeleted() const;
+		inline unsigned int getPeriod() const;		
 		/**
 		* it's process finished correctly?
 		*/
-		inline bool getFinished() const;
 		inline bool getInitiated() const;
 		/**
 		* returns time elapsed during this iteration 
 		*/
 		unsigned int getElapsedTime() const;
-		/**
-		* @return time in previous iteration
-		*/
-		//inline uint64_t getPreviousTime() const;
-		//inline uint64_t getLastTime() const;
 		/**
 		* @return time when task was executed in last iteration, when onUpdate is called: 
 		* @note context switches or waits inside code doesn't modify update time.
@@ -227,19 +205,6 @@ namespace tasking
 		*  when parent Process will be
 		*/
 		//void attachProcess( Process* );		
-
-		/**
-		*  get Task ID provided by its processcheduler
-		*/
-		//inline unsigned int getId() const;
-		/**
-		* time after wich Process will start
-		*/
-		// inline void setStartTime( unsigned int );
-		// inline unsigned int getStartTime( ) const;
-		// get time when process began
-		inline uint64_t getBeginTime() const;
-
 		/**
 		* @return true if process received kill signal
 		* @see switchProcess for comments
@@ -310,25 +275,11 @@ namespace tasking
 		static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
 		EProcessState mState;
 		EProcessState mPreviousState;
-		//volatile bool mAsleep;
 		volatile bool mWakeup; //temp value to know if context switch comes from a wakeup
-		//bool	mFinished; //@todo no creo que valga para nada
 		bool 	mPauseReq;
 		unsigned int mPeriod;
-		unsigned int 	mProcessId; 
-		//unsigned int	mStartTime; //!when to start process since insertion in scheduler (default = 0)
 		uint64_t mLastUpdateTime; //!<time at process execution
 		ProcessScheduler* mOwnerProcessScheduler; //!<scheduler in which is inserted
-		//uint64_t mLastTime;
-
-
-		//extra data passed to Process for custom processing TODO temporal hasta tener el extradata bien
-		//void*			mExtrainfo;		
-		//uint64_t		mPreviousTime;
-		//uint64_t		mBeginTime;  //time stored at init
-		//SmartPtr<Process>	mNext; //next process in chain. It's scheduled when killed
-		//Callback<void,Process*>* mKillCallback;
-
 		/**
 		* main execution block
 		* @param msegs    msegs
@@ -379,14 +330,7 @@ namespace tasking
 		inline void setId( unsigned int id );
 	};
 	
-	// unsigned int Process::getId() const
-	// {
-	// 	return mProcessId;
-	// }
-	void Process::setId( unsigned int id )
-	{
-		mProcessId = id;
-	}
+	
 	void Process::setPeriod(unsigned int value)
 	{
 		mPeriod = value;
@@ -413,10 +357,7 @@ namespace tasking
 		return mPeriod;
 	}
 
-	// bool Process::getFinished() const
-	// {
-	// 	return mFinished;
-	// }
+	
 	bool Process::getInitiated() const
 	{
 		return ( mState == EProcessState::INITIATED );
@@ -439,54 +380,7 @@ namespace tasking
 		return mLastUpdateTime;
 	}
 	
-	// void Process::setExtraInfo( void* info )
-	// {
-	// 	mExtrainfo = info;
-	// }
-	// void* Process::getExtraInfo() const
-	// {
-	// 	return mExtrainfo;
-	// }
-	// void Process::setStartTime( unsigned int st )
-	// {
-	// 	mStartTime = st;
-	// }
-	// unsigned int Process::getStartTime( ) const
-	// {
-	// 	return mStartTime;
-	// }
-	// uint64_t Process::getBeginTime() const
-	// {
-	// 	return mBeginTime;
-	// }
-	/*Process* Process::getNext()
-	{
-		return mNext.getPtr();
-	}*/
-	/*template <class F>
-	void Process::setKillCallback( F functor )
-	{
-		delete mKillCallback;
-		mKillCallback = new Callback<void,Process*>( functor, ::core::use_functor );
-	}*/
 
-/*
-	void Process::clearKillCallback()
-	{
-		delete mKillCallback;
-		mKillCallback=NULL;
-	}
-*/
-	// template <class F>
-	// void Process::subscribeKillCallback( F functor )
-	// {
-	// 	KillEventSubscriptor::subscribeCallback( functor );
-	// }
-	// template <class F>
-	// void Process::unsubscribeKillCallback( F functor )
-	// {
-	// 	KillEventSubscriptor::unsubscribeCallback( functor );
-	// }
 	bool Process::getAsleep() const
 	{
 		return mState == EProcessState::ASLEEP;

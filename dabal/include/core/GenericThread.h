@@ -53,14 +53,15 @@ namespace core
 			return new GenericThread( autoRun, autoDestroy,maxTasksSize );
 		}
 
+		template <class F>
+		GenericThread( F&& functor,bool autoRun = true, bool autoDestroy= true, unsigned int maxTaskSize= Runnable::DEFAULT_POOL_SIZE  );
+        GenericThread( std::function<bool(Thread*,bool)>&& f,bool autoRun =true,bool autoDestroy=true,unsigned int maxTaskSize= Runnable::DEFAULT_POOL_SIZE );
+		GenericThread(const std::function<bool(Thread*, bool)>& f, bool autoRun, bool autoDestroy, unsigned int maxTaskSize);
+		GenericThread( bool autoRun=true, bool autoDestroy=true, unsigned int maxTaskSize = Runnable::DEFAULT_POOL_SIZE );
 		~GenericThread();
 	protected:
 
-		template <class F>
-		GenericThread( F&& functor,bool autoRun, bool autoDestroy, unsigned int maxTaskSize );
-        GenericThread( std::function<bool(Thread*,bool)>&& f,bool autoRun,bool autoDestroy,unsigned int maxTaskSize);
-		GenericThread(const std::function<bool(Thread*, bool)>& f, bool autoRun, bool autoDestroy, unsigned int maxTaskSize);
-		GenericThread( bool autoRun, bool autoDestroy, unsigned int maxTaskSize);
+		
 		/**
 		* copy constructor. Only to hide to users
 		*/
