@@ -51,67 +51,8 @@ namespace core
 		{
 			return mState;
 		}
-		/**
-		* waits for value to be present
-
-		*/
-	/*
-		EWaitResult wait( unsigned int msecs ) const
-		{
-			if ( mResultAvailable.wait( msecs) == Event::EVENT_WAIT_TIMEOUT )
-			{
-				mSC.enter();	
-				//podr�a ocurrir que en este lapso de tiempo se estableciese correctamente el valor
-				if( !getValid() )
-				{
-					return FUTURE_WAIT_TIMEOUT;
-				}
-			}
-			return FUTURE_WAIT_OK;
-		}
-		EWaitResult waitAsMThread( unsigned int msecs ) const
-		{
-			EWaitResult result;
-			//first check if already set
-			if ( mState != NOTAVAILABLE )
-				result = FUTURE_WAIT_OK;
-			else
-			{
-				mSC.enter();
-				Event_mthread::EWaitCode eventresult;
-				eventresult = mResultAvailableMThread.waitAndDo(makeMemberEncapsulate( &CriticalSection::leave, &mSC ), msecs );
-				switch( eventresult )
-				{
-				case Event_mthread::EVENTMT_WAIT_KILL:
-					//event was triggered because a kill signal
-					result = FUTURE_RECEIVED_KILL_SIGNAL;
-					break;
-				case Event_mthread::EVENTMT_WAIT_TIMEOUT:
-					result = FUTURE_WAIT_TIMEOUT;
-					break;
-				default:
-					result = FUTURE_WAIT_OK;
-					break;
-				}
-			}
-			return result;			
-		}*/
-		/**
-		* set error info. TAKES OWNSERHIP
-		*/
-		void setError( ErrorInfo* ei )
-		{
-			Lock lck(mSC);
-			if ( mState == NOTAVAILABLE)
-			{
-				mErrorInfo.reset( ei  );
-				mState = INVALID;
-				//mResultAvailable.set();
-				//mResultAvailableMThread.set();
-			}
-			else
-				delete ei;
-		};
+	
+		
 
 		inline const ErrorInfo* getError() const { return mErrorInfo.get(); };
 	protected:
@@ -122,12 +63,12 @@ namespace core
 	};
 	template <typename ResultType>
 	class FutureData : public FutureData_Base,
-					private 	CallbackSubscriptor<::core::MultithreadPolicy,typename ::mpl::TypeTraits<ResultType>::ParameterType>
+					private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<ResultType>&>
 	{		
 	public:
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ParamType;
-		typedef CallbackSubscriptor<::core::MultithreadPolicy,typename ::mpl::TypeTraits<ResultType>::ParameterType> Subscriptor;
+		typedef CallbackSubscriptor<::core::MultithreadPolicy, const FutureData<ResultType>&> Subscriptor;
 		/**
 		* default constructor
 		*/
@@ -147,6 +88,22 @@ namespace core
 		typename FutureData<ResultType>::ReturnType getValue() const;
 		void setValue( ParamType value );
 		/**
+		* set error info. TAKES OWNSERHIP
+		*/
+		void setError( ErrorInfo* ei )
+		{
+			mSC.enter();
+			if ( mState == NOTAVAILABLE)
+			{
+				mErrorInfo.reset( ei  );
+				mState = INVALID;
+			}
+			else
+				delete ei;
+			mSC.leave();
+			Subscriptor::triggerCallbacks(*this);
+		};
+		/**
 		 * @brief Subscribe to future available
 		 * 
 		 * @tparam F functor with signature 
@@ -159,7 +116,7 @@ namespace core
 			Lock lck(mSC);
 			if ( mState != NOTAVAILABLE)
 			{
-				f(mValue);
+				f(*this);
 			}
 			return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn be neccesary if mstate already avaialbe but for consistency
 		}
@@ -183,7 +140,7 @@ namespace core
 			mValue = value;
 			FutureData_Base::mState = VALID;
 			FutureData_Base::mSC.leave();
-			Subscriptor::triggerCallbacks(value);
+			Subscriptor::triggerCallbacks(*this);
 		}else
 			FutureData_Base::mSC.leave();
 
@@ -193,9 +150,9 @@ namespace core
 	//TODO no estoy un pijo convencido...
 	template <>
 	class FutureData<void> : public FutureData_Base,
-		private CallbackSubscriptor<::core::MultithreadPolicy,void>
+		private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&>
 	{
-		typedef CallbackSubscriptor<::core::MultithreadPolicy,void> Subscriptor;
+		typedef CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&> Subscriptor;
 	public:
 		typedef void ReturnType;
 		typedef void ParamType;
@@ -209,7 +166,7 @@ namespace core
 			Lock lck(FutureData_Base::mSC);
 			if ( mState != NOTAVAILABLE)
 			{
-				f();
+				f(*this);
 			}				
 			return Subscriptor::subscribeCallback(std::forward<F>(f));
 		}
@@ -221,10 +178,26 @@ namespace core
 			{
 				FutureData_Base::mState = VALID;
 				FutureData_Base::mSC.leave();
-				CallbackSubscriptor<::core::MultithreadPolicy, void>::triggerCallbacks();
+				Subscriptor::triggerCallbacks(*this);
 			}else
 				FutureData_Base::mSC.leave();
 		}
+		/**
+		* set error info. TAKES OWNSERHIP
+		*/
+		void setError( ErrorInfo* ei )
+		{
+			FutureData_Base::mSC.enter();
+			if ( mState == NOTAVAILABLE)
+			{
+				mErrorInfo.reset( ei  );
+				mState = INVALID;
+			}
+			else
+				delete ei;
+			FutureData_Base::mSC.leave();
+			Subscriptor::triggerCallbacks(*this);
+		};
 	};
 
 	
@@ -307,15 +280,7 @@ namespace core
 		* return if there is an error. NULL if not
 		*/
 		inline const FutureData_Base::ErrorInfo* getError() const { return mData->getError(); };
- 		inline void setError( FutureData_Base::ErrorInfo* ei ){ mData->setError( ei ); } 
-		//convenient overload getting err code and msg
-		inline void setError( int code,const std::string& msg) 
-		{
-			ErrorInfo* ei = new ErrorInfo();
-			ei->error = code;
-			ei->errorMsg = msg;
-			mData->setError(ei); 
-		}
+ 		
 		
 	};
 	template <typename ResultType>
@@ -330,19 +295,21 @@ namespace core
 	public:
 		inline const FutureData<ResultType>& getData() const{ return *(FutureData<ResultType>*)mData; }
 		inline FutureData<ResultType>& getData(){ return *(FutureData<ResultType>*)mData.get(); }
-
-
-		inline  typename FutureData<ResultType>::ReturnType getValue() const{ return ((FutureData<ResultType>*)mData.get())->getValue();}
-		
-		/**
-		* return if there is an error. NULL if not
-		*/
-// 		inline const FutureData_Base::ErrorInfo* getError() const { return mData->getError(); };
-// 		inline void setError( FutureData_Base::ErrorInfo* ei ){ ((FutureData<ResultType>*)mData)->setError( ei ); } 
+		inline  typename FutureData<ResultType>::ReturnType getValue() const{ return ((FutureData<ResultType>*)mData.get())->getValue();}		
 		template <class F> auto subscribeCallback(F&& f) const						
 		{
 			//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
 			return const_cast<Future_Common<ResultType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
+		}
+		inline void setError( FutureData_Base::ErrorInfo* ei ){ 
+			((FutureData<ResultType>*)Future_Common<ResultType>::mData.get())->setError( ei ); } 
+		//convenient overload getting err code and msg
+		inline void setError( int code,const std::string& msg) 
+		{
+			FutureData_Base::ErrorInfo* ei = new FutureData_Base::ErrorInfo();
+			ei->error = code;
+			ei->errorMsg = msg;
+			((FutureData<ResultType>*)Future_Common<ResultType>::mData.get())->setError(ei); 
 		}
 	};
 	///@endcond
@@ -357,7 +324,8 @@ namespace core
 
 		inline void setValue( typename FutureData<ResultType>::ParamType value )
 		{
-		    ((FutureData<ResultType>*)Future_Common<ResultType>::mData.get())->setValue( value ); }
+		    ((FutureData<ResultType>*)Future_Common<ResultType>::mData.get())->setValue( value ); 
+		}	
 	};
 
 	//specialization for void
@@ -368,9 +336,8 @@ namespace core
 		typedef void ParamType;
 		typedef void ReturnType;
 		Future(){};
-		Future(const Future& f):Future_Common<void>(f){};
-	
-		inline void setValue( void ){ ((FutureData<void>*)Future_Base::mData.get())->setValue( ); }
+		Future(const Future& f):Future_Common<void>(f){};	
+		inline void setValue( void ){ ((FutureData<void>*)Future_Base::mData.get())->setValue( ); }		
 	};
 
 

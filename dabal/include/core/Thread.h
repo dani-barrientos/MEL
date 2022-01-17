@@ -17,6 +17,7 @@ using mpl::link1st;
 
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
+#include <memory>
 namespace core {
 	DABAL_API unsigned int getNumProcessors();
 	DABAL_API uint64_t getProcessAffinity();
@@ -388,4 +389,56 @@ namespace core {
 		}
 		return 1; // != 0 no error
 	}
+
+
+	/**
+	* waiting for a Future from a Thread
+	* @see tasking::waitForFutureMThread
+	*/
+	template<class T> ::core::FutureData_Base::EWaitResult waitForFutureThread( const core::Future<T>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+    {
+        using ::core::Event;
+        using ::core::FutureData_Base;
+        using ::core::FutureData;
+        struct _Receiver
+        {		
+            _Receiver():mEvent(false,false){}
+            FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
+            {
+                FutureData_Base::EWaitResult result;            
+                Event::EWaitCode eventresult;
+            // spdlog::debug("Waiting for event in Thread {}",threadid);
+				f.subscribeCallback(
+					std::function<::core::ECallbackResult( const FutureData<T>&)>([this](const FutureData<T>& ) 
+					{
+						mEvent.set();
+					//   spdlog::debug("Event was set for Thread {}",threadid);
+						return ::core::ECallbackResult::UNSUBSCRIBE; 
+					})
+				);
+                eventresult = mEvent.wait(msecs); 
+            //  spdlog::debug("Wait was done in Thread {}",threadid);
+                switch( eventresult )
+                {
+                case ::core::Event::EVENT_WAIT_OK:
+                    //event was triggered because a kill signal
+                    result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
+                    break;
+                case ::core::Event::EVENT_WAIT_TIMEOUT:
+                    result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
+                    break;
+                case ::core::Event::EVENT_WAIT_ERROR:
+                    result = ::core::FutureData_Base::EWaitResult::FUTURE_UNKNOWN_ERROR;
+					break;
+                }			
+                return result;	
+        
+            }
+            private:
+            ::core::Event mEvent;
+
+        };
+        auto receiver = std::make_unique<_Receiver>();
+        return receiver->wait(f,msecs);	
+    }	
 }

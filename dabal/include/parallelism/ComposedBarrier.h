@@ -4,9 +4,9 @@
 namespace parallelism
 {
 	/**
-	* barrier composde of toher barriers
+	* barrier composed of other barriers
 	* so waiting for a ComposedBarrier is as waiting for all barriers (AND) 
-	* @todo sería interesante un OR. para eso necesito lanzar n tareas paralelas esperando por ellas. Y en el momento que una sale, hacer el set
+	* @todo serï¿½a interesante un OR. para eso necesito lanzar n tareas paralelas esperando por ellas. Y en el momento que una sale, hacer el set
 	MEDITAR BIEN SOBRE ESTA HERENCIA, PORQUE AL NO PODER HACERSE LOS CONTRUCTORES DE COPIA BIEN (YA QUE SIEMPRE DEVOLVEMOS EL BARRIER TAL CUAL EN LAS FUNCIONES, SIN TIPO)
 	*/
 	class ComposedBarrier;

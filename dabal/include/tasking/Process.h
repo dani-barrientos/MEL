@@ -266,10 +266,104 @@ namespace tasking
 		 * wakeup an asleep process or an evicted process (that process having called swtich or wait)
 		 */
 		void wakeUp();
+/*
+dónde las meto??? hay dependencia circular con event
+		template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T>& f,unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE)
+		{
+			using ::core::Event_mthread;
+			using ::core::FutureData_Base;
+			struct _Receiver
+			{		
+				_Receiver():mEvent(false,false){}
+				FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
+				{
+					FutureData_Base::EWaitResult result;            
+					Event_mthread::EWaitCode eventresult;
+				// spdlog::debug("Waiting for event in Thread {}",threadid);
+					eventresult = mEvent.waitAndDo([this,f]()
+					{
+					//   spdlog::debug("waitAndDo was done for Thread {}",threadid);
+						f.subscribeCallback(
+						std::function<::core::ECallbackResult( typename ::Future<T>::ParamType)>([this](typename ::Future<T>::ParamType ) 
+						{
+							mEvent.set();
+						//   spdlog::debug("Event was set for Thread {}",threadid);
+							return ::core::ECallbackResult::UNSUBSCRIBE; 
+						}));
+					},msecs); 
+				//  spdlog::debug("Wait was done in Thread {}",threadid);
+					switch( eventresult )
+					{
+					case ::core::Event_mthread::EVENTMT_WAIT_KILL:
+						//event was triggered because a kill signal
+						result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
+						break;
+					case Event_mthread::EVENTMT_WAIT_TIMEOUT:
+						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
+						break;
+					default:
+						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
+						break;
+					}			
+					return result;	
+			
+				}
+				private:
+				::core::Event_mthread mEvent;
 
-		
-		//void setFinished( bool );
+			};
+			auto receiver = make_unique<_Receiver>();
+			return receiver->wait(f,msecs);	
+		}
 
+		template<> ::core::FutureData_Base::EWaitResult waitForFutureMThread<void>( const core::Future<void>& f,unsigned int msecs)
+		{
+			using ::core::Event_mthread;
+			using ::core::FutureData_Base;
+			struct _Receiver
+			{		
+				_Receiver():mEvent(false,false){}
+				FutureData_Base::EWaitResult wait(const core::Future<void>& f,unsigned int msecs)
+				{
+					FutureData_Base::EWaitResult result;            
+					Event_mthread::EWaitCode eventresult;
+				// spdlog::debug("Waiting for event in Thread {}",threadid);
+					eventresult = mEvent.waitAndDo([this,f]()
+					{
+					//   spdlog::debug("waitAndDo was done for Thread {}",threadid);
+						f.subscribeCallback(
+						std::function<::core::ECallbackResult(void)>([this]( ) 
+						{
+							mEvent.set();
+						//   spdlog::debug("Event was set for Thread {}",threadid);
+							return ::core::ECallbackResult::UNSUBSCRIBE; 
+						}));
+					},msecs); 
+				//  spdlog::debug("Wait was done in Thread {}",threadid);
+					switch( eventresult )
+					{
+					case ::core::Event_mthread::EVENTMT_WAIT_KILL:
+						//event was triggered because a kill signal
+						result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
+						break;
+					case Event_mthread::EVENTMT_WAIT_TIMEOUT:
+						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
+						break;
+					default:
+						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
+						break;
+					}			
+					return result;	
+			
+				}
+				private:
+				::core::Event_mthread mEvent;
+
+			};
+			auto receiver = make_unique<_Receiver>();
+			return receiver->wait(f,msecs);	
+		}
+*/
 	private:
 		static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;

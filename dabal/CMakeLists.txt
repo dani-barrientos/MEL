@@ -5,11 +5,11 @@ add_compile_definitions(DABAL_EXPORTS)
 
 
 
-add_library(dabal SHARED "source/core/atomics.cpp" "source/core/CriticalSection_mthread.cpp"
-"source/core/Event_mthread.cpp" "source/tasking/Process.cpp"
+add_library(dabal SHARED "source/core/atomics.cpp" "source/tasking/CriticalSection_mthread.cpp"
+"source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/core/Timer.cpp"
  "source/core/Type.cpp" "source/core/Thread.cpp" "source/core/GenericThread.cpp" "source/core/TLS.cpp" 
-"source/core/Event_win32.cpp" "source/core/Event_posix.cpp" "include/core/atomics.h" "include/core/CriticalSection_mthread.h"  "include/DabalLibType.h"
+"source/core/Event_win32.cpp" "source/core/Event_posix.cpp" "include/core/atomics.h" "include/tasking/CriticalSection_mthread.h"  "include/DabalLibType.h"
 "source/tasking/Process_X64_GCC.cpp")
 
  #[[
