@@ -221,7 +221,7 @@ int test_threading::test_futures()
 	
     spdlog::set_level(spdlog::level::info); // Set global log level
 	constexpr size_t n = 30;
-	constexpr unsigned int TESTTIME = 5*60*1000;
+	constexpr unsigned int TESTTIME = 30*60*1000;
 	std::array< std::shared_ptr<Thread>,n> consumers;
 	for(size_t i=0;i<n;++i)
 	{
