@@ -84,6 +84,11 @@ void ::tasking::_private::RunnableTask::operator delete( void* ptr ) noexcept
 	}
 	*/
 }
+void ::tasking::_private::RunnableTask::operator delete(void* ptr, Runnable*) noexcept
+{
+	RTMemBlock* mBlock = (RTMemBlock*)((char*)ptr - offsetof(RTMemBlock, task));
+	mBlock->memState = RTMemBlock::EMemState::FREE;
+}
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
 
 RTMemPool* Runnable::_addNewPool()

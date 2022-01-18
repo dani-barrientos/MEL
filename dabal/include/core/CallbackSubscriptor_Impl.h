@@ -64,7 +64,7 @@ namespace core
 		inline size_t getNumCallbacks() const{ return mCallbacks.size(); }
 		void removeCallbacks()
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			mCallbacks.clear();
 		}
 		template <class U>
@@ -91,7 +91,7 @@ namespace core
 		template <class U>
 		bool unsubscribeCallback( U&& callback )
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			CallbackType* auxiliar = new CallbackType(::std::forward<U>(callback), ::core::use_functor );
 			return unsubscribeCreatedCallback( std::shared_ptr< CallbackType>( auxiliar ) );
 		}
@@ -99,7 +99,7 @@ namespace core
 		{
 			bool result = false;
 			//@todo revisar locks
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			if (mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
@@ -137,7 +137,7 @@ namespace core
 		int subscribeCreatedCallback(CallbackType* cb, SubscriptionEmplacement se=SE_BACK)
 		{
 			int result;
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);					
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 				result = ++mCurrId;
 			if (mTriggering)
 			{
@@ -169,7 +169,7 @@ namespace core
 		bool unsubscribeCreatedCallback( std::shared_ptr<CallbackType> cb  )
 		{
 			bool result = false;
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);				
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			if (mTriggering)
 			{
 
@@ -216,11 +216,11 @@ namespace core
 
 	protected:
 		CallbackListType mCallbacks;
-		_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> mSC;
+		_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,::core::CSMultithreadPolicy>::result> mSC;
 
 		CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			for( typename CallbackListType::iterator i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 			
 				mCallbacks.push_back( CallbackInfo((*i).cb->clone(),++mCurrId) );			
 		}	
@@ -261,7 +261,7 @@ namespace core
 	public:
 		void triggerCallbacks( VARIABLE_ARGS_IMPL )
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(BaseType::mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
@@ -301,7 +301,7 @@ namespace core
 
 		void triggerCallbacks(  )
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(BaseType::mSC);		
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
@@ -415,7 +415,7 @@ namespace core
 		inline size_t getNumCallbacks() const{ return mCallbacks.size(); }
 		void removeCallbacks()
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			mCallbacks.clear();
 		}
 
@@ -432,7 +432,7 @@ namespace core
 		int subscribeCreatedCallback( CallbackType* cb, SubscriptionEmplacement se=SE_BACK )
 		{			
 			int result;
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			result = ++mCurrId;
 			if (mTriggering)
 			{
@@ -460,7 +460,7 @@ namespace core
 		bool unsubscribeCallback( U&& callback )
 		{
 			bool result = false;
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			CallbackType* auxiliar = new CallbackType( std::forward<U>(callback), ::core::use_functor );
 			result = unsubscribeCreatedCallback(std::shared_ptr< CallbackType>(auxiliar));
 			return result;	
@@ -468,7 +468,7 @@ namespace core
 		bool unsubscribeCallback(int id)
 		{
 			bool result = false;
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 					
 			if (mTriggering)
 			{
@@ -509,7 +509,7 @@ namespace core
 		bool unsubscribeCreatedCallback(std::shared_ptr<CallbackType> cb  )
 		{
 			bool result = false;
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);			
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			if (mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
@@ -557,11 +557,11 @@ namespace core
 
 	protected:
 		CallbackListType mCallbacks;
-		_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> mSC;
+		_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> mSC;
 
 		CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 		{
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			typename CallbackListType::const_iterator i,j;
 			for( i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 
 				mCallbacks.push_back( CallbackInfo( std::shared_ptr<CallbackType>((*i).cb->clone()),++mCurrId) );
@@ -602,7 +602,7 @@ namespace core
 
 		void triggerCallbacks( VARIABLE_ARGS_IMPL )
 		{			
-			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(BaseType::mSC);
+			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");

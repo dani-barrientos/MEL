@@ -157,7 +157,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 					mNew.push_back( p->getNext() );
 				}*/
 				p->setProcessScheduler( NULL ); //nobody is scheduling the process
-				EvictSubscriptor::second.triggerCallbacks(p);
+				mES.triggerCallbacks(p);
 				i = processes.erase( i );
 			}else
 			{
@@ -300,9 +300,9 @@ void ProcessScheduler::processAsleep(std::shared_ptr<Process>p)
 }
 void ProcessScheduler::_triggerSleepEvents(std::shared_ptr<Process> p)
 {
-	SleepSubscriptor::second.triggerCallbacks(p);
+	mSS.triggerCallbacks(p);
 }
 void ProcessScheduler::_triggerWakeEvents(std::shared_ptr<Process> p)
 {
-	WakeSubscriptor::second.triggerCallbacks(p);
+	mWS.triggerCallbacks(p);
 }

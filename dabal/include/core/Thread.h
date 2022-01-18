@@ -46,7 +46,8 @@ namespace core {
 	 * 
 	 * You can subscribe callback to thread end. It will be thrown just before onThreadEnd is called
 	 */
-	class DABAL_API Thread : public Runnable, public CallbackSubscriptor<::core::NoMultithreadPolicy,Thread*>
+	class DABAL_API Thread : public Runnable, 
+					public CallbackSubscriptor<::core::CSNoMultithreadPolicy,Thread*>
 					//,public std::enable_shared_from_this<Thread>
 	{
 
