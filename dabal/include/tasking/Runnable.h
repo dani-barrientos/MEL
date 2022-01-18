@@ -61,6 +61,7 @@ namespace tasking
 		public:		
 			//throws bad_alloc oif no enoguh memory
 			static void* operator new( size_t s,Runnable* owner );
+			void operator delete(void* ptr, Runnable*) noexcept;
 			static void operator delete( void* ptr ) noexcept;			
 			RunnableTask(){}
 		private:
@@ -209,7 +210,7 @@ namespace tasking
 		//std::mutex mMemPoolCS;
 		::core::ThreadId	mOwnerThread;//thread executing Runnable
 		//typedef Callback<void,Runnable*>	TFinishEvent;
-		CallbackSubscriptor<::core::NoMultithreadPolicy, Runnable*> mFinishEvents;
+		CallbackSubscriptor<::core::CSNoMultithreadPolicy, Runnable*> mFinishEvents;
 		void executeFinishEvents();
 
 		/**

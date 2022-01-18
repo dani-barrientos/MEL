@@ -19,8 +19,8 @@ using tests::TestManager;
 }
 
 
-typedef std::pair<Int2Type<0>,CallbackSubscriptor<::core::NoMultithreadPolicy,float>> CS1; 
-typedef std::pair<Int2Type<1>,CallbackSubscriptor<::core::NoMultithreadPolicy,float&>> CS2; 
+typedef std::pair<Int2Type<0>,CallbackSubscriptor<::core::CSNoMultithreadPolicy,float>> CS1; 
+typedef std::pair<Int2Type<1>,CallbackSubscriptor<::core::CSNoMultithreadPolicy,float&>> CS2; 
 class Pepe : private CS1,
  private CS2
 {
@@ -109,10 +109,10 @@ core::ECallbackResult f4(int,float,float,int,int,float,int )
 int test_callbacks::test()
 {
     
-    CallbackSubscriptor<::core::NoMultithreadPolicy,int> cs;   
-    CallbackSubscriptor<::core::MultithreadPolicy,int,float> cs2;
-    CallbackSubscriptor<::core::NoMultithreadPolicy,void> cs3;
-    CallbackSubscriptor<::core::MultithreadPolicy,int,float,float,int,int,float,int> cs4;
+    CallbackSubscriptor<::core::CSNoMultithreadPolicy,int> cs;   
+    CallbackSubscriptor<::core::CSMultithreadPolicy,int,float> cs2;
+    CallbackSubscriptor<::core::CSNoMultithreadPolicy,void> cs3;
+    CallbackSubscriptor<::core::CSMultithreadPolicy,int,float,float,int,int,float,int> cs4;
 
     cs.subscribeCallback(f1);
     cs.triggerCallbacks(1);

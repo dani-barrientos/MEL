@@ -8,14 +8,11 @@
 
 #include <tasking/Process.h>
 
-#include <set>
-using std::set;
-
 #include <list>
 using std::list;
 using tasking::Process;
 
-using std::pair;
+#include <utility>
 
 
 #include <core/CriticalSection.h>
@@ -27,29 +24,21 @@ using core::Timer;
 using core::CallbackSubscriptor;
 #include <mpl/Int2Type.h>
 using ::mpl::Int2Type;
-#include <utility>
 #include <atomic>
-
-// temas que quiero:
-//  - quitar esas prioridades. meter un objeto de propiedades en el post donde se indiquen cosas, si es que las quiero meter
-//   - ¿poder insertar al principio o al final?->¿de verdad tiene sentido? al final es un bucle infinito donde no importa. Lo que si puede
-//   importar es insertar antes o después que otra¿¿??
-
+#include <memory>
 
 namespace tasking
 {
-	typedef std::pair<mpl::Int2Type<0>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> SleepSubscriptor;
-	typedef std::pair<mpl::Int2Type<1>,CallbackSubscriptor< ::core::MultithreadPolicy, std::shared_ptr<Process>>> WakeSubscriptor;
-	typedef std::pair<mpl::Int2Type<2>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> EvictSubscriptor;
+	typedef CallbackSubscriptor< ::core::CSMultithreadPolicy, std::shared_ptr<Process>> WakeSubscriptor;
+	typedef CallbackSubscriptor< ::core::CSNoMultithreadPolicy, std::shared_ptr<Process>> SleepSubscriptor;
+	typedef CallbackSubscriptor< ::core::CSNoMultithreadPolicy, std::shared_ptr<Process>> EvictSubscriptor;
     /**
     * Process manager. It can be seen as a task scheduler
     * @version 1.0
     * @remarks as is explained in Process, temporization is used with a Timer but getting only the 32 bit low part of the
     * 64 bits time returned, for efficiency reasons.
     */
-	class DABAL_API ProcessScheduler : private  SleepSubscriptor //TODO que poco me gusta esta herencia, incrementa el tama�o de los Process y quisiera que fuesen m�s ligeros
-		,private WakeSubscriptor
-		,private EvictSubscriptor
+	class DABAL_API ProcessScheduler 
 	{
 		typedef unsigned int ThreadID;
 		friend class Process;
@@ -156,37 +145,40 @@ namespace tasking
 		*/
 		template <class F> int susbcribeSleepEvent(F&& f)
 		{
-			return SleepSubscriptor::second.subscribeCallback(std::forward<F>(f));
+			return mSS.subscribeCallback(std::forward<F>(f));
 		}
 		template <class F> void unsusbcribeSleepEvent(F&& f)
 		{
-			SleepSubscriptor::second.unsubscribeCallback(std::forward<F>(f));
+			mSS.unsubscribeCallback(std::forward<F>(f));
 		}
 		void unsusbcribeSleepEvent(int id)
 		{
-			SleepSubscriptor::second.unsubscribeCallback(id);
+			mSS.unsubscribeCallback(id);
 		}
 		template <class F> int susbcribeWakeEvent(F&& f)
 		{
-			return WakeSubscriptor::second.subscribeCallback(std::forward<F>(f));
+			return mWS.subscribeCallback(std::forward<F>(f));
 		}
 		template <class F> void unsusbcribeWakeEvent(F&& f)
 		{
-			WakeSubscriptor::second.unsubscribeCallback(std::forward<F>(f));
+			mWS.unsubscribeCallback(std::forward<F>(f));
 		}
 		template <class F> int subscribeProcessEvicted(F&& f)
 		{
-			return EvictSubscriptor::second.subscribeCallback(std::forward<F>(f));
+			return mES.subscribeCallback(std::forward<F>(f));
 		}
 		template <class F> void unsubscribeProcessEvicted(F&& f)
 		{
-			EvictSubscriptor::second.unsubscribeCallback(std::forward<F>(f));
+			mES.unsubscribeCallback(std::forward<F>(f));
 		}
 		void unsubscribeProcessEvicted(int id)
 		{
-			EvictSubscriptor::second.unsubscribeCallback(id);
+			mES.unsubscribeCallback(id);
 		}
 	private:
+		WakeSubscriptor mWS;
+		SleepSubscriptor mSS;
+		EvictSubscriptor mES;
 		struct ProcessInfo  //for TLS
 		{
 			std::shared_ptr<Process> current;

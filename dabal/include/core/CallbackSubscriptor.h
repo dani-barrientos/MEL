@@ -17,8 +17,8 @@ namespace core {
 		SE_FRONT
 	};
 	enum class ECallbackResult : uint8_t{ NO_UNSUBSCRIBE,UNSUBSCRIBE};
-	struct MultithreadPolicy{};
-	struct NoMultithreadPolicy{};
+	struct CSMultithreadPolicy{};
+	struct CSNoMultithreadPolicy{};
 }
 #include <deque>
 #include <memory>

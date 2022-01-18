@@ -73,6 +73,6 @@ namespace tasking
         auto receiver = std::make_unique<_Receiver>();
         return receiver->wait(f,msecs);	
     }    
-    ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE );
+    DABAL_API ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE );
 
 }

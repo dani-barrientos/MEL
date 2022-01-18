@@ -68,10 +68,7 @@ namespace core
 		* copy constructor. Only to hide to users
 		*/
 		GenericThread( GenericThread& t ):Thread_Impl<GenericThread>(""){};
-		/**
-		* default constructor. Only to hide to users
-		*/
-		GenericThread():Thread_Impl<GenericThread>(""){}
+		
 	private:
 		::core::ECallbackResult _processAwaken(std::shared_ptr<Process> p);
 		Callback< bool, Thread*,bool >*	mThreadFunction;

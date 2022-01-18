@@ -9,6 +9,7 @@ using namespace std;
 #include <tasking/utilities.h>
 #include <parallelism/Barrier.h>
 using ::parallelism::Barrier;
+#include <array>
 
 template <size_t n>
 class MasterThread : public GenericThread
@@ -108,7 +109,8 @@ class MasterThread : public GenericThread
 			mBarrier = Barrier(nTasks);
 			for(auto th:mConsumers)
 				th->resume();
-            constexpr unsigned MAX_TIME = 1500;
+			auto t0 = getTimer()->getMilliseconds();
+            constexpr unsigned MAX_TIME = 3500;
 			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
 			if ( r != ::tasking::Event_mthread::EVENTMT_WAIT_OK )
 			{
@@ -119,7 +121,8 @@ class MasterThread : public GenericThread
 			else if ( (msecs - mLastDebugTime) > 5000 )
 				{
 					mLastDebugTime = msecs;
-					spdlog::info("Wait for responses ok!!");
+					auto t1 = getTimer()->getMilliseconds();
+					spdlog::info("Wait for responses ok. Time waiting: {} msecs",t1-t0);
 				}
 			
 			if ( msecs - mStartTime > mMaxTime)

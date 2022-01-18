@@ -62,13 +62,13 @@ namespace core
 	};
 	template <typename ResultType>
 	class FutureData : public FutureData_Base,
-					private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<ResultType>&>,
+					private CallbackSubscriptor<::core::CSMultithreadPolicy,const FutureData<ResultType>&>,
 					public std::enable_shared_from_this<FutureData<ResultType>>
 	{		
 	public:
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ParamType;
-		typedef CallbackSubscriptor<::core::MultithreadPolicy, const FutureData<ResultType>&> Subscriptor;
+		typedef CallbackSubscriptor<::core::CSMultithreadPolicy, const FutureData<ResultType>&> Subscriptor;
 		/**
 		* default constructor
 		*/
@@ -93,7 +93,7 @@ namespace core
 		void setError( ErrorInfo* ei )
 		{
 			volatile auto protectMe=FutureData<ResultType>::shared_from_this();
-			mSC.enter();
+			FutureData_Base::mSC.enter();
 			if ( mState == NOTAVAILABLE)
 			{
 				mErrorInfo.reset( ei  );
@@ -101,7 +101,7 @@ namespace core
 			}
 			else
 				delete ei;
-			mSC.leave();
+			FutureData_Base::mSC.leave();
 			Subscriptor::triggerCallbacks(*this);
 		};
 		/**
@@ -114,7 +114,7 @@ namespace core
 		 */
 		template <class F> auto subscribeCallback(F&& f)
 		{
-			Lock lck(mSC);
+			Lock lck(FutureData_Base::mSC);
 			if ( mState != NOTAVAILABLE)
 			{
 				f(*this);
@@ -123,7 +123,7 @@ namespace core
 		}
 		template <class F> auto unsubscribeCallback(F&& f)
 		{
-			Lock lck(mSC);
+			Lock lck(FutureData_Base::mSC);
 			return Subscriptor::unsubscribeCallback( std::forward<F>(f));
 		}
 
@@ -157,10 +157,10 @@ namespace core
 	//TODO no estoy un pijo convencido...
 	template <>
 	class FutureData<void> : public FutureData_Base,
-		private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&>,
+		private CallbackSubscriptor<::core::CSMultithreadPolicy,const FutureData<void>&>,
 		public std::enable_shared_from_this<FutureData<void>>
 	{
-		typedef CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&> Subscriptor;
+		typedef CallbackSubscriptor<::core::CSMultithreadPolicy,const FutureData<void>&> Subscriptor;
 	public:
 		typedef void ReturnType;
 		typedef void ParamType;

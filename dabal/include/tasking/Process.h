@@ -76,7 +76,7 @@ namespace tasking
 	* because Windows interpret it as a hack process. This option is disabled in worksations but enabled for Windows Server- To disable it, go to HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/Session Manager/Kernel/DisableExceptionChainValidation
 	*/
 	class Process;
-//	typedef CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>> KillEventSubscriptor; @todo lo pasaré a ProcessScheduler
+//	typedef CallbackSubscriptor< ::core::CSNoMultithreadPolicy, std::shared_ptr<Process>> KillEventSubscriptor; @todo lo pasaré a ProcessScheduler
 	class DABAL_API Process :
 		public std::enable_shared_from_this<Process>,
 		public MThreadAttributtes		

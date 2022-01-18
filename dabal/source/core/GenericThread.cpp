@@ -89,7 +89,7 @@ bool GenericThread::terminateRequest()
 
 void GenericThread::onPostTask(std::shared_ptr<Process> process)
 {
-	unsigned int result;
+	//unsigned int result;
 	/*//PENSAR QUE PASARIA SI HUBIESE MAS DE UN suspend ENCADENADO
 	mSuspendCS.enter();
 	//tambi�n se recibe un onPostTask en el suspend, pero tal y como esta hecho (ver Thread) el mState se fija despu�s del post

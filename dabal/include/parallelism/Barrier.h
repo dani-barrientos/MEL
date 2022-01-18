@@ -5,11 +5,11 @@
 namespace parallelism
 {
 	class Barrier;
-	class BarrierData : private core::CallbackSubscriptor<::core::NoMultithreadPolicy,const BarrierData&>,
+	class DABAL_API BarrierData : private core::CallbackSubscriptor<::core::CSNoMultithreadPolicy,const BarrierData&>,
 		public std::enable_shared_from_this<BarrierData>
 	{
 		friend class ::parallelism::Barrier;		
-		typedef CallbackSubscriptor<::core::NoMultithreadPolicy,const BarrierData&> Subscriptor;
+		typedef CallbackSubscriptor<::core::CSNoMultithreadPolicy,const BarrierData&> Subscriptor;
 	private:
 		BarrierData(size_t nWorkers):mActiveWorkers(nWorkers){}		
 		void set();		
