@@ -227,7 +227,8 @@ void resizeStack(   MThreadAttributtes* process,  unsigned int newSize )
 
 Process::ESwitchResult Process::wait( unsigned int msegs )
 {
-	return _wait( msegs, NULL );
+	return _postWait(msegs,_preWait());
+//	return _wait( msegs, NULL );
 }
 Process::ESwitchResult Process::switchProcess( bool v )
 {
@@ -255,13 +256,39 @@ Process::ESwitchResult Process::switchProcess( bool v )
 	}
 	return result;
 }
+mpl::Tuple<TYPELIST(bool,Process*)> Process::_preWait() 
+{
+	auto p = ProcessScheduler::getCurrentProcess();
+	
+	auto prevSwitch = p->mSwitched;
+	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
+	return mpl::Tuple<TYPELIST(bool,Process*)>(prevSwitch,p.get());
+	
+}
+Process::ESwitchResult Process::_postWait(uint64_t msegs,mpl::Tuple<TYPELIST(bool,Process*)> input) 
+{
+	ESwitchResult result;
+	auto p = input.get<1>();
+	unsigned int currentPeriod = p->getPeriod();
+	p->setPeriod( msegs );
+	if (!input.get<0>()) {//!no multithread safe!!
+		result = switchProcess(false);
+	}
+	else {
+		result = ESwitchResult::ESWITCH_OK;
+	}
+	p->setPeriod( currentPeriod );
+	return result;
+}
 Process::ESwitchResult Process::sleep( )
 {
-	return _sleep( NULL );
+	return _postSleep(_preSleep());
 }
-
+/*
 Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 {
+	//return _postSleep(_preSleep());
+	
 	ESwitchResult result;
 	auto p = ProcessScheduler::getCurrentProcess();
 	const auto state = p->getState();
@@ -271,6 +298,7 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 		return ESwitchResult::ESWITCH_ERROR;
 	}
 	p->mPreviousState = state;
+	p->mState = EProcessState::ASLEEP;
 	p->mOwnerProcessScheduler->processAsleep(p);
 	unsigned int currentPeriod = p->getPeriod();
 	p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
@@ -291,22 +319,77 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 	p->setPeriod( currentPeriod );
 	p->mState = p->mPreviousState;
 	return result;
+	
 }
+*/
+
+//return: 0 -> false, 1 = true; 2 = already asleep
+mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()
+{
+	auto p = ProcessScheduler::getCurrentProcess();
+	const auto state = p->getState();
+	if ( state == EProcessState::ASLEEP ) //it hasn't any sense, but just in case this condition could be reached
+	{
+		spdlog::warn("Process_sleep: process is already asleep");
+		//return ESwitchResult::ESWITCH_ERROR;
+		return mpl::Tuple<TYPELIST(int,Process*,unsigned int)>(2,p.get(),0);
+	}
+	p->mPreviousState = state;
+	p->mState = EProcessState::ASLEEP;
+	p->mOwnerProcessScheduler->processAsleep(p);	
+	unsigned int currentPeriod = p->getPeriod();
+	p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
+	auto prevSwitch = p->mSwitched;
+	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
+	return mpl::Tuple<TYPELIST(int,Process*,unsigned int)>(prevSwitch?1:0,p.get(),currentPeriod);
+}
+Process::ESwitchResult Process::_postSleep(mpl::Tuple<TYPELIST(int,Process*,unsigned int)> input) 
+{
+	if ( input.get<0>() == 2 ) //it hasn't any sense, but just in case this condition could be reached
+	{
+		return ESwitchResult::ESWITCH_ERROR;
+	}
+	ESwitchResult result;
+	auto p = input.get<1>();
+	//unsigned int currentPeriod = p->getPeriod();
+	//p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
+	if (!input.get<0>()) {//!no multithread safe!!
+		result = switchProcess(false);
+	}
+	else
+	 {
+		result = ESwitchResult::ESWITCH_OK;
+	}
+	auto currentPeriod = input.get<2>();
+	p->setPeriod( currentPeriod );
+	p->mState = p->mPreviousState;	
+	return result;
+}
+/*
 Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* postWait ) 
 {
 	auto p = ProcessScheduler::getCurrentProcess();
 	unsigned int currentPeriod = p->getPeriod();
 	p->setPeriod( msegs );
+	auto prevSwitch = p->mSwitched;
+	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
 	//trigger callback
 	if ( postWait )
 	{
 		(*postWait)();
 		delete postWait;
 	}
-	ESwitchResult result = switchProcess( false );		
+	ESwitchResult result;
+	if (!prevSwitch) {//!no multithread safe!!
+		result = switchProcess(false);
+	}
+	else {
+		result = ESwitchResult::ESWITCH_OK;
+	}
 	p->setPeriod( currentPeriod );
 	return result;
 }
+*/
 void Process::wakeUp()
 {
 	//@todo termina verificar que está pausado y tal y poner estado anterior y todo eso..
@@ -315,7 +398,7 @@ void Process::wakeUp()
 		//notify scheduler
 		mOwnerProcessScheduler->processAwakened( shared_from_this() ); 
 		setPeriod( 0 );
-		mState = mPreviousState;
+	//	mState = mPreviousState; //creo que esto no debe ser aqui!!! LO HICE PORQUE EL SCHEDULER NO TENIA EN CUENTA SI SE HABÁI DESPERTADO
 		mWakeup = true;        
 		onWakeUp();
 	}

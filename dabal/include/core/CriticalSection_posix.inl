@@ -25,6 +25,8 @@ CriticalSection::CriticalSectionData::CriticalSectionData() {
 
 CriticalSection::CriticalSectionData::~CriticalSectionData() {
 	int ret=pthread_mutex_destroy(&mCS);
+	if ( ret!=0 )
+		ret = 6;
 	assert(!ret && "Error destroying mutex!");
 //!@note: to avoid the "unused variable" warning
 #ifndef WIN32

@@ -11,6 +11,8 @@ using mpl::binary;
 #include <core/Callback.h>
 using core::Callback;
 #include <stdint.h>
+#include <memory>
+#include <mpl/Tuple.h>
 
 #if defined(_IOS) || defined(_MACOSX)
 #include <TargetConditionals.h>
@@ -46,9 +48,8 @@ using core::Callback;
 	#define OPTIMIZE_FLAGS
 #elif defined(_ARM_GCC) || defined(DABAL_X86_GCC) ||defined(DABAL_X64_GCC) 
 	#define OPTIMIZE_FLAGS __attribute__ ((optimize(0)))
-	//#define OPTIMIZE_FLAGS lo anterior no funciona en GCC?? por el atribute
 #elif defined(DABAL_X64_CLANG)
-	#define OPTIMIZE_FLAGS __attribute__ ((optnone))
+	#define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
 #elif defined(_MSC_VER)
 	#define OPTIMIZE_FLAGS
 #endif
@@ -238,10 +239,7 @@ namespace tasking
 		* @remarks not multithread-safe
 		*/
 		template <class F>
-		static ESwitchResult sleepAndDo( F postSleep )
-		{
-			return _sleep( new Callback<void,void>( postSleep,::core::use_functor ) );
-		}
+		static ESwitchResult sleepAndDo( F postSleep );
 		/**
 		* @param[in] postWait functor (signature <void,void>) to execute just in the moment when Process go to sleep
 		* @return resulting state of the operation
@@ -266,107 +264,14 @@ namespace tasking
 		 * wakeup an asleep process or an evicted process (that process having called swtich or wait)
 		 */
 		void wakeUp();
-/*
-dónde las meto??? hay dependencia circular con event
-		template<class T> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T>& f,unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE)
-		{
-			using ::core::Event_mthread;
-			using ::core::FutureData_Base;
-			struct _Receiver
-			{		
-				_Receiver():mEvent(false,false){}
-				FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
-				{
-					FutureData_Base::EWaitResult result;            
-					Event_mthread::EWaitCode eventresult;
-				// spdlog::debug("Waiting for event in Thread {}",threadid);
-					eventresult = mEvent.waitAndDo([this,f]()
-					{
-					//   spdlog::debug("waitAndDo was done for Thread {}",threadid);
-						f.subscribeCallback(
-						std::function<::core::ECallbackResult( typename ::Future<T>::ParamType)>([this](typename ::Future<T>::ParamType ) 
-						{
-							mEvent.set();
-						//   spdlog::debug("Event was set for Thread {}",threadid);
-							return ::core::ECallbackResult::UNSUBSCRIBE; 
-						}));
-					},msecs); 
-				//  spdlog::debug("Wait was done in Thread {}",threadid);
-					switch( eventresult )
-					{
-					case ::core::Event_mthread::EVENTMT_WAIT_KILL:
-						//event was triggered because a kill signal
-						result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
-						break;
-					case Event_mthread::EVENTMT_WAIT_TIMEOUT:
-						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
-						break;
-					default:
-						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
-						break;
-					}			
-					return result;	
-			
-				}
-				private:
-				::core::Event_mthread mEvent;
 
-			};
-			auto receiver = make_unique<_Receiver>();
-			return receiver->wait(f,msecs);	
-		}
-
-		template<> ::core::FutureData_Base::EWaitResult waitForFutureMThread<void>( const core::Future<void>& f,unsigned int msecs)
-		{
-			using ::core::Event_mthread;
-			using ::core::FutureData_Base;
-			struct _Receiver
-			{		
-				_Receiver():mEvent(false,false){}
-				FutureData_Base::EWaitResult wait(const core::Future<void>& f,unsigned int msecs)
-				{
-					FutureData_Base::EWaitResult result;            
-					Event_mthread::EWaitCode eventresult;
-				// spdlog::debug("Waiting for event in Thread {}",threadid);
-					eventresult = mEvent.waitAndDo([this,f]()
-					{
-					//   spdlog::debug("waitAndDo was done for Thread {}",threadid);
-						f.subscribeCallback(
-						std::function<::core::ECallbackResult(void)>([this]( ) 
-						{
-							mEvent.set();
-						//   spdlog::debug("Event was set for Thread {}",threadid);
-							return ::core::ECallbackResult::UNSUBSCRIBE; 
-						}));
-					},msecs); 
-				//  spdlog::debug("Wait was done in Thread {}",threadid);
-					switch( eventresult )
-					{
-					case ::core::Event_mthread::EVENTMT_WAIT_KILL:
-						//event was triggered because a kill signal
-						result = ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
-						break;
-					case Event_mthread::EVENTMT_WAIT_TIMEOUT:
-						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
-						break;
-					default:
-						result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
-						break;
-					}			
-					return result;	
-			
-				}
-				private:
-				::core::Event_mthread mEvent;
-
-			};
-			auto receiver = make_unique<_Receiver>();
-			return receiver->wait(f,msecs);	
-		}
-*/
 	private:
-		static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
-		static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
+		//static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
+		static mpl::Tuple<TYPELIST(int,Process*,unsigned int)> _preSleep() OPTIMIZE_FLAGS;
+		static ESwitchResult _postSleep(mpl::Tuple<TYPELIST(int,Process*,unsigned int)>) OPTIMIZE_FLAGS;
+		//static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
+		static mpl::Tuple<TYPELIST(bool,Process*)> _preWait() OPTIMIZE_FLAGS;
+		static ESwitchResult _postWait(uint64_t msegs,mpl::Tuple<TYPELIST(bool,Process*)>) OPTIMIZE_FLAGS;
 		EProcessState mState;
 		EProcessState mPreviousState;
 		volatile bool mWakeup; //temp value to know if context switch comes from a wakeup
@@ -477,12 +382,24 @@ dónde las meto??? hay dependencia circular con event
 
 	bool Process::getAsleep() const
 	{
-		return mState == EProcessState::ASLEEP;
+		return mState == EProcessState::ASLEEP && !mWakeup;
 	}
 	
 	template <class F> Process::ESwitchResult Process::waitAndDo( unsigned int msegs,F postWait )
 	{
-		return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
+		auto v = _preWait();
+		//trigger callback
+		postWait();
+		return 	_postWait(msegs,v);
+		//return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
+	}
+	template <class F> Process::ESwitchResult Process::sleepAndDo( F postSleep )
+	{			
+		auto v = _preSleep();
+		//trigger callback
+		postSleep();
+		return 	_postSleep(v);
+		//return _sleep( new Callback<void,void>( postSleep,::core::use_functor ) );
 	}
 }
 

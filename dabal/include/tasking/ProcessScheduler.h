@@ -39,7 +39,7 @@ using ::mpl::Int2Type;
 namespace tasking
 {
 	typedef std::pair<mpl::Int2Type<0>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> SleepSubscriptor;
-	typedef std::pair<mpl::Int2Type<1>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> WakeSubscriptor;
+	typedef std::pair<mpl::Int2Type<1>,CallbackSubscriptor< ::core::MultithreadPolicy, std::shared_ptr<Process>>> WakeSubscriptor;
 	typedef std::pair<mpl::Int2Type<2>,CallbackSubscriptor< ::core::NoMultithreadPolicy, std::shared_ptr<Process>>> EvictSubscriptor;
     /**
     * Process manager. It can be seen as a task scheduler

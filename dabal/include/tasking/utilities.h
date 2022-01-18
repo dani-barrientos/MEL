@@ -12,6 +12,7 @@
 #include <core/Future.h>
 #include <memory>
 #include <tasking/Event_mthread.h>
+#include <parallelism/Barrier.h>
 namespace tasking
 {
     /**
@@ -34,11 +35,12 @@ namespace tasking
             {
                 FutureData_Base::EWaitResult result;            
                 Event_mthread::EWaitCode eventresult;
+                int evId;
             // spdlog::debug("Waiting for event in Thread {}",threadid);
-                eventresult = mEvent.waitAndDo([this,f]()
+                eventresult = mEvent.waitAndDo([this,f,&evId]()
                 {
                 //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
-                    f.subscribeCallback(
+                    evId = f.subscribeCallback(
                     std::function<::core::ECallbackResult( const FutureData<T>&)>([this](const FutureData<T>& ) 
                     {
                         mEvent.set();
@@ -46,6 +48,7 @@ namespace tasking
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                 },msecs); 
+                f.unsubscribeCallback(evId);
             //  spdlog::debug("Wait was done in Thread {}",threadid);
                 switch( eventresult )
                 {
@@ -67,7 +70,9 @@ namespace tasking
             ::tasking::Event_mthread mEvent;
 
         };
-        auto receiver = make_unique<_Receiver>();
+        auto receiver = std::make_unique<_Receiver>();
         return receiver->wait(f,msecs);	
     }    
+    ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE );
+
 }

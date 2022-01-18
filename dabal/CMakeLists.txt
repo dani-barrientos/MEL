@@ -10,7 +10,7 @@ add_library(dabal SHARED "source/core/atomics.cpp" "source/tasking/CriticalSecti
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/core/Timer.cpp"
  "source/core/Type.cpp" "source/core/Thread.cpp" "source/core/GenericThread.cpp" "source/core/TLS.cpp" 
 "source/core/Event_win32.cpp" "source/core/Event_posix.cpp" "include/core/atomics.h" "include/tasking/CriticalSection_mthread.h"  "include/DabalLibType.h"
-"source/tasking/Process_X64_GCC.cpp")
+"source/tasking/Process_X64_GCC.cpp" "source/parallelism/Barrier.cpp" "source/tasking/utilities.cpp")
 
  #[[
  add_library(dabal SHARED "source/core/atomics.cpp" "source/core/Type.cpp" "source/core/TLS.cpp" 

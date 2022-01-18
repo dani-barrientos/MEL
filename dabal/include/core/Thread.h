@@ -18,6 +18,7 @@ using mpl::link1st;
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
 #include <memory>
+#include <parallelism/Barrier.h>
 namespace core {
 	DABAL_API unsigned int getNumProcessors();
 	DABAL_API uint64_t getProcessAffinity();
@@ -406,9 +407,9 @@ namespace core {
             FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
             {
                 FutureData_Base::EWaitResult result;            
-                Event::EWaitCode eventresult;
+                Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
-				f.subscribeCallback(
+				int evId = f.subscribeCallback(
 					std::function<::core::ECallbackResult( const FutureData<T>&)>([this](const FutureData<T>& ) 
 					{
 						mEvent.set();
@@ -417,6 +418,7 @@ namespace core {
 					})
 				);
                 eventresult = mEvent.wait(msecs); 
+				f.unsubscribeCallback(evId);
             //  spdlog::debug("Wait was done in Thread {}",threadid);
                 switch( eventresult )
                 {
@@ -435,10 +437,10 @@ namespace core {
         
             }
             private:
-            ::core::Event mEvent;
-
+            	::core::Event mEvent;
         };
         auto receiver = std::make_unique<_Receiver>();
         return receiver->wait(f,msecs);	
     }	
+	::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 }

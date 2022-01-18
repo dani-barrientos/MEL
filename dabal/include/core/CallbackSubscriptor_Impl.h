@@ -8,6 +8,27 @@ namespace core
 
 	*/
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS	
+	namespace _private
+	{
+		template <bool> struct _CriticalSectionWrapper
+		{
+			CriticalSection mSC;
+		};
+		template <bool enabled> struct _Lock
+		{
+			_Lock(_CriticalSectionWrapper<enabled>& cs):mLck(cs.mSC){}
+			private:
+				Lock mLck;
+		};
+		template <> struct _CriticalSectionWrapper<false>
+		{
+			private:				
+		};
+		template <> struct _Lock<false>
+		{
+			_Lock(_CriticalSectionWrapper<false>& cs){}
+		};
+	}
 	template <class ThreadingPolicy, VARIABLE_ARGS >
 	class CallbackSubscriptor_Base
 	{
@@ -43,15 +64,8 @@ namespace core
 		inline size_t getNumCallbacks() const{ return mCallbacks.size(); }
 		void removeCallbacks()
 		{
-			if constexpr ( mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
-			{
-				Lock lck( mSC );			
-				mCallbacks.clear();
-			}
-			else
-			{
-				mCallbacks.clear();
-			}
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			mCallbacks.clear();
 		}
 		template <class U>
 		int subscribeCallback( U&& callback, SubscriptionEmplacement se=SE_BACK)
@@ -77,90 +91,45 @@ namespace core
 		template <class U>
 		bool unsubscribeCallback( U&& callback )
 		{
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
-			{
-				Lock lck( mSC );
-				CallbackType* auxiliar = new CallbackType(::std::forward<U>(callback), ::core::use_functor );
-				return unsubscribeCreatedCallback( std::shared_ptr< CallbackType>( auxiliar ) );
-			}
-			else
-			{
-				CallbackType* auxiliar = new CallbackType(::std::forward<U>(callback), ::core::use_functor );
-				return unsubscribeCreatedCallback(std::shared_ptr< CallbackType>(auxiliar));
-			}
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			CallbackType* auxiliar = new CallbackType(::std::forward<U>(callback), ::core::use_functor );
+			return unsubscribeCreatedCallback( std::shared_ptr< CallbackType>( auxiliar ) );
 		}
 		bool unsubscribeCallback(int id)
 		{
 			bool result = false;
 			//@todo revisar locks
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			if (mTriggering)
 			{
-				Lock lck(mSC);
-				if (mTriggering)
+				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+				for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
+					if (i->id == id)
 					{
-						if (i->id == id)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(nullptr, id));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
+						PendingOperation po;
+						po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
+						po.info = std::move(CallbackInfo(nullptr, id));
+						mPendingOperation.push_back(std::move(po));
+						result = true;
+						break;
 					}
 				}
-				else
-				{
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
-					{
-						if (i->id == id)
-						{
-							mCallbacks.erase(i);
-							result = true;
-							break;
-						}
-					}
-				}
-				return result;
 			}
 			else
 			{
-				if (mTriggering)
+				for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
+					if (i->id == id)
 					{
-						if (i->id == id)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(nullptr, id));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
+						mCallbacks.erase(i);
+						result = true;
+						break;
 					}
 				}
-				else
-				{
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
-					{
-						if (i->id == id)
-						{
-							mCallbacks.erase(i);
-							result = true;
-							break;
-						}
-					}
-				}
-				return result;
 			}
+			return result;			
 		}
 		/**
 		* special case for subscription with Callback already created. Takes ownership
@@ -168,52 +137,27 @@ namespace core
 		int subscribeCreatedCallback(CallbackType* cb, SubscriptionEmplacement se=SE_BACK)
 		{
 			int result;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);					
+				result = ++mCurrId;
+			if (mTriggering)
 			{
-				Lock lck(mSC);
-				result = ++mCurrId;
-				if (mTriggering)
-				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					PendingOperation po;
-					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
-					po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					po.emplacement = se;
-					mPendingOperation.push_back(std::move(po));
-				}
-				else
-				{
-					if (se == SE_BACK) {
-						mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
-					else {
-						mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
-				}
+				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
+				PendingOperation po;
+				po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
+				po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
+				po.emplacement = se;
+				mPendingOperation.push_back(std::move(po));
 			}
-			else {
-				result = ++mCurrId;
-				if (mTriggering)
-				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					PendingOperation po;
-					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
-					po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					po.emplacement = se;
-					mPendingOperation.push_back(std::move(po));					
+			else
+			{
+				if (se == SE_BACK) {
+					mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 				}
-				else
-				{
-					if (se == SE_BACK) {
-						mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
-					else {
-						mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
+				else {
+					mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 				}
-			}
+			}			
 			return result;
 		}
 		/**
@@ -225,91 +169,45 @@ namespace core
 		bool unsubscribeCreatedCallback( std::shared_ptr<CallbackType> cb  )
 		{
 			bool result = false;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);				
+			if (mTriggering)
 			{
-				Lock lck( mSC );
-				if (mTriggering)
-				{
 
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
-					{
-						if (*i->cb == *cb)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
-					}					
-				}
-				else
+				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+				typename CallbackListType::iterator i = mCallbacks.begin();
+				while (i != mCallbacks.end())
 				{
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
+					if (*i->cb == *cb)
 					{
-						if (*i->cb == *cb)
-						{
-							mCallbacks.erase(i);
-							i = mCallbacks.end();
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
+						PendingOperation po;
+						po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
+						po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
+						mPendingOperation.push_back(std::move(po));
+						result = true;
+						break;
 					}
-				}
+					else
+					{
+						++i;
+					}
+				}					
 			}
 			else
 			{
-				if (mTriggering)
+				typename CallbackListType::iterator i = mCallbacks.begin();
+				while (i != mCallbacks.end())
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
+					if (*i->cb == *cb)
 					{
-						if (*i->cb == *cb)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
+						mCallbacks.erase(i);
+						i = mCallbacks.end();
+						result = true;
+						break;
 					}
-				}
-				else
-				{
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
+					else
 					{
-						if (*i->cb == *cb)
-						{
-							mCallbacks.erase(i);
-							i = mCallbacks.end();
-							result = true;
-							return result;
-						}
-						else
-						{
-							++i;
-						}
+						++i;
 					}
 				}
 			}
@@ -318,21 +216,13 @@ namespace core
 
 	protected:
 		CallbackListType mCallbacks;
-		CriticalSection mSC;
+		_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> mSC;
 
 		CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 		{
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
-			{
-				Lock lck( mSC );
-				for( typename CallbackListType::iterator i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 			
-					mCallbacks.push_back( CallbackInfo((*i).cb->clone(),++mCurrId) );
-			}
-			else
-			{
-				for( typename CallbackListType::iterator i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 			
-					mCallbacks.push_back( CallbackInfo((*i).cb->clone(),++mCurrId) );
-			}			
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			for( typename CallbackListType::iterator i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 			
+				mCallbacks.push_back( CallbackInfo((*i).cb->clone(),++mCurrId) );			
 		}	
 		void _applyPendingOperations()
 		{
@@ -371,6 +261,7 @@ namespace core
 	public:
 		void triggerCallbacks( VARIABLE_ARGS_IMPL )
 		{
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
@@ -378,43 +269,21 @@ namespace core
 				return;
 			}
 			BaseType::mTriggering = true;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
+			auto j = BaseType::mCallbacks.end();
+			while( i != j )
 			{
-				Lock lck( BaseType::mSC );
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				auto j = BaseType::mCallbacks.end();
-				while( i != j )
-				{
-					 if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
-					{
-						i = BaseType::mCallbacks.erase( i );
-					}else
-					{
-						++i;
-					}
-				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-			else
-			{
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				auto j = BaseType::mCallbacks.end();
-				while( i != j )
-				{
 					if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
-					{
-						i = BaseType::mCallbacks.erase( i );
-					}else
-					{
-						++i;
-					}
+				{
+					i = BaseType::mCallbacks.erase( i );
+				}else
+				{
+					++i;
 				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}			
+			}
+			BaseType::mTriggering = false;
+			if (!BaseType::mPendingOperation.empty())
+				BaseType::_applyPendingOperations();
 		}
 	protected:
 		CallbackSubscriptorNotTyped():BaseType(){}
@@ -432,6 +301,7 @@ namespace core
 
 		void triggerCallbacks(  )
 		{
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(BaseType::mSC);		
 			if (BaseType::mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
@@ -439,44 +309,22 @@ namespace core
 				return;
 			}
 			BaseType::mTriggering = true;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			
+			typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
+			auto j = BaseType::mCallbacks.end();
+			while( i != j )
 			{
-				Lock lck( BaseType::mSC );
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				auto j = BaseType::mCallbacks.end();
-				while( i != j )
+					if ( (*i->cb)() == ECallbackResult::UNSUBSCRIBE )
 				{
-					 if ( (*i->cb)() == ECallbackResult::UNSUBSCRIBE )
-					{
-						i = BaseType::mCallbacks.erase( i );
-					}else
-					{
-						++i;
-					}
-				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-			else
-			{
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				auto j = BaseType::mCallbacks.end();
-				while( i != j )
+					i = BaseType::mCallbacks.erase( i );
+				}else
 				{
-					if ( (*i->cb)() == ECallbackResult::UNSUBSCRIBE)
-					{
-						i = BaseType::mCallbacks.erase( i );
-					}else
-					{
-						++i;
-					}
+					++i;
 				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
 			}
-
+			BaseType::mTriggering = false;
+			if (!BaseType::mPendingOperation.empty())
+				BaseType::_applyPendingOperations();
 		}
 	protected:
 		CallbackSubscriptorNotTyped():BaseType(){}
@@ -567,15 +415,8 @@ namespace core
 		inline size_t getNumCallbacks() const{ return mCallbacks.size(); }
 		void removeCallbacks()
 		{
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
-			{
-				Lock lck( mSC );
-				mCallbacks.clear();
-			}
-			else
-			{
-				mCallbacks.clear();
-			}
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			mCallbacks.clear();
 		}
 
 		template <class U>
@@ -591,52 +432,27 @@ namespace core
 		int subscribeCreatedCallback( CallbackType* cb, SubscriptionEmplacement se=SE_BACK )
 		{			
 			int result;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+			result = ++mCurrId;
+			if (mTriggering)
 			{
-				Lock lck( mSC );
-				result = ++mCurrId;
-				if (mTriggering)
-				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering subscribing!!");
-					PendingOperation po;
-					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
-					po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					po.emplacement = se;
-					mPendingOperation.push_back(std::move(po));
-				}
-				else
-				{
-					if (se == SE_BACK) {
-						mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
-					else {
-						mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
-				}				
+				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering subscribing!!");
+				PendingOperation po;
+				po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
+				po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
+				po.emplacement = se;
+				mPendingOperation.push_back(std::move(po));
 			}
-			else {
-				result = ++mCurrId;
-				if (mTriggering)
-				{
-//					::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering subscribing!!");
-					PendingOperation po;
-					po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
-					po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					po.emplacement = se;
-					mPendingOperation.push_back(std::move(po));
+			else
+			{
+				if (se == SE_BACK) {
+					mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 				}
-				else
-				{
-					if (se == SE_BACK) {
-						mCallbacks.push_back(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
-					else {
-						mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
-					}
+				else {
+					mCallbacks.push_front(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
 				}
-			}
+			}				
 			return result;
 		}
 
@@ -644,89 +460,45 @@ namespace core
 		bool unsubscribeCallback( U&& callback )
 		{
 			bool result = false;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
-			{
-				Lock lck( mSC );
-				CallbackType* auxiliar = new CallbackType( std::forward<U>(callback), ::core::use_functor );
-				result = unsubscribeCreatedCallback(std::shared_ptr< CallbackType>(auxiliar));
-			}
-			else
-			{
-				CallbackType* auxiliar = new CallbackType( std::forward<U>(callback), ::core::use_functor );
-				result = unsubscribeCreatedCallback(std::shared_ptr< CallbackType>(auxiliar));
-			}
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			CallbackType* auxiliar = new CallbackType( std::forward<U>(callback), ::core::use_functor );
+			result = unsubscribeCreatedCallback(std::shared_ptr< CallbackType>(auxiliar));
 			return result;	
 		}
 		bool unsubscribeCallback(int id)
 		{
 			bool result = false;
-			//EST�N MAL LOS LOCKS
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);
+					
+			if (mTriggering)
 			{
-				Lock lck(mSC);
-				if (mTriggering)
+				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");					
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
+				for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");					
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
+					if (i->id == id)
 					{
-						if (i->id == id)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(nullptr, id));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
+						PendingOperation po;
+						po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
+						po.info = std::move(CallbackInfo(nullptr, id));
+						mPendingOperation.push_back(std::move(po));
+						result = true;
+						break;
 					}
 				}
-				else
-				{
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
-					{
-						if (i->id == id)
-						{
-							mCallbacks.erase(i);
-							result = true;
-							break;
-						}
-					}
-				}				
 			}
 			else
 			{
-				if (mTriggering)
+				for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering subscribing!!");
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
+					if (i->id == id)
 					{
-						if (i->id == id)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(nullptr, id));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
+						mCallbacks.erase(i);
+						result = true;
+						break;
 					}
 				}
-				else
-				{
-					for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
-					{
-						if (i->id == id)
-						{
-							mCallbacks.erase(i);
-							result = true;
-							break;
-						}
-					}
-				}
-				
-			}
+			}				
 			return result;
 		}
 
@@ -737,93 +509,47 @@ namespace core
 		bool unsubscribeCreatedCallback(std::shared_ptr<CallbackType> cb  )
 		{
 			bool result = false;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);			
+			if (mTriggering)
 			{
-				Lock lck(mSC);
-				if (mTriggering)
+				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
+				typename CallbackListType::iterator i = mCallbacks.begin();
+				while (i != mCallbacks.end())
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
+					if (*i->cb == *cb)
 					{
-						if (*i->cb == *cb)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
-					}					
-				}
-				else
-				{
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
-					{
-						if (*i->cb == *cb)
-						{
-							mCallbacks.erase(i);
-							i = mCallbacks.end();
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
+						PendingOperation po;
+						po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
+						po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
+						mPendingOperation.push_back(std::move(po));
+						result = true;
+						break;
 					}
-
-				}
+					else
+					{
+						++i;
+					}
+				}					
 			}
 			else
 			{
-				if (mTriggering)
+				typename CallbackListType::iterator i = mCallbacks.begin();
+				while (i != mCallbacks.end())
 				{
-					//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-					spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
+					if (*i->cb == *cb)
 					{
-						if (*i->cb == *cb)
-						{
-							PendingOperation po;
-							po.op = PendingOperation::EOperation::O_UNSUBSCRIPTION;
-							po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), -1));
-							mPendingOperation.push_back(std::move(po));
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
+						mCallbacks.erase(i);
+						i = mCallbacks.end();
+						result = true;
+						break;
+					}
+					else
+					{
+						++i;
 					}
 				}
-				else
-				{
-					typename CallbackListType::iterator i = mCallbacks.begin();
-					while (i != mCallbacks.end())
-					{
-						if (*i->cb == *cb)
-						{
-							mCallbacks.erase(i);
-							i = mCallbacks.end();
-							result = true;
-							break;
-						}
-						else
-						{
-							++i;
-						}
-					}
-				}
+
 			}
 			return result;
 		}
@@ -831,22 +557,14 @@ namespace core
 
 	protected:
 		CallbackListType mCallbacks;
-		CriticalSection mSC;
+		_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> mSC;
+
 		CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 		{
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
-			{
-				Lock lck( mSC );
-				typename CallbackListType::const_iterator i,j;
-				for( i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 
-					mCallbacks.push_back( CallbackInfo( std::shared_ptr<CallbackType>((*i).cb->clone()),++mCurrId) );
-			}
-			else
-			{
-				typename CallbackListType::const_iterator i,j;
-				for( i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 
-					mCallbacks.push_back( CallbackInfo(std::shared_ptr<CallbackType>((*i).cb->clone()),++mCurrId) );
-			}
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(mSC);		
+			typename CallbackListType::const_iterator i,j;
+			for( i = o2.mCallbacks.begin(),j = o2.mCallbacks.end(); i!=j;++i) 
+				mCallbacks.push_back( CallbackInfo( std::shared_ptr<CallbackType>((*i).cb->clone()),++mCurrId) );
 		}	
 		void _applyPendingOperations()
 		{
@@ -883,52 +601,29 @@ namespace core
 	public:
 
 		void triggerCallbacks( VARIABLE_ARGS_IMPL )
-		{
+		{			
+			_private::_Lock<mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
 				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again!!");
+				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again YYY!!");
 				return;
 			}
 			BaseType::mTriggering = true;
-			if constexpr (mpl::isSame<ThreadingPolicy,MultithreadPolicy>::result)
+			typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
+			while( i != BaseType::mCallbacks.end() )
 			{
-				Lock lck( BaseType::mSC );
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				while( i != BaseType::mCallbacks.end() )
+				if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
 				{
-					//if ( (**i)( VARIABLE_ARGS_USE ) )
-					if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
-					{
-						i = BaseType::mCallbacks.erase( i );
-					}else
-					{
-						++i;
-					}
-				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
-			}
-			else
-			{
-				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
-				while( i != BaseType::mCallbacks.end() )
+					i = BaseType::mCallbacks.erase( i );
+				}else
 				{
-					//if ( (**i)( VARIABLE_ARGS_USE ) )
-					if ( (*i->cb)(VARIABLE_ARGS_USE) == ECallbackResult::UNSUBSCRIBE)
-					{
-						i = BaseType::mCallbacks.erase( i );
-					}else
-					{
-						++i;
-					}
+					++i;
 				}
-				BaseType::mTriggering = false;
-				if (!BaseType::mPendingOperation.empty())
-					BaseType::_applyPendingOperations();
 			}
 			BaseType::mTriggering = false;
+			if (!BaseType::mPendingOperation.empty())
+				BaseType::_applyPendingOperations();						
 		}
 	protected:
 		CallbackSubscriptorNotTyped():BaseType(){}

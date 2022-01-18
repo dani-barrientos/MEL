@@ -55,7 +55,8 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      _execute( msegs );
 }
 
-volatile void fakeFunction()
+volatile void fakeFunction( ) __attribute__((noinline))  __attribute__( (used)) __attribute__((naked));
+volatile void fakeFunction() 
 {
     asm volatile( "wrapperSwitch:");
     asm volatile( "push %rbp\n"

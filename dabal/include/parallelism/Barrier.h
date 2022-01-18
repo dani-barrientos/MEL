@@ -1,42 +1,74 @@
 #pragma once
-#include <core/IRefCount.h>
-#include <core/SmartPtr.h>
-#include <core/Future.h>
-using ::core::FutureData_Base;
-
+#include <core/CallbackSubscriptor.h>
+#include <core/CriticalSection.h>
+#include <memory>
 namespace parallelism
 {
-	using ::core::SmartPtr;
-	using ::core::IRefCount;
-	using ::core::Future;
 	class Barrier;
-	class BarrierData : public IRefCount
+	class BarrierData : private core::CallbackSubscriptor<::core::NoMultithreadPolicy,const BarrierData&>,
+		public std::enable_shared_from_this<BarrierData>
 	{
-		friend class ::parallelism::Barrier;
+		friend class ::parallelism::Barrier;		
+		typedef CallbackSubscriptor<::core::NoMultithreadPolicy,const BarrierData&> Subscriptor;
 	private:
-		virtual FutureData_Base::EWaitResult wait( unsigned int msecs ) const = 0;
-		virtual FutureData_Base::EWaitResult waitAsMThread( unsigned int msecs ) const = 0;
+		BarrierData(size_t nWorkers):mActiveWorkers(nWorkers){}		
+		void set();		
+		inline int getActiveWorkers() const { return mActiveWorkers; }
+		template <class F> auto subscribeCallback(F&& f)
+		{
+			volatile auto protectMe = shared_from_this();
+			Lock lck(mCS);
+			if (mActiveWorkers==0)
+				f(*this);
+			return Subscriptor::subscribeCallback(std::forward<F>(f));
+		}
+		template <class F> auto unsubscribeCallback(F&& f)
+		{
+			Lock lck(mCS);
+			return Subscriptor::unsubscribeCallback(std::forward<F>(f));
+		}
 	protected:
+		int	mActiveWorkers;  //para implementacion ingenua
+		::core::CriticalSection mCS;
 
 	};
-
-	class DABAL_API Barrier
+	class Barrier
 	{
 	public:
-		Barrier( const Barrier& o2){ mData = o2.mData;}
-		FutureData_Base::EWaitResult wait( unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE ) const
+		Barrier( size_t nWorkers = 1 ):mData( new BarrierData( nWorkers ) )
 		{
-			return mData->wait( msecs );
 		}
-		FutureData_Base::EWaitResult waitAsMThread( unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE) const
+		Barrier( const Barrier& o2):mData(o2.mData){ }
+		Barrier( Barrier&& o2):mData(std::move(o2.mData)){}
+		Barrier& operator=(const Barrier& o2){mData = o2.mData;return *this;}
+		Barrier& operator=(Barrier&& o2){mData = std::move(o2.mData);return *this;}
+		// inline void addWorkers(size_t nWorkers)
+		// {
+		// 	mData->addWorkers(nWorkers);
+		// }
+		/**
+		* called by each worker to notify barrier was reach
+		*/
+		inline void set()
 		{
-			return mData->waitAsMThread( msecs );
+			mData->set();
+		}
+		inline int getActiveWorkers() const
+		{ 
+			return mData->getActiveWorkers(); 
+		}
+		template <class F> auto subscribeCallback(F&& f) const
+		{
+			return const_cast<BarrierData*>(mData.get())->subscribeCallback(std::forward<F>(f));
+		}
+		template <class F> auto unsubscribeCallback(F&& f) const
+		{
+			const_cast<BarrierData*>(mData.get())->unsubscribeCallback(std::forward<F>(f));
 		}
 	private:
-		SmartPtr<BarrierData>	mData;
+		std::shared_ptr<BarrierData>	mData;
 	protected:
 		Barrier( BarrierData* data );
-		inline BarrierData* getData(){ return mData;}
-		inline const BarrierData* getData() const { return mData; }
+		
 	};
 }

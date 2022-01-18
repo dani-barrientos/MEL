@@ -642,3 +642,32 @@ bool Thread::setAffinity(uint64_t affinity)
 }
 
 }
+::core::Event::EWaitCode core::waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs)
+{
+	using ::core::Event;
+	struct _Receiver
+	{		
+		_Receiver():mEvent(false,false){}
+		Event::EWaitCode wait(const ::parallelism::Barrier& barrier,unsigned int msecs)
+		{
+			Event::EWaitCode eventresult;
+		 	//spdlog::info("Waiting for event");
+			int evId;
+			evId = barrier.subscribeCallback(
+				std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([this](const ::parallelism::BarrierData& ) 
+				{
+					 mEvent.set();
+				    //spdlog::info("Event was set");
+					return ::core::ECallbackResult::UNSUBSCRIBE; 
+				}));
+			eventresult = mEvent.wait(msecs); 
+			barrier.unsubscribeCallback(evId);
+			return eventresult;
+		}
+		private:
+			::core::Event mEvent;
+
+	};
+	auto receiver = std::make_unique<_Receiver>();
+	return receiver->wait(b,msecs);	
+}

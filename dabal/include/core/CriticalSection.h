@@ -15,7 +15,7 @@ namespace core {
 	class DABAL_API CriticalSection {
 		public:
 			CriticalSection():
-				mData(::std::make_shared<CriticalSectionData>()) {
+				mData(::std::make_unique<CriticalSectionData>()) {
 			}
 
 			/**
@@ -58,7 +58,7 @@ namespace core {
 			};
 
 		protected:
-			std::shared_ptr<CriticalSectionData> mData;
+			std::unique_ptr<CriticalSectionData> mData;
 	};
 	void CriticalSection::enter()
 	{
@@ -86,7 +86,7 @@ namespace core {
 	*	{
 	*		Lock lock (cs);
 	*		... all method is thread-safe using the mCS CriticalSection...
-	*	}
+	*	}CriticalSectionData
 	*/
 	class DABAL_API Lock
 	{
@@ -104,7 +104,7 @@ namespace core {
 			// Disabled methods and constructors
 
 			Lock();
-			Lock(const Lock & cs) : mCs(cs.mCs){}
+			Lock(const Lock& cs) : mCs(cs.mCs){}
 			
 			inline void * operator new (std::size_t size) throw() {return NULL;}
 			inline void * operator new (std::size_t size, const std::nothrow_t & nothrow_constant) throw() {return NULL;}

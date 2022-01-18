@@ -146,17 +146,20 @@ static int _testMicroThreadingMonoThread()
 		::tasking::Process::wait(waittime);
 		auto t2 = sTimer.getMilliseconds();
 		CHECK_TIME(t2-t1,waittime,"check wait 2"s);
+		t0 = sTimer.getMilliseconds();
+		::tasking::Process::wait(2000);
+		t1 = sTimer.getMilliseconds();
+		spdlog::debug("Elapsed {}",t1-t0);
 		sharedVar = aux;
 		return ::tasking::EGenericProcessResult::CONTINUE;
 	},true,2000,000);
-	th1->post<CustomProcessType,MyAllocator>(
-		::mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
-		,true,4200);
-	auto p = make_shared<MyProcess>(sharedVar);
-	p->setPeriod(0);
-	th1->postTask(p);
-	th1->post(MyTask(p.get(),sharedVar),true,1200);
-	//th1->post(MyTask(nullptr,sharedVar),true,1200);
+	// th1->post<CustomProcessType,MyAllocator>(
+	// 	::mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
+	// 	,true,4200);
+	// auto p = make_shared<MyProcess>(sharedVar);
+	// p->setPeriod(0);
+	// th1->postTask(p);
+	// th1->post(MyTask(p.get(),sharedVar),true,1200);
 
 /*
 preparar bien el test: quiero que los procesos actúa sobre algún objeto y tenga una salida precedible, por ejemplo:

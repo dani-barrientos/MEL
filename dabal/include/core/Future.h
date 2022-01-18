@@ -63,7 +63,8 @@ namespace core
 	};
 	template <typename ResultType>
 	class FutureData : public FutureData_Base,
-					private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<ResultType>&>
+					private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<ResultType>&>,
+					public std::enable_shared_from_this<FutureData<ResultType>>
 	{		
 	public:
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
@@ -92,6 +93,7 @@ namespace core
 		*/
 		void setError( ErrorInfo* ei )
 		{
+			volatile auto protectMe=FutureData<ResultType>::shared_from_this();
 			mSC.enter();
 			if ( mState == NOTAVAILABLE)
 			{
@@ -120,6 +122,11 @@ namespace core
 			}
 			return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn be neccesary if mstate already avaialbe but for consistency
 		}
+		template <class F> auto unsubscribeCallback(F&& f)
+		{
+			Lock lck(mSC);
+			return Subscriptor::unsubscribeCallback( std::forward<F>(f));
+		}
 
 	private:
 		ResultType mValue;
@@ -134,6 +141,7 @@ namespace core
 	template <typename ResultType>
 	void FutureData<ResultType>::setValue( ParamType value )
 	{
+		volatile auto protectMe= FutureData<ResultType>::shared_from_this();
 		FutureData_Base::mSC.enter();	
 		if ( mState == NOTAVAILABLE)
 		{
@@ -150,7 +158,8 @@ namespace core
 	//TODO no estoy un pijo convencido...
 	template <>
 	class FutureData<void> : public FutureData_Base,
-		private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&>
+		private CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&>,
+		public std::enable_shared_from_this<FutureData<void>>
 	{
 		typedef CallbackSubscriptor<::core::MultithreadPolicy,const FutureData<void>&> Subscriptor;
 	public:
@@ -170,9 +179,15 @@ namespace core
 			}				
 			return Subscriptor::subscribeCallback(std::forward<F>(f));
 		}
+		template <class F> auto unsubscribeCallback(F&& f)
+		{
+			Lock lck(FutureData_Base::mSC);
+			return Subscriptor::unsubscribeCallback(std::forward<F>(f));
+		}
 		inline void getValue() const{ return;}
 		inline void setValue( void )
 		{
+			volatile auto protectMe=shared_from_this();
 			FutureData_Base::mSC.enter();	
 			if ( mState == NOTAVAILABLE)
 			{
@@ -187,6 +202,7 @@ namespace core
 		*/
 		void setError( ErrorInfo* ei )
 		{
+			volatile auto protectMe=shared_from_this();
 			FutureData_Base::mSC.enter();
 			if ( mState == NOTAVAILABLE)
 			{
@@ -300,6 +316,10 @@ namespace core
 		{
 			//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
 			return const_cast<Future_Common<ResultType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
+		}
+		template <class F> auto unsubscribeCallback(F&& f) const
+		{
+			return const_cast<Future_Common<ResultType>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
 		}
 		inline void setError( FutureData_Base::ErrorInfo* ei ){ 
 			((FutureData<ResultType>*)Future_Common<ResultType>::mData.get())->setError( ei ); } 
