@@ -3,8 +3,6 @@ using parallelism::ThreadPool;
 #include <core/GenericThread.h>
 using core::GenericThread;
 
-#include <logging/Logger.h>
-using logging::Logger;
 
 
 ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
@@ -31,12 +29,11 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 		uint64_t pAff = applyAffinity?core::getProcessAffinity():0;
 		const uint64_t lastProc = 0x8000000000000000;
 		uint64_t coreSelector = lastProc;
-		mPool = new Thread*[mNThreads];
+		mPool = new std::shared_ptr<Thread>[mNThreads];
 		for (unsigned int i = 0; i < mNThreads; ++i)
 		{
-			Thread* th;
-			th = GenericThread::createEmptyThread(false, false);
-			::Logger::getLogger()->debugf("ThreadPool. Create thread %ld", 1, th->getThreadId());
+			auto th = GenericThread::createEmptyThread(false, false);
+			//spdlog::debug("ThreadPool. Create thread {}}",th->getThreadId());
 			mPool[i] = th;
 			if (pAff != 0 && applyAffinity)
 			{
@@ -53,7 +50,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 							coreSelector = coreSelector << 1;
 					} while (((coreSelector&opts.affinity) == 0) || ((coreSelector&pAff) == 0));
 					if (!th->setAffinity(coreSelector))
-						Logger::getLogger()->error("Error setting thread affinity");
+						spdlog::error("Error setting thread affinity");
 				}
 			}		
 			th->start();  //need to start after setting affinity
@@ -69,7 +66,6 @@ ThreadPool::~ThreadPool()
 	for ( i = 0; i < mNThreads; ++i )
 	{
 		mPool[i]->join();
-		delete mPool[i];
 	}
 	delete[]mPool;
 }

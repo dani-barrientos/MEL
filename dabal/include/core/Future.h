@@ -30,7 +30,6 @@ namespace core
 			int		error;  //there was error. Error code. Very simple for now. 
 			std::string errorMsg;
 			virtual ~ErrorInfo(){}
-			bool operator== (const ErrorInfo & err) const {return true;}
 		};
 		//result code
 		enum EWaitResult{ FUTURE_WAIT_OK = 0,

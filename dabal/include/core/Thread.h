@@ -47,6 +47,7 @@ namespace core {
 	 * You can subscribe callback to thread end. It will be thrown just before onThreadEnd is called
 	 */
 	class DABAL_API Thread : public Runnable, public CallbackSubscriptor<::core::NoMultithreadPolicy,Thread*>
+					//,public std::enable_shared_from_this<Thread>
 	{
 
 #ifdef _WINDOWS
@@ -276,6 +277,7 @@ namespace core {
 		private:
 			static bool DEFAULT_CR_ENABLED; //Global (default) crash reporting flag
 			bool mCREnabled; //Per-instance crash reporting flag
+			
 
 			inline void threadEnd()
 			{

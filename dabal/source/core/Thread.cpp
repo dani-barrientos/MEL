@@ -32,8 +32,6 @@ static CriticalSection gCurrrentThreadCS;
 
 namespace core {
 
-//using logging::Logger;
-
 unsigned int getNumProcessors()
 {
 #ifdef _WINDOWS
@@ -154,6 +152,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	{
 		int err = errno;
 		//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
+		spdlog::error("Error setting thread affinity. {}", err);
 	}
 	
 #endif
@@ -479,7 +478,6 @@ void Thread::terminate(unsigned int exitCode)
 
 unsigned int Thread::runInternal() {
 
-
 	TLS::setValue( gCurrentThreadKey, this );
 	if ( !mEnd )
 	{
@@ -508,7 +506,7 @@ bool Thread::join(unsigned int millis)
 		int err = pthread_join(mHandle, NULL/*result*/);
 		mJoined=!err;
 		if (err) {
-		//	Logger::getLogger()->warnf("Error joining thread: err=%d", 1, err);
+			spdlog::error("Error joining thread: err = {}", err);
 		}
 		onJoined();
 		return mJoined;	

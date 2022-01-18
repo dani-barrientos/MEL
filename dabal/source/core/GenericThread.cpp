@@ -73,9 +73,10 @@ GenericThread::~GenericThread()
 
 void GenericThread::onThreadEnd()
 {
-	Thread::onThreadEnd();
+	Thread::onThreadEnd();	
+	//@todo estoy no es correcto, hay que hacerlo bien
 	if ( mAutoDestroy )
-		delete this;
+	 	delete this;
 }
 
 bool GenericThread::terminateRequest()

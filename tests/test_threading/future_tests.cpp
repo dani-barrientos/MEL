@@ -9,140 +9,29 @@ using namespace std;
 #include <tasking/utilities.h>
 #include <parallelism/Barrier.h>
 using ::parallelism::Barrier;
-/*
-	class Barrier;
-	class BarrierData : private CallbackSubscriptor<::core::NoMultithreadPolicy,const BarrierData&>,
-		public std::enable_shared_from_this<BarrierData>
-	{
-		friend class ::Barrier;		
-		typedef CallbackSubscriptor<::core::NoMultithreadPolicy,const BarrierData&> Subscriptor;
-	private:
-		BarrierData(size_t nWorkers):mActiveWorkers(nWorkers){}		
-		void set()
-		{
-			volatile auto protectMe = shared_from_this();
-			::core::Lock lck(mCS);
-			if ( --mActiveWorkers == 0 ) 
-			{				
-				triggerCallbacks(*this);
-			}
-		}
-		inline int getActiveWorkers() const { return mActiveWorkers; }
-		template <class F> auto subscribeCallback(F&& f)
-		{
-			volatile auto protectMe = shared_from_this();
-			Lock lck(mCS);
-			if (mActiveWorkers==0)
-				f(*this);
-			return Subscriptor::subscribeCallback(std::forward<F>(f));
-		}
-		template <class F> auto unsubscribeCallback(F&& f)
-		{
-			Lock lck(mCS);
-			return Subscriptor::unsubscribeCallback(std::forward<F>(f));
-		}
-	protected:
-		int	mActiveWorkers;  //para implementacion ingenua
-		::core::CriticalSection mCS;
-
-	};
-	class Barrier
-	{
-	public:
-		Barrier( size_t nWorkers = 1 ):mData( new BarrierData( nWorkers ) )
-		{
-		}
-		Barrier( const Barrier& o2):mData(o2.mData){ }
-		Barrier( Barrier&& o2):mData(std::move(o2.mData)){}
-		Barrier& operator=(const Barrier& o2){mData = o2.mData;return *this;}
-		Barrier& operator=(Barrier&& o2){mData = std::move(o2.mData);return *this;}
-		// inline void addWorkers(size_t nWorkers)
-		// {
-		// 	mData->addWorkers(nWorkers);
-		// }
-		inline void set()
-		{
-			mData->set();
-		}
-		inline int getActiveWorkers() const
-		{ 
-			return mData->getActiveWorkers(); 
-		}
-		template <class F> auto subscribeCallback(F&& f) const
-		{
-			return const_cast<BarrierData*>(mData.get())->subscribeCallback(std::forward<F>(f));
-		}
-		template <class F> auto unsubscribeCallback(F&& f) const
-		{
-			const_cast<BarrierData*>(mData.get())->unsubscribeCallback(std::forward<F>(f));
-		}
-	private:
-		std::shared_ptr<BarrierData>	mData;
-	protected:
-		Barrier( BarrierData* data );
-		
-	};
-*/
-// static ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE )
-// {
-// 	using ::tasking::Event_mthread;
-
-// 	struct _Receiver
-// 	{		
-// 		_Receiver():mEvent(false,false){}
-// 		Event_mthread::EWaitCode wait(const Barrier& barrier,unsigned int msecs)
-// 		{
-// 			Event_mthread::EWaitCode eventresult;
-// 		 	//spdlog::info("Waiting for event");
-// 			int evId;
-// 			eventresult = mEvent.waitAndDo([this,barrier,&evId]()
-// 			{
-// 			//   spdlog::debug("waitAndDo was done for Thread {}",threadid);
-// 				evId = barrier.subscribeCallback(
-// 				std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([this](const ::parallelism::BarrierData& ) 
-// 				{
-// 					 mEvent.set();// el problema de esto es que puede destruir la barrera nates de terminbar:				
-// 				    //spdlog::info("Event was set");
-// 					return ::core::ECallbackResult::UNSUBSCRIBE; 
-// 				}));
-// 			},msecs); 
-// 			barrier.unsubscribeCallback(evId);
-// 			return eventresult;
-// 		}
-// 		private:
-// 		::tasking::Event_mthread mEvent;
-
-// 	};
-// 	auto receiver = make_unique<_Receiver>();
-// 	return receiver->wait(b,msecs);	
-// }
-
 
 template <size_t n>
 class MasterThread : public GenericThread
 {
 	public:
-		MasterThread(Thread* producer,std::array<Thread*,n> consumers) : GenericThread(false,true),mConsumers(consumers),mProducer(producer)
+		MasterThread(std::shared_ptr<Thread> producer,std::array<std::shared_ptr<Thread>,n> consumers,unsigned int maxTime) : 
+			GenericThread(false,true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime)
 		{
 		}	
 	private:
-		std::array<Thread*,n> mConsumers;
-		Thread* mProducer;
+		std::array<std::shared_ptr<Thread>,n> mConsumers;
+		std::shared_ptr<Thread> mProducer;
 		int				 mValueToAdd;
 		Barrier			mBarrier;
 		uint64_t		mLastDebugTime; //para mosrtar mensaje de debug de que todo va bien
+		uint64_t 		mStartTime;
+		unsigned int	mMaxTime; //msecs to do test
 		void onThreadStart() override
-		{
-			srand((unsigned)this->getTimer()->getMilliseconds());
-			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));			
-			// //pruebas de tareas dummy
-			// for(auto th:mConsumers)
-			// {
-			// 	th->post( [](uint64_t t, Process*, ::tasking::EGenericProcessState)
-			// 	{
-			// 		return ::tasking::EGenericProcessResult::CONTINUE;
-			// 	},1000000);										
-			// }
+		{			
+			auto msecs = this->getTimer()->getMilliseconds();
+			mStartTime = msecs;
+			srand((unsigned)msecs);
+			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));					
 		}
 		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p, ::tasking::EGenericProcessState) 
 		{	
@@ -153,7 +42,6 @@ class MasterThread : public GenericThread
 			Future<int> channel;            
 			int nSinglethreads = 0;
 			auto prodIdx = rand()%(n+1);
-			//auto prodIdx = -1; //para pruebas
 			mValueToAdd = rand()%50;  //value to add to input in consumers
 			spdlog::debug("Producer idx {} de {}. Consumers must add {} to their input",prodIdx,n,mValueToAdd);
 			int nTasks = 0;
@@ -220,7 +108,7 @@ class MasterThread : public GenericThread
 			mBarrier = Barrier(nTasks);
 			for(auto th:mConsumers)
 				th->resume();
-            constexpr unsigned MAX_TIME = 1000;
+            constexpr unsigned MAX_TIME = 1500;
 			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
 			if ( r != ::tasking::Event_mthread::EVENTMT_WAIT_OK )
 			{
@@ -234,11 +122,13 @@ class MasterThread : public GenericThread
 					spdlog::info("Wait for responses ok!!");
 				}
 			
-			/*t0 = getTimer()->getMilliseconds();
-			::tasking::Process::wait(100);
-			t1 = getTimer()->getMilliseconds();					
-			spdlog::info("Elapsed {}",t1-t0);*/
-			return ::tasking::EGenericProcessResult::CONTINUE;
+			if ( msecs - mStartTime > mMaxTime)
+			{
+				spdlog::info("Maximum test time reached. Finishing");
+				this->finish();  
+				return ::tasking::EGenericProcessResult::KILL; 
+			}else			
+				return ::tasking::EGenericProcessResult::CONTINUE;
 		}
 		::tasking::EGenericProcessResult _producerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> output) 
 		{			
@@ -303,17 +193,17 @@ class MasterThread : public GenericThread
             mProducer->finish();
 			for(auto th:mConsumers)
 			{
-				th->finish();
+				th->finish();				
 				//@todo qué pasa con el join? quiero esperar antes por los demas, ¿virtual?
-			}
+			}			
 		}
 		void onJoined() override
 		{
             mProducer->join();
-			for(auto th:mConsumers)
-			{
-				th->join();
-			}
+			// for(auto th:mConsumers)
+			// {
+			// 	th->join();
+			// }
 		}
 };
 /**
@@ -325,19 +215,21 @@ future. Estaría bien usar una berrera para esperar por todos, no el wait que te
 int test_threading::test_futures()
 {
 	int result = 0;
-	auto producer = GenericThread::createEmptyThread();
+	//@todo hasta que no haga bien lo del autodestroy, esto no está bien del todo. Deberia pasar los consumidores como shared_ptr
+	
+	auto producer = GenericThread::createEmptyThread(true,false);
+	
     spdlog::set_level(spdlog::level::info); // Set global log level
-	constexpr size_t n = 20;
-	std::array<Thread*,n> consumers;
+	constexpr size_t n = 30;
+	constexpr unsigned int TESTTIME = 5*60*1000;
+	std::array< std::shared_ptr<Thread>,n> consumers;
 	for(size_t i=0;i<n;++i)
 	{
-		consumers[i] = GenericThread::createEmptyThread();
+		consumers[i] = GenericThread::createEmptyThread(true,false);
 	}
-	auto master = new MasterThread<n>(producer,consumers);
+	auto master = make_shared<MasterThread<n>>(producer,consumers,TESTTIME);
 	master->start();	
-	Thread::sleep(5*60*60*1000);
-    spdlog::info("To finish");
-	master->finish();
-	master->join();
+	master->join();	
+	
 	return result;
 }

@@ -41,16 +41,18 @@ namespace core
 		* @param maxTasksSize the maximum number of tasks allowed on this thread
 		*/
 		template <class F> static 
-		GenericThread* createGenericThread( F&& functor,bool autoRun = true, bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
+		std::shared_ptr<GenericThread> createGenericThread( F&& functor,bool autoRun = true, bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
 		{
-            return new GenericThread( std::forward<F>(functor),autoRun, autoDestroy,maxTasksSize );
+            //return new GenericThread( std::forward<F>(functor),autoRun, autoDestroy,maxTasksSize );
+			return std::make_shared<GenericThread>( std::forward<F>(functor),autoRun, autoDestroy,maxTasksSize );
 		}
 		/**
 		* @todo funcion para pruebas. no usar todavia
 		*/
-		static GenericThread* createEmptyThread( bool autoRun = true, bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
+		static std::shared_ptr<GenericThread> createEmptyThread( bool autoRun = true, bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
 		{
-			return new GenericThread( autoRun, autoDestroy,maxTasksSize );
+			//return new GenericThread( autoRun, autoDestroy,maxTasksSize );
+			return std::make_shared<GenericThread>(  autoRun, autoDestroy,maxTasksSize );
 		}
 
 		template <class F>

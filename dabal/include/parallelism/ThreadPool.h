@@ -1,8 +1,8 @@
 #pragma once
 #include <core/Thread.h>
 using core::Thread;
-#include <parallelism/SimpleBarrier.h>
-using parallelism::SimpleBarrier;
+#include <parallelism/Barrier.h>
+using parallelism::Barrier;
 #include <mpl/Tuple.h>
 using mpl::Tuple;
 #include <mpl/_If.h>
@@ -15,6 +15,7 @@ using mpl::addParam;
 #include <functional>
 #undef max
 #include <limits>
+#include <tasking/GenericProcessDefs.h>
 namespace parallelism
 {
 	class DABAL_API ThreadPool
@@ -47,38 +48,38 @@ namespace parallelism
 			SchedulingPolicy schedPolicy = SP_ROUNDROBIN;
 			size_t threadIndex = 0; //set thread index to use when schedPolicy is SP_EXPLICIT
 		};
-		template <class ... FTypes> void execute(const ExecutionOpts& opts, SimpleBarrier& barrier,bool updateWorkers, FTypes ... functions)
+		template <class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,/*bool updateWorkers, */FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
-			if (updateWorkers)
-				barrier.addWorkers(nTasks); //update workers using barrier
+			// if (updateWorkers)
+			// 	barrier.addWorkers(nTasks); //update workers using barrier
 			//_execute(opts, barrier, std::forward<FTypes>(functions)...);
 			_execute(opts, barrier, functions...);
 		}
-		template <class ... FTypes> SimpleBarrier execute(const ExecutionOpts& opts, FTypes ... functions)
+		template <class ... FTypes> Barrier execute(const ExecutionOpts& opts, FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
-			SimpleBarrier result(nTasks);
+			Barrier result(nTasks);
 		//	std::tuple<FTypes...> args{ std::forward<FTypes>(functions)... };			
 			_execute(opts,result,std::forward<FTypes>(functions)...);		
 			return result;
 		}
 	private:
 		ThreadPoolOpts mOpts;
-		Thread**	mPool;
+		std::shared_ptr<Thread>*	mPool;
 		unsigned int		mNThreads;
 		volatile	int		mLastIndex;  //last thread used
 		/**
 		* execute generic case.
 		* @param[in] opts execution options
 		*/
-		template <class F,class ... FTypes> void _execute(const ExecutionOpts& opts, SimpleBarrier& output, F&& func,FTypes ... functions)
+		template <class F,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, F&& func,FTypes ... functions)
 		{
 			if (mNThreads != 0)
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-					std::function<bool(unsigned int, Process*, EGenericProcessState)>([func, output](unsigned int, Process*, EGenericProcessState) mutable
+					std::function<tasking::EGenericProcessResult (uint64_t, Process*, tasking::EGenericProcessState)>([func, output](unsigned int, Process*, ::tasking::EGenericProcessState) mutable
 				{
 					func();
 					output.set();
@@ -95,7 +96,7 @@ namespace parallelism
 			_execute(opts, output, std::forward<FTypes>(functions)...);
 		}
 		//base case
-		template <class F> void _execute(const ExecutionOpts& opts,  SimpleBarrier& output, F&& func)
+		template <class F> void _execute(const ExecutionOpts& opts,  Barrier& output, F&& func)
 		{
 			if ( opts.useCallingThread || mNThreads == 0 )
 			{
@@ -106,7 +107,7 @@ namespace parallelism
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-                   std::function<bool(unsigned int,Process*,EGenericProcessState)>([func,output](unsigned int, Process*,EGenericProcessState) mutable
+                   std::function<tasking::EGenericProcessResult (uint64_t,Process*,tasking::EGenericProcessState)>([func,output](uint64_t, Process*,::tasking::EGenericProcessState) mutable
                    {
                        func();
                        output.set();
