@@ -15,11 +15,6 @@ using tasking::MThreadAttributtes;
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 
-/**
-* =============================================================================
-*
-* @param tipo
-*/
 Process::Process( bool reserveStack,unsigned short capacity  )
 	: 
 	//mLastTime(0),
@@ -31,8 +26,7 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 	mOwnerProcessScheduler( 0 ),
 	mState(EProcessState::PREPARED),
 	mWakeup(false)
-//	,mExtrainfo(0)
-//	,mStartTime(0)
+
 {
 	mSwitched = false;
     mStackSize = 0;
@@ -54,13 +48,7 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 
 Process::~Process(void)
 {
-
-    free( (void*)mStack );
-	/*if ( mAttachedProcesses )
-	{
-		delete mAttachedProcesses;
-	}*/
-	//delete mKillCallback;
+	free( (void*)mStack );
 }
 
 
@@ -88,43 +76,6 @@ void Process::reset()
 //	mPreviousTime = 0;
 }
 
-
-/**
-* execution function. It calls update() when time > mPeriod
-*
-* @param msegs    msegs
-*/
-// void Process::update(uint64_t msegs)
-// {
-// 	if( mSleeped )
-// 		return; 
-// 	unsigned int lap = (unsigned int)((msegs-mLastTime)-mPausedTime);
-// 	//TODO se est� enrevesando ya esta comparaci�n. Revisarla para simplificarla si se puede
-// 	auto mask = EProcessState::PREPARED | EProcessState::PREPARED_TO_DIE/* | TRYING_TO_KILL*/;
-// 	if ( mState == EProcessState::TRYING_TO_KILL )
-// 	{
-// 		//call kill again
-// 		kill();
-// 	}
-// 	//TODO creo que esto es un fallo conceptual importante..ya que llama al update tanto si se cumple el per�odo como si se est� TRYING_TO_KILL. No parece que tenga sentido
-// 	if (  ( mState == EProcessState::PREPARED && lap >= mStartTime ) ||
-// 		( !(mState & mask) && lap >= mPeriod ) ) //TODO tal vez tenga sentido que si est� TRYING_TO_KILL y cumple el periodo si lo ejecute
-// 	{
-// 		mUpdateTime = msegs;
-// 		/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no s� si vale hacerlo despu�s
-// 				SI EL checkMicrothread HICISE OTRO WAIT, CREO QUE NO FURRULARIA*/
-// 		checkMicrothread( msegs ); 
-// 		mPausedTime = 0;
-// 		mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
-// 		mPreviousTime = msegs;
-
-// 	}
-// 	// //los procesos asociados se ejecutan independientemente de que este proceso entre en ejecuci�n
-// 	// if ( mAttachedProcesses )
-// 	// {
-// 	// 	mAttachedProcesses->executeProcesses();		
-// 	// }
-// }
 void Process::update(uint64_t msegs)
 {	
 	checkMicrothread( msegs ); 
@@ -133,30 +84,6 @@ void Process::update(uint64_t msegs)
 //	mLastTime = (unsigned int)mOwnerProcessScheduler->getTimer()->getMilliseconds();
 	//mPreviousTime = msegs;
 }
-//void Process::attachProcess( Process* p )
-//{
-//	if ( !mAttachedProcesses )
-//	{
-//		mAttachedProcesses = new ProcessScheduler;
-//		mAttachedProcesses->ini();
-//		mAttachedProcesses->setTimer( mOwnerProcessScheduler->getTimer() );
-//	}
-//	mAttachedProcesses->insertProcess( p,ProcessScheduler::NORMAL );
-//}
-
-
-
-
-/**
-* indicates this process that was succesfully finished
-*/
-// void Process::setFinished(bool value)
-// {
-
-// 	mFinished = value;
-// }
-
-
 
 /**
 * main execution block. Normally it will not be redefined. 
@@ -164,7 +91,7 @@ void Process::update(uint64_t msegs)
 *
 * @param msegs    msegs
 */
-void Process::_execute(uint64_t msegs)
+void Process::_execute(uint64_t msegs) 
 {
 	if ( mPauseReq)
 	{

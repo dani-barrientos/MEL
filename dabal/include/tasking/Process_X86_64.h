@@ -12,7 +12,7 @@ extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newS
 #endif
 namespace tasking
 {
-    struct MThreadAttributtes
+    struct MThreadAttributtes 
     {
     public:
         volatile void* mIniSP;

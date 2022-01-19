@@ -10,9 +10,10 @@ extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSi
 #else
 extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #endif
+
 namespace tasking
 {
-    struct MThreadAttributtes
+    struct MThreadAttributtes 
     {
     public:
         volatile bool mSwitched;

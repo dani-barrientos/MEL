@@ -130,6 +130,14 @@ static int _testMicroThreadingMonoThread()
 	auto th1 = GenericThread::createEmptyThread();
 	th1->start();	
 	
+	th1->post( [](RUNNABLE_TASK_PARAMS)
+	{
+		spdlog::debug("Task - 1");
+		::tasking::Process::wait(1000);
+		spdlog::debug("Task - 2");
+		return ::tasking::EGenericProcessResult::CONTINUE;
+	},true,3000);
+	/*
 	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
 	{
 		int aux = sharedVar;
@@ -153,6 +161,7 @@ static int _testMicroThreadingMonoThread()
 		sharedVar = aux;
 		return ::tasking::EGenericProcessResult::CONTINUE;
 	},true,2000,000);
+	*/
 	// th1->post<CustomProcessType,MyAllocator>(
 	// 	::mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
 	// 	,true,4200);
@@ -166,7 +175,8 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
  - incrementar/dec variable de forma que deba siempre ser isgreaterequal
 - 
 */
-	Thread::sleep(15000);
+	Thread::sleep(60000);
+	spdlog::debug("finish");
 	th1->finish();
 	th1->join();
 	return result;

@@ -222,8 +222,8 @@ int test_threading::test_futures()
 	
 	auto producer = GenericThread::createEmptyThread(true,false);
 	
-    spdlog::set_level(spdlog::level::info); // Set global log level
-	constexpr size_t n = 30;
+    spdlog::set_level(spdlog::level::debug); // Set global log level
+	constexpr size_t n = 1;
 	constexpr unsigned int TESTTIME = 30*60*1000;
 	std::array< std::shared_ptr<Thread>,n> consumers;
 	for(size_t i=0;i<n;++i)

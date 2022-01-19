@@ -18,10 +18,18 @@ using tasking::MThreadAttributtes;
 #define mRegistersOFF offsetof( MThreadAttributtes,mRegisters)
 
 
-volatile void Process::checkMicrothread( uint64_t msegs )
+volatile void Process::checkMicrothread( uint64_t msegs ) 
 {
      MThreadAttributtes* realThis = this;
+     //asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax","%rbp","rsp");
+     #ifdef DABAL_X64_CLANG
+     //@todo i can't find any other way to force standard stack prefix.. (this ocurrs since clang 11)
+     //casi seguro es lo del red-zone (-mno-red-zone)
+     asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax","rbp","rsp");
+//     asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax");
+     #else
      asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax");
+     #endif
      asm volatile("mov %%rbx,(%P[v])(%%rax)"::[v] "i" (mIniRBXOFF) );
      asm volatile("mov %%r12,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF) );
      asm volatile("mov %%r13,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+8) );
@@ -29,7 +37,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      asm volatile("mov %%r15,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+24) );
      asm volatile("mov %%rsp,(%P[v])(%%rax)"::[v] "i" (mIniSPOFF));
      asm volatile("mov %%rbp,(%P[v])(%%rax)"::[v] "i" (mIniBPOFF));
-     asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF) );
+     asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF):"cc" );
      asm volatile("jz continueExecuting");
      asm volatile( "movb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF));
      asm volatile( "std\n");
@@ -39,8 +47,8 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      asm volatile("mov %rsp,%rdi\n");
      asm volatile("mov (%P[v])(%%rax),%%rsi"::[v] "i" (mStackEndOFF) );
 
-     asm volatile("sub $8,%rsi" );
-     asm volatile("rep movsq");
+     asm volatile("sub $8,%%rsi":::"cc" );
+     asm volatile("rep movsq":::"%rdi","%rsi");
      asm volatile("mov %rdi,%rsp");
      asm volatile("add $8,%rsp");
      asm volatile( "cld\n"
@@ -55,8 +63,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      _execute( msegs );
 }
 
-volatile void fakeFunction( ) __attribute__((noinline))  __attribute__( (used)) __attribute__((naked));
-volatile void fakeFunction() 
+volatile void fakeFunction() OPTIMIZE_FLAGS
 {
     asm volatile( "wrapperSwitch:");
     asm volatile( "push %rbp\n"
@@ -71,20 +78,19 @@ volatile void fakeFunction()
     asm volatile("movb $1,(%P[v])(%%r12)"::[v] "i" (mSwitchedOFF));
     asm volatile("mov (%P[v])(%%r12),%%r13"::[v] "i" (mIniSPOFF));
     asm volatile("mov %r13,%r14");
-    asm volatile("sub $8,%r14");
-   
+    asm volatile("sub $8,%r14");   
     asm volatile("sub %rsp,%r13");
     asm volatile( "sub $8,%rsp" );
     asm volatile( "mov %r13,%rsi" );
-    asm volatile( "call resizeStack");
+    asm volatile( "call resizeStack":::"memory");
     asm volatile("mov %r13,%rcx");
     asm volatile("mov %r14,%rsi");
     
     asm volatile("std\n"
                 "shr $3,%rcx");
     asm volatile("mov (%P[v])(%%r12),%%rdi"::[v] "i" (mStackEndOFF) );
-    asm volatile("sub $8,%rdi");
-    asm volatile("rep movsq");
+    asm volatile("sub $8,%%rdi":::"cc");
+    asm volatile("rep movsq":::"%rdi","%rsi" );
     asm volatile("cld");
 
     asm volatile("mov (%P[v])(%%r12),%%rsp"::[v] "i" (mIniBPOFF));
@@ -98,16 +104,16 @@ volatile void fakeFunction()
     asm volatile("ret");
 }
  
-void Process::_switchProcess( )
+void Process::_switchProcess( ) 
 {
     auto p = ProcessScheduler::getCurrentProcess().get();
     MThreadAttributtes* mt = p;
     char needAlignment=false;
     asm volatile("test $0xf,%rsp");
-    asm volatile("jz callfunction");
+    asm volatile ("jz callfunction");
     asm volatile("movb $1,%[v]"::[v] "m" (needAlignment));
     asm volatile( "sub $8,%rsp"); 
-    asm volatile( "callfunction:mov %[v],%%rdi"::[v] "m" (mt):"%rsi","%rdi" );
+    asm volatile( "callfunction:mov %[v],%%rdi"::[v] "m" (mt):"%rdi" );
     asm volatile( "call wrapperSwitch" );
     asm volatile("cmpb $1,%[v]"::[v] "m" (needAlignment));
     asm volatile("jne endswitch");

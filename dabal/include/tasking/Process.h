@@ -88,16 +88,7 @@ namespace tasking
         static void _switchProcess( ) OPTIMIZE_FLAGS ;
 	public:		
 		enum EProcessState : uint8_t
-		{
-			/*
-			PREPARED = binary<1>::value, //!< Process created but not executed
-			INITIATED = binary<10>::value, //!< executing process normally
-			PAUSED = binary<100>::value, //!< paused
-			PREPARED_TO_DIE = binary<1000>::value, //!< it's going to die, but process manager doesn't discard it
-			TRYING_TO_KILL = binary<10000>::value, //!< sending kill signal but no accepted yet
-			WAITING_FOR_SCHEDULED  = binary<100000>::value, //!< switched and no shceduled yet
-			DEAD = binary<1000000>::value //!< process is out of process manager
-			*/
+		{			
 			PREPARED, //!< Process created but not executed
 			INITIATED , //!< executing process normally
 			ASLEEP, //!< sleeping. Waiting for a wakeup
