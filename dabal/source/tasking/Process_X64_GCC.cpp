@@ -63,7 +63,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      _execute( msegs );
 }
 
-volatile void fakeFunction() OPTIMIZE_FLAGS
+volatile void fakeFunction()
 {
     asm volatile( "wrapperSwitch:");
     asm volatile( "push %rbp\n"

@@ -1,6 +1,6 @@
 #pragma once
 #include <parallelism/ThreadPool.h>
-#include <parallelism/SimpleBarrier.h>
+#include <parallelism/Barrier.h>
 #include <mpl/TypeTraits.h>
 #include <iterator>
 #include <math.h>
@@ -9,6 +9,8 @@
 #ifndef _ITERATOR_DEBUG_LEVEL
 #define _ITERATOR_DEBUG_LEVEL 0
 #endif
+#include <tasking/utilities.h>
+#include <core/Thread.h>
 
 namespace parallelism
 {
@@ -48,7 +50,7 @@ namespace parallelism
 	template <bool>
 	struct GetElement
 	{
-		template <class I> static typename ::std::iterator_traits<I>::value_type& get(I& it)
+		template <class I> static typename ::std::iterator_traits<I>::value_type& get(I it)
 		{
 			return *it;
 		}
@@ -65,7 +67,7 @@ namespace parallelism
 	template <bool>
 	struct BulkExecute
 	{
-		template <class I, class F> inline static void execute(int& cont,int nIterations,I i,I, I end,F&& functor,int divisionSize,int leftOver,int increment,int,ThreadPool* tp, const ThreadPool::ExecutionOpts& opts,SimpleBarrier& barrier)
+		template <class I, class F> inline static void execute(int& cont,int nIterations,I i,I, I end,F&& functor,int divisionSize,int leftOver,int increment,int,ThreadPool* tp, const ThreadPool::ExecutionOpts& opts,Barrier& barrier)
 		{
 			ThreadPool::ExecutionOpts newOpts(opts);
 			newOpts.useCallingThread = false;  //only one iteration in calling thread
@@ -73,8 +75,7 @@ namespace parallelism
 			bool finish = ((i == end) || (cont > nIterations));
 			while (!finish)
 			{
-				tp->execute(newOpts, barrier, false,
-					std::function<void()>([ divisionSize, functor, increment, i, cont, nIterations, leftOver]() mutable
+				tp->execute(newOpts, barrier, std::function<void()>([ divisionSize, functor, increment, i, cont, nIterations, leftOver]() mutable
 				{
 					I j = i;
 					int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
@@ -100,7 +101,7 @@ namespace parallelism
 	template <>
 	struct BulkExecute<true>
 	{
-		template <class I, class F> static void execute(int& cont, int nIterations, I i,I begin, I end, F&& functor, int divisionSize, int leftOver, int increment, int loopSize, ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, SimpleBarrier& barrier)
+		template <class I, class F> static void execute(int& cont, int nIterations, I i,I begin, I end, F&& functor, int divisionSize, int leftOver, int increment, int loopSize, ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, Barrier& barrier)
 		{
 			if (cont > nIterations)
 				return;
@@ -119,7 +120,7 @@ namespace parallelism
 			}
 			while (cont <= nIterations)
 			{
-				tp->execute(newOpts, barrier, false,
+				tp->execute(newOpts, barrier,
 					std::function<void()>([divisionSize, functor, increment, vCopy, cont, nIterations, leftOver]() mutable
 				{
 					int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
@@ -144,16 +145,15 @@ namespace parallelism
 	{
 	private:
 		
-		SimpleBarrier mBarrier;	
+		Barrier mBarrier;	
 	/**
 	* uso de incremento de otro tipo (float). 
-	* loopSize? entiendo que será float tal y como está, siendo 
+	* loopSize? entiendo que serï¿½ float tal y como estï¿½, siendo 
 	* ahora el calculo de nElements no vale creo porque si son floats ya no es necesario
 	*/
 	//! @note internal use
-	template <class I, class F>	 For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int increment, int loopSize) :mBarrier(0)/*mBarrier((int)ceil(loopSize / (float)increment))*/
+	template <class I, class F>	 For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int increment, int loopSize)
 	{
-		//int nElements = (int)ceil(loopSize / (float)increment);  //number of elements to proces
 		typedef typename std::decay<I>::type DecayedIt;
 		constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
 		int nElements = (loopSize + increment - 1) / increment;  //"manual" ceil, because ceil function fails somtimes in fast floating mode
@@ -164,7 +164,8 @@ namespace parallelism
 
 		if (nElements <= (int)nThreads || opts.groupTasks == false || nThreads == 0 )  //more or equal threads than tasks
 		{
-			mBarrier.addWorkers(nElements);
+			//mBarrier.addWorkers(nElements);
+			 mBarrier = Barrier(nElements);
 			int cont = 0;
 			if (opts.useCallingThread)
 			{
@@ -180,7 +181,7 @@ namespace parallelism
 			while (!finish)
 			{
 				//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(*i))); //@todo notengo claro que deba usar ref???
-				tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), GetElement<isArithIterator>::get(i))); //@todo notengo claro que deba usar ref???
+				tp->execute(newOpts, mBarrier, std::bind(typename std::decay<F>::type(functor), GetElement<isArithIterator>::get(i))); 
 				if (++cont < nElements)
 				{
 					Advance<isArithIterator >::get(i, increment);
@@ -200,7 +201,8 @@ namespace parallelism
 			int nIterations = nThreads;  //number of parallel iterations
 			int leftOver = nElements % nIterations;
 //			logging::Logger::getLogger()->info("Comienzo: divisionSize=%d; nThreads=%d; nElements=%d; leftOver=%d; loopSize=%d,increment=%d", divisionSize, nThreads, nElements, leftOver,loopSize,increment);
-			mBarrier.addWorkers(nIterations);
+		//	mBarrier.addWorkers(nIterations);
+			mBarrier = Barrier(nIterations);
 			int cont = 1;
 			if (opts.useCallingThread)
 			{
@@ -228,18 +230,19 @@ namespace parallelism
 	}
 	public:
 		//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor,int inc = 1) : For(tp, opts, std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), inc, Distance<::mpl::TypeTraits<I>::isArith>::get(begin,end) )
-		//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, Distance<::mpl::TypeTraits<I>::isArith>::get(begin, end))
-		template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, Distance<::mpl::TypeTraits<I>::isArith>::get(begin, end))
+		template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, Distance<::mpl::TypeTraits<I>::isArith>::get(begin, end))
+		//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, ::parallelism::Distance<::mpl::TypeTraits<std::decay<I>::type>::isArith>::get(begin, end))
 		{
 		}
 		For() {}
-		FutureData_Base::EWaitResult wait(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE ) const
+		auto wait(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE ) const
 		{
-			return mBarrier.wait(msecs);
+			return ::core::waitForBarrierThread(mBarrier,msecs);
 		}
-		FutureData_Base::EWaitResult waitAsMThread(unsigned int msecs = ::core::Event_mthread::EVENTMT_WAIT_INFINITE) const
+		//@todo quitar esto que no me gusta. Aislarlo como para barreras y futures
+		auto waitAsMThread(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE) const
 		{
-			return mBarrier.waitAsMThread(msecs);
+			::tasking::waitForBarrierMThread(mBarrier,msecs);
 		}		
 	};
 };

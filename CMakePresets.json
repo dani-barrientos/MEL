@@ -198,7 +198,7 @@
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "inherits": "Linux Base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "/bin/clang-11",
                 "CMAKE_CXX_COMPILER": "/bin/clang++-11",
                 "DABAL_ARQ": "DABAL_X64_CLANG"

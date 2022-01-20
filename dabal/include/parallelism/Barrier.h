@@ -35,7 +35,7 @@ namespace parallelism
 	class Barrier
 	{
 	public:
-		Barrier( size_t nWorkers = 1 ):mData( new BarrierData( nWorkers ) )
+		explicit Barrier( size_t nWorkers = 1 ):mData( new BarrierData( nWorkers ) )
 		{
 		}
 		Barrier( const Barrier& o2):mData(o2.mData){ }

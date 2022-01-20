@@ -30,7 +30,7 @@ namespace parallelism
 		constexpr static uint64_t THREAD_AFFINITY_ALL = -1;
 		struct ThreadPoolOpts
 		{
-			int nThreads; //number of threads to create or THREADS_USE_ALL_CORES. if negative number, means all available cores minus nThreads (p.e, if 8 available cores and set -2, use 6 cores)
+			int nThreads = THREADS_USE_ALL_CORES; //number of threads to create or THREADS_USE_ALL_CORES. if negative number, means all available cores minus nThreads (p.e, if 8 available cores and set -2, use 6 cores)
 			uint64_t affinity = THREAD_AFFINITY_ALL;  //by default, all cores allowed
 			bool forceAffinitty = false; //force each thread to be in a fixed core 
 		};
@@ -54,7 +54,7 @@ namespace parallelism
 			// if (updateWorkers)
 			// 	barrier.addWorkers(nTasks); //update workers using barrier
 			//_execute(opts, barrier, std::forward<FTypes>(functions)...);
-			_execute(opts, barrier, functions...);
+			_execute(opts, barrier, std::forward<FTypes>(functions)...);
 		}
 		template <class ... FTypes> Barrier execute(const ExecutionOpts& opts, FTypes ... functions)
 		{
@@ -79,11 +79,11 @@ namespace parallelism
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-					std::function<tasking::EGenericProcessResult (uint64_t, Process*, tasking::EGenericProcessState)>([func, output](unsigned int, Process*, ::tasking::EGenericProcessState) mutable
+					std::function<tasking::EGenericProcessResult (uint64_t, Process*, tasking::EGenericProcessState)>([func, output](uint64_t, Process*, ::tasking::EGenericProcessState) mutable
 				{
 					func();
 					output.set();
-					return true;
+					return tasking::EGenericProcessResult::KILL;
 				})
 				);
 			}
@@ -111,7 +111,7 @@ namespace parallelism
                    {
                        func();
                        output.set();
-                       return true;
+                       return tasking::EGenericProcessResult::KILL;
                    })
 				);
 				//mLastIndex = (int)thIdx;

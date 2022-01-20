@@ -153,6 +153,8 @@ class MasterThread : public GenericThread
 		}
 		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input,Future<int> output,int taskId ) 
 		{
+			int tam = rand()%1000;
+			int arr[tam];
 			spdlog::debug("Task {} waits for input",taskId);
 			auto wr = ::tasking::waitForFutureMThread(input);
 			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
@@ -209,12 +211,7 @@ class MasterThread : public GenericThread
 			// }
 		}
 };
-/**
- * @todo 
-lanzar n tareas para esperar por respuesta de consumidores para comprar valor con el generado. Por ejemploi, que los conusmidores sumen un valor ty lo dejen en otro
-future. Estaría bien usar una berrera para esperar por todos, no el wait que tengo en el master.
- 
- */
+
 int test_threading::test_futures()
 {
 	int result = 0;
