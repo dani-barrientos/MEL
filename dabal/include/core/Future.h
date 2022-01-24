@@ -306,7 +306,8 @@ namespace core
 		{
 			mData = std::make_shared<FutureData<ResultType>>();
 		};
-		Future_Common( const Future_Common& f ):Future_Base( f ){}			
+		Future_Common( const Future_Common& f ):Future_Base( f ){}
+		Future_Common( Future_Common&& f ):Future_Base( std::move(f) ){}
 	public:
 		inline const FutureData<ResultType>& getData() const{ return *(FutureData<ResultType>*)mData; }
 		inline FutureData<ResultType>& getData(){ return *(FutureData<ResultType>*)mData.get(); }
@@ -340,6 +341,7 @@ namespace core
 		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
 		Future(){};
 		Future( const Future& f ):Future_Common<ResultType>(f){};
+		Future( Future&& f ):Future_Common<ResultType>(std::move(f)){};
 
 		inline void setValue( typename FutureData<ResultType>::ParamType value )
 		{
@@ -356,6 +358,7 @@ namespace core
 		typedef void ReturnType;
 		Future(){};
 		Future(const Future& f):Future_Common<void>(f){};	
+		Future(Future&& f):Future_Common<void>(std::move(f)){};	
 		inline void setValue( void ){ ((FutureData<void>*)Future_Base::mData.get())->setValue( ); }		
 	};
 

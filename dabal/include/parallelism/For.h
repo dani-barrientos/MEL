@@ -46,6 +46,7 @@ namespace parallelism
 			it += increment;
 		}
 	};
+	/*
 	//clas to get element in collection
 	template <bool>
 	struct GetElement
@@ -64,6 +65,7 @@ namespace parallelism
 			return it;
 		}
 	};
+	*/
 	template <bool>
 	struct BulkExecute
 	{
@@ -81,7 +83,7 @@ namespace parallelism
 					int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
 					for (int n = 0; n < size;)
 					{
-						functor(GetElement<::mpl::TypeTraits<I>::isArith>::get(j));
+						functor(j);
 						if (++n < size)
 							Advance<::mpl::TypeTraits<I>::isArith>::get(j, increment);
 					}
@@ -180,8 +182,8 @@ namespace parallelism
 			bool finish = ((i == end) || (cont >= nElements));
 			while (!finish)
 			{
-				//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(*i))); //@todo notengo claro que deba usar ref???
-				tp->execute(newOpts, mBarrier, std::bind(typename std::decay<F>::type(functor), GetElement<isArithIterator>::get(i))); 
+				//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(GetElement<isArithIterator>::get(i)))); //@todo notengo claro que deba usar ref???
+				tp->execute(newOpts, mBarrier, std::bind(typename std::decay<F>::type(functor),i)); 
 				if (++cont < nElements)
 				{
 					Advance<isArithIterator >::get(i, increment);
@@ -191,7 +193,7 @@ namespace parallelism
 			}
 			if (opts.useCallingThread && nElements > 0)
 			{
-				functor(GetElement<isArithIterator>::get(begin));
+				functor(begin);
 				mBarrier.set();
 			}
 		}
@@ -220,7 +222,7 @@ namespace parallelism
 				typename std::decay<I>::type j = begin;
 				for (int n = 0; n < size/* && j != end*/;)
 				{
-					functor(GetElement<isArithIterator>::get(j));
+					functor(j);
 					if (++n < size)
 						Advance<isArithIterator>::get(j, increment);
 				}

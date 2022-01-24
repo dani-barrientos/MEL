@@ -297,7 +297,15 @@ namespace tasking
 			F&& task_proc,
 			bool autoKill = false,
 			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
-			unsigned int period = 0,unsigned int startTime = 0/*,void* extraInfo = NULL*/);
+			unsigned int period = 0,unsigned int startTime = 0);
+		/**
+		 * @brief Convenient function to post no periodic task with signature void f()
+		 * 
+		 */
+		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F>		
+		std::shared_ptr<Process> fireAndForget(
+			F&& task_proc,
+			unsigned int startTime = 0);
 		/**
 		* executes a function in a context of the Runnable.
 		* If this Runnable is in the same thread than caller then, depending on forcepost parameter, the functor
@@ -306,10 +314,9 @@ namespace tasking
 		* @param[in] function Functor with signature TRet f() that will be executed in this Runnable
 		* @param[in] forcePost if true, then function will be posted in spite of calling thread is same as Runnable thread
 		* @param[in] delay milliseconds to be delayed before execution
-		* @param[in] extraInfo Same as in #post
 		*/
 		template <class TRet,class F> 
-			Future<TRet> execute( F&& function,unsigned int delay = 0, bool forcePost = false/*, void* extraInfo = NULL */);
+			Future<TRet> execute( F&& function,unsigned int delay = 0, bool forcePost = false);
 
 		/**
 		* evaluate condition on this Runnable
@@ -340,19 +347,17 @@ namespace tasking
 		* @param[in] future The future to wait for
 		* @param[in[ functor Callback called when triggered with signature <void,const Future_Base&>
 		* @param[in] autoKill If wait is canceled when kill signal is received
-		* @param extraInfo same as in #post
 		* @return reference to a FutureTriggerInfo (don't delete it)
 		*/
 		//template <class F>
-	//	FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, F&& functor, bool autoKill = true, void* extraInfo = NULL);
+	//	FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, F&& functor, bool autoKill = true);
 		/**
 		* @param[in] future The future to wait for
 		* @param[in] f an standard function to be called when triggered with signature <void,const Future_Base&>
 		* @param[in] autoKill If wait is canceled when kill signal is received
-		* @param extraInfo same as in #post
 		* @return reference to a FutureTriggerInfo (don't delete it)
 		*/
-		//FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill = true, void* extraInfo = NULL);
+		//FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill = true);
         
 		/**
 		* subscribe to finish event. This event will be executed when Runnable finish,
@@ -403,15 +408,30 @@ namespace tasking
 		F&& task_proc,
 		bool autoKill,
 		// ETaskPriority priority ,
-		unsigned int period,unsigned int startTime/*,void* extraInfo */ )
+		unsigned int period,unsigned int startTime )
 	{
 		::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
-		//p->setExtraInfo( extraInfo );
 		p->setAutoKill( autoKill );
 		postTask(p,startTime);
 		return p;
+	}
+	template <class ProcessType ,class AllocatorType, class F>		
+	std::shared_ptr<Process> Runnable::fireAndForget(
+			F&& f,
+			unsigned int startTime)
+	{
+		return post(
+			RUNNABLE_CREATETASK
+				(
+					returnAdaptor<void>
+					(
+						std::forward<F>(f)
+						, ::tasking::EGenericProcessResult::KILL
+					)
+				),true,0,startTime
+		);
 	}
 
 
@@ -440,7 +460,7 @@ namespace tasking
 		mFinishEvents.subscribeCallback(std::forward<F>(functor));
 	}
 	template <class TRet,class F> 
-	Future<TRet> Runnable::execute( F&& function,unsigned int delay,bool forcePost/*, void* extraInfo*/)
+	Future<TRet> Runnable::execute( F&& function,unsigned int delay,bool forcePost)
 	{
 		assert(mOwnerThread != 0);
 		Future<TRet> future;
@@ -452,11 +472,11 @@ namespace tasking
 					returnAdaptor<void>
 					(
 						linkFunctor<void, TYPELIST()>(ExecuteTask<TRet, typename ::std::decay<F>::type>(::std::forward<F>(function)), future)
-						, true
+						, ::tasking::EGenericProcessResult::KILL
 						)
 				), false/*@todo esto tengo que poder configurarlo*/
 				/* , NORMAL_PRIORITY_TASK */
-				, 0, delay/*, extraInfo*/
+				, 0, delay
 
 			);
 	

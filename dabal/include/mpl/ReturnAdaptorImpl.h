@@ -20,7 +20,8 @@ namespace mpl
 	class ReturnAdaptor_Base
 	{
 	public:
-		ReturnAdaptor_Base( const T& functor,typename TypeTraits<TRet>::ParameterType retorno ): mFunctor( functor ),mReturn( retorno )
+		//ReturnAdaptor_Base( const T& functor,typename TypeTraits<TRet>::ParameterType retorno ): mFunctor( functor ),mReturn( retorno )
+		ReturnAdaptor_Base( T&& functor,typename TypeTraits<TRet>::ParameterType retorno ): mFunctor( std::forward<T>(functor) ),mReturn( retorno )
 		{
 		}
 		ReturnAdaptor_Base( const ReturnAdaptor_Base<TRet,T>& ob2 ): mFunctor( ob2.mFunctor ),
@@ -125,7 +126,8 @@ namespace mpl
 	class ReturnAdaptor<void,T,void> : public ReturnAdaptor_Base<void, T >
 	{
 	public:
-		ReturnAdaptor( const T& functor):ReturnAdaptor_Base<void, T >( functor ){};
+		//ReturnAdaptor( const T& functor):ReturnAdaptor_Base<void, T >( functor ){};
+		ReturnAdaptor( T&& functor):ReturnAdaptor_Base<void, T >( std::forward<T>(functor) ){};
 		ReturnAdaptor( const ReturnAdaptor& ob2 ): ReturnAdaptor_Base<void, T >( ob2 ){};
 
 		void operator()(  )
@@ -145,7 +147,7 @@ namespace mpl
 	class ReturnAdaptor<TRet,T,void> : public ReturnAdaptor_Base<TRet,T>
 	{
 	public:
-		ReturnAdaptor( const T& functor, typename TypeTraits<TRet>::ParameterType retorno ):ReturnAdaptor_Base<TRet,T>( functor, retorno ){};
+		ReturnAdaptor( T&& functor, typename TypeTraits<TRet>::ParameterType retorno ):ReturnAdaptor_Base<TRet,T>( std::forward<T>(functor), retorno ){};
 		ReturnAdaptor( const ReturnAdaptor& ob2 ): ReturnAdaptor_Base<TRet,T>( ob2 ){};
 		TRet operator()()
 		{
@@ -160,21 +162,16 @@ namespace mpl
 	};
 	///@endcond
 	template < VARIABLE_ARGS_NODEFAULT,class T,class TRet > inline
-	ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL> returnAdaptor( T functor, TRet retorno )
+	ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL> returnAdaptor( T&& functor, TRet retorno )
 	{
-		return ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL>( functor, retorno );
+		return ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL>( std::forward<T>(functor), retorno );
 	}
 
-	/*template < VARIABLE_ARGS_NODEFAULT,class T> inline
-		ReturnAdaptor<void,T,VARIABLE_ARGS_DECL> returnAdaptorVoid( T functor )
-	{
-		return ReturnAdaptor<void,T,VARIABLE_ARGS_DECL>( functor);
-	}*/
 	//TODO incompleto, tengo que hacerlo para parametros variables!!
 	template < class T> inline
-		ReturnAdaptor<void,T,void> returnAdaptorVoid( T functor )
+		ReturnAdaptor<void,T,void> returnAdaptorVoid( T&& functor )
 	{
-		return ReturnAdaptor<void,T,void>( functor);
+		return ReturnAdaptor<void,T,void>( std::forward<T>(functor));
 	}
 
 #else
@@ -189,36 +186,19 @@ namespace mpl
 			ReturnAdaptor_Base<TRet, T >::mFunctor( VARIABLE_ARGS_USE );
 			return ReturnAdaptor_Base<TRet, T >::mReturn;
 		}
-		/*bool operator ==( const ReturnAdaptor<TRet, T, VARIABLE_ARGS_DECL>& ob2 ) const
-		{
-			// return mFunctor == ob2.mFunctor && mReturn == ob2.mReturn;
-			return ReturnAdaptor_Base<TRet, T >::operator ==( ob2 );
-		}*/
+
 	};
-	/*//specialization for void return
-	template <class T, VARIABLE_ARGS >
-	class ReturnAdaptor<void, T, VARIABLE_ARGS_DECL> : public ReturnAdaptor_Base<void, T >
-	{
-	public:
-		ReturnAdaptor( T functor ):ReturnAdaptor_Base( functor ){};
-		ReturnAdaptor( const ReturnAdaptor& ob2 ): ReturnAdaptor_Base( ob2 ){};
-		void operator()( VARIABLE_ARGS_IMPL )
-		{
-			mFunctor( VARIABLE_ARGS_USE );
-
-		}
-
-	};*/
+	
 
 	template < VARIABLE_ARGS,class T,class TRet > inline
-	ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL> returnAdaptor( T functor, TRet retorno )
+	ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL> returnAdaptor( T&& functor, TRet retorno )
 	{
-		return ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL>( functor, retorno );
+		return ReturnAdaptor<TRet,T,VARIABLE_ARGS_DECL>( std::forward<T>(functor), retorno );
 	}
 	template < VARIABLE_ARGS,class T> inline
-		ReturnAdaptor<void,T,VARIABLE_ARGS_DECL> returnAdaptorVoid( T functor )
+		ReturnAdaptor<void,T,VARIABLE_ARGS_DECL> returnAdaptorVoid( T&& functor )
 	{
-		return ReturnAdaptor<void,T,VARIABLE_ARGS_DECL>( functor );
+		return ReturnAdaptor<void,T,VARIABLE_ARGS_DECL>( std::forward<T>(functor) );
 	}
 
 #endif

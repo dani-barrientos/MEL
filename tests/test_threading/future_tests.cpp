@@ -54,9 +54,9 @@ class MasterThread : public GenericThread
 			{
 				if ( i == prodIdx)
 				{
-					mProducer->post(
-						mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-							makeMemberEncapsulate(&MasterThread::_producerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
+					mProducer->fireAndForget(
+						mpl::linkFunctor<void,TYPELIST()>(
+							makeMemberEncapsulate(&MasterThread::_producerTask,this),channel)
 					);
 				}
 
@@ -91,17 +91,17 @@ class MasterThread : public GenericThread
 				else
 				{
 					nSinglethreads++;
-					mConsumers[i]->post(
-						mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-						makeMemberEncapsulate(&MasterThread::_consumerTaskAsThread,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel,nTasks++)
+					mConsumers[i]->fireAndForget(
+						mpl::linkFunctor<void,TYPELIST()>(
+						makeMemberEncapsulate(&MasterThread::_consumerTaskAsThread,this),channel,nTasks++)
 					);
 				}
 			}
 			if ( prodIdx == n)
 			{
-				mProducer->post(
-						mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-							makeMemberEncapsulate(&MasterThread::_producerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel)
+				mProducer->fireAndForget(
+						mpl::linkFunctor<void,TYPELIST()>(
+							makeMemberEncapsulate(&MasterThread::_producerTask,this),channel)
 					);
 			}
 			spdlog::debug("{} jobs have been launched, from which {} are single threads",nTasks,nSinglethreads);
@@ -133,7 +133,7 @@ class MasterThread : public GenericThread
 			}else			
 				return ::tasking::EGenericProcessResult::CONTINUE;
 		}
-		::tasking::EGenericProcessResult _producerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> output) 
+		void _producerTask(Future<int> output) 
 		{			
 			//generar el output como sea (tiempo aleatorio, etc..)
 			//@note remember C++11 has cool functions for random numbers in <random> header
@@ -149,7 +149,6 @@ class MasterThread : public GenericThread
                 output.setError(0,"PRUEBA ERROR");
                 spdlog::debug("Genero error");
             }			
-			return ::tasking::EGenericProcessResult::KILL;
 		}
 		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input,Future<int> output,int taskId ) 
 		{
@@ -178,7 +177,7 @@ class MasterThread : public GenericThread
 			mBarrier.set();
 			return ::tasking::EGenericProcessResult::KILL;
 		}
-		::tasking::EGenericProcessResult _consumerTaskAsThread(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input,int taskId ) 
+		void _consumerTaskAsThread(Future<int> input,int taskId ) 
 		{
 			auto wr = ::core::waitForFutureThread(input);
 			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
@@ -191,7 +190,6 @@ class MasterThread : public GenericThread
 			}else
 				spdlog::error("Thread {} gets error waiting for input",taskId);
 			mBarrier.set();
-			return ::tasking::EGenericProcessResult::KILL;
 		}
 		void onThreadEnd() override{
 			//finalizar el resto
@@ -214,6 +212,14 @@ class MasterThread : public GenericThread
 
 int test_threading::test_futures()
 {
+/*
+triggerOnDone: ¿tiene sentido? sería para llamar a un callback desde el Runnable adecaudo->¿merece la pena? sí->
+¿otro nombre?
+¿cómo resuelvo lo del kill? no me gusta mucho que esa opción esté ahí
+esto está relacionado con el tema de devovler error, el valor y tal. Igual podría devovler el exception?? la cuestión es que si es otro
+¿merecerá la pena devolver un optional (o mejor un variant) con el valor y el error si hubiese?->
+¿sería malo pasar ese variant al triggerondone?
+*/
 	int result = 0;
 	//@todo hasta que no haga bien lo del autodestroy, esto no está bien del todo. Deberia pasar los consumidores como shared_ptr
 	
