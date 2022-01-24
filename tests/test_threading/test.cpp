@@ -12,7 +12,9 @@ using tests::TestManager;
 #include <string>
 #include <tasking/Process.h>
 using tasking::Process;
-  #include "future_tests.h"
+#include "future_tests.h"
+#include <tasking/utilities.h>
+
 /**
  * @todo pensar en test neceasrios:
  *  - mono hilo + microhilos
@@ -129,12 +131,27 @@ static int _testMicroThreadingMonoThread()
 	int sharedVar = 0;
 	auto th1 = GenericThread::createEmptyThread();
 	th1->start();	
+	auto th2 = GenericThread::createEmptyThread();
 	
-	th1->post( [](RUNNABLE_TASK_PARAMS)
+	th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
-		spdlog::debug("Task - 1");
-		::tasking::Process::wait(1000);
-		spdlog::debug("Task - 2");
+		th2->fireAndForget([]
+		{
+			spdlog::debug("HECHO!!!");
+		},5000);
+
+
+		
+		 auto r = th2->execute<int>(
+			[]()
+			{
+				::Process::wait(3000);
+				return 6;
+			}
+		);
+		spdlog::debug("waiting for execution");
+		tasking::waitForFutureMThread(r);
+		spdlog::debug("execution done");
 		return ::tasking::EGenericProcessResult::CONTINUE;
 	},true,3000);
 	/*
