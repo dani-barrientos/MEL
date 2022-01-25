@@ -256,47 +256,4 @@ void Runnable::executeFinishEvents()
 		(**i)( this );
 	}*/
 }
-/*
-void Runnable::_triggerOnDone( const ::core::Future_Base& future, Callback<void,const ::core::Future_Base&>* cb,
-	FutureTriggerInfo* info )
-{
-	if ( !info->getCancel() )
-	{
-		core::FutureData_Base::EWaitResult waitResult = future.waitAsMThread();
-		if ( !info->getCancel() && 
-			waitResult != ::core::FutureData_Base::FUTURE_RECEIVED_KILL_SIGNAL )
-			(*cb)( future );
 
-	}
-	delete cb;
-	delete info;
-}*/
-void Runnable::_sleep( unsigned int msegs )
-{
-	Thread::sleep( msegs );
-}
-//#pragma optimize("",on)
-
-/*
-Runnable::FutureTriggerInfo* Runnable::triggerOnDone(const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill,void* extraInfo) {
-    if ( !future.getValid() )
-    {
-        FutureTriggerInfo* info = new FutureTriggerInfo;
-        typedef Callback<void,const ::core::Future_Base&> TCallback;
-        TCallback* cb = new TCallback( f, ::core::use_function );
-        post(
-             RUNNABLE_CREATETASK(
-                returnAdaptor<void>
-                (
-                linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
-                ,::tasking::EGenericProcessResult::KILL
-                )
-                ),autoKill, 0, 0
-             );
-        return info;
-    }else
-    {
-        f( future );
-        return NULL;
-    }
-}*/

@@ -399,21 +399,22 @@ namespace core {
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T> ::core::FutureData_Base::EWaitResult waitForFutureThread( const core::Future<T>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	template<class T,class ErrorType = ::core::ErrorInfo> ::core::FutureData_Base::EWaitResult waitForFutureThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         using ::core::FutureData_Base;
         using ::core::FutureData;
+		using ::core::FutureValue;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            FutureData_Base::EWaitResult wait(const core::Future<T>& f,unsigned int msecs)
+            FutureData_Base::EWaitResult wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
             {
                 FutureData_Base::EWaitResult result;            
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
 				int evId = f.subscribeCallback(
-					std::function<::core::ECallbackResult( const FutureData<T>&)>([this](const FutureData<T>& ) 
+					std::function<::core::ECallbackResult( const FutureValue<T,ErrorType>&)>([this](const FutureValue<T,ErrorType>& ) 
 					{
 						mEvent.set();
 					//   spdlog::debug("Event was set for Thread {}",threadid);

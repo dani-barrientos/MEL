@@ -76,9 +76,9 @@ class MasterThread : public GenericThread
 								{									
 									if (result.getValid() )
 									{
-										auto val = channel.getValue() + mValueToAdd;
-										if ( val != result.getValue())
-											spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue(),val);
+										auto val = channel.getValue().value() + mValueToAdd;
+										if ( val != result.getValue().value())
+											spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
 									}/*else
 										spdlog::error("Error waiting for output: {}",result.getError()->errorMsg);*/
 								}
@@ -146,7 +146,7 @@ class MasterThread : public GenericThread
                 output.setValue(value);
             }else
             {
-                output.setError(0,"PRUEBA ERROR");
+                output.setError(core::ErrorInfo(0,"PRUEBA ERROR"));
                 spdlog::debug("Genero error");
             }			
 		}
@@ -160,19 +160,19 @@ class MasterThread : public GenericThread
 			{
 				if (!input.getValid())
 				{
-					spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getError()->errorMsg);
-					output.setError(0,"");
+					spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
+					output.setError( core::ErrorInfo(0,""));
 				}
 				else
 				{
-					output.setValue(input.getValue() + mValueToAdd);
-					spdlog::debug("Task {} gets value {}",taskId,input.getValue());
+					output.setValue(input.getValue().value() + mValueToAdd);
+					spdlog::debug("Task {} gets value {}",taskId,input.getValue().value());
 				}
                     //spdlog::debug("Thread {} gets value ",thId);
 			}else
 			{
 				spdlog::error("Task {} gets error waiting for input",taskId);
-				output.setError(0,"");
+				output.setError(core::ErrorInfo(0,""));
 			}
 			mBarrier.set();
 			return ::tasking::EGenericProcessResult::KILL;
@@ -183,9 +183,9 @@ class MasterThread : public GenericThread
 			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
 			{
 				if (!input.getValid())				
-					spdlog::debug("Thread {} gets error waiting for input: {}",taskId,input.getError()->errorMsg);
+					spdlog::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
 				else
-					spdlog::debug("Thread {} gets value {}",taskId,input.getValue());
+					spdlog::debug("Thread {} gets value {}",taskId,input.getValue().value());
                     //spdlog::debug("Thread {} gets value ",thId);
 			}else
 				spdlog::error("Thread {} gets error waiting for input",taskId);

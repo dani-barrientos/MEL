@@ -164,22 +164,7 @@ namespace tasking
 		
 		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
 		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
-		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception
-		//! todo esto no me gusta un pijo
-		//!ErrorInfo specialization for execute
-		//struct ExecuteErrorInfo : public Future_Base::ErrorInfo
-		//{
-		//	Exception* exc; //captured exception, cloned  @todo ver si puedo resolver esto
-		//	bool isPointer; //if original captured exception was as poiner or object
-		//	~ExecuteErrorInfo()
-		//	{
-		//		if ( !isPointer )
-		//		{
-		//			delete exc; 
-		//		}
-		//	}
-		//};
-
+		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception		
 		inline ::core::ThreadId getOwnerThreadId() const { assert(mOwnerThread != 0); return mOwnerThread; }
 		/**
 		* Manually set the owner thread ID.
@@ -212,22 +197,7 @@ namespace tasking
 		//typedef Callback<void,Runnable*>	TFinishEvent;
 		CallbackSubscriptor<::core::CSNoMultithreadPolicy, Runnable*> mFinishEvents;
 		void executeFinishEvents();
-
-		/**
-		* helper function for checkCondition
-		*/
-		template <class Condition>
-		bool _checkConditionHelper(  Condition& cond, Future<void>& result )
-		{
-			if ( cond() )
-			{
-				result.setValue();
-				return true;
-			}else
-			{
-				return false;
-			}
-		}
+		
 	protected:
 		/**
 		* Performs a controlled loop over the internal queue, excuting
@@ -287,7 +257,6 @@ namespace tasking
 		* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
 		* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::core::_private::Allocator for interfaz needed to your custom allocator
 		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*,::tasking::EGenericProcessState)
-		* @param[in] priority process priority
 		* @param[in] period Milliseconds
 		* @param[in] startTime milliseconds to begin task
 		* @return the process created for this task
@@ -300,7 +269,7 @@ namespace tasking
 			unsigned int period = 0,unsigned int startTime = 0);
 		/**
 		 * @brief Convenient function to post no periodic task with signature void f()
-		 * 
+		 * @param[in] task_proc functor with signature void f(void)
 		 */
 		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F>		
 		std::shared_ptr<Process> fireAndForget(
@@ -312,53 +281,10 @@ namespace tasking
 		* will be executed directly (so Future<TRet> will be always available at return) or posted (so caller will
 		* need to wait on this Future or whatever other mechanism)
 		* @param[in] function Functor with signature TRet f() that will be executed in this Runnable
-		* @param[in] forcePost if true, then function will be posted in spite of calling thread is same as Runnable thread
-		* @param[in] delay milliseconds to be delayed before execution
 		*/
 		template <class TRet,class F> 
-			Future<TRet> execute( F&& function,unsigned int delay = 0, bool forcePost = false);
+			Future<TRet> execute( F&& function);
 
-		/**
-		* evaluate condition on this Runnable
-		* @param[in] cond Condition object. Must have bool operator()()
-		* @param[in] checkPeriod Internally it post a task, so this is the task period. Default is 0
-		* @return a future which will be triggered when condition is true
-		*/
-		template <class Condition> 
-		Future<void> checkCondition( Condition cond,unsigned int checkPeriod = 0);
-		
-		/**
-		* trigger the given callback when given future is ready (valid or error)
-		* @remarks internally it post a task in this Runnable and this task becomes sleep.It will
-		* be awaked when future is ready. Some things to consider:
-		*		- if the future has a FUTURE_RECEIVED_KILL_SIGNAL because was kill, no callback is called (to avoid when task are being killed and maybe callback is not more valid)
-		*		- if trigger is canceled through FutureTriggerInfo, callback is not called
-		*/
-		class FutureTriggerInfo
-		{
-		public:
-			FutureTriggerInfo():mCancel(false){}
-			inline void cancel(){ mCancel = true;}
-			inline bool getCancel() const{ return mCancel;}
-		private:
-			bool mCancel;
-		};
-		/**
-		* @param[in] future The future to wait for
-		* @param[in[ functor Callback called when triggered with signature <void,const Future_Base&>
-		* @param[in] autoKill If wait is canceled when kill signal is received
-		* @return reference to a FutureTriggerInfo (don't delete it)
-		*/
-		//template <class F>
-	//	FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, F&& functor, bool autoKill = true);
-		/**
-		* @param[in] future The future to wait for
-		* @param[in] f an standard function to be called when triggered with signature <void,const Future_Base&>
-		* @param[in] autoKill If wait is canceled when kill signal is received
-		* @return reference to a FutureTriggerInfo (don't delete it)
-		*/
-		//FutureTriggerInfo* triggerOnDone( const ::core::Future_Base& future, std::function<void(const ::core::Future_Base&)>&& f, bool autoKill = true);
-        
 		/**
 		* subscribe to finish event. This event will be executed when Runnable finish,
 		* so, when onRun returns;
@@ -395,11 +321,6 @@ namespace tasking
 		}
 		inline unsigned int getMaxPoolTasks() const{ return mMaxTaskSize;}
 	private:
-		/**
-		* helper for triggerOnDone
-		*/
-		void _triggerOnDone( const ::core::Future_Base& future, Callback<void,const Future_Base&>*,FutureTriggerInfo* info );
-		static void _sleep( unsigned int);
 
 	};
 	
@@ -434,9 +355,6 @@ namespace tasking
 		);
 	}
 
-
-	
-	
 	const ProcessScheduler& Runnable::getTasksScheduler() const
 	{
 		return mTasks;
@@ -460,13 +378,12 @@ namespace tasking
 		mFinishEvents.subscribeCallback(std::forward<F>(functor));
 	}
 	template <class TRet,class F> 
-	Future<TRet> Runnable::execute( F&& function,unsigned int delay,bool forcePost)
+	Future<TRet> Runnable::execute( F&& function)
 	{
 		assert(mOwnerThread != 0);
 		Future<TRet> future;
-		if ( forcePost || mOwnerThread != ::core::getCurrentThreadId())
-		{			
-			post(
+		//always post the task, despite being in same thread. This is the most consistent way of doing it
+		post(
 				RUNNABLE_CREATETASK
 				(
 					returnAdaptor<void>
@@ -474,87 +391,27 @@ namespace tasking
 						linkFunctor<void, TYPELIST()>(ExecuteTask<TRet, typename ::std::decay<F>::type>(::std::forward<F>(function)), future)
 						, ::tasking::EGenericProcessResult::KILL
 						)
-				), false/*@todo esto tengo que poder configurarlo*/
-				/* , NORMAL_PRIORITY_TASK */
-				, 0, delay
+				),
+				 false  //@todo revisar cómo debería ser
+				, 0
 
-			);
-	
-		}else
-		{
-			_sleep( delay ); //@todo �apa para evitar incluir Thread.h
-			//same calling thread that this thread, execute directly
-			ExecuteTask<TRet, typename ::std::decay<F>::type>(::std::forward<F>(function))( future);
-		}
-
+			);		
 		return future;
 	}
 	
-	template <class Condition> 
-	Future<void> Runnable::checkCondition( Condition cond,unsigned int checkPeriod )
-	{
-		assert(mOwnerThread != 0);
-		Future<void> result;
-		if ( (mOwnerThread != ::core::getCurrentThreadId()) || !_checkConditionHelper(cond,result))
-		{
-			//post task to check condition
-			
-			 post(
-				RUNNABLE_CREATETASK((
-					linkFunctor<bool,TYPELIST()>(makeMemberEncapsulate( &Runnable::_checkConditionHelper<Condition>,this ),
-												 cond,result)
-				))
-				
-			);
-			
-			
-
-		}
 		
-		return result;
-	}
-	/*
-	template <class F>
-	Runnable::FutureTriggerInfo* Runnable::triggerOnDone( const ::core::Future_Base& future, F&& functor,bool autoKill, void* extraInfo)
-	{
-		if ( !future.getValid() )
-		{
-			FutureTriggerInfo* info = new FutureTriggerInfo;
-			typedef Callback<void,const ::core::Future_Base&> TCallback;
-			TCallback* cb = new TCallback( functor, ::core::use_functor );
-			post( 
-				RUNNABLE_CREATETASK(
-					returnAdaptor<void>
-					(
-						linkFunctor<void,TYPELIST()>( makeMemberEncapsulate( &Runnable::_triggerOnDone, this ),future,cb,info)
-						,true
-					)
-				),autoKill,0,0
-			);
-			return info;
-		}else
-		{
-			functor( future );
-			return NULL;
-		}
-	}
-*/
 	///@cond HIDDEN_SYMBOLS
 	//helper class por request task to Runnable
 	template <class TRet, class F> struct ExecuteTask
 	{
 		F mFunction;
-		ExecuteTask(F&&f):mFunction(std::move(f))
+		ExecuteTask(F&&f):mFunction(std::forward<F>(f))
 		{			
-		}
-		ExecuteTask(const F& f):mFunction(f)
-		{
 		}
 		void operator()( /*F& function,*/ Future<TRet> f )
 		{
 			try
 			{
-				//f.setValue( function() );
 				f.setValue(mFunction());
 			}
 			//check chances of Exception
@@ -564,20 +421,15 @@ namespace tasking
 				ei->error = Runnable::ERRORCODE_EXCEPTION;
 				ei->exc = e.clone();
 				ei->isPointer = false;*/
-				auto ei = new Future_Base::ErrorInfo;
-				ei->error = Runnable::ERRORCODE_EXCEPTION;
-				ei->errorMsg = e.what();
-				f.setError( ei );	
+				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
 			}
 			catch(...)
 			{
 				/*Future_Base::ErrorInfo* ei = new Future_Base::ErrorInfo; 
 				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
 				ei->errorMsg = "Unknown exception";*/
-				auto ei = new Future_Base::ErrorInfo;
-				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
-				ei->errorMsg = "Unknown exception";
-				f.setError( ei );	
+				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+
 			}
 
 		}
@@ -587,10 +439,7 @@ namespace tasking
 	template <class F> struct ExecuteTask<void,F>
 	{
 		F mFunction;
-		ExecuteTask(F&&f) :mFunction(std::move(f))
-		{
-		}
-		ExecuteTask(const F& f) :mFunction(f)
+		ExecuteTask(F&&f) :mFunction(std::forward<F>(f))
 		{
 		}
 		void operator()( Future<void> f )
@@ -603,17 +452,11 @@ namespace tasking
 			//check chances of Exception
 			catch( std::exception& e )
 			{
-				auto ei = new Future_Base::ErrorInfo;
-				ei->error = Runnable::ERRORCODE_EXCEPTION;
-				ei->errorMsg = e.what();
-				f.setError( ei );	
+				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
 			}
 			catch(...)
 			{
-				auto ei = new Future_Base::ErrorInfo;
-				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
-				ei->errorMsg = "Unknown exception";
-				f.setError( ei );	
+				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
 			}
 		}
 		bool operator ==( const ExecuteTask& )const { return true;} //for compliance
