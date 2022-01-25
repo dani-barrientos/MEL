@@ -32,7 +32,7 @@ namespace parallelism
 		::core::CriticalSection mCS;
 
 	};
-	class Barrier
+	class DABAL_API Barrier
 	{
 	public:
 		explicit Barrier( size_t nWorkers = 1 ):mData( new BarrierData( nWorkers ) )

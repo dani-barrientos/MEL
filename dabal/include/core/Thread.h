@@ -446,5 +446,5 @@ namespace core {
         auto receiver = std::make_unique<_Receiver>();
         return receiver->wait(f,msecs);	
     }	
-	::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
+	DABAL_API ::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 }

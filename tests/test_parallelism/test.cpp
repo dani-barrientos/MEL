@@ -52,7 +52,7 @@ class Hija : public Base
 class TestResult
 {    
     public:
-        TestResult(string name,size_t nThreads,unsigned int baseTime):mBaseTime(baseTime),mName(name),mData(nThreads-1){}
+        TestResult(string name,size_t nThreads,unsigned int baseTime):mBaseTime(baseTime),mName(name),mData(nThreads){}
         void addTime(int nThread,unsigned int time){ mData[nThread-1] = time;}
         unsigned int getTime(int nThread) const{ return mData[nThread-1];}
         const string& getName() const{ return mName;}
@@ -69,7 +69,7 @@ static int test()
     spdlog::set_level(spdlog::level::info); // Set global log level
     Timer timer;
     constexpr int n = 100000;
-    constexpr int tries = 500;
+    constexpr int tries = 50;
     constexpr int maxThreads = 20;
     std::map<string,std::unique_ptr<TestResult>> results;
 
@@ -134,7 +134,7 @@ static int test()
     results[test->getName()]=std::move(test);
 
     ThreadPool::ThreadPoolOpts opts;           
-    for(int i = 1; i < maxThreads;++i)
+    for(int i = 1; i <= maxThreads;++i)
     {
         spdlog::info("Using {} threads",i);
         if ( i == numCores)
@@ -158,7 +158,8 @@ static int test()
                 {
                     objs[idx]->f();
                 //  spdlog::debug("it {}",idx);
-                }).wait();            
+                }).wait();         
+           
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method indexing (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_INDEXED]->addTime(i,elapsed);
@@ -201,6 +202,7 @@ static int test()
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method with iterators (list). Time: {}",elapsed);
         results[PARALLEL_LIST_ITERATOR]->addTime(i,elapsed);
+        
         /*
         este no face falta, era por curiosidad    
         t0 = timer.getMilliseconds();
@@ -227,7 +229,7 @@ static int test()
         TList ordered;
         for(size_t i=0;i<data.size();++i)
         {
-             if ( data[i] > max )
+             if ( data[i] >= max )
              {
                  max = data[i];
                  maxIdx = i;

@@ -1,4 +1,5 @@
 #pragma once
+#include <DabalLibType.h>
 #include <parallelism/ThreadPool.h>
 #include <parallelism/Barrier.h>
 #include <mpl/TypeTraits.h>
@@ -46,26 +47,7 @@ namespace parallelism
 			it += increment;
 		}
 	};
-	/*
-	//clas to get element in collection
-	template <bool>
-	struct GetElement
-	{
-		template <class I> static typename ::std::iterator_traits<I>::value_type& get(I it)
-		{
-			return *it;
-		}
-	};
-	//specialization for arithmetic iterator (plain for)
-	template <>
-	struct GetElement<true>
-	{
-		template <class I> static I get(I& it)
-		{
-			return it;
-		}
-	};
-	*/
+	
 	template <bool>
 	struct BulkExecute
 	{
@@ -100,6 +82,7 @@ namespace parallelism
 		}
 	};
 	//specialization whitout using iterators and for not arithmethic iterators
+	//@todo ya no vale
 	template <>
 	struct BulkExecute<true>
 	{
@@ -128,10 +111,10 @@ namespace parallelism
 					int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
 					for (int n = 0; n < size; ++n)
 					{
-						int idx = (cont - 1)*(divisionSize*increment) + n * increment;
-						//						logging::Logger::getLogger()->info("idx %d. Cont=%d; divisionSize=%d; increment=%d; leftOver=%d,n=%d",idx,cont,divisionSize,increment,leftOver,n);
-						ObjType* element = (*vCopy)[idx];
-						functor(*element);
+						int idx = (cont - 1)*(divisionSize*increment) + n * increment;						
+						//@todo no vale porque necesito iterador
+						//ObjType* element = (*vCopy)[idx];
+						//functor(*element);
 					}
 				}
 						)
@@ -143,7 +126,7 @@ namespace parallelism
 	/**
 	* parallelized iteration, begin:end (end not included)
 	*/
-	class DABAL_API For
+	class For
 	{
 	private:
 		
@@ -214,7 +197,9 @@ namespace parallelism
 				}
 				++cont;
 			}
-			BulkExecute<_ITERATOR_DEBUG_LEVEL != 0 && !isArithIterator >::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, mBarrier);
+			//BulkExecute<_ITERATOR_DEBUG_LEVEL != 0 && !isArithIterator >::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, mBarrier);
+			//@todo arreglar metodo sin iteradores
+			BulkExecute<false>::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, mBarrier);
 		
 			if (opts.useCallingThread && nIterations > 0)
 			{
@@ -237,12 +222,12 @@ namespace parallelism
 		{
 		}
 		For() {}
-		auto wait(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE ) const
+		inline auto wait(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE ) const
 		{
 			return ::core::waitForBarrierThread(mBarrier,msecs);
 		}
 		//@todo quitar esto que no me gusta. Aislarlo como para barreras y futures
-		auto waitAsMThread(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE) const
+		inline auto waitAsMThread(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE) const
 		{
 			::tasking::waitForBarrierMThread(mBarrier,msecs);
 		}		

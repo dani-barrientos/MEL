@@ -152,8 +152,8 @@ class MasterThread : public GenericThread
 		}
 		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input,Future<int> output,int taskId ) 
 		{
-			int tam = rand()%1000;
-			int arr[tam];
+			// int tam = rand()%1000;
+			// int arr[tam];  //Uvale, qué susto, esto no es standard. Funciona en gcc y clang pero no es standard
 			spdlog::debug("Task {} waits for input",taskId);
 			auto wr = ::tasking::waitForFutureMThread(input);
 			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
