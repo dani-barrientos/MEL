@@ -22,28 +22,7 @@ using tests::TestManager;
  *  -t <NAME>  execute given test
  * eachs test has it's own command line arguments
  **/
-#include <core/Future.h>
-using core::Future;
-struct Pepe
-{
-	Pepe(int aA,string aB):a(aA),b(std::move(aB)){}
-	Pepe(){};
-	Pepe( const Pepe& )
-	{
-		spdlog::debug("Constructor copia Pepe");
-	}
-	Pepe( Pepe&& )
-	{
-		spdlog::debug("Constructor move Pepe");
-	}
-	Pepe& operator=(const Pepe& o2){
-		spdlog::debug("Asignacion copia Pepe");
-		a = o2.a;b=o2.b;return *this;}
-	Pepe& operator=(Pepe&& o2){
-		spdlog::debug("Constructor move Pepe");
-	a = o2.a;b=std::move(o2.b);return *this;}
-	int a;string b;
-};
+
 int main(int argc, const char* argv[])
 {	
 //ver cómo furrula y 
@@ -54,35 +33,6 @@ int main(int argc, const char* argv[])
 	spdlog::info("otra prueba");
 	spdlog::error("Prueba error 2");
 	spdlog::set_level(spdlog::level::debug); // Set global log level to debug
-
-	Future<int> f;
-	f.setValue(6);
-	{
-	Future<Pepe> f2;	 
-	Pepe p{1,"dani"};
-	f2.setValue(Pepe(1,"dani"));
-	//f2.setValue(p);
-	spdlog::debug(f2.getValue().isValid());
-	f2.getValue().value();
-	const auto& fv = f2.getValue();
-	auto& v = fv.value();
-	spdlog::debug(v.b);
-	}
-	Future<Pepe> f3;	 
-	::core::ErrorInfo ei{5,"pepe"};
-	//f3.setError(ei);
-	f3.setError(::core::ErrorInfo(5,"pepe"));
-	f3.getValue().error();
-
-	Future<void> f4;
-	f4.setValue();
-	auto v = f4.getValue();
-	spdlog::debug( v.isValid() );
-	Future<void> f5;
-	f5.setError(::core::ErrorInfo(5,"dani"));
-	auto v2 = f5.getValue();
-	spdlog::debug( v2.isValid() );
-	
 	#ifdef NDEBUG
 	spdlog::info( "ESTAMOS EN RELEASE");
 	#else

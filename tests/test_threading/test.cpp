@@ -118,10 +118,108 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 	if ( elapsed > TIME_MARGIN)
 		spdlog::warn("Margin time overcome {}. Info: {}",elapsed,text);
 }
+//pruebas---
+class Continuation;
+//sería clase genérica que usa cualquier agente de ejecución->probar uno con threadPool y que distribuya tareas
+class Executor
+{
+	friend class ContinuationData;
+	public:
+		Executor(Runnable* runnable):mRunnable(runnable)
+		{
+
+		};
+		template <class F> Continuation launch( F&& f);
+	private:
+		Runnable* mRunnable;
+		template <class F> void _execute(F&& f)
+		{
+			mRunnable->fireAndForget(std::forward<F>(f));
+		}
+};
+
+class ContinuationData final : public enable_shared_from_this<ContinuationData>
+{
+	friend class Continuation;
+	public:
+	//	static std::atomic<int> counter; //para pruebas
+		template <class F> ContinuationData(Executor ex,F&& f ):mState(EState::NONE), mExecutor(std::move(ex)),mFunct(std::forward<F>(f)),mNext(nullptr)
+		{			
+	//		++counter;
+		}
+		~ContinuationData()
+		{
+	//		spdlog::debug("~ContinuationData()");
+	//		--counter;
+		}
+		template <class F> Continuation next(F&& f);		
+		void start()
+		{
+			mExecutor._execute(
+				[_this = shared_from_this()]() mutable
+				{					
+					::core::Lock lck(_this->mCS);				
+					_this->mFunct();
+					_this->mState = EState::DONE;
+					if ( _this->mNext )
+						_this->mNext->start();
+				}
+			);
+		}
+	private:	
+		enum class EState :uint8_t{NONE,DOING,DONE};
+		CriticalSection mCS;
+		Executor	mExecutor;
+		EState mState;		
+		std::shared_ptr<ContinuationData> mNext;
+		std::function<void()> mFunct;
+	
+};
+//std::atomic<int> ContinuationData::counter = 0;
+class Continuation
+{
+	friend class Executor;
+	
+	public:
+		template <class F> Continuation(Executor ex,F&& f ):mData(make_shared<ContinuationData>(ex,std::forward<F>(f))){}		
+		template <class F> Continuation next(F&& f)
+		{
+			return mData->next(std::forward<F>(f));
+		}
+		Continuation(shared_ptr<ContinuationData> data):mData(data){}  //@todo debe ser privado pero algo no me va bien con el friend
+		Continuation(Continuation&& cont):mData(std::move(cont.mData)){}
+		Continuation(const Continuation& cont):mData(cont.mData){}
+	private:
+		void _start(){ if(mData) mData->start();}
+		shared_ptr<ContinuationData> mData;
+
+};
+template <class F> Continuation ContinuationData::next(F&& f)
+{
+	::core::Lock lck(mCS);
+	if ( mState== EState::DONE)
+	{
+		//spdlog::debug("next. Straight execution");
+		//straight execution 
+		return mExecutor.launch(f);
+	}else
+	{
+		//spdlog::debug("next. Not available");
+		mNext = make_shared<ContinuationData>(mExecutor,std::forward<F>(f));
+		return Continuation(mNext); 
+	}
+}	
+template <class F> Continuation Executor::launch( F&& f )
+{
+	Continuation result(*this,std::forward<F>(f));
+	result._start();
+	return result;
+}	
 
 
 static int _testMicroThreadingMonoThread()
 {
+	
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
@@ -129,10 +227,41 @@ static int _testMicroThreadingMonoThread()
 	spdlog::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 	int result = 0;
 	int sharedVar = 0;
-	auto th1 = GenericThread::createEmptyThread();
+	auto th1 = GenericThread::createEmptyThread(false);
+	//th1->start();	
+	{
+//---- pruebas executors
+	Executor ex(th1.get());
+	auto cont = ex.launch(
+		[]()
+		{
+			spdlog::debug("UNO");
+			::tasking::Process::wait(4000);
+			spdlog::debug("DOS");
+		}
+	).next([]()
+		{
+			spdlog::debug("TRES");
+			::tasking::Process::wait(1000);
+			spdlog::debug("CUATRO");
+		}
+	);
+//	spdlog::debug("Remaining Data 1: {}",ContinuationData::counter);
+	Thread::sleep(3000);
+//	spdlog::debug("Remaining Data 2: {}",ContinuationData::counter);
+	cont.next([]()
+		{
+			spdlog::debug("CINCO");
+		}
+	);	
+	}
+//	spdlog::debug("Remaining Data 3: {}",ContinuationData::counter);	
 	th1->start();	
+	Thread::sleep(2000);
+//	spdlog::debug("Final Remaining Data: {}",ContinuationData::counter);
+//---
+	/*
 	auto th2 = GenericThread::createEmptyThread();
-	
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
 		th2->fireAndForget([]
@@ -154,6 +283,7 @@ static int _testMicroThreadingMonoThread()
 		spdlog::debug("execution done");
 		return ::tasking::EGenericProcessResult::CONTINUE;
 	},true,3000);
+	*/
 	/*
 	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
 	{
