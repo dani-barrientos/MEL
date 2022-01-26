@@ -113,6 +113,7 @@ template <class F> Continuation<Executor<Runnable>> Executor<Runnable>::launch( 
 	result._start();
 	return result;
 }	
+resolver que las funciones devuelva un future, es decir, usar un execute<>. La cuestión es qué se debe devolver afuera
 
 /**
  * @brief execution tests
