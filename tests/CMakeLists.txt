@@ -9,7 +9,7 @@ add_compile_definitions(DABAL_IMPORTS)
 add_executable (tests "main.cpp")
 target_include_directories(tests PUBLIC "common/include")
 target_sources(tests PRIVATE  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
-"test_threading/future_tests.cpp" "test_parallelism/test.cpp"
+"test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp"
 )
 
 #add_link_options()

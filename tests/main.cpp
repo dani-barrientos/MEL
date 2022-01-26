@@ -3,6 +3,7 @@
 #include "test_callbacks/test.h"
 #include "test_threading/test.h"
 #include "test_parallelism/test.h"
+#include "test_execution/test.h"
 #include <CommandLine.h>
 using tests::CommandLine;
 #include <TestManager.h>
@@ -50,6 +51,7 @@ int main(int argc, const char* argv[])
 	test_callbacks::registerTest();
 	test_threading::registerTest(); 
 	test_parallelism::registerTest();
+	test_execution::registerTest();
 
 	if ( CommandLine::getSingleton().getOption(LIST_OPTION) != std::nullopt )
 	{
