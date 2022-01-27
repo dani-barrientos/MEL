@@ -16,12 +16,26 @@ using mpl::addParam;
 #undef max
 #include <limits>
 #include <tasking/GenericProcessDefs.h>
+/**
+* @namespace parallelism
+* @brief parallelism support
+*/
 namespace parallelism
 {
+	/**
+	 * @brief Pool of threads allowing parallel execution
+	 * @details
+	 * Code example:
+	 * @code {.cpp}
+	 * ThreadPool::ThreadPoolOpts opts;
+	 * ThreadPool myPool(opts);
+     * ThreadPool::ExecutionOpts exopts;
+	 * @endcode
+	 */
 	class DABAL_API ThreadPool
 	{
 	public:
-		enum SchedulingPolicy {
+		enum class SchedulingPolicy {
 			SP_ROUNDROBIN,
 			SP_BESTFIT,
 			SP_EXPLICIT
@@ -45,7 +59,7 @@ namespace parallelism
 		struct ExecutionOpts {
 			bool useCallingThread = false;
 			bool groupTasks = true; //group task when number of tasks is greater than threads. This way, grouped tasks, are execute one after each
-			SchedulingPolicy schedPolicy = SP_ROUNDROBIN;
+			SchedulingPolicy schedPolicy = SchedulingPolicy::SP_ROUNDROBIN;
 			size_t threadIndex = 0; //set thread index to use when schedPolicy is SP_EXPLICIT
 		};
 		template <class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,/*bool updateWorkers, */FTypes ... functions)
@@ -64,6 +78,11 @@ namespace parallelism
 			_execute(opts,result,std::forward<FTypes>(functions)...);		
 			return result;
 		}
+		/**
+		 * @brief select thread for execution based on given opts
+		 * 
+		 */
+		std::shared_ptr<Thread> selectThread(const ExecutionOpts& opts);
 	private:
 		ThreadPoolOpts mOpts;
 		std::shared_ptr<Thread>*	mPool;
@@ -77,8 +96,9 @@ namespace parallelism
 		{
 			if (mNThreads != 0)
 			{
-				mLastIndex = _chooseIndex(opts);
-				mPool[mLastIndex]->post(
+				// mLastIndex = _chooseIndex(opts);
+				// mPool[mLastIndex]->post(
+				selectThread(opts)->post(
 					std::function<tasking::EGenericProcessResult (uint64_t, Process*, tasking::EGenericProcessState)>([func, output](uint64_t, Process*, ::tasking::EGenericProcessState) mutable
 				{
 					func();
@@ -116,10 +136,7 @@ namespace parallelism
 				);
 				//mLastIndex = (int)thIdx;
 			}
-		}
-		
-		
-		
+		}						
 		size_t _chooseIndex(const ExecutionOpts& sp);
 	};
 	
