@@ -57,6 +57,11 @@ using core::Callback;
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
 #include <core/Future.h>
+/**
+ * @brief Tasking system
+ * @details Based on the concept of *microthread*, which is represented by class Process. A microthread alows to have cooperative multitasking, such that a single
+ * thread can excute thousands concurrent tasks. Think microthread as a very light fiber
+ */
 namespace tasking
 {
 
@@ -65,7 +70,8 @@ namespace tasking
 // lo de usar binary tampco vale para mucho
 	class ProcessScheduler;  //predeclaration
 	/**
-	* @brief a periodic task
+	* @class Process
+	* @brief A periodic task,. implementing a *microthread*
 	* A Process is scheduled by a ProcessScheduler.
 	* @remarks tasks are accoring according to a Timer, which uses uint64_t type to express msecs, but for eficiency reasons
 	* using a 64 bits type on 32 bits machines will be very "agressive", so we use unsigned int as time for tasks so getting the low part
@@ -75,12 +81,9 @@ namespace tasking
 	* it will not be a problema, but in Windows (maybe other Operating Systems?) there is a exploitation prevent system (called SEHOP, see https://blogs.technet.microsoft.com/srd/2009/02/02/preventing-the-exploitation-of-structured-exception-handler-seh-overwrites-with-sehop/) )that will make the app crash
 	* because Windows interpret it as a hack process. This option is disabled in worksations but enabled for Windows Server- To disable it, go to HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/Session Manager/Kernel/DisableExceptionChainValidation
 	*/
-	class Process;
-//	typedef CallbackSubscriptor< ::core::CSNoMultithreadPolicy, std::shared_ptr<Process>> KillEventSubscriptor; @todo lo pasaré a ProcessScheduler
 	class DABAL_API Process :
 		public std::enable_shared_from_this<Process>,
 		public MThreadAttributtes		
-		//private KillEventSubscriptor  //TODO que poco me gusta esta herencia, incrementa el tama�o de los Process y quisiera que fuesen m�s ligeros
 	{
 		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	
@@ -99,36 +102,30 @@ namespace tasking
 		};
 		//! reason why Process returns for context switch
 		enum class ESwitchResult{
-			ESWITCH_OK,  //return from context switch was ok
-			ESWITCH_WAKEUP,  //return from context switch was because a wakeup
-			ESWITCH_ERROR,  //switch couldn't be done
-			ESWITCH_KILL //return from context switch because a kill
+			ESWITCH_OK,  //!< return from context switch was ok
+			ESWITCH_WAKEUP,  //!<return from context switch was because a wakeup
+			ESWITCH_ERROR,  //!<switch couldn't be done
+			ESWITCH_KILL //!<return from context switch because a kill
 			};
 		
 		/**
-		*
-		*
-		* @param reserveStack If true then statck is initially reserved with capacity
-		* @param capacity Initial capacity (only makes sense if reserveStack = true)
+		* @brief constructor
+		* @param capacity Initial capacity.in bytes A value of 0 means no stack precreated. in any case, stack grow as is needed
 		*/
-		Process( bool reserveStack = false,unsigned short capacity = 64 );
-		/**
-		*	destructor
-		*/
+		Process( unsigned short capacity = 0 );
 		virtual ~Process(void);
 		/**
-		* sets processManager which holds this process
-		*
-		* @param gestor    gestor
+		* sets ProcessScheduler which holds this process. Each process can only be scheduled by one ProcessScheduler
 		*/
-		void setProcessScheduler( ProcessScheduler* const  gestor);
+		void setProcessScheduler( ProcessScheduler* const  mgr);
 		/**
-		* pause this process
-		*/
+		 * @brief pause execution until wakeup called
+		 * @ref onPause is called in order children can do custom behaviour
+		 */
 		void pause( );
 		
 		/**
-		* mark this process to be eliminated by the process manager.
+		* @brief mark this process to be eliminated by the process manager.
 		* Internally, kill calls virtual onKill, which returns true if kill can be acomplished or not.
 		* In case of true, then process is put in PREPARED_TO_DIE state, so the scheduler can remove it.
 		* In case of false, process is put in a TRYING_TO_KILL state so scheduler will continue to trying to
@@ -149,25 +146,21 @@ namespace tasking
 		virtual void reset();
 		/**
 		* Set the period for this process
-		*
 		* @param value the new period (in msecs)
 		*/
 		inline void setPeriod(unsigned int value);
 
 		EProcessState getState() const{ return mState;}
 		/**
-		* it's process out of process manager?
+		* check if process is dead
 		*/
 		inline bool getDead() const;
 		/**
-		* it's process prepared to be eliminated from process manager?
+		* check if process is going to die
 		*/
 		inline bool getPreparedToDie() const;
-		inline unsigned int getPeriod() const;		
-		/**
-		* it's process finished correctly?
-		*/
-		inline bool getInitiated() const;
+		//! get period (milliseconds)
+		inline unsigned int getPeriod() const;						
 		/**
 		* returns time elapsed during this iteration 
 		*/
@@ -178,13 +171,7 @@ namespace tasking
 		*/
 		inline uint64_t getLastUpdateTime() const;
 		inline void resetTime();
-		/**
-		* execution function. It calls update() when time > mPeriod
-		*
-		* @param msegs    msegs
-		*/
-
-		void update(uint64_t msegs) OPTIMIZE_FLAGS;
+		
 
 		/**
 		* gets ProcessScheduler which holds this Process
@@ -276,7 +263,16 @@ namespace tasking
 		*/
 		void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
 		volatile void checkMicrothread(uint64_t msegs ) OPTIMIZE_FLAGS;
-
+		/**
+		* execution function. It calls update() when time > mPeriod
+		*
+		* @param msegs    msegs
+		*/
+		void update(uint64_t msegs) OPTIMIZE_FLAGS;
+		/**
+		* this is intended to be used by ProcessScheduler
+		*/
+		inline void setDead();
 	protected:
 		/**
 		* behaviour function. The main function of a process. MUST be implemented in
@@ -295,7 +291,7 @@ namespace tasking
 		* called when process is going to be got out of scheduler and was inited (not in PREPARED state)
 		* can be overridden by children
 		* @return bool. True if kill can be acomplished
-		* @remarks it's only called when kill if called with force = false
+		* @remarks it's only called when kill is called with force = false
 		*/
 		virtual bool onKill(){ return true;};
 		/**
@@ -313,11 +309,7 @@ namespace tasking
 		virtual void killDone(){};
 		
 		friend class ProcessScheduler;
-		/**
-		* this is intended to be used by ProcessScheduler
-		*/
-		inline void setDead();
-		inline void setId( unsigned int id );
+		
 	};
 	
 	
@@ -348,10 +340,7 @@ namespace tasking
 	}
 
 	
-	bool Process::getInitiated() const
-	{
-		return ( mState == EProcessState::INITIATED );
-	}
+	
 	void Process::resetTime()
 	{
 		mLastUpdateTime = 0;

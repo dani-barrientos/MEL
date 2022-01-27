@@ -69,19 +69,23 @@ ThreadPool::~ThreadPool()
 	}
 	delete[]mPool;
 }
-
+std::shared_ptr<Thread> ThreadPool::selectThread(const ExecutionOpts& opts)
+{
+	mLastIndex = _chooseIndex(opts);
+	return mPool[mLastIndex];
+}
 size_t ThreadPool::_chooseIndex(const ExecutionOpts& opts) {
 	size_t result;
 	switch (opts.schedPolicy) 
 	{
-		case SP_ROUNDROBIN:
+		case SchedulingPolicy::SP_ROUNDROBIN:
 			result = (int)((mLastIndex + 1) % mNThreads); 
 			break;
-		case SP_BESTFIT:
+		case SchedulingPolicy::SP_BESTFIT:
 			//@todo choose least busy thread
 			result = (int)((mLastIndex + 1) % mNThreads);
 			break;
-		case SP_EXPLICIT:
+		case SchedulingPolicy::SP_EXPLICIT:
 			//assert(opts.threadIndex < (size_t)mNThreads); 
 			result = opts.threadIndex; 
 			break;

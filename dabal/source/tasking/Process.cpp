@@ -15,13 +15,10 @@ using tasking::MThreadAttributtes;
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 
-Process::Process( bool reserveStack,unsigned short capacity  )
+Process::Process( unsigned short capacity  )
 	: 
-	//mLastTime(0),
 	mPeriod(0),
-	//mFinished(false),
 	mPauseReq(false),
-	//mPreviousTime(0),
 	mLastUpdateTime(0),
 	mOwnerProcessScheduler( 0 ),
 	mState(EProcessState::PREPARED),
@@ -30,7 +27,7 @@ Process::Process( bool reserveStack,unsigned short capacity  )
 {
 	mSwitched = false;
     mStackSize = 0;
-	if ( reserveStack )
+	if ( capacity > 0 )
 	{
         assert( (capacity & 3)==0 ); //TODO multiplo de 16 en GCC!!
         mCapacity = capacity;
@@ -101,9 +98,6 @@ void Process::_execute(uint64_t msegs)
 	switch ( mState )
 	{
 	case EProcessState::PREPARED:
-		//mFinished = false;
-		//mPreviousTime = msegs;
-		//mBeginTime = msegs;
 		mState = EProcessState::INITIATED;
 		onInit( msegs );   	
 	case EProcessState::INITIATED:
@@ -292,31 +286,7 @@ Process::ESwitchResult Process::_postSleep(mpl::Tuple<TYPELIST(int,Process*,unsi
 	p->mState = p->mPreviousState;	
 	return result;
 }
-/*
-Process::ESwitchResult Process::_wait( unsigned int msegs, Callback<void,void>* postWait ) 
-{
-	auto p = ProcessScheduler::getCurrentProcess();
-	unsigned int currentPeriod = p->getPeriod();
-	p->setPeriod( msegs );
-	auto prevSwitch = p->mSwitched;
-	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
-	//trigger callback
-	if ( postWait )
-	{
-		(*postWait)();
-		delete postWait;
-	}
-	ESwitchResult result;
-	if (!prevSwitch) {//!no multithread safe!!
-		result = switchProcess(false);
-	}
-	else {
-		result = ESwitchResult::ESWITCH_OK;
-	}
-	p->setPeriod( currentPeriod );
-	return result;
-}
-*/
+
 void Process::wakeUp()
 {
 	//@todo termina verificar que está pausado y tal y poner estado anterior y todo eso..

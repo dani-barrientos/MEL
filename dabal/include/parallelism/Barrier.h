@@ -32,6 +32,10 @@ namespace parallelism
 		::core::CriticalSection mCS;
 
 	};
+	/**
+	 * @brief Multithread barrier
+	 * 
+	 */
 	class DABAL_API Barrier
 	{
 	public:

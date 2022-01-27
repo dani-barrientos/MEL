@@ -8,6 +8,7 @@ using core::MThreadAttributtes;
 
 extern "C"  void __attribute__ ((noinline)) resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 
+///@cond HIDDEN_SYMBOLS
 namespace tasking
 {
 	struct MThreadAttributtes
@@ -24,3 +25,4 @@ namespace tasking
 		volatile unsigned int mCapacity;
 	};
 }
+///@endcond

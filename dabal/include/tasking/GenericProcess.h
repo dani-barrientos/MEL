@@ -8,8 +8,8 @@ using tasking::Process;
 namespace tasking
 {
 	/**
-	* A Process constructed from a functor
-	* This Process it's executed until given functor returns true. This functor is given the current state wich is:
+	* @brief A Process constructed from a functor
+	* This Process it's executed until given functor returns EGenericProcessResult::KILL. This functor is given the current state wich is:
 	*		INIT : first time it's executed
 	*		RUN : second and next times
 	*		KILL : a kill request it's done. 

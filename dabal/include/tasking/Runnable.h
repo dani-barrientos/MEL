@@ -129,8 +129,9 @@ namespace tasking
 			//MemZoneList::iterator iterator; quitar
 		};
 	}
-	
-	template <class TRet, class F> struct ExecuteTask; //predeclaration
+	///@cond HIDDEN_SYMBOLS
+	template <class TRet,class ErrorType, class F> struct ExecuteTask; //predeclaration
+	///@endcond
 	/**
 	* @class Runnable
 	* @brief A class representing a "running" task, with added functionality to post events requesting
@@ -282,8 +283,10 @@ namespace tasking
 		* need to wait on this Future or whatever other mechanism)
 		* @param[in] function Functor with signature TRet f() that will be executed in this Runnable
 		*/
-		template <class TRet,class F> 
-			Future<TRet> execute( F&& function);
+		template <class TRet,class ErrorType = core::ErrorInfo,class F> 
+			Future<TRet,ErrorType> execute( F&& function);
+		template <class TRet,class ErrorType = core::ErrorInfo,class F> 
+			Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>);
 
 		/**
 		* subscribe to finish event. This event will be executed when Runnable finish,
@@ -377,12 +380,12 @@ namespace tasking
 		//mFinishEvents.push_back( new TFinishEvent( functor, ::core::use_functor ) );
 		mFinishEvents.subscribeCallback(std::forward<F>(functor));
 	}
-	template <class TRet,class F> 
-	Future<TRet> Runnable::execute( F&& function)
+	template <class TRet,class ErrorType, class F> 
+	Future<TRet,ErrorType> Runnable::execute( F&& function)
 	{
-		assert(mOwnerThread != 0);
-		Future<TRet> future;
-		//always post the task, despite being in same thread. This is the most consistent way of doing it
+		Future<TRet,ErrorType> future;
+		return execute(std::forward<F>(function),future);
+		/*//always post the task, despite being in same thread. This is the most consistent way of doing it
 		post(
 				RUNNABLE_CREATETASK
 				(
@@ -396,19 +399,45 @@ namespace tasking
 				, 0
 
 			);		
-		return future;
+			
+		return future;*/
+	}
+	/**
+	 * @brief Overload where output Future is given
+	 * With this overload the given Future is fille with result from function. 
+	 * @param output Future where result must be put
+	 * @return same future as out
+	 */
+	template <class TRet,class ErrorType , class F> 
+	Future<TRet,ErrorType> Runnable::execute( F&& function,Future<TRet,ErrorType> output)
+	{
+		//always post the task, despite being in same thread. This is the most consistent way of doing it
+		post(
+				RUNNABLE_CREATETASK
+				(
+					returnAdaptor<void>
+					(
+						linkFunctor<void, TYPELIST()>(ExecuteTask<TRet, ErrorType, typename ::std::decay<F>::type>(::std::forward<F>(function)), output)
+						, ::tasking::EGenericProcessResult::KILL
+						)
+				),
+				 false  //@todo revisar cómo debería ser
+				, 0
+
+			);		
+		return output;
 	}
 	
 		
 	///@cond HIDDEN_SYMBOLS
 	//helper class por request task to Runnable
-	template <class TRet, class F> struct ExecuteTask
+	template <class TRet,class ErrorType, class F> struct ExecuteTask
 	{
 		F mFunction;
 		ExecuteTask(F&&f):mFunction(std::forward<F>(f))
 		{			
 		}
-		void operator()( /*F& function,*/ Future<TRet> f )
+		void operator()( /*F& function,*/ Future<TRet,ErrorType> f )
 		{
 			try
 			{
@@ -436,7 +465,7 @@ namespace tasking
 		bool operator ==( const ExecuteTask& ) const{ return true;} //for compliance
 	};
 	//specialization for void TRet
-	template <class F> struct ExecuteTask<void,F>
+	template <class ErrorInfo,class F> struct ExecuteTask<void,ErrorInfo,F>
 	{
 		F mFunction;
 		ExecuteTask(F&&f) :mFunction(std::forward<F>(f))

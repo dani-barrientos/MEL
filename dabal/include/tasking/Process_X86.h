@@ -10,6 +10,7 @@ using tasking::MThreadAttributtes;
 #else
 	extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #endif
+///@cond HIDDEN_SYMBOLS
 namespace tasking
 {
     struct MThreadAttributtes
@@ -26,4 +27,5 @@ namespace tasking
         volatile unsigned int mCapacity;
     };
 }
+///@endcond
 

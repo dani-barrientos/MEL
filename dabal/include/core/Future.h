@@ -26,6 +26,9 @@ namespace core
 	{
 		typedef std::variant<T,ErrorType> Base;
 		public:
+			FutureValue(){}
+			FutureValue(const T& v):Base(v){}
+			FutureValue(T&& v):Base(std::move(v)){}
 			/**
 			 * @brief get if has valid value
 			 */
@@ -89,10 +92,8 @@ namespace core
 	*/
 	class FutureData_Base 
 	{
-	public:
-		
-		
-		//quitar de aqui
+	public:				
+		//@todo quitar de aqui
 		//result code
 		enum EWaitResult{ FUTURE_WAIT_OK = 0,
 			FUTURE_RECEIVED_KILL_SIGNAL = -1,
@@ -124,8 +125,9 @@ namespace core
 					public std::enable_shared_from_this<FutureData<ResultType,ErrorType>>
 	{		
 	public:
-		typedef typename mpl::TypeTraits< FutureValue<ResultType,ErrorType> >::ParameterType ReturnType;
-		typedef CallbackSubscriptor<::core::CSMultithreadPolicy,const FutureValue<ResultType,ErrorType>&> Subscriptor;
+		typedef FutureValue<ResultType,ErrorType> ValueType;
+		typedef typename mpl::TypeTraits< ValueType >::ParameterType ReturnType;
+		typedef CallbackSubscriptor<::core::CSMultithreadPolicy,const ValueType&> Subscriptor;
 		/**
 		* default constructor
 		*/
@@ -222,7 +224,7 @@ namespace core
 		}
 
 	private:
-		FutureValue<ResultType,ErrorType> mValue;
+		ValueType mValue;
 	
 	};
 
@@ -236,7 +238,8 @@ namespace core
 	{
 		typedef CallbackSubscriptor<::core::CSMultithreadPolicy,const FutureValue<void,ErrorType>&> Subscriptor;
 	public:
-		typedef typename mpl::TypeTraits< FutureValue<void,ErrorType> >::ParameterType ReturnType;
+		typedef FutureValue<void,ErrorType> ValueType;
+		typedef typename mpl::TypeTraits< ValueType >::ParameterType ReturnType;
 
 		FutureData(){};
 		~FutureData(){};
@@ -247,7 +250,7 @@ namespace core
 			Lock lck(FutureData_Base::mSC);
 			if ( mState != NOTAVAILABLE)
 			{
-				f(*this);
+				f(mValue);
 			}				
 			return Subscriptor::subscribeCallback(std::forward<F>(f));
 		}
@@ -300,7 +303,7 @@ namespace core
 			FutureData_Base::mSC.leave();
 		};
 		private:
-			FutureValue<void,ErrorType> mValue;
+			ValueType mValue;
 	};
 
 	
@@ -397,8 +400,8 @@ namespace core
 	class Future : public Future_Common<ResultType,ErrorType>
 	{
 	public:
-		typedef typename mpl::TypeTraits< ResultType >::ParameterType ParamType;
-		typedef typename mpl::TypeTraits< ResultType >::ParameterType ReturnType;
+		typedef typename FutureData<ResultType,ErrorType>::ValueType ValueType;
+		typedef typename FutureData<ResultType,ErrorType>::ReturnType ReturnType;
 		Future(){};
 		Future( const Future& f ):Future_Common<ResultType,ErrorType>(f){};
 		Future( Future&& f ):Future_Common<ResultType,ErrorType>(std::move(f)){};
@@ -420,8 +423,8 @@ namespace core
 	class Future<void,ErrorType> : public Future_Common<void,ErrorType>
 	{
 	public:
-		typedef void ParamType;
-		typedef void ReturnType;
+		typedef typename FutureData<void,ErrorType>::ValueType ValueType;
+		typedef typename FutureData<void,ErrorType>::ReturnType ReturnType;
 		Future(){};
 		Future(const Future& f):Future_Common<void,ErrorType>(f){};	
 		Future(Future&& f):Future_Common<void,ErrorType>(std::move(f)){};	

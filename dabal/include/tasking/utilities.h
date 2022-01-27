@@ -16,11 +16,11 @@
 namespace tasking
 {
     /**
-     * @brief wait for future ready (valid or error)
+     * @brief Wait for future ready (valid or error)
      * 
      * @tparam T 
-     * @param f 
-     * @param msecs 
+     * @param f future to wait for
+     * @param msecs maximum time to wait.
      * @return ::core::FutureData_Base::EWaitResult 
      */
     template<class T,class ErrorType = ::core::ErrorInfo> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)

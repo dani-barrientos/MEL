@@ -1,18 +1,16 @@
 #pragma once
-/**
-* macros para preprocesado útiles. Todavía muy simplón, todo metido aquí. Más adelante estará separadas las cosas por ficheros
-*/
+
 namespace preprocessor
 {
 /**
-* número de argumentos en macro
+* nï¿½mero de argumentos en macro
 */
 /*
 version perfectamente funcional en GCC
 #define MACRO_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 5,4,3,2,1)
 #define VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,N,...) N
 */
-//TENGO QUE HACER PATRAÑAS PARA QUE FUNCIONE EN VISUAL
+//TENGO QUE HACER PATRAï¿½AS PARA QUE FUNCIONE EN VISUAL
 #define _DABAL_PREP_ARGS(_0, _1, ...) _1
 #define TWO_ARGS(...) TWO_ARGS_IMPL( (__VA_ARGS__,1) )
 #define TWO_ARGS_IMPL( args ) _DABAL_PREP_ARGS args
@@ -39,8 +37,8 @@ version perfectamente funcional en GCC
 #define MACRO_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,N,...) N
 */
 /**
-* construcción de argumentos a partir de una lista tal que: (T1,T2,T3,...). Los Ti son tipos
-* Construye una lista de la forma:(T1 _1, T2 _2, T3 _3,..)  (hasta 10 parámetros, puede ser ampliado fácilmente
+* construcciï¿½n de argumentos a partir de una lista tal que: (T1,T2,T3,...). Los Ti son tipos
+* Construye una lista de la forma:(T1 _1, T2 _2, T3 _3,..)  (hasta 10 parï¿½metros, puede ser ampliado fï¿½cilmente
 */
 #ifdef _MSC_VER
 	
@@ -64,7 +62,7 @@ version perfectamente funcional en GCC
 	#define MAKE_PARAMS_9( a,b,c,d,e,f,g,h,i ) MAKE_PARAMS_8(a,b,c,d,e,f,g,h), i _9
 	#define MAKE_PARAMS_10( a,b,c,d,e,f,g,h,i,j ) MAKE_PARAMS_9(a,b,c,d,e,f,g,h,i), j _10
 #else
-	 //para GCC. Estoy suponiendo que no hay más compiladores...
+	 //para GCC. Estoy suponiendo que no hay mï¿½s compiladores...
 	#define MAKE_PARAMS( ... ) MAKE_PARAMS_N( MACRO_NUM_ARGS( __VA_ARGS__ ),__VA_ARGS__ )
 	#define MAKE_PARAMS_N(N,...) MAKE_PARAMS_(N, __VA_ARGS__ )
 	#define MAKE_PARAMS_(N,...) MAKE_PARAMS_ ## N( __VA_ARGS__ )

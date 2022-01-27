@@ -63,7 +63,7 @@
 
 /**
 * @namespace core
-* core system classes and functions: type system, task system, threading system, events, callbacks,...
+* @brief core system classes and functions
 */
 namespace core {
 	/**
@@ -99,9 +99,9 @@ namespace core {
 			
 			inline static ReflectionMap& Reflection()
 			{
-				// En principio no es necesario hacer thread-safe este método para evitar la construcción duplicada
-				// del ReflectionMap, porque no existe posibidad ya que se creará en la fase de inicialización, siendo
-				// todas las llamadas desde el mismo hilo de aplicación.
+				// En principio no es necesario hacer thread-safe este mï¿½todo para evitar la construcciï¿½n duplicada
+				// del ReflectionMap, porque no existe posibidad ya que se crearï¿½ en la fase de inicializaciï¿½n, siendo
+				// todas las llamadas desde el mismo hilo de aplicaciï¿½n.
 				static ReflectionMap mReflection;
 				return mReflection;
 			}

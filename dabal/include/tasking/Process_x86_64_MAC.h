@@ -11,6 +11,7 @@ extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSi
 extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #endif
 
+///@cond HIDDEN_SYMBOLS
 namespace tasking
 {
     struct MThreadAttributtes 
@@ -28,5 +29,6 @@ namespace tasking
 
     };
 }
+///@endcond
 #endif
 

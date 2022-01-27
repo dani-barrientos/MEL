@@ -3,8 +3,13 @@
 namespace tasking
 {
 	/**
-	* some definitions used by GenericProcess
+	* @brief GenericProcess state
 	*/
-	enum class EGenericProcessState : char { INIT,RUN,KILL};
+	enum class EGenericProcessState : char {
+		 INIT,
+		 RUN,
+		 KILL
+	 };
+	 //!@brief Result from functor used in a GenericProcess
 	enum class EGenericProcessResult:char{ CONTINUE,KILL};
 }
