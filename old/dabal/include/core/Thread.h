@@ -113,7 +113,7 @@ namespace core {
 			/**
 			* overridden from Runnable for compatibility
 			* It calls terminate 
-			* @todo revisar no está nada claro
+			* @todo revisar no estï¿½ nada claro
 			*/
 			void finish() override { terminate(); }
 			/**
@@ -201,7 +201,7 @@ namespace core {
 
 			uint64_t getAffinity() const;
 			/**
-			* @todo no está protegido frente a llamada con el hilo iniciandose
+			* @todo no estï¿½ protegido frente a llamada con el hilo iniciandose
 			*/
 			bool setAffinity(uint64_t);
 
@@ -217,7 +217,7 @@ namespace core {
 			*/
 			constexpr static unsigned getMinimunSleepTime()
 			{
-				//@todo por ahora pongo tiempo fijo "típico" para que se pueda usar y ya trataremos de que sea automático o al menos más flexible
+				//@todo por ahora pongo tiempo fijo "tï¿½pico" para que se pueda usar y ya trataremos de que sea automï¿½tico o al menos mï¿½s flexible
 				constexpr unsigned MINIMUM_SLEEP = 10;
 				return MINIMUM_SLEEP;
 			}
@@ -255,7 +255,7 @@ namespace core {
 			/**
 			* suspend inmediately, can be called only from same thread execution
 			*/
-			bool suspendInternal(uint64_t millis,Process* proc,::core::EGenericProcessState);
+			bool suspendInternal(uint64_t millis,Process* proc);
 			/**
 			* called when thread begins to run
 			*/

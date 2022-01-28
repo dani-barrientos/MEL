@@ -34,7 +34,7 @@ class MasterThread : public GenericThread
 			srand((unsigned)msecs);
 			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));					
 		}
-		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p, ::tasking::EGenericProcessState) 
+		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p) 
 		{	
 			constexpr auto mthreadProb = 0.7f; //probability of task being a microthread instead blocking thread
 			constexpr auto newTaskProb = 0.5f; //probability of launching a new task
@@ -66,11 +66,11 @@ class MasterThread : public GenericThread
 					{
 						Future<int> result;
 						mConsumers[i]->post(
-							mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*,::tasking::EGenericProcessState)>(
-							makeMemberEncapsulate(&MasterThread::_consumerTask,this),::mpl::_v1,::mpl::_v2,::mpl::_v3,channel,result,nTasks++)
+							mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+							makeMemberEncapsulate(&MasterThread::_consumerTask,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
 						);
 						++nTasks; //take next task into account
-						post( [this,channel,result](uint64_t,Process*, ::tasking::EGenericProcessState)
+						post( [this,channel,result](uint64_t,Process*)
 							{
 								if( ::tasking::waitForFutureMThread(result) == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
 								{									
@@ -79,8 +79,7 @@ class MasterThread : public GenericThread
 										auto val = channel.getValue().value() + mValueToAdd;
 										if ( val != result.getValue().value())
 											spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
-									}/*else
-										spdlog::error("Error waiting for output: {}",result.getError()->errorMsg);*/
+									}
 								}
 								mBarrier.set();	
 								return ::tasking::EGenericProcessResult::KILL;
@@ -150,7 +149,7 @@ class MasterThread : public GenericThread
                 spdlog::debug("Genero error");
             }			
 		}
-		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, ::tasking::EGenericProcessState,Future<int> input,Future<int> output,int taskId ) 
+		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, Future<int> input,Future<int> output,int taskId ) 
 		{
 			// int tam = rand()%1000;
 			// int arr[tam];  //Uvale, qué susto, esto no es standard. Funciona en gcc y clang pero no es standard

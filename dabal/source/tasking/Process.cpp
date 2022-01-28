@@ -93,7 +93,7 @@ void Process::_execute(uint64_t msegs)
 	if ( mPauseReq)
 	{
 		mPauseReq = false;
-		mState = EProcessState::ASLEEP;
+		sleep();
 	}
 	switch ( mState )
 	{
@@ -164,15 +164,24 @@ Process::ESwitchResult Process::switchProcess( bool v )
 		if (v)
 			p->setPeriod(0);
 		_switchProcess();
-		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despertó por wakeup
-		if (p->getState() == EProcessState::WAITING_FOR_SCHEDULED)
-			result = ESwitchResult::ESWITCH_KILL;
-		else if (p->mWakeup)
+
+		if ( p->mPauseReq && !p->mWakeup )  //maybe a pause was  requested while switched
 		{
-			result = ESwitchResult::ESWITCH_WAKEUP;
+			p->mPauseReq = false;
+			sleep();
+			
+		}else
+		{
+			p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despertó por wakeup
+			if (p->getState() == EProcessState::WAITING_FOR_SCHEDULED)
+				result = ESwitchResult::ESWITCH_KILL;
+			else if (p->mWakeup)
+			{
+				result = ESwitchResult::ESWITCH_WAKEUP;
+			}
+			else
+				result = ESwitchResult::ESWITCH_OK;
 		}
-		else
-			result = ESwitchResult::ESWITCH_OK;
 		p->mWakeup = false;
 	}
 	return result;

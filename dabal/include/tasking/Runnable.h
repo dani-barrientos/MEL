@@ -46,13 +46,12 @@ namespace tasking
 	//so you need to do RUNNABLE_CREATETASK( (link1st<false,void>( xxx )) ) or RUNNABLE_CREATETASK( link1st<false coma void>( xxx ) )
 	//to show de preprocessor that the ',' is not a parameter separator sign
 #define RUNNABLE_CREATETASK( f ) \
-	addParam< ::tasking::EGenericProcessResult,::tasking::EGenericProcessState,uint64_t,Process*,void >( \
 	addParam< ::tasking::EGenericProcessResult,Process*,uint64_t,void > \
-	(addParam< ::tasking::EGenericProcessResult,uint64_t,void >( f ) ) )
+	(addParam< ::tasking::EGenericProcessResult,uint64_t,void >( f ) ) 
 //macro to simplify task creation from lambda expression
-#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::tasking::EGenericProcessResult (uint64_t, Process*, ::tasking::EGenericProcessState)>(lambda)
+#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::tasking::EGenericProcessResult (uint64_t, Process*)>(lambda)
 //useful macro to declare task parameters
-#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p,::tasking::EGenericProcessState s
+#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p
 	class Runnable; //predeclaration
 	namespace _private
 	{
@@ -257,7 +256,7 @@ namespace tasking
 		* By default, a ::core::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons.wich also can
 		* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
 		* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::core::_private::Allocator for interfaz needed to your custom allocator
-		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*,::tasking::EGenericProcessState)
+		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*)
 		* @param[in] period Milliseconds
 		* @param[in] startTime milliseconds to begin task
 		* @return the process created for this task

@@ -99,7 +99,7 @@ namespace parallelism
 				// mLastIndex = _chooseIndex(opts);
 				// mPool[mLastIndex]->post(
 				selectThread(opts)->post(
-					std::function<tasking::EGenericProcessResult (uint64_t, Process*, tasking::EGenericProcessState)>([func, output](uint64_t, Process*, ::tasking::EGenericProcessState) mutable
+					std::function<tasking::EGenericProcessResult (uint64_t, Process*)>([func, output](uint64_t, Process*) mutable
 				{
 					func();
 					output.set();
@@ -127,7 +127,7 @@ namespace parallelism
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-                   std::function<tasking::EGenericProcessResult (uint64_t,Process*,tasking::EGenericProcessState)>([func,output](uint64_t, Process*,::tasking::EGenericProcessState) mutable
+                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func,output](uint64_t, Process*) mutable
                    {
                        func();
                        output.set();

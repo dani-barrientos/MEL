@@ -1,12 +1,10 @@
 #include <tasking/GenericProcess.h>
 using tasking::GenericProcess;
-using ::tasking::EGenericProcessState;
 using ::tasking::EGenericProcessResult;
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL(GenericProcess,Process);
 GenericProcess::GenericProcess() :
 	mProcessCallback( 0 )
-	,mCurrentState( EGenericProcessState::INIT )
 	,mUpdateResult( EGenericProcessResult::CONTINUE )
 	,mAutoKill( false )
 	{
@@ -33,12 +31,20 @@ void GenericProcess::onInit(uint64_t msegs)
 bool GenericProcess::onKill()
 {
 
-	mCurrentState = EGenericProcessState::KILL;
+//	mCurrentState = EGenericProcessState::KILL;
 	return mUpdateResult==(EGenericProcessResult::KILL) || mAutoKill;
 }
 void GenericProcess::onUpdate(uint64_t msegs)
 {
 	if ( mUpdateResult == EGenericProcessResult::CONTINUE)
+	{
+		mUpdateResult = mProcessCallback( msegs, this);
+		if (  mUpdateResult == EGenericProcessResult::KILL  )
+		{
+			kill();
+		}
+	}
+	/*if ( mUpdateResult == EGenericProcessResult::CONTINUE)
 	{
 		mUpdateResult = mProcessCallback( msegs, this,mCurrentState );
 		if ( mCurrentState == EGenericProcessState::INIT )
@@ -47,23 +53,6 @@ void GenericProcess::onUpdate(uint64_t msegs)
 		{
 			kill();
 		}
-	}
+	}*/
 	
 }
-/*
-void GenericProcess::setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&& f)
-{
-	delete mProcessCallback;
-	mProcessCallback = new GenericCallback(::std::move(f), ::core::use_function);
-}
-void GenericProcess::setProcessCallback(const std::function< bool(uint64_t, Process*, EGenericProcessState)>& f)
-{
-	delete mProcessCallback;
-	mProcessCallback = new GenericCallback(f, ::core::use_function);
-}
-void GenericProcess::setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>& f)
-{
-	delete mProcessCallback;
-	mProcessCallback = new GenericCallback(f, ::core::use_function);
-}
-*/

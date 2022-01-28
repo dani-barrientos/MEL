@@ -78,7 +78,7 @@ namespace parallelism
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-					std::function<bool(unsigned int, Process*, EGenericProcessState)>([func, output](unsigned int, Process*, EGenericProcessState) mutable
+					std::function<bool(unsigned int, Process*)>([func, output](unsigned int, Process*) mutable
 				{
 					func();
 					output.set();
@@ -106,7 +106,7 @@ namespace parallelism
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-                   std::function<bool(unsigned int,Process*,EGenericProcessState)>([func,output](unsigned int, Process*,EGenericProcessState) mutable
+                   std::function<bool(unsigned int,Process*)>([func,output](unsigned int, Process*) mutable
                    {
                        func();
                        output.set();

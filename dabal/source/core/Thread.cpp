@@ -422,7 +422,7 @@ using namespace ::std::string_literals;
 #endif	
 }
 
-::tasking::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc, ::tasking::EGenericProcessState) {
+::tasking::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc) {
 	mPauseEV.wait();
 	return ::tasking::EGenericProcessResult::KILL;
 }

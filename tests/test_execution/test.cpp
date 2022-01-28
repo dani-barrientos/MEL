@@ -88,7 +88,7 @@ static int test()
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			parallelism::ThreadPool::ExecutionOpts exopts;
 			execution::Executor<parallelism::ThreadPool> ex2(myPool);
-			auto r2 = ex.launch<int>(  
+			auto r2 = ex2.launch<int>(  
 				[](const auto& v)
 				{
 					if ( v.isValid() )

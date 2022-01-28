@@ -1,7 +1,41 @@
 #pragma once
 namespace execution
 {
+    /**
+     * @details A Continuation is a wrapper for a task executed by a executor, allowing to chain another execution and check the result
+     * Example:
+     * @code {.language-id}
+     *  execution::Executor<...whatever execution agent...> ex(th1);
+			auto cont = ex.launch<int>(  
+				[](const auto& v)
+				{					
+					if ( v.isValid() )					
+						spdlog::debug("Value ");
+					else
+						spdlog::error("Error = {}",v.error().errorMsg);
+					::tasking::Process::wait(4000);
+					
+					return 5;
+				}
+			).next<void>([](const auto& v)
+			{
+				if ( v.isValid() )
+				{
+					spdlog::debug("Value = {}",v.value());
+				}
+				else
+				{
+					spdlog::error("Error = {}",v.error().errorMsg);
+				}
+			})
+     * @endcode
+     * 
+     * @tparam TRet 
+     * @tparam TArg 
+     * @tparam ExecutorType 
+     */
     template <class TRet,class TArg,class ExecutorType> class Continuation;
+    ///@cond HIDDEN_SYMBOLS
     namespace _private
     {
         template <class TArg> class ContinuationDataBase
@@ -48,6 +82,7 @@ namespace execution
             
         };
     }
+    ///@endcond 
     template <class TRet,class TArg,class ExecutorType> class Continuation final
     {
         friend ExecutorType;

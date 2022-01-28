@@ -416,7 +416,7 @@ void Thread::start() {
 }
 
 //#if defined(_MACOSX) || defined(_IOS)
-bool Thread::suspendInternal(uint64_t millis,Process* proc, ::core::EGenericProcessState) {
+bool Thread::suspendInternal(uint64_t millis,Process* proc) {
 	mPauseEV.wait();
 	return true;
 }
@@ -427,7 +427,7 @@ unsigned int Thread::suspend()
 	if ( mState == THREAD_RUNNING )
 	{
 		post(makeMemberEncapsulate(&Thread::suspendInternal,this),HIGH_PRIORITY_TASK); //post as the first task for next iteration
-		mState=THREAD_SUSPENDED; //aunque todavía no se haya hecho el wait,
+		mState=THREAD_SUSPENDED; //aunque todavï¿½a no se haya hecho el wait,
 								 //por la forma en que funcionan los eventos da igual, porque si se hace
 								 //un resume justo antes de procesarse la tarea "suspendInternal", implica que el set
 								 //hace que el siguiente wait no espere, lo cual es lo correcto
@@ -465,7 +465,7 @@ void Thread::terminate(unsigned int exitCode)
 		resume();
 	}else if ( mState == THREAD_INIT )
 	{
-		//TODO vigilar, esto no está bien. Puede ocurrir que en este momento esté arrancado el hilo
+		//TODO vigilar, esto no estï¿½ bien. Puede ocurrir que en este momento estï¿½ arrancado el hilo
 		#ifdef _WINDOWS
 		//in Windows we need to ResumeThread if it wasn't started. Other way it won't be removed from memory( I don't know why..)
 		ResumeThread( mHandle );
@@ -494,7 +494,7 @@ bool Thread::join(unsigned int millis) const
 	//if ( !(mState & (THREAD_INIT | THREAD_FINISHED) ) )
 	{
 	#ifdef _WINDOWS
-		//@todo por qué no usar WaitForSingleObject?
+		//@todo por quï¿½ no usar WaitForSingleObject?
 		DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
 		return status!=WAIT_TIMEOUT;
 	#endif

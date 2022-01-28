@@ -18,16 +18,13 @@ namespace tasking
 	{
 		DABAL_CORE_OBJECT_TYPEINFO;
 	public:
-		//typedef Callback< bool, uint64_t, Process*, EGenericProcessState > GenericCallback;
-		typedef std::function<EGenericProcessResult (uint64_t,Process*,EGenericProcessState)> GenericCallback;
+		typedef std::function<EGenericProcessResult (uint64_t,Process*)> GenericCallback;
 	private:
 		GenericCallback			mProcessCallback;
-		EGenericProcessState	mCurrentState;
 		volatile EGenericProcessResult			mUpdateResult;
 		bool					mAutoKill;
 
 	public:
-		typedef EGenericProcessState EState; //for compliance
 		/**
 		* constructor
 		* @todo hacer los constructores convenientes
@@ -37,12 +34,9 @@ namespace tasking
 		
 		/**
 		* set callback to execute on process update
-		* @param[in] functor A functor with signature bool f(unsigned int msegs, Process*, EGenericProcessState )
+		* @param[in] functor A functor with signature bool f(unsigned int msegs, Process* )
 		*/
 		template <class F> void setProcessCallback( F&& functor );
-		/*void setProcessCallback( std::function< bool(uint64_t,Process*,EGenericProcessState)>&& );
-		void setProcessCallback(const std::function< bool(uint64_t, Process*, EGenericProcessState)>&);
-		void setProcessCallback(std::function< bool(uint64_t, Process*, EGenericProcessState)>&);*/
 		inline const GenericProcess::GenericCallback& getProcessCallback() const;
 		/**
 		* set if process will be atomatically killed when kill signal is received

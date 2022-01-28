@@ -92,7 +92,7 @@ void ProcessScheduler::executeProcesses()
 		mProcessInfo = pi;
 	}
 	auto previousProcess = mProcessInfo->current;
-	//Process* previousProcess = (Process*)TLS::getValue( gTLSCurrentProcessKey ); //TODO por alguna razón en VTS lo hacía en cada executeProcesses..
+	//Process* previousProcess = (Process*)TLS::getValue( gTLSCurrentProcessKey ); //TODO por alguna razï¿½n en VTS lo hacï¿½a en cada executeProcesses..
 	
 	assert(	mTimer != NULL );
 	uint64_t time= mTimer->getMilliseconds();
@@ -148,7 +148,7 @@ void ProcessScheduler::executeProcesses( uint64_t time,TProcessList& processes )
 		while( i != end )
 		{
 			p = *i;
-			if( p->getActive() ) //si no está activo paso de él
+			if( p->getActive() ) //si no estï¿½ activo paso de ï¿½l
 			{			
 				mProcessInfo->current = p;
 				p->onUpdate( time );
@@ -279,8 +279,6 @@ void ProcessScheduler::killProcesses( bool deferred )
 		mKillingProcess = true;
 		auto task = std::make_shared<GenericProcess>();
 		task->setProcessCallback(
-			addParam<bool,::core::EGenericProcessState, uint64_t,Process*,void>
-			(
 				addParam<bool,Process*, uint64_t,void>
 				(
 					addParam<bool, uint64_t,void>
@@ -291,8 +289,7 @@ void ProcessScheduler::killProcesses( bool deferred )
 							,true
 						)
 					)
-				)
-			)
+				)			
 		);
 		insertProcess( task,HIGH );
 
@@ -357,7 +354,7 @@ unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process,EP
 	auto pos = mPendingIdTasks.find( process->getId() );
 	if ( pos == mPendingIdTasks.end() )
 	{
-		//no existía el proceso
+		//no existï¿½a el proceso
 		newId = ++mRequestedTaskCount;
 
 		process->setId( newId );
@@ -366,7 +363,7 @@ unsigned int ProcessScheduler::insertProcess(std::shared_ptr<Process> process,EP
 		usedList->push_back( process );
 	}else
 	{
-		//ya existía!
+		//ya existï¿½a!
 		newId = process->getId();
 	}
 

@@ -219,20 +219,17 @@ void ProcessScheduler::killProcesses( bool deferred )
 		mKillingProcess = true;
 		auto task = std::make_shared<GenericProcess>();
 		task->setProcessCallback(
-			addParam<::tasking::EGenericProcessResult,::tasking::EGenericProcessState, uint64_t,Process*,void>
+			addParam<::tasking::EGenericProcessResult,Process*, uint64_t,void>
 			(
-				addParam<::tasking::EGenericProcessResult,Process*, uint64_t,void>
+				addParam<::tasking::EGenericProcessResult, uint64_t,void>
 				(
-					addParam<::tasking::EGenericProcessResult, uint64_t,void>
+					returnAdaptor<void>
 					(
-						returnAdaptor<void>
-						(
-							makeMemberEncapsulate( &ProcessScheduler::_killTasks, this )
-							,::tasking::EGenericProcessResult::KILL
-						)
+						makeMemberEncapsulate( &ProcessScheduler::_killTasks, this )
+						,::tasking::EGenericProcessResult::KILL
 					)
 				)
-			)
+			)			
 		);
 		insertProcess( task);
 
