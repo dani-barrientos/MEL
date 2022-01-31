@@ -21,9 +21,55 @@ namespace tasking
      * @tparam T 
      * @param f future to wait for
      * @param msecs maximum time to wait.
-     * @return ::core::FutureData_Base::EWaitResult 
      */
-    template<class T,class ErrorType = ::core::ErrorInfo> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
+    template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureMThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
+    {
+        using ::tasking::Event_mthread;
+        struct _Receiver
+        {		
+            _Receiver():mEvent(false,false){}
+            typename core::Future<T,ErrorType>::ValueType wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
+            {
+                Event_mthread::EWaitCode eventresult;
+                int evId;
+            // spdlog::debug("Waiting for event in Thread {}",threadid);
+                eventresult = mEvent.waitAndDo([this,f,&evId]()
+                {
+                //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
+                    evId = f.subscribeCallback(
+                    std::function<::core::ECallbackResult( const ::core::FutureValue<T,ErrorType>&)>([this](const ::core::FutureValue<T,ErrorType>& ) 
+                    {
+                        mEvent.set();
+                    //   spdlog::debug("Event was set for Thread {}",threadid);
+                        return ::core::ECallbackResult::UNSUBSCRIBE; 
+                    }));
+                },msecs); 
+                f.unsubscribeCallback(evId);
+            //  spdlog::debug("Wait was done in Thread {}",threadid);
+                switch( eventresult )
+                {
+                case Event_mthread::EVENTMT_WAIT_KILL:
+                    //event was triggered because a kill signal
+                    return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received"));
+                    //result =  ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
+                    break;
+                case Event_mthread::EVENTMT_WAIT_TIMEOUT:
+                    //result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
+                    return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
+                    break;
+                default:
+                    return f.getValue();
+                    break;
+                }			        
+            }
+            private:
+            ::tasking::Event_mthread mEvent;
+
+        };
+        auto receiver = std::make_unique<_Receiver>();
+        return receiver->wait(f,msecs);	
+    }  
+    /*template<class T,class ErrorType = ::core::ErrorInfo> ::core::FutureData_Base::EWaitResult waitForFutureMThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
     {
         using ::tasking::Event_mthread;
         using ::core::FutureData_Base;
@@ -73,6 +119,7 @@ namespace tasking
         auto receiver = std::make_unique<_Receiver>();
         return receiver->wait(f,msecs);	
     }    
+    */
     DABAL_API ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE );
 
 }

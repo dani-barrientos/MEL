@@ -21,6 +21,7 @@ using tasking::Process;
 ????
  * @return int 
  */
+
 static int test()
 {
 	int result = 0;
@@ -75,15 +76,14 @@ static int test()
 			auto r = cont.getResult();			
 			spdlog::debug("Waiting for first task block...");			
 			th1->start();
-			tasking::waitForFutureMThread(r);
-			if ( r.getValid() )
+			auto wr = tasking::waitForFutureMThread(r);
+			if ( wr.isValid() )
 				spdlog::debug("First tasks completed successfully");
 			else
-				spdlog::debug("First tasks completed with error {}",r.getValue().error().errorMsg); 
-		
+				spdlog::debug("First tasks completed with error {}",wr.error().errorMsg); 
+
+
 			spdlog::info("Launching second task block in a thread pool (Executor<ThreadPool>)");
-
-
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			parallelism::ThreadPool::ExecutionOpts exopts;
@@ -120,22 +120,15 @@ static int test()
 				return 1;
 			}).getResult();
 			spdlog::debug("Waiting for second task block...");			
-			tasking::waitForFutureMThread(r2);
-			if ( r2.getValid() )
+			auto wr2 = tasking::waitForFutureMThread(r2);
+			if ( wr2.isValid() )
 				spdlog::debug("Second task block completed successfully");
 			else
-				spdlog::debug("Second task block completed with error {}",r2.getValue().error().errorMsg);  
+				spdlog::debug("Second task block completed with error {}",wr2.error().errorMsg);  
 			
 		}
-	);	
-	// ¿qué hago para coger/esperar por el resultado final? POSIBILIDADES:
-	// 	- USAR UN NEXT QUE HARÁ LO QUE SE QUIERE->ES LO MÁS DIRECTO, NO REQUIERE CAMBIOS->EL PROBLEMA ES QUE ESO SE EJECUTA EN EL RUNNABLE DESTINO
-	// 	- TENER UN WAIT EN EL CONTINUATION
-	// 	- TENER UN FUTURE CON EL RESULTADO->CREO QUE SERÁ LO MEJOR, PERO IMPLICA OTRO MIEMBRO MÁS EN EL CONTINAUTION
-		
-	spdlog::debug("Termino");
-	//¿deberái poder coger el resultado final? Es decir, de alguna forma que me dé el 
-	
+	);				
+	spdlog::debug("Termino");	
 /*
 {
 	Executor<Runnable> ex(th1);

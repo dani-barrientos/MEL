@@ -11,6 +11,30 @@ using namespace std;
 using ::parallelism::Barrier;
 #include <array>
 
+//Test with custom error
+struct MyErrorInfo : public ::core::ErrorInfo
+{
+	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
+	{
+		spdlog::debug("MyErrorInfo");
+	}
+	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
+	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
+	MyErrorInfo& operator = (MyErrorInfo&& info)
+	{
+		error = info.error;
+		errorMsg = std::move(info.errorMsg);
+		return *this;
+	}
+	MyErrorInfo& operator = (const MyErrorInfo& info)
+	{
+		error = info.error;
+		errorMsg = info.errorMsg;
+		return *this;
+	}
+};
+
+
 template <size_t n>
 class MasterThread : public GenericThread
 {
@@ -20,6 +44,8 @@ class MasterThread : public GenericThread
 		{
 		}	
 	private:
+		typedef Future<int,MyErrorInfo> FutureType;
+
 		std::array<std::shared_ptr<Thread>,n> mConsumers;
 		std::shared_ptr<Thread> mProducer;
 		int				 mValueToAdd;
@@ -40,7 +66,7 @@ class MasterThread : public GenericThread
 			constexpr auto newTaskProb = 0.5f; //probability of launching a new task
 			constexpr auto maxTasks = 500;
 			//a common future ("channel") is created so producer will put ther its value and cosumers wait for it
-			Future<int> channel;            
+			FutureType channel;            
 			int nSinglethreads = 0;
 			auto prodIdx = rand()%(n+1);
 			mValueToAdd = rand()%50;  //value to add to input in consumers
@@ -60,11 +86,11 @@ class MasterThread : public GenericThread
 					);
 				}
 
-				if ( rand() < RAND_MAX*mthreadProb)
+				if ( rand() < (int)RAND_MAX*mthreadProb)
 				{
 					do
 					{
-						Future<int> result;
+						FutureType result;
 						mConsumers[i]->post(
 							mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
 							makeMemberEncapsulate(&MasterThread::_consumerTask,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
@@ -72,20 +98,19 @@ class MasterThread : public GenericThread
 						++nTasks; //take next task into account
 						post( [this,channel,result](uint64_t,Process*)
 							{
-								if( ::tasking::waitForFutureMThread(result) == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
-								{									
-									if (result.getValid() )
-									{
-										auto val = channel.getValue().value() + mValueToAdd;
-										if ( val != result.getValue().value())
-											spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
-									}
+								auto wr = ::tasking::waitForFutureMThread(result);
+								if ( wr.isValid())
+								{
+									auto val = channel.getValue().value() + mValueToAdd;
+									if ( val != wr.value())
+										spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
 								}
+							
 								mBarrier.set();	
 								return ::tasking::EGenericProcessResult::KILL;
 							}
 						);
-					}while(rand()<RAND_MAX*newTaskProb && nTasks < maxTasks);
+					}while(rand()< (int)(RAND_MAX*newTaskProb) && nTasks < maxTasks);
 				}
 				else
 				{
@@ -132,7 +157,7 @@ class MasterThread : public GenericThread
 			}else			
 				return ::tasking::EGenericProcessResult::CONTINUE;
 		}
-		void _producerTask(Future<int> output) 
+		void _producerTask(FutureType output) 
 		{			
 			//generar el output como sea (tiempo aleatorio, etc..)
 			//@note remember C++11 has cool functions for random numbers in <random> header
@@ -145,49 +170,38 @@ class MasterThread : public GenericThread
                 output.setValue(value);
             }else
             {
-                output.setError(core::ErrorInfo(0,"PRUEBA ERROR"));
+                output.setError(MyErrorInfo(0,"PRUEBA ERROR"));
                 spdlog::debug("Genero error");
             }			
 		}
-		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, Future<int> input,Future<int> output,int taskId ) 
+		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
 		{
 			// int tam = rand()%1000;
 			// int arr[tam];  //Uvale, qué susto, esto no es standard. Funciona en gcc y clang pero no es standard
 			spdlog::debug("Task {} waits for input",taskId);
 			auto wr = ::tasking::waitForFutureMThread(input);
-			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
+			if ( wr.isValid() )
 			{
-				if (!input.getValid())
-				{
-					spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
-					output.setError( core::ErrorInfo(0,""));
-				}
-				else
-				{
-					output.setValue(input.getValue().value() + mValueToAdd);
-					spdlog::debug("Task {} gets value {}",taskId,input.getValue().value());
-				}
-                    //spdlog::debug("Thread {} gets value ",thId);
+				output.setValue(wr.value() + mValueToAdd);
+				spdlog::debug("Task {} gets value {}",taskId,input.getValue().value());
 			}else
 			{
-				spdlog::error("Task {} gets error waiting for input",taskId);
-				output.setError(core::ErrorInfo(0,""));
-			}
+				spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
+					output.setError( MyErrorInfo(0,""));
+			}			
 			mBarrier.set();
 			return ::tasking::EGenericProcessResult::KILL;
 		}
-		void _consumerTaskAsThread(Future<int> input,int taskId ) 
+		void _consumerTaskAsThread(FutureType input,int taskId ) 
 		{
 			auto wr = ::core::waitForFutureThread(input);
-			if (  wr == ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK )
+			if ( wr.isValid() )
 			{
-				if (!input.getValid())				
-					spdlog::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
-				else
-					spdlog::debug("Thread {} gets value {}",taskId,input.getValue().value());
-                    //spdlog::debug("Thread {} gets value ",thId);
+				spdlog::debug("Thread {} gets value {}",taskId,wr.value());
 			}else
-				spdlog::error("Thread {} gets error waiting for input",taskId);
+			{
+				spdlog::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
+			}		
 			mBarrier.set();
 		}
 		void onThreadEnd() override{

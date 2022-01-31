@@ -383,23 +383,7 @@ namespace tasking
 	Future<TRet,ErrorType> Runnable::execute( F&& function)
 	{
 		Future<TRet,ErrorType> future;
-		return execute(std::forward<F>(function),future);
-		/*//always post the task, despite being in same thread. This is the most consistent way of doing it
-		post(
-				RUNNABLE_CREATETASK
-				(
-					returnAdaptor<void>
-					(
-						linkFunctor<void, TYPELIST()>(ExecuteTask<TRet, typename ::std::decay<F>::type>(::std::forward<F>(function)), future)
-						, ::tasking::EGenericProcessResult::KILL
-						)
-				),
-				 false  //@todo revisar cómo debería ser
-				, 0
-
-			);		
-			
-		return future;*/
+		return execute(std::forward<F>(function),future);		
 	}
 	/**
 	 * @brief Overload where output Future is given
@@ -449,14 +433,14 @@ namespace tasking
 				ei->error = Runnable::ERRORCODE_EXCEPTION;
 				ei->exc = e.clone();
 				ei->isPointer = false;*/
-				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
+				f.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
 			}
 			catch(...)
 			{
 				/*Future_Base::ErrorInfo* ei = new Future_Base::ErrorInfo; 
 				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
 				ei->errorMsg = "Unknown exception";*/
-				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+				f.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
 
 			}
 
@@ -464,7 +448,7 @@ namespace tasking
 		bool operator ==( const ExecuteTask& ) const{ return true;} //for compliance
 	};
 	//specialization for void TRet
-	template <class ErrorInfo,class F> struct ExecuteTask<void,ErrorInfo,F>
+	template <class ErrorType,class F> struct ExecuteTask<void,ErrorType,F>
 	{
 		F mFunction;
 		ExecuteTask(F&&f) :mFunction(std::forward<F>(f))
@@ -480,11 +464,11 @@ namespace tasking
 			//check chances of Exception
 			catch( std::exception& e )
 			{
-				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
+				f.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
 			}
 			catch(...)
 			{
-				f.setError( ::core::ErrorInfo(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+				f.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
 			}
 		}
 		bool operator ==( const ExecuteTask& )const { return true;} //for compliance

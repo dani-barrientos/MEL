@@ -29,6 +29,8 @@ namespace core
 			FutureValue(){}
 			FutureValue(const T& v):Base(v){}
 			FutureValue(T&& v):Base(std::move(v)){}
+			FutureValue(const ErrorType& err):Base(err){}
+			FutureValue(ErrorType&& err):Base(std::move(err)){}
 			/**
 			 * @brief get if has valid value
 			 */
@@ -66,6 +68,9 @@ namespace core
 	{
 		typedef std::optional<ErrorType> Base;
 		public:
+			FutureValue(){}
+			FutureValue(const ErrorType& err):Base(err){}
+			FutureValue(ErrorType&& err):Base(std::move(err)){}
 			/**
 			 * @brief get if has valid value
 			 */
@@ -92,14 +97,7 @@ namespace core
 	*/
 	class FutureData_Base 
 	{
-	public:				
-		//@todo quitar de aqui
-		//result code
-		enum EWaitResult{ FUTURE_WAIT_OK = 0,
-			FUTURE_RECEIVED_KILL_SIGNAL = -1,
-			FUTURE_WAIT_TIMEOUT = -2,
-			FUTURE_UNKNOWN_ERROR = -3};
-
+	public:								
 		FutureData_Base():mState(NOTAVAILABLE)
 		{}
 
@@ -115,7 +113,6 @@ namespace core
 		}
 	protected:
 		mutable CriticalSection	mSC; 
-		//std::unique_ptr< ErrorInfo > mErrorInfo; //It will have content when error
 		EFutureState		mState;
 
 	};
@@ -172,10 +169,7 @@ namespace core
 				Subscriptor::triggerCallbacks(mValue);
 			}else
 				FutureData_Base::mSC.leave();
-		}
-		/**
-		* set error info. TAKES OWNSERHIP
-		*/
+		}		
 		void setError( const ErrorType& ei )
 		{
 			volatile auto protectMe=FutureData<ResultType,ErrorType>::shared_from_this();
@@ -278,7 +272,7 @@ namespace core
 		/**
 		* set error info. TAKES OWNSERHIP
 		*/
-		void setError( const ErrorInfo& ei )
+		void setError( const ErrorType& ei )
 		{
 			volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
 			FutureData_Base::mSC.enter();
@@ -290,7 +284,7 @@ namespace core
 			}			
 			FutureData_Base::mSC.leave();
 		};
-		void setError( ErrorInfo&& ei )
+		void setError( ErrorType&& ei )
 		{
 			volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
 			FutureData_Base::mSC.enter();
@@ -332,6 +326,14 @@ namespace core
 		Future_Base():mData(nullptr){};
 
 	public:
+		/**
+		* @brief Generic result error codes for future waiting
+		*/
+		enum EWaitError{
+			FUTURE_RECEIVED_KILL_SIGNAL = -1, //!<Wait for Future was interrupted because waiting Process was killed
+			FUTURE_WAIT_TIMEOUT = -2, //!<time out expired while waiting for Future
+			FUTURE_UNKNOWN_ERROR = -3//!<Unknow error while waiting for Future
+		};
 		Future_Base( const Future_Base& f )
 		{
 			mData = f.mData; 
@@ -369,6 +371,7 @@ namespace core
 		inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
 				
 	};
+	///@endcond
 	template <typename ResultType,typename ErrorType>
 	class Future_Common : public Future_Base
 	{
@@ -380,7 +383,7 @@ namespace core
 		Future_Common( const Future_Common& f ):Future_Base( f ){}
 		Future_Common( Future_Common&& f ):Future_Base( std::move(f) ){}
 	public:
-	
+		
 		inline  typename FutureData<ResultType,ErrorType>::ReturnType getValue() const{ return ((FutureData<ResultType,ErrorType>*)mData.get())->getValue();}		
 		template <class F> auto subscribeCallback(F&& f) const						
 		{
@@ -395,7 +398,6 @@ namespace core
 		inline const FutureData<ResultType,ErrorType>& getData() const{ return *(FutureData<ResultType,ErrorType>*)mData; }
 		inline FutureData<ResultType,ErrorType>& getData(){ return *(FutureData<ResultType,ErrorType>*)mData.get(); }
 	};
-	///@endcond
 	template <typename ResultType,typename ErrorType = ::core::ErrorInfo>
 	class Future : public Future_Common<ResultType,ErrorType>
 	{

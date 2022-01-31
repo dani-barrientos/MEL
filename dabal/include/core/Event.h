@@ -11,7 +11,14 @@ namespace core {
 	 */
 	class DABAL_API Event {
 		public:
-			enum EWaitCode {EVENT_WAIT_OK,EVENT_WAIT_TIMEOUT,EVENT_WAIT_ERROR};
+			/**
+			 * @brief Wait result codes
+			 */
+			enum EWaitCode 
+			{
+				EVENT_WAIT_OK, //!< wait was ok
+				EVENT_WAIT_TIMEOUT, //!< time out while waiting
+				EVENT_WAIT_ERROR}; //!< unknown error
 #if defined(DABAL_POSIX)
 			static const int EVENT_WAIT_INFINITE = -1;
 #elif defined(_WIN32)		

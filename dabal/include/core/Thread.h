@@ -19,6 +19,8 @@ using mpl::link1st;
 using core::CallbackSubscriptor;
 #include <memory>
 #include <parallelism/Barrier.h>
+#include <core/Future.h>
+
 namespace core {
 	DABAL_API unsigned int getNumProcessors();
 	DABAL_API uint64_t getProcessAffinity();
@@ -399,18 +401,14 @@ namespace core {
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T,class ErrorType = ::core::ErrorInfo> ::core::FutureData_Base::EWaitResult waitForFutureThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
-        using ::core::FutureData_Base;
-        using ::core::FutureData;
-		using ::core::FutureValue;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            FutureData_Base::EWaitResult wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
+            typename core::Future<T,ErrorType>::ValueType wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
             {
-                FutureData_Base::EWaitResult result;            
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
 				int evId = f.subscribeCallback(
@@ -425,19 +423,18 @@ namespace core {
 				f.unsubscribeCallback(evId);
             //  spdlog::debug("Wait was done in Thread {}",threadid);
                 switch( eventresult )
-                {
-                case ::core::Event::EVENT_WAIT_OK:
-                    //event was triggered because a kill signal
-                    result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK;
-                    break;
+                {               
                 case ::core::Event::EVENT_WAIT_TIMEOUT:
-                    result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
+					return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
                     break;
                 case ::core::Event::EVENT_WAIT_ERROR:
-                    result = ::core::FutureData_Base::EWaitResult::FUTURE_UNKNOWN_ERROR;
+
+					return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error"));
+					break;
+				default:
+					return f.getValue();
 					break;
                 }			
-                return result;	
         
             }
             private:

@@ -110,41 +110,71 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 		{
 			p = i->first;
 			
-			//@todo el sleeped no debería ser un estado?? eso de un boleano no cuadra mucho
 			if ( p->getAsleep())
 			{
 				++i;
 				continue;
 			}
 			mProcessInfo->current = p;
-			const auto state = p->getState();			
+			const auto state = p->getState();	
+			if ( state == Process::EProcessState::TRYING_TO_KILL )
+			{
+				//call kill again
+				p->kill();
+			}
+			unsigned int lap = (unsigned int)(time-p->getLastUpdateTime());	
+			switch(state)
+			{
+				case Process::EProcessState::PREPARED:
+					//firt iteration
+					if ( lap >= i->second)
+						p->update(time); 
+					break;
+				case Process::EProcessState::TRYING_TO_KILL:
+					p->kill();
+				case Process::EProcessState::INITIATED:					
+				default:			
+					if ( lap >= p->getPeriod())
+						p->update(time); 
+					break;
+			}
+			if ( p->getState()==Process::EProcessState::PREPARED_TO_DIE)  //new state after executing!!
+			{
+				p->setDead();
+				mProcessCount.fetch_sub(1,::std::memory_order_relaxed);
+				p->setProcessScheduler( NULL ); //nobody is scheduling the process
+				mES.triggerCallbacks(p);
+				i = processes.erase( i );
+			}else
+				++i;
+			mProcessInfo->current = nullptr;		
+			/*	
 			if ( state == Process::EProcessState::TRYING_TO_KILL )
 			{
 				//call kill again
 				p->kill();
 			}
 			unsigned int lap = (unsigned int)(time-p->getLastUpdateTime());
-			//const auto mask = Process::EProcessState::PREPARED | Process::EProcessState::PREPARED_TO_DIE/* | TRYING_TO_KILL*/; ya no
+			//const auto mask = Process::EProcessState::PREPARED | Process::EProcessState::PREPARED_TO_DIE | TRYING_TO_KILL; 
 
 			if ( state == Process::EProcessState::PREPARED )
 			{
 				if ( lap >= i->second)
 					p->update(time); 
-			}else if ( state != Process::EProcessState::PREPARED_TO_DIE && lap > p->getPeriod())
+			}else if ( state != Process::EProcessState::PREPARED_TO_DIE && lap > p->getPeriod())  //lo tenía mal al no hacer update en trying to kill
 				p->update(time); 			
-			mProcessInfo->current = nullptr;				
-			
+
 			//check if Process is trying to kill, then retry kill
 			if ( p->getState() == Process::EProcessState::TRYING_TO_KILL )
 			{
 				p->kill();
-			}
+			}else
 			//not in else because maybe previous code gets a prepared to die Process
 			if( p->getPreparedToDie())
 			{
 				//proceso muerto, lo anoto para quitarlo
 				//removes this process from pending
-				//mPendingIdTasksCS.enter(); par aquçe es esto
+				//mPendingIdTasksCS.enter(); para que es esto
 				p->setDead();
 				//mPendingIdTasks.erase( p->getId() );
 				//mProcessCount--; proteger?? puedo usar un atomic pero es un poco ridiculo
@@ -152,10 +182,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 
 				//mPendingIdTasksCS.leave();
 				//get next Process in its chain (if any)
-				/*if ( p->getNext() )
-				{
-					mNew.push_back( p->getNext() );
-				}*/
+
 				p->setProcessScheduler( NULL ); //nobody is scheduling the process
 				mES.triggerCallbacks(p);
 				i = processes.erase( i );
@@ -163,6 +190,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 			{
 				++i;
 			}
+			*/
 		}
 
 	}

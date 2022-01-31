@@ -95,9 +95,9 @@ namespace tasking
 			PREPARED, //!< Process created but not executed
 			INITIATED , //!< executing process normally
 			ASLEEP, //!< sleeping. Waiting for a wakeup
-			PREPARED_TO_DIE, //!< it's going to die, but process manager doesn't discard it
+			PREPARED_TO_DIE, //!< it's going to die, but process manager doesn't discard it yet
 			TRYING_TO_KILL, //!< sending kill signal but no accepted yet
-			WAITING_FOR_SCHEDULED , //!< switched and no shceduled yet
+			KILLING_WAITING_FOR_SCHEDULED , //!< switched and no shceduled yet
 			DEAD  //!< process is out of process manager
 		};
 		//! reason why Process returns for context switch
@@ -158,7 +158,8 @@ namespace tasking
 		/**
 		* check if process is going to die
 		*/
-		inline bool getPreparedToDie() const;
+		
+		//inline bool getPreparedToDie() const;
 		//! get period (milliseconds)
 		inline unsigned int getPeriod() const;						
 		/**
@@ -326,14 +327,14 @@ namespace tasking
 	{
 		return mOwnerProcessScheduler;
 	}
-	bool Process::getDead() const
+	/*bool Process::getDead() const
 	{
 		return (mState ==EProcessState:: DEAD );
 	}
 	bool Process::getPreparedToDie() const
 	{
 		return (mState == EProcessState::PREPARED_TO_DIE);
-	}
+	}*/
 	unsigned int Process::getPeriod() const
 	{
 		return mPeriod;

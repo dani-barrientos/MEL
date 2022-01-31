@@ -104,9 +104,8 @@ void Process::_execute(uint64_t msegs)
 	case EProcessState::TRYING_TO_KILL:		
 		onUpdate( msegs );
 		break;
-	case EProcessState::WAITING_FOR_SCHEDULED:
+	case EProcessState::KILLING_WAITING_FOR_SCHEDULED:
 		//process was in "switched" state. Now It can be killed
-		//KillEventSubscriptor::triggerCallbacks( shared_from_this() );
 		mState = EProcessState::PREPARED_TO_DIE;
 		killDone();
 		break;
@@ -156,7 +155,7 @@ Process::ESwitchResult Process::switchProcess( bool v )
 	ESwitchResult result;
 	auto p = ProcessScheduler::getCurrentProcess();
 	auto state = p->getState();
-	if (state == EProcessState::PREPARED_TO_DIE || state == EProcessState::DEAD)
+	if (state == EProcessState::PREPARED_TO_DIE || state == EProcessState::DEAD || state == EProcessState::KILLING_WAITING_FOR_SCHEDULED)
 		result = ESwitchResult::ESWITCH_KILL;
 	else
 	{
@@ -173,7 +172,7 @@ Process::ESwitchResult Process::switchProcess( bool v )
 		}else
 		{
 			p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despertó por wakeup
-			if (p->getState() == EProcessState::WAITING_FOR_SCHEDULED)
+			if (p->getState() == EProcessState::KILLING_WAITING_FOR_SCHEDULED)
 				result = ESwitchResult::ESWITCH_KILL;
 			else if (p->mWakeup)
 			{
@@ -253,17 +252,19 @@ Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
 }
 */
 
-//return: 0 -> false, 1 = true; 2 = already asleep
+//return: 0 -> false, 1 = true; 2 = already asleep, 3 = process killed 
 mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()
 {
 	auto p = ProcessScheduler::getCurrentProcess();
 	const auto state = p->getState();
-	if ( state == EProcessState::ASLEEP ) //it hasn't any sense, but just in case this condition could be reached
+	if ( state == EProcessState::ASLEEP  )
 	{
-		spdlog::warn("Process_sleep: process is already asleep");
-		//return ESwitchResult::ESWITCH_ERROR;
 		return mpl::Tuple<TYPELIST(int,Process*,unsigned int)>(2,p.get(),0);
+	}else if (state == EProcessState::PREPARED_TO_DIE || state == EProcessState::DEAD || state == EProcessState::KILLING_WAITING_FOR_SCHEDULED)
+	{
+		return mpl::Tuple<TYPELIST(int,Process*,unsigned int)>(3,p.get(),0);
 	}
+	
 	p->mPreviousState = state;
 	p->mState = EProcessState::ASLEEP;
 	p->mOwnerProcessScheduler->processAsleep(p);	
@@ -278,16 +279,17 @@ Process::ESwitchResult Process::_postSleep(mpl::Tuple<TYPELIST(int,Process*,unsi
 	if ( input.get<0>() == 2 ) //it hasn't any sense, but just in case this condition could be reached
 	{
 		return ESwitchResult::ESWITCH_ERROR;
+	}else if ( input.get<0>() == 3 )
+	{
+		return ESwitchResult::ESWITCH_KILL;
 	}
 	ESwitchResult result;
 	auto p = input.get<1>();
-	//unsigned int currentPeriod = p->getPeriod();
-	//p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
 	if (!input.get<0>()) {//!no multithread safe!!
 		result = switchProcess(false);
 	}
 	else
-	 {
+	{
 		result = ESwitchResult::ESWITCH_OK;
 	}
 	auto currentPeriod = input.get<2>();
@@ -319,7 +321,7 @@ void Process::kill( bool force )
 			{
 				if ( mSwitched )
 				{
-					mState = EProcessState::WAITING_FOR_SCHEDULED;
+					mState = EProcessState::KILLING_WAITING_FOR_SCHEDULED;
 					wakeUp();
 				}else
 				{
@@ -333,7 +335,7 @@ void Process::kill( bool force )
 				{
 					if ( mSwitched )
 					{
-						mState = EProcessState::WAITING_FOR_SCHEDULED;
+						mState = EProcessState::KILLING_WAITING_FOR_SCHEDULED;
 						wakeUp();
 					}else
 					{

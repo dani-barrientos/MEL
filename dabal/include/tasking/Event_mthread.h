@@ -17,7 +17,10 @@ namespace tasking
 	class DABAL_API Event_mthread
 	{
 	public:
-		enum EWaitCode {EVENTMT_WAIT_OK,EVENTMT_WAIT_TIMEOUT,EVENTMT_WAIT_ERROR,EVENTMT_WAIT_KILL};
+		enum EWaitCode {
+			EVENTMT_WAIT_OK,
+			EVENTMT_WAIT_TIMEOUT,
+			EVENTMT_WAIT_KILL};
 		static const int EVENTMT_WAIT_INFINITE = -1;
 		/**
 		* Creates a new event.

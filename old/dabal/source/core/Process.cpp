@@ -144,19 +144,19 @@ void Process::onUpdate(uint64_t msegs)
 	if( mSleeped )
 		return; 
 	unsigned int lap = (unsigned int)((msegs-mLastTime)-mPausedTime);
-	//TODO se está enrevesando ya esta comparación. Revisarla para simplificarla si se puede
+	//TODO se estï¿½ enrevesando ya esta comparaciï¿½n. Revisarla para simplificarla si se puede
 	unsigned int mask = PREPARED | PREPARED_TO_DIE/* | TRYING_TO_KILL*/;
 	if ( mState == TRYING_TO_KILL )
 	{
 		//call kill again
 		kill();
 	}
-	//TODO creo que esto es un fallo conceptual importante..ya que llama al update tanto si se cumple el período como si se está TRYING_TO_KILL. No parece que tenga sentido
+	//TODO creo que esto es un fallo conceptual importante..ya que llama al update tanto si se cumple el perï¿½odo como si se estï¿½ TRYING_TO_KILL. No parece que tenga sentido
 	if (  ( mState == PREPARED && lap >= mStartTime ) ||
-		( !(mState & mask) && lap >= mPeriod ) ) //TODO tal vez tenga sentido que si está TRYING_TO_KILL y cumple el periodo si lo ejecute
+		( !(mState & mask) && lap >= mPeriod ) ) //TODO tal vez tenga sentido que si estï¿½ TRYING_TO_KILL y cumple el periodo si lo ejecute
 	{
 		mUpdateTime = msegs;
-		/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no sé si vale hacerlo después
+		/*mPausedTime = 0; duda, para calcular el elapsed time lo necesitaria, pero no sï¿½ si vale hacerlo despuï¿½s
 				SI EL checkMicrothread HICISE OTRO WAIT, CREO QUE NO FURRULARIA*/
 		checkMicrothread( msegs ); 
 		mPausedTime = 0;
@@ -164,7 +164,7 @@ void Process::onUpdate(uint64_t msegs)
 		mPreviousTime = msegs;
 
 	}
-	//los procesos asociados se ejecutan independientemente de que este proceso entre en ejecución
+	//los procesos asociados se ejecutan independientemente de que este proceso entre en ejecuciï¿½n
 	/*if ( mAttachedProcesses )
 	{
 		mAttachedProcesses->executeProcesses();		
@@ -217,10 +217,7 @@ void Process::execute(uint64_t msegs){
 
 		break;
 	case INITIATED:
-	case TRYING_TO_KILL:
-		//llamamos a la función de comportamiento del objeto particular
-		//TODO no sé si esto está bien colocado del todo aqui. La pretensión es
-		//que no corra el tiempo si no se desea al pausar
+	case TRYING_TO_KILL:		
 		if ( mResetPreviousTime )
 		{
 			mPreviousTime = msegs;
@@ -229,7 +226,7 @@ void Process::execute(uint64_t msegs){
 		update( msegs );
 		break;
 	case WAITING_FOR_SCHEDULED:
-//		TEMAS: ¿REDUCIR PERÍODO?¿avisar de alguna forma?
+//		TEMAS: ï¿½REDUCIR PERï¿½ODO?ï¿½avisar de alguna forma?
 		//process was in "switched" state. Now It can be killed
 		KillEventSubscriptor::triggerCallbacks( shared_from_this() );
 		mState = PREPARED_TO_DIE;
@@ -287,9 +284,9 @@ Process::ESwitchResult Process::switchProcess( bool v ) OPTIMIZE_FLAGS
 		unsigned int currentPeriod = p->getPeriod();
 		if (v)
 			p->setPeriod(0);
-		_switchProcess(); //@todo quitar este parámetro del _switchProcess
+		_switchProcess(); //@todo quitar este parï¿½metro del _switchProcess
 
-		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despertó por wakeup
+		p->setPeriod(currentPeriod); //siempre restauramos por si acaso se despertï¿½ por wakeup
 		if (p->getState() == WAITING_FOR_SCHEDULED)
 			result = ESWITCH_KILL;
 		else if (p->mWakeup)

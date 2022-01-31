@@ -130,21 +130,45 @@ static int _testMicroThreadingMonoThread()
 	int sharedVar = 0;
 	auto th1 = GenericThread::createEmptyThread();
 	auto th2 = GenericThread::createEmptyThread();
+
+
 	//th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
-		std::shared_ptr<Process> p1=th2->post([](uint64_t t,Process* p)
+		bool autokill = true;
+		std::shared_ptr<Process> p1=th2->post([th2](uint64_t t,Process* p)
 		{
 			static bool firstTime = true;
 			spdlog::debug("Ejecuto p1");
 			if ( firstTime )
 			{
 				firstTime = false;
+
+				auto fut = th2->execute<int>(
+					[]()
+					{
+						::tasking::Process::wait(20000);
+						return 6;
+					}
+				);
+
+		
+				auto fr = ::tasking::waitForFutureMThread(fut,2000);
+				if ( !fr.isValid())
+					spdlog::error(fr.error().errorMsg);
+				else
+					spdlog::error(fr.value());
+				// if ( fr != ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
+				// {
+				// 	spdlog::error(fut.getValue().error().errorMsg);
+				// }
 				spdlog::debug("espero en p1");
-				tasking::Process::wait(10000);
+				auto wr = tasking::Process::wait(10000);
 				spdlog::debug("vuelvo a esperar en p1");
-				esto tengo que arreglarlo para que, si soy autokill, no vuelva a esperar si está en trying_tokill
-				meditar sobre estos temas, no me convence demasiado la forma en que está planteado
-				tasking::Process::wait(10000);
+				// esto tengo que arreglarlo para que, si soy autokill, no vuelva a esperar si está en trying_tokill
+				// meditar sobre estos temas, no me convence demasiado la forma en que está planteado
+				//wr = tasking::Process::wait(10000);
+				wr = tasking::Process::switchProcess(true);
+				wr = tasking::Process::sleep();
 				spdlog::debug("fin espera en p1");
 				/*
 				 * no me convence nada el tema del kill y demas. Cosas que pasan:
@@ -155,25 +179,25 @@ static int _testMicroThreadingMonoThread()
 			}
 			spdlog::debug("Continuo");
 			return ::tasking::EGenericProcessResult::CONTINUE;
-		},false,2000,2000);
+		},autokill,2000,000);
 		th2->fireAndForget(
 			[p1]()
 			{
 				spdlog::debug("Ejecuto p2");
 				tasking::Process::wait(4000);
-				/*spdlog::debug("Pauso proceso");
-				if ( p1 )
-					p1->pause();*/
-				tasking::Process::wait(1000);
+				// spdlog::debug("Pauso proceso");
+				//  if ( p1 )
+				//  	p1->pause();
+			//	tasking::Process::wait(1000);
 				spdlog::debug("Mato proceso");
 				p1->kill();
-				/*spdlog::debug("Vuelvo a pausar proceso");
+				// spdlog::debug("Vuelvo a pausar proceso");
+				// if ( p1 )
+				// 	p1->pause();
+				tasking::Process::wait(25000);
+				// spdlog::debug("Despierto proceso");
 				if ( p1 )
-					p1->pause();*/
-				tasking::Process::wait(15000);
-				/*spdlog::debug("Despierto proceso");
-				if ( p1 )
-					p1->wakeUp();*/
+				 	p1->wakeUp();
 			}
 		);
 //revisar execute
@@ -297,7 +321,7 @@ int  _testPerformanceLotTasks()
 	}
 	t1 = sTimer.getMilliseconds();
 	spdlog::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
-	Thread::sleep(15000);
+	Thread::sleep(45000);
 	th1->finish();
 	th1->join();
 	return result;

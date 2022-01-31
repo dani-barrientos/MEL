@@ -216,19 +216,7 @@ namespace tasking
 		*/
 		void processAsleep(std::shared_ptr<Process>);
 	};
-	/*std::shared_ptr<Process> ProcessScheduler::getProcessForId( unsigned int taskId ) const
-	{
-		std::shared_ptr<Process> result = 0;
-		mPendingIdTasksCS.enter();
-		auto pos = mPendingIdTasks.find( taskId );
-		if ( pos != mPendingIdTasks.end() )
-		{
-			result = pos->second;
-		}
-		mPendingIdTasksCS.leave();
-		return result;
-	}
-*/
+	
 
 	template <class T>
 	void ProcessScheduler::pauseProcesses(T& predicate)
