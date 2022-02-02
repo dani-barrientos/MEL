@@ -12,8 +12,6 @@ using mpl::makeMemberEncapsulate;
 #include <mpl/ReturnAdaptor.h>
 using mpl::returnAdaptor;
 
-#include <mpl/Linker.h>
-using mpl::link1st;
 
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;

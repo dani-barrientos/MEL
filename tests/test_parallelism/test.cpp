@@ -4,7 +4,7 @@ using tests::TestManager;
 #include <parallelism/ThreadPool.h>
 using namespace parallelism;
 #include <parallelism/For.h>
-using parallelism::For;
+
 #include <array>
 #include <core/Timer.h>
 using core::Timer;
@@ -133,7 +133,8 @@ static int test()
     test = std::make_unique<TestResult>(PARALLEL_LIST_ITERATOR,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
 
-    ThreadPool::ThreadPoolOpts opts;           
+    ThreadPool::ThreadPoolOpts opts;      
+         
     for(int i = 1; i <= maxThreads;++i)
     {
         spdlog::info("Using {} threads",i);
@@ -154,66 +155,67 @@ static int test()
             v=0.f;
         t0 = timer.getMilliseconds();    
         for(int i = 0; i < tries; ++i )
-            For(&myPool,exopts,begin,end,[&objs](int idx)
+            ::core::waitForBarrierThread(::parallelism::_for(&myPool,exopts,begin,end,[&objs](int idx)
                 {
                     objs[idx]->f();
                 //  spdlog::debug("it {}",idx);
-                }).wait();         
+                })
+            );
            
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method indexing (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_INDEXED]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
-            For(&myPool,exopts,begin,end,[&objs2](int idx)
+            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,begin,end,[&objs2](int idx)
                 {
                     objs2[idx]->f();
                 //  spdlog::debug("it {}",idx);
-                }).wait();            
+                }));            
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method indexing (vector). Time: {}",elapsed);
         results[PARALLEL_VECTOR_INDEXED]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();        
         for(int i = 0; i < tries; ++i )
-            For(&myPool,exopts,objs.begin(),objs.end(),[](decltype(objs)::iterator i  )
+            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs.begin(),objs.end(),[](decltype(objs)::iterator i  )
                 {
                     (*i)->f();
                 //  spdlog::debug("it {}",idx);
-                }).wait();        
+                }));        
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method with iterators (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_ITERATOR]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
-            For(&myPool,exopts,objs2.begin(),objs2.end(),[](decltype(objs2)::iterator i  )
+            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs2.begin(),objs2.end(),[](decltype(objs2)::iterator i  )
                 {
                     (*i)->f();
-                }).wait();
+                }));
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method with iterators (vector). Time: {}",elapsed);
         results[PARALLEL_VECTOR_ITERATOR]->addTime(i,elapsed);
         
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
-            For(&myPool,exopts,objs3.begin(),objs3.end(),[](decltype(objs3)::iterator i  )
+            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs3.begin(),objs3.end(),[](decltype(objs3)::iterator i  )
                 {
                     (*i)->f();
-                }).wait();
+                }));
         elapsed = timer.getMilliseconds()-t0;
         spdlog::info("Parallel method with iterators (list). Time: {}",elapsed);
         results[PARALLEL_LIST_ITERATOR]->addTime(i,elapsed);
         
-        /*
-        este no face falta, era por curiosidad    
-        t0 = timer.getMilliseconds();
+       
+        // este no face falta, era por curiosidad    
+        // t0 = timer.getMilliseconds();
         
-        for(int i = 0; i < tries; ++i )
-            For(&myPool,exopts,objs4.begin(),objs4.end(),[](decltype(objs4)::iterator i  )
-                {
-                    (*i).f();
-                }).wait();
-        spdlog::info("Parallel method with iterators plain objects (list). Time: {}",timer.getMilliseconds()-t0);
-        */
+        // for(int i = 0; i < tries; ++i )
+        //     For(&myPool,exopts,objs4.begin(),objs4.end(),[](decltype(objs4)::iterator i  )
+        //         {
+        //             (*i).f();
+        //         }).wait();
+        // spdlog::info("Parallel method with iterators plain objects (list). Time: {}",timer.getMilliseconds()-t0);
+        
     }
     //show results
     spdlog::info("Results:");

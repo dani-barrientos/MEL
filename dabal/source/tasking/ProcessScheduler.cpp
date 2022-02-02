@@ -62,8 +62,7 @@ void ProcessScheduler::executeProcesses()
 {
 	if (mProcessCount == 0)
 		return;
-	TProcessList::iterator i;
-	TProcessList::iterator end;
+	
 	if (mProcessInfo == nullptr)
 	{
 		auto pi = _getCurrentProcessInfo();
@@ -79,16 +78,26 @@ void ProcessScheduler::executeProcesses()
 	uint64_t time= mTimer->getMilliseconds();
 	//inserto procesos pendientes
 
-	//don't block if no new processes. size member is not atomic, but if a new prodess is being inserted in this moment, it will be inserted in next iteration
+	//don't block if no new processes. size member is not atomic, but if a new process is being inserted in this moment, it will be inserted in next iteration
 	if ( !mNewProcesses.empty())
 	{
 		mCS.enter();
-		end = mNewProcesses.end();
-		for( i = mNewProcesses.begin(); i != end; ++i )
-		{
-			mProcessList.push_back( *i );
+		TNewProcesses::reverse_iterator i;
+		TNewProcesses::reverse_iterator end;
+		end = mNewProcesses.rend();
+		/*for( i = mNewProcesses.begin(); i != end; ++i )
+		{			
 			(*i).first->mLastUpdateTime = time; 
 			(*i).first->setProcessScheduler( this );
+			mProcessList.push_back( std::move(*i) );
+		}*/
+		
+		for( i = mNewProcesses.rbegin(); i != end; ++i )
+		{			
+			(*i).first->mLastUpdateTime = time; 
+			(*i).first->setProcessScheduler( this );
+			mProcessList.push_front( std::move(*i) );
+			//mProcessList.push_back( std::move(*i) );
 		}
 		mNewProcesses.clear();	
 		mCS.leave();
@@ -105,6 +114,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 	{
 		TProcessList::iterator i = processes.begin();
 		TProcessList::iterator end = processes.end();
+		TProcessList::iterator prev = processes.before_begin();
 		Process::EProcessState state;
 		while( i != end )
 		{
@@ -144,53 +154,13 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 				mProcessCount.fetch_sub(1,::std::memory_order_relaxed);
 				p->setProcessScheduler( NULL ); //nobody is scheduling the process
 				mES.triggerCallbacks(p);
-				i = processes.erase( i );
+				i = processes.erase_after(prev);
+				//i = processes.erase( i );
 			}else
-				++i;
-			mProcessInfo->current = nullptr;		
-			/*	
-			if ( state == Process::EProcessState::TRYING_TO_KILL )
 			{
-				//call kill again
-				p->kill();
+				prev = i++;
 			}
-			unsigned int lap = (unsigned int)(time-p->getLastUpdateTime());
-			//const auto mask = Process::EProcessState::PREPARED | Process::EProcessState::PREPARED_TO_DIE | TRYING_TO_KILL; 
-
-			if ( state == Process::EProcessState::PREPARED )
-			{
-				if ( lap >= i->second)
-					p->update(time); 
-			}else if ( state != Process::EProcessState::PREPARED_TO_DIE && lap > p->getPeriod())  //lo tenía mal al no hacer update en trying to kill
-				p->update(time); 			
-
-			//check if Process is trying to kill, then retry kill
-			if ( p->getState() == Process::EProcessState::TRYING_TO_KILL )
-			{
-				p->kill();
-			}else
-			//not in else because maybe previous code gets a prepared to die Process
-			if( p->getPreparedToDie())
-			{
-				//proceso muerto, lo anoto para quitarlo
-				//removes this process from pending
-				//mPendingIdTasksCS.enter(); para que es esto
-				p->setDead();
-				//mPendingIdTasks.erase( p->getId() );
-				//mProcessCount--; proteger?? puedo usar un atomic pero es un poco ridiculo
-				mProcessCount.fetch_sub(1,::std::memory_order_relaxed);
-
-				//mPendingIdTasksCS.leave();
-				//get next Process in its chain (if any)
-
-				p->setProcessScheduler( NULL ); //nobody is scheduling the process
-				mES.triggerCallbacks(p);
-				i = processes.erase( i );
-			}else
-			{
-				++i;
-			}
-			*/
+			mProcessInfo->current = nullptr;			
 		}
 
 	}
@@ -221,13 +191,12 @@ void ProcessScheduler::activateProcesses()
 
 void ProcessScheduler::_killTasks()
 {
-	TProcessList::iterator	i;
-	for(i = mProcessList.begin() ; i != mProcessList.end(); ++i)
+	for(auto i = mProcessList.begin() ; i != mProcessList.end(); ++i)
 	{
 		(*i).first->kill();
 	}
 	mCS.enter();
-	for( i = mNewProcesses.begin(); i != mNewProcesses.end(); ++i)
+	for( auto i = mNewProcesses.begin(); i != mNewProcesses.end(); ++i)
 	{
 		(*i).first->kill();
 	}
@@ -282,6 +251,7 @@ void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned 
 {
 	if (process == nullptr)
 		return;
+	//mejorar esto. Intentar quitar el lock
 	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
 
 	Lock lck(mCS);  

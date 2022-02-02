@@ -88,7 +88,7 @@ namespace tasking
 		{
 			enum class EMemState:uint8_t { FREE = 0,USED = 1 } ;							
 			EMemState	memState = EMemState::FREE;  
-			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( ::tasking::_private::RunnableTask ) ] ;
+			alignas(RUNNABLE_TASK_ALIGNMENT) char task[ sizeof( ::tasking::_private::RunnableTask ) ] ;			
 			//RunnableTask task;
 			RTMemPool*	owner;
 		};
@@ -336,24 +336,36 @@ namespace tasking
 		::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
-		p->setAutoKill( autoKill );
+		p->setAutoKill( autoKill );		
 		postTask(p,startTime);
 		return p;
+				
+		// postTask(nullptr);
+		// return nullptr;
 	}
 	template <class ProcessType ,class AllocatorType, class F>		
 	std::shared_ptr<Process> Runnable::fireAndForget(
 			F&& f,
 			unsigned int startTime)
 	{
-		return post(
-			RUNNABLE_CREATETASK
-				(
-					returnAdaptor<void>
-					(
-						std::forward<F>(f)
-						, ::tasking::EGenericProcessResult::KILL
-					)
-				),true,0,startTime
+		// return post<ProcessType,AllocatorType>(
+		// 	RUNNABLE_CREATETASK
+		// 		(
+		// 			returnAdaptor<void>
+		// 			(
+		// 				std::forward<F>(f)
+		// 				, ::tasking::EGenericProcessResult::KILL
+		// 			)
+		// 		),true,0,startTime
+		// );
+		
+		return post<ProcessType,AllocatorType>(
+			[f=std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
+			{
+				f();
+				return ::tasking::EGenericProcessResult::KILL;
+			}
+			,true,0,startTime
 		);
 	}
 

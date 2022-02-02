@@ -34,7 +34,7 @@ namespace core
 	public:
 
 		/**
-		* create new GenericThread.
+		* @brief Create new GenericThread.
 		* @param[in] functor Functor to execute on each cycle. Signature is <bool,Thread*,bool>
 		* @param[in] autoRun If true, thread start at construction. Otherwise you must call start manually
 		* @param[in] autoDestroy If true (default) thread is deleted when finished
@@ -47,12 +47,18 @@ namespace core
 			return std::make_shared<GenericThread>( std::forward<F>(functor),autoRun, autoDestroy,maxTasksSize );
 		}
 		/**
-		* @todo funcion para pruebas. no usar todavia
+		* @brief Create a thread with an empty loop, that continuosly processes posted tasks @see Runnable::post
+		* @param autoRun if false, thread will be created suspended, *but running". This means that you need to call resume(), not start()
+		* @param autoDestroy Thread will be deleted when finished ->REVISAR, NO BIEN IMPLEMENTADO		
 		*/
 		static std::shared_ptr<GenericThread> createEmptyThread( bool autoRun = true, bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
 		{
 			//return new GenericThread( autoRun, autoDestroy,maxTasksSize );
-			return std::make_shared<GenericThread>(  autoRun, autoDestroy,maxTasksSize );
+			//return std::make_shared<GenericThread>(  autoRun, autoDestroy,maxTasksSize );
+			auto result = std::make_shared<GenericThread>(  true, autoDestroy,maxTasksSize );
+			if ( !autoRun )
+				result->suspend();
+			return result;
 		}
 
 		template <class F>

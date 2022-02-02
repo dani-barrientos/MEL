@@ -88,22 +88,7 @@ bool GenericThread::terminateRequest()
 }
 
 void GenericThread::onPostTask(std::shared_ptr<Process> process)
-{
-	//unsigned int result;
-	/*//PENSAR QUE PASARIA SI HUBIESE MAS DE UN suspend ENCADENADO
-	mSuspendCS.enter();
-	//tambi�n se recibe un onPostTask en el suspend, pero tal y como esta hecho (ver Thread) el mState se fija despu�s del post
-	if ( getState() == THREAD_SUSPENDED )
-	{
-		cout << "RESUMO\n";
-		resume();
-	}
-	result = Thread_Impl< GenericThread >::onPostTask( process, priority );;
-	mSuspendCS.leave();
-	*/
-//@remarks. If post is done before thread start running, the event is set before wait, so when task finish, event will be set and thread don't stop on event and will do an extrga cycle
-//	result = Thread_Impl< GenericThread >::onPostTask( process,startTime);
-	
+{		
 #ifdef USE_CUSTOM_EVENT
 	mWaitForTasks.set();
 #else
@@ -112,7 +97,10 @@ void GenericThread::onPostTask(std::shared_ptr<Process> process)
 		mSignaled = true;
 	}
 	mWaitForTasksCond.notify_one();
+	
 #endif	
+
+
 }
 void GenericThread::terminate(unsigned int exitCode)
 {
@@ -138,6 +126,7 @@ void GenericThread::terminate(unsigned int exitCode)
 	}
 	mWaitForTasksCond.notify_one();
 #endif
+
 	//::spdlog::debug("GenericThread::_processWaken");
 	return ECallbackResult::NO_UNSUBSCRIBE;
 }
@@ -161,6 +150,7 @@ void GenericThread::onCycleEnd()
 	}
 	else
 	{
+		
 		count = getActiveTaskCount();
 		if (!mEnd && count == 0)
 		{
@@ -176,5 +166,6 @@ void GenericThread::onCycleEnd()
 			mSignaled = false;	
 #endif
 		}
+		
 	}	
 }

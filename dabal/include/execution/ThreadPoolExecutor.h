@@ -2,6 +2,7 @@
 #include <parallelism/ThreadPool.h>
 #include <execution/Executor.h>
 #include <execution/Continuation.h>
+#include <parallelism/For.h>
 namespace execution
 {   
     using ::parallelism::ThreadPool;
@@ -25,7 +26,7 @@ namespace execution
             template <class TRet,class TArg,class F> Continuation<TRet,TArg,Executor<ThreadPool>> launch( F&& f,const typename Continuation<TRet,TArg,Executor<ThreadPool>>::ArgType& arg);
             template <class TRet,class TArg,class F> Continuation<TRet,TArg,Executor<ThreadPool>> launch( F&& f,TArg arg);
             template <class TRet,class F> Continuation<TRet,void,Executor<ThreadPool>> launch( F&& f); //@todo resolver el pasar parámetro a la priemra. Esto tiene varios problemas que igual no merece la pena
-
+            template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment = 1);
         private:
             std::weak_ptr<ThreadPool> mPool; 
         public: //@todo hasta resolver friendship, debe ser privado
@@ -56,6 +57,14 @@ namespace execution
         Continuation<TRet,TArg,Executor<ThreadPool>> result(*this,std::forward<F>(f));
         result._start(arg);
         return result;
+    }
+    template <class I, class F>	 ::parallelism::Barrier Executor<ThreadPool>::loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment)
+    {        
+        //@todo tratar de generalizar para que estas opciones se puedan indicar..
+        ThreadPool::ExecutionOpts exopts;
+        exopts.useCallingThread = false;
+        exopts.groupTasks = !hints.independentTasks;
+        return ::parallelism::_for(mPool.lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );
     }
     typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
 }

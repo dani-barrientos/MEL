@@ -27,7 +27,7 @@ namespace mpl
 	class ParamAdder_Base
 	{
 	public:
-		ParamAdder_Base( const T& functor ):mFunctor( functor ){};
+		ParamAdder_Base( T&& functor ):mFunctor( std::forward<T>(functor) ){};
 		template <class F>
         bool operator ==( const F& ob2 ) const
         {
@@ -53,7 +53,7 @@ namespace mpl
 	class ParamAdder : public ParamAdder_Base<T,TRet,NewArg>
 	{
 	public:
-		ParamAdder( const T& functor ):ParamAdder_Base<T,TRet,NewArg>(functor){};
+		ParamAdder( T&& functor ):ParamAdder_Base<T,TRet,NewArg>(std::forward<T>(functor)){};
 
 		TRet operator()( VARIABLE_ARGS_IMPL,NewArg newarg )
 		{
@@ -66,7 +66,7 @@ namespace mpl
 	class ParamAdder<T,TRet,NewArg,void> : public ParamAdder_Base<T,TRet,NewArg>
 	{
 	public:
-		ParamAdder( const T& functor ): ParamAdder_Base<T,TRet,NewArg>( functor ){};
+		ParamAdder( T&& functor ): ParamAdder_Base<T,TRet,NewArg>( std::forward<T>(functor) ){};
 		TRet operator()( NewArg )
 		{
 			return ParamAdder_Base<T,TRet,NewArg>::mFunctor();
@@ -81,14 +81,14 @@ namespace mpl
 	template <class TRet, class NewArg,VARIABLE_ARGS_NODEFAULT,class T> inline
 		ParamAdder<T,TRet,VARIABLE_ARGS_DECL, NewArg> addParam( T functor )
 	{
-		return ParamAdder<T,TRet,NewArg, VARIABLE_ARGS_DECL>( functor );
+		return ParamAdder<T,TRet,NewArg, VARIABLE_ARGS_DECL>( std::forward<T>(functor) );
 	}
 #else
 	template <class T,class TRet,class NewArg,VARIABLE_ARGS>
 	class ParamAdder<T,TRet,NewArg,VARIABLE_ARGS_DECL,void> : public ParamAdder_Base<T,TRet,NewArg>
 	{
 	public:
-		ParamAdder( const T& functor ):ParamAdder_Base<T,TRet,NewArg>( functor ){};
+		ParamAdder( T&& functor ):ParamAdder_Base<T,TRet,NewArg>( std::forward<T>(functor) ){};
 
 		TRet operator()( VARIABLE_ARGS_IMPL,NewArg )
 		{
@@ -105,7 +105,7 @@ namespace mpl
 	template <class TRet, class NewArg,VARIABLE_ARGS,class T> inline
 		ParamAdder<T,TRet,NewArg,VARIABLE_ARGS_DECL > addParam( T functor )
 	{
-		return ParamAdder<T,TRet,NewArg,VARIABLE_ARGS_DECL>( functor );
+		return ParamAdder<T,TRet,NewArg,VARIABLE_ARGS_DECL>( std::forward<T>(functor) );
 	}
 #endif
 	}
@@ -138,7 +138,7 @@ namespace mpl
 	class ParamAdder_prev_Base
 	{
 	public:
-		ParamAdder_prev_Base( const T& functor ):mFunctor( functor ){};
+		ParamAdder_prev_Base( T&& functor ):mFunctor( std::forward<T>(functor) ){};
 		template <class F>
         bool operator ==( const F& ob2 ) const
         {

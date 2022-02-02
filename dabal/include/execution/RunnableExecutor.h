@@ -2,6 +2,8 @@
 #include <tasking/Runnable.h>
 #include <execution/Executor.h>
 #include <execution/Continuation.h>
+#include <parallelism/Barrier.h>
+#include <mpl/TypeTraits.h>
 namespace execution
 {   
     namespace _private
@@ -24,6 +26,7 @@ namespace execution
             template <class TRet,class TArg,class F> Continuation<TRet,TArg,Executor<Runnable>> launch( F&& f,const typename Continuation<TRet,TArg,Executor<Runnable>>::ArgType& arg);
             template <class TRet,class TArg,class F> Continuation<TRet,TArg,Executor<Runnable>> launch( F&& f,TArg arg);
             template <class TRet,class F> Continuation<TRet,void,Executor<Runnable>> launch( F&& f); //@todo resolver el pasar parámetro a la priemra. Esto tiene varios problemas que igual no merece la pena
+            template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment = 1);
 
         private:
             std::weak_ptr<Runnable> mRunnable; 
@@ -52,6 +55,44 @@ namespace execution
         Continuation<TRet,TArg,Executor<Runnable>> result(*this,std::forward<F>(f));
         result._start(arg);
         return result;
+    }
+    template <class I, class F>	 ::parallelism::Barrier Executor<Runnable>::loop(I&& begin, I&& end, F&& functor, const LoopHints& hints,int increment)
+    {        
+        typedef typename std::decay<I>::type DecayedIt;
+		constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
+        int length;
+        if constexpr (isArithIterator)
+            length = (end-begin);
+        else
+            length = std::distance(begin, end);
+        int nElements = hints.independentTasks?(length+increment-1)/increment:1; //round-up        
+        auto ptr = mRunnable.lock();
+       ::parallelism::Barrier result(nElements);
+        if ( hints.independentTasks)
+        {        
+            for(auto i = begin; i < end;i+=increment)
+                ptr->fireAndForget(
+                    [functor,result,i]() mutable
+                    {
+                        functor(i);
+                        result.set();
+                    }
+                );
+        }else
+        {
+            ptr->fireAndForget(
+                    [functor,result,begin,end,increment]() mutable
+                    {
+                        for(auto i = begin; i < end;i+=increment)
+                        {
+                            functor(i);            
+                        }            
+                        result.set();
+                    }
+                );           
+        }
+            
+        return result; //@todo resolver
     }
     typedef Executor<Runnable> RunnableExecutor; //alias
 }

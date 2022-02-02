@@ -39,7 +39,7 @@ namespace parallelism
 	class DABAL_API Barrier
 	{
 	public:
-		explicit Barrier( size_t nWorkers = 1 ):mData( new BarrierData( nWorkers ) )
+		explicit Barrier( size_t nWorkers = 0 ):mData( new BarrierData( nWorkers ) )
 		{
 		}
 		Barrier( const Barrier& o2):mData(o2.mData){ }

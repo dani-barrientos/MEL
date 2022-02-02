@@ -27,8 +27,8 @@ void* ::tasking::_private::RunnableTask::operator new( size_t s,Runnable* owner 
 {
 	return ::operator new(s);
 	/*
-	descartado hasta ahcer sistema eficiente
-	Lock lck(owner->mMemPoolCS);
+	//descartado hasta ahcer sistema eficiente
+	//Lock lck(owner->mMemPoolCS);
 	//std::lock_guard<std::mutex> lck(owner->mMemPoolCS);
 	RTMemPool* selectedPool = NULL;
 	//run over memory zones looking for free one
@@ -40,8 +40,6 @@ void* ::tasking::_private::RunnableTask::operator new( size_t s,Runnable* owner 
 			break;
 		}
 	}
-
-	
 	if ( !selectedPool ) //no free pool, create new
 	{
 		spdlog::warn("New pool needed for Runnable!!");
@@ -64,16 +62,16 @@ void* ::tasking::_private::RunnableTask::operator new( size_t s,Runnable* owner 
 	//Logger::getLogger()->fatal( "Runnable::not enough memory" );
 	throw std::bad_alloc();
 	*/
+	
 }
 
 void ::tasking::_private::RunnableTask::operator delete( void* ptr ) noexcept
 {
-	::operator delete(ptr);
-	/*
-	Runnable* ownerRunnable;
+	::operator delete(ptr);	
+/*	Runnable* ownerRunnable;
 	RTMemBlock* block = (RTMemBlock*)((char*)ptr - offsetof( RTMemBlock, task));
 	ownerRunnable = block->owner->owner;
-	Lock lck(ownerRunnable->mMemPoolCS);
+	//Lock lck(ownerRunnable->mMemPoolCS);
 	//std::lock_guard<std::mutex> lck(ownerRunnable->mMemPoolCS);
 	block->memState = RTMemBlock::EMemState::FREE;
 	if (--block->owner->count == 0 )
@@ -81,8 +79,8 @@ void ::tasking::_private::RunnableTask::operator delete( void* ptr ) noexcept
 		//remove pool only if it's not the first pool
 		if ( ownerRunnable->mRTZone.size() > 1 )
 			ownerRunnable->_removePool( block->owner );
-	}
-	*/
+	}*/
+	
 }
 void ::tasking::_private::RunnableTask::operator delete(void* ptr, Runnable*) noexcept
 {
@@ -224,11 +222,10 @@ void Runnable::setTimer(std::shared_ptr<Timer> timer )
 
 void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime)
 {
-	assert( process && "is NULL");
+//	assert( process && "is NULL");
 	mTasks.insertProcess( process,startTime );
 	onPostTask( process );
 }
-
 
 void Runnable::processTasks()
 {
@@ -236,17 +233,9 @@ void Runnable::processTasks()
 	mCurrentInfo->current = this;
 	mTasks.executeProcesses();
 	mCurrentInfo->current = oldR;
-	//RunnableInfo* current = getCurrentRunnableInfo();
-	//if ( current != this )
-	//	TLS::setValue(gCurrentRunnableKey, this);
-	//mTasks.executeProcesses();
-	//if (current != this)
-	//	TLS::setValue(gCurrentRunnableKey, current);  //Restore previous
 }
 
-
 //#pragma optimize("",off)
-
 
 void Runnable::executeFinishEvents()
 {

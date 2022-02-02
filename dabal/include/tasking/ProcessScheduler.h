@@ -8,8 +8,8 @@
 
 #include <tasking/Process.h>
 
-#include <list>
-using std::list;
+#include <forward_list>
+using std::forward_list;
 using tasking::Process;
 
 #include <utility>
@@ -26,6 +26,7 @@ using core::CallbackSubscriptor;
 using ::mpl::Int2Type;
 #include <atomic>
 #include <memory>
+#include <deque>
 
 namespace tasking
 {
@@ -43,7 +44,10 @@ namespace tasking
 		typedef unsigned int ThreadID;
 		friend class Process;
 	public:
-		typedef list< std::pair<std::shared_ptr<Process>,unsigned int> > TProcessList; //pairs of processes and starttime
+		typedef std::pair<std::shared_ptr<Process>,unsigned int> ProcessElement;
+		//typedef list<ProcessElement> TProcessList; //pairs of processes and starttime
+		typedef forward_list<ProcessElement> TProcessList; //pairs of processes and starttime
+		typedef std::deque< std::pair<std::shared_ptr<Process>,unsigned int> > TNewProcesses; //pairs of processes and starttime
 		ProcessScheduler();		
 		~ProcessScheduler(void);
 
@@ -106,19 +110,7 @@ namespace tasking
 		//inline bool checkFor(unsigned int taskId);
 
 		inline TProcessList& getProcesses();
-		inline TProcessList& getPendingProcesses();
-		/**
-		* do pred for each process in scheduler.
-		* @param[in] pred function of type: bool f(Process*)
-		* @return true if pred return true for some process
-		*/
-		template <class Predicado> bool forEach( Predicado pred);
-		/**
-		* coge los procesos que cumplem el predicado indicado (function)
-		*/
-		template <class T> void getProcesses( T function, list<std::shared_ptr<Process>>& processList );
-
-
+		inline TNewProcesses& getPendingProcesses();
 		/**
 		* remove all processes without taking care
 		* @remarks for use with caution
@@ -186,7 +178,7 @@ namespace tasking
 		ProcessInfo*	mProcessInfo;
 		TProcessList mProcessList;
 		//new processes to insert next time
-		 TProcessList  mNewProcesses;
+		TNewProcesses  mNewProcesses;
 
 		mutable CriticalSection	mCS;		
 		std::shared_ptr<Timer>			mTimer;
@@ -233,34 +225,11 @@ namespace tasking
 	{
 		return mProcessList;
 	}
-	ProcessScheduler::TProcessList& ProcessScheduler::getPendingProcesses()
+	ProcessScheduler::TNewProcesses& ProcessScheduler::getPendingProcesses()
 	{
 		return mNewProcesses;
 	}
-	
-	template <class Predicado> bool ProcessScheduler::forEach( Predicado pred)
-	{
-		TProcessList::const_iterator i;
-		const TProcessList *processArray[2];
-		const TProcessList* aux;
-		processArray[0] = &getProcesses();
-		processArray[1] = &mNewProcesses;
-		bool res = false;
-		int count = 0;
-		while( count < 6 )
-		{
-			aux = processArray[ count ];
-			for( i = aux->begin(); i != aux->end(); ++i)
-			{
-				if (pred( *i ) )
-				{
-					res = true;
-				}
-			}
-			count++;
-		}
-		return res;
-	}
+
 	unsigned int ProcessScheduler::getProcessCount() const
 	{
 		//accediendo al size de cada lista puede dar una condici�n de carrera
@@ -277,15 +246,7 @@ namespace tasking
 	{
 		return getProcessCount()-((unsigned int)mInactiveProcessCount);
 	}
-	template <class T> void ProcessScheduler::getProcesses( T function, list<std::shared_ptr<Process>>& processList )
-	{
-		TProcessList::iterator i;
-		for( i = mProcessList.begin(); i != mProcessList.end(); ++i )
-		{
-			if ( function( i->first ) )
-				processList.push_back( i->first );
-		}
-	}
+
 	const std::shared_ptr<Timer> ProcessScheduler::getTimer() const
 	{
 		return mTimer;

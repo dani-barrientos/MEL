@@ -18,7 +18,7 @@ namespace parallelism
 	template <bool>
 	struct Distance
 	{
-		template <class I> static typename std::iterator_traits<I>::difference_type get(I& a, I& b)
+		template <class I> static typename std::iterator_traits<I>::difference_type get(const I& a, const I& b)
 		{
 			return std::distance(a, b);
 		}
@@ -126,16 +126,12 @@ namespace parallelism
 	/**
 	* parallelized iteration, begin:end (end not included)
 	*/
+/*
 	class For
 	{
 	private:
 		
-		Barrier mBarrier;	
-	/**
-	* uso de incremento de otro tipo (float). 
-	* loopSize? entiendo que ser� float tal y como est�, siendo 
-	* ahora el calculo de nElements no vale creo porque si son floats ya no es necesario
-	*/
+		Barrier mBarrier;		
 	//! @note internal use
 	template <class I, class F>	 For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int increment, int loopSize)
 	{
@@ -149,7 +145,6 @@ namespace parallelism
 
 		if (nElements <= (int)nThreads || opts.groupTasks == false || nThreads == 0 )  //more or equal threads than tasks
 		{
-			//mBarrier.addWorkers(nElements);
 			 mBarrier = Barrier(nElements);
 			int cont = 0;
 			if (opts.useCallingThread)
@@ -185,8 +180,6 @@ namespace parallelism
 			int divisionSize = nElements / nThreads;
 			int nIterations = nThreads;  //number of parallel iterations
 			int leftOver = nElements % nIterations;
-//			logging::Logger::getLogger()->info("Comienzo: divisionSize=%d; nThreads=%d; nElements=%d; leftOver=%d; loopSize=%d,increment=%d", divisionSize, nThreads, nElements, leftOver,loopSize,increment);
-		//	mBarrier.addWorkers(nIterations);
 			mBarrier = Barrier(nIterations);
 			int cont = 1;
 			if (opts.useCallingThread)
@@ -205,7 +198,7 @@ namespace parallelism
 			{
 				int size = divisionSize;
 				typename std::decay<I>::type j = begin;
-				for (int n = 0; n < size/* && j != end*/;)
+				for (int n = 0; n < size/;)
 				{
 					functor(j);
 					if (++n < size)
@@ -222,15 +215,102 @@ namespace parallelism
 		{
 		}
 		For() {}
-		inline auto wait(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE ) const
+		const Barrier& getBarrier() const{ return mBarrier;}
+
+	};*/
+	/*//helper functions to wait for a For loop
+	DABAL_API auto wait(const For& _for,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE )
+	{
+		return ::core::waitForBarrierThread(_for.getBarrier(),msecs);
+	}
+	//@todo quitar esto que no me gusta. Aislarlo como para barreras y futures
+	DABAL_API inline auto waitAsMThread(const For& _for,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	{
+		::tasking::waitForBarrierMThread(_for.getBarrier(),msecs);
+	}*/	
+	namespace _private
+	{
+		template <class I, class F>	 Barrier _for(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int increment, int loopSize)
 		{
-			return ::core::waitForBarrierThread(mBarrier,msecs);
-		}
-		//@todo quitar esto que no me gusta. Aislarlo como para barreras y futures
-		inline auto waitAsMThread(unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE) const
-		{
-			::tasking::waitForBarrierMThread(mBarrier,msecs);
-		}		
-	};
+			Barrier result;
+			typedef typename std::decay<I>::type DecayedIt;
+			constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
+			int nElements = (loopSize + increment - 1) / increment;  //"manual" ceil, because ceil function fails somtimes in fast floating mode
+			size_t nThreads = tp->getNumThreads()+(opts.useCallingThread?1:0);
+			if (begin == end)
+				return result;
+			DecayedIt i(begin);
+
+			if (nElements <= (int)nThreads || opts.groupTasks == false || nThreads == 0 )  //more or equal threads than tasks
+			{
+				result = Barrier(nElements);
+				int cont = 0;
+				if (opts.useCallingThread)
+				{
+					++cont;
+					if (nElements > 1)
+					{
+						Advance<isArithIterator>::get(i, increment);
+					}
+				}
+				ThreadPool::ExecutionOpts newOpts(opts);
+				newOpts.useCallingThread = false;  //only one iteration in calling thread
+				bool finish = ((i == end) || (cont >= nElements));
+				while (!finish)
+				{
+					//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(GetElement<isArithIterator>::get(i)))); //@todo notengo claro que deba usar ref???
+					tp->execute(newOpts, result, std::bind(typename std::decay<F>::type(functor),i)); 
+					if (++cont < nElements)
+					{
+						Advance<isArithIterator >::get(i, increment);
+					}
+					else
+						finish = true;
+				}
+				if (opts.useCallingThread && nElements > 0)
+				{
+					functor(begin);
+					result.set();
+				}
+			}
+			else  //less threads than elements to process
+			{
+				int divisionSize = nElements / nThreads;
+				int nIterations = nThreads;  //number of parallel iterations
+				int leftOver = nElements % nIterations;
+				result = Barrier(nIterations);
+				int cont = 1;
+				if (opts.useCallingThread)
+				{
+					if (nIterations > 1)
+					{
+						Advance<isArithIterator>::get(i, divisionSize*increment);
+					}
+					++cont;
+				}
+				//BulkExecute<_ITERATOR_DEBUG_LEVEL != 0 && !isArithIterator >::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, mBarrier);
+				//@todo arreglar metodo sin iteradores
+				BulkExecute<false>::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, result);
+			
+				if (opts.useCallingThread && nIterations > 0)
+				{
+					int size = divisionSize;
+					typename std::decay<I>::type j = begin;
+					for (int n = 0; n < size/* && j != end*/;)
+					{
+						functor(j);
+						if (++n < size)
+							Advance<isArithIterator>::get(j, increment);
+					}
+					result.set();
+				}				
+			}
+			return result;
+		}	
+	}	
+	template <class I, class F>	 Barrier _for(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int increment = 1)
+	{
+		return _private::_for(tp,opts,begin,end,std::forward<F>(functor),increment,Distance<::mpl::TypeTraits<I>::isArith>::get(begin, end));
+	}
 };
 
