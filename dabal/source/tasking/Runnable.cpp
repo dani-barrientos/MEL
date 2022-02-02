@@ -220,10 +220,13 @@ void Runnable::setTimer(std::shared_ptr<Timer> timer )
 	mTasks.setTimer( timer );
 }
 
-void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime)
+void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime,bool lockScheduler)
 {
 //	assert( process && "is NULL");
-	mTasks.insertProcess( process,startTime );
+	if ( lockScheduler)
+		mTasks.insertProcess( process,startTime );
+	else
+		mTasks.insertProcess( process,startTime );
 	onPostTask( process );
 }
 

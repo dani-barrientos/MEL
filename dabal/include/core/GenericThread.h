@@ -112,7 +112,7 @@ namespace core
 		mAutoDestroy( autoDestroy ),
 		mTerminateAccepted( false )
 	{
-		getTasksScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));
+		getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));
         mThreadFunction = new Callback<bool,Thread*,bool>( ::std::forward<F>(functor),::core::use_functor );
 		if ( autoRun )
 		{

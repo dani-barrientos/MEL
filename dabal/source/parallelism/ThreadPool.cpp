@@ -53,7 +53,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 						spdlog::error("Error setting thread affinity");
 				}
 			}		
-			th->start();  //need to start after setting affinity
+			th->resume();  //need to start after setting affinity
 		}
 		
 	}

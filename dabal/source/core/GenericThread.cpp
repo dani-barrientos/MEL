@@ -15,7 +15,7 @@ GenericThread::GenericThread( std::function<bool(Thread*,bool)>&& f,bool autoRun
 	
 {
     //assert(false && "Still in development!!!");        
-	getTasksScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));	
+	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));	
     mThreadFunction = new Callback<bool,Thread*,bool>( std::move(f),::core::use_function );
     if ( autoRun ) {
         start();
@@ -32,7 +32,7 @@ GenericThread::GenericThread(const std::function<bool(Thread*, bool)>& f, bool a
 	,mSignaled(false)
 #endif
 {
-	getTasksScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));
+	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));
 	mThreadFunction = new Callback<bool, Thread*, bool>(f, ::core::use_function);
 	if (autoRun) {
 		start();
@@ -51,7 +51,7 @@ GenericThread::GenericThread( bool autoRun, bool autoDestroy, unsigned int maxTa
 #endif
 
 {
-	getTasksScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));
+	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&GenericThread::_processAwaken, this));
 	/*auto f = std::function<bool(Process*)>([](Process*) {
 		return false;
 	});
@@ -67,6 +67,7 @@ GenericThread::GenericThread( bool autoRun, bool autoDestroy, unsigned int maxTa
 }
 GenericThread::~GenericThread()
 {
+	terminateRequest();
 	delete mThreadFunction;
 }
 
@@ -132,11 +133,6 @@ void GenericThread::terminate(unsigned int exitCode)
 }
 void GenericThread::onCycleEnd()
 {
-	/*@todo Esto es por compatibilidad. Mejorarlo cuando este listo lo del empty thread
-	la idea final es que no se aporte ninguna funci�n de thread y todo sea e nbase a lanzar tareas y que se quede dormido cuando no haya. Requisitos:
-	 - los Process han de avisar de alguna forma cuando est�n en wait para no parar el hilo si hay alguno pendiente-
-	 - si un Process recibe un wakeup tiene que avisar el hilo
-	*/
 	unsigned int count = 0;
 	if (mThreadFunction)
 	{

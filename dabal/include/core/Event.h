@@ -1,7 +1,9 @@
 #pragma once
 
 #include <DabalLibType.h>
-
+#if defined (DABAL_POSIX)
+#include <pthread.h>
+#endif
 namespace core {
 
 	/**

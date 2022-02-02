@@ -323,6 +323,7 @@ Thread::Thread(const char *name,unsigned int maxTaskSize):
 
 Thread::~Thread()
 {
+	spdlog::info("~Thread");
 #ifdef _WINDOWS
 		//maybe the thread was not started
 	if (mHandle && !CloseHandle(mHandle))

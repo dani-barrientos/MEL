@@ -12,7 +12,8 @@ namespace execution
      */
     struct LoopHints
     {
-        bool independentTasks; //<! if true, try to make each iteration independent
+        bool independentTasks = true; //<! if true, try to make each iteration independent
+        virtual ~LoopHints(){} //to make it polymorphic
     };
     template <class ExecutorAgent> class Executor
     {

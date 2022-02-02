@@ -13,6 +13,14 @@ namespace execution
     template <class TRet,class TArg,class ExecutorType> class Continuation;
 
     /**
+     * @brief Additional hints for this kind of executor
+     * @details if loop function receives an objetc of this type, use additional hints
+     */
+    struct RunnableExecutorLoopHints : public LoopHints
+    {
+        bool blockOnPost = false; //!<if true,task is posted previous bloking Runnable internal scheduler
+    };
+    /**
      * @brief Executor specialization using Runnable as execution agent
      */
     template <> class Executor<Runnable>
@@ -67,32 +75,49 @@ namespace execution
             length = std::distance(begin, end);
         int nElements = hints.independentTasks?(length+increment-1)/increment:1; //round-up        
         auto ptr = mRunnable.lock();
-       ::parallelism::Barrier result(nElements);
-        if ( hints.independentTasks)
-        {        
-            for(auto i = begin; i < end;i+=increment)
-                ptr->fireAndForget(
-                    [functor,result,i]() mutable
-                    {
-                        functor(i);
-                        result.set();
-                    }
-                );
-        }else
+        bool mustLock;
+        if ( dynamic_cast<const RunnableExecutorLoopHints*>(&hints) )
+            mustLock = static_cast<const RunnableExecutorLoopHints&>(hints).blockOnPost;
+        else
+            mustLock = false;
+        if ( mustLock )
+            ptr->getScheduler().getLock().enter();
+        try
         {
-            ptr->fireAndForget(
-                    [functor,result,begin,end,increment]() mutable
-                    {
-                        for(auto i = begin; i < end;i+=increment)
+            ::parallelism::Barrier result(nElements);
+            if ( hints.independentTasks)
+            {        
+                for(auto i = begin; i < end;i+=increment)
+                    ptr->fireAndForget(
+                        [functor,result,i]() mutable
                         {
-                            functor(i);            
-                        }            
-                        result.set();
-                    }
-                );           
+                            functor(i);
+                            result.set();
+                        },0,!mustLock
+                    );
+            }else
+            {
+                ptr->fireAndForget(
+                        [functor,result,begin,end,increment]() mutable
+                        {
+                            for(auto i = begin; i < end;i+=increment)
+                            {
+                                functor(i);            
+                            }            
+                            result.set();
+                        },0,!mustLock
+                    );           
+            }
+            if ( mustLock )
+                ptr->getScheduler().getLock().leave();
+            return result; //@todo resolver
+        }catch(...)
+        {
+            if ( mustLock )
+                ptr->getScheduler().getLock().leave();
+            return ::parallelism::Barrier();
         }
-            
-        return result; //@todo resolver
+                    
     }
     typedef Executor<Runnable> RunnableExecutor; //alias
 }

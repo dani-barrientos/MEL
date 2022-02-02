@@ -18,7 +18,9 @@ using core::CallbackSubscriptor;
 #include <memory>
 #include <parallelism/Barrier.h>
 #include <core/Future.h>
-
+#if defined (DABAL_POSIX)
+#include <pthread.h>
+#endif
 namespace core {
 	DABAL_API unsigned int getNumProcessors();
 	DABAL_API uint64_t getProcessAffinity();
@@ -70,7 +72,7 @@ namespace core {
 			 * process will be actually executed until Thread::start is invoked.
 			 * @remarks Thread should be only deleted when is sure it's finished (see terminate and join)
 			 */
-			~Thread();
+			virtual ~Thread();
 
 			/**
 			 * Changes thread priority.
@@ -327,6 +329,10 @@ namespace core {
 	{
 	public:
 		Thread_Impl(const char* name,unsigned int maxTaskSize = Runnable::DEFAULT_POOL_SIZE);
+		~Thread_Impl()
+		{
+
+		}
 	protected:
 		/**
 		* overridden from Runnable
@@ -377,11 +383,11 @@ namespace core {
 				{
 					//end order was received
 					mState = THREAD_FINISHING;
-					getTasksScheduler().killProcesses( false ); 
+					getScheduler().killProcesses( false ); 
 				}
 				break;
 			case THREAD_FINISHING:
-				if ( getTasksScheduler().getProcessCount() == 0 ) //forma cutre de hacerlo, vale por ahora
+				if ( getScheduler().getProcessCount() == 0 ) //forma cutre de hacerlo, vale por ahora
 				{
 					mState = THREAD_FINISHING_DONE;
 				}

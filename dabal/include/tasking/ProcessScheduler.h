@@ -59,6 +59,14 @@ namespace tasking
 		* @warning 	if process is already inserted behaviour is unpredictable
 		*/
 		void insertProcess( std::shared_ptr<Process> process,unsigned int startTime = 0);
+		/**
+		 * @brief Insert new process in scheduler without locking processlist
+		 * @details Use this function very carefully, when you know that no other thread is inserting processes or executing it
+		 * 
+		 * @param process 
+		 * @param startTime 
+		 */
+		void insertProcessNoLock( std::shared_ptr<Process> process,unsigned int startTime = 0);
 
 
 		/**
@@ -126,6 +134,13 @@ namespace tasking
 		*/
 		inline const std::shared_ptr<Timer> getTimer() const;
 		inline std::shared_ptr<Timer> getTimer() ;
+		/**
+		 * @brief Get the Lock object
+		 * @details Requesting lock on CriticalSection will avoid scheduler to access task while locked
+		 * @warning use very carefully!! 
+		 * @return CriticalSection& 
+		 */
+		inline CriticalSection& getLock(){ return mCS;}
 
         /**
         * get current executing process in current thread

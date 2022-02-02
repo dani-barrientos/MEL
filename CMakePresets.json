@@ -36,10 +36,6 @@
                 "DABAL_OS": "DABAL_LINUX",
                 "DABAL_API": "DABAL_POSIX"
             },
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
                     "hostOS": [
@@ -214,7 +210,7 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-10",
                 "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",
-                "DABAL_ARQ": "DABAL_X64_GCC"
+                "DABAL_ARQ": "DABAL_X86_GCC"
             }
         },
         {

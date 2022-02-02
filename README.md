@@ -7,6 +7,7 @@ There are 3 diferent macros that guide compilation based on target platform.
 - DABAL_OS : target operating system. Available OS are: **DABAL_WINDOWS**, **DABAL_LINUX**,**DABAL_MACOS**,**DABAL_IOS**,**DABAL_ANDROID**
 - DABAL_API: API to use. It can be **DABAL_POSIX**. Else, API based on platform is used.
 - DABAL_ARQ: CPU arquitecture and compiler, fo assembler syntax resolution
+- by default, installing gcc o clang in a 64bit platform will only install 64 bi libraries. You need to installa all, using for example target_compile_options
 
 # vcpkg
  vcpkg need to be installed. Follow instructions, among many other sites, https://vcpkg.io/en/getting-started.html. An environment variable VCPKG_ROOT pointing to vcpkg root

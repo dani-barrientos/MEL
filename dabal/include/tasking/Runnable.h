@@ -229,7 +229,7 @@ namespace tasking
 		* @return an integer being the internal task id just created
 		* @internally, it calls protected onPostTask, so children can add custom behaviour
 		*/
-		void postTask(std::shared_ptr<Process> process,unsigned int startTime = 0);
+		void postTask(std::shared_ptr<Process> process,unsigned int startTime = 0,bool lockScheduler = true);
 
 		/**
 		* Creates a new runnable object.
@@ -266,7 +266,8 @@ namespace tasking
 			F&& task_proc,
 			bool autoKill = false,
 			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
-			unsigned int period = 0,unsigned int startTime = 0);
+			unsigned int period = 0,unsigned int startTime = 0,
+			bool lockScheduler = true);
 		/**
 		 * @brief Convenient function to post no periodic task with signature void f()
 		 * @param[in] task_proc functor with signature void f(void)
@@ -274,7 +275,8 @@ namespace tasking
 		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F>		
 		std::shared_ptr<Process> fireAndForget(
 			F&& task_proc,
-			unsigned int startTime = 0);
+			unsigned int startTime = 0,
+			bool lockScheduler = true);
 		/**
 		* executes a function in a context of the Runnable.
 		* If this Runnable is in the same thread than caller then, depending on forcepost parameter, the functor
@@ -299,8 +301,8 @@ namespace tasking
 		* @param[in] taskId the task to check
 		* @return true if the task has already been executed. false otherwise
 		*/
-		inline const ProcessScheduler& getTasksScheduler() const;
-		inline ProcessScheduler& getTasksScheduler() ;
+		inline const ProcessScheduler& getScheduler() const;
+		inline ProcessScheduler& getScheduler() ;
 
 		/**
 		* set timer to be used by internal scheduler
@@ -311,7 +313,7 @@ namespace tasking
 		inline std::shared_ptr<Timer> getTimer( );
 		inline unsigned int getPendingTaskCount() const 
 		{
-			return (unsigned int)getTasksScheduler().getProcessCount();
+			return (unsigned int)getScheduler().getProcessCount();
 		}
 		/*
 		* get number of processes running (not sleeped or paused)
@@ -319,7 +321,7 @@ namespace tasking
 	//	intentar flexibilizarlo para cuando considere los wait
 		inline unsigned int getActiveTaskCount() const 
 		{
-			return (unsigned int)getTasksScheduler().getActiveProcessCount();
+			return (unsigned int)getScheduler().getActiveProcessCount();
 		}
 		inline unsigned int getMaxPoolTasks() const{ return mMaxTaskSize;}
 	private:
@@ -331,13 +333,13 @@ namespace tasking
 		F&& task_proc,
 		bool autoKill,
 		// ETaskPriority priority ,
-		unsigned int period,unsigned int startTime )
+		unsigned int period,unsigned int startTime,bool lockScheduler )
 	{
 		::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
 		p->setAutoKill( autoKill );		
-		postTask(p,startTime);
+		postTask(p,startTime,lockScheduler);
 		return p;
 				
 		// postTask(nullptr);
@@ -346,7 +348,8 @@ namespace tasking
 	template <class ProcessType ,class AllocatorType, class F>		
 	std::shared_ptr<Process> Runnable::fireAndForget(
 			F&& f,
-			unsigned int startTime)
+			unsigned int startTime,
+			bool lockScheduler)
 	{
 		// return post<ProcessType,AllocatorType>(
 		// 	RUNNABLE_CREATETASK
@@ -365,15 +368,15 @@ namespace tasking
 				f();
 				return ::tasking::EGenericProcessResult::KILL;
 			}
-			,true,0,startTime
+			,true,0,startTime,lockScheduler
 		);
 	}
 
-	const ProcessScheduler& Runnable::getTasksScheduler() const
+	const ProcessScheduler& Runnable::getScheduler() const
 	{
 		return mTasks;
 	}
-	ProcessScheduler& Runnable::getTasksScheduler() 
+	ProcessScheduler& Runnable::getScheduler() 
 	{
 		return mTasks;
 	}

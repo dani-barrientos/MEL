@@ -28,6 +28,8 @@ find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(tests spdlog::spdlog spdlog::spdlog_header_only)
 enable_testing()
 add_test(NAME Run1 COMMAND tests -t callbacks)
-add_test(NAME Run2 COMMAND tests -t threading)
+add_test(NAME Run2 COMMAND tests -t threading -n 0)
+add_test(NAME Run3 COMMAND tests -t threading -n 1)
+add_test(NAME Run4 COMMAND tests -t threading -n 2)
 
 

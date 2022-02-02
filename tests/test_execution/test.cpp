@@ -130,61 +130,136 @@ int _testLaunch()
 	
 	return result;
 }
-int _testFor()
+template <class F> void _measureTest(string text,F f)
 {
-	int result = 0;
-	Timer timer;
 	#define loopSize 100000
-	spdlog::set_level(spdlog::level::info); // Set global log level
-	auto th1 = GenericThread::createEmptyThread(true);
-	execution::Executor<Runnable> ex(th1);	
-	spdlog::info("Doing {} iterations using Runnable executor with independent tasks",loopSize);	
-	execution::LoopHints lhints{true};
-
 	int mean = 0;
-	constexpr size_t iters = 100;
+	constexpr size_t iters = 20;
+	Timer timer;
+	spdlog::info("Doing {} iterations using {}",loopSize,text);	
 	for(size_t i = 0; i < iters;i++)
 	{
 		auto t0 = timer.getMilliseconds();
-		auto barrier = ex.loop(0,loopSize,
-			[](int idx)
-			{								
-				spdlog::debug("iteracion {}",idx);
-				//::tasking::Process::wait(10);
-			},lhints,1
-		);
+		f();
 		auto elapsed = timer.getMilliseconds()-t0;
 		mean += elapsed;
 		//th1->resume();
-		::core::waitForBarrierThread(barrier);
+		
 		//th1->suspend();
 	}
 	mean /= iters;
 
 	spdlog::info("Finished. Time: {}",mean);
-
-/*en vista de los resutlados de velocidad, me convendría:
- *(LO MAS)- si no necesito el hilo automaticamente arrando, me convendría arrancarlo después de insertar tareas, ya que la parte de la varaible de condicion hace que se note mucho
- - es muy costoso también la creación del PRcoess 
- - la insercion en planificadpr también añade algo pero no tanto
- - el quitar el "virtualismo" en onpostTask no es importante
- */
-
+}
+int _testFor()
+{
+	int result = 0;
 	
-	/*spdlog::info("Doing {} iterations using Runnable executor without indepent tasks",loopSize);	
-	t0 = timer.getMilliseconds();
-	lhints.independentTasks = false;
-	barrier = ex.loop(0,loopSize,
-		[](int idx)
-		{								
-			spdlog::debug("iteracion {}",idx);
-			//::tasking::Process::wait(10);
-		},lhints,1
+	
+	spdlog::set_level(spdlog::level::info); // Set global log level
+
+	_measureTest("Runnable executor with independent tasks and blocking on post",
+		[]() 
+		{
+			GenericThread* th = new GenericThread(true,false);
+//con autorun no se borra bien. segurametne si hago el finish antes sí, pero me gustaría algo más compacto
+			Thread::sleep(5000);
+		//		th->finish(); así mejor
+			delete th;
+			return;
+			auto th1 = GenericThread::createEmptyThread(true);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = true;
+			lhints.blockOnPost = true;
+			auto barrier = ex.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+				//::tasking::Process::wait(10);
+			},lhints,1
+			);
+			::core::waitForBarrierThread(barrier);
+		}
 	);
-	::core::waitForBarrierThread(barrier);
-	spdlog::info("Finished. Time: {}",timer.getMilliseconds()-t0);
-*/
+	_measureTest("Runnable executor with independent tasks,blocking on post and pausing thread",
+		[]() mutable
+		{
+			auto th1 = GenericThread::createEmptyThread(false);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = true;
+			lhints.blockOnPost = true;
+			auto barrier = ex.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+				//::tasking::Process::wait(10);
+			},lhints,1
+			);
+			th1->resume();
+			::core::waitForBarrierThread(barrier);
+			th1->suspend();
+		}
+	);
+	_measureTest("Runnable executor without independent tasks",
+		[]()
+		{
+			auto th1 = GenericThread::createEmptyThread(true);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = false;
+			lhints.blockOnPost = true;
+			auto barrier = ex.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+				//::tasking::Process::wait(10);
+			},lhints,1
+			);
+			::core::waitForBarrierThread(barrier);
+		}
+	);
+	//parallelism::ThreadPool::ThreadPoolOpts opts;
+	//auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	_measureTest("ThreadPool executor, grouped tasks",
+		[]()
+		{
+			parallelism::ThreadPool::ThreadPoolOpts opts;
+			auto myPool = make_shared<parallelism::ThreadPool>(opts);
+			execution::Executor<parallelism::ThreadPool> ex2(myPool);
+			execution::LoopHints lhints;
+			lhints.independentTasks = false;
+			auto barrier = ex2.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+			//	::tasking::Process::wait(10);
+				//++count; //para asegurar
+			},lhints);
+			::core::waitForBarrierThread(barrier);
+		}
+	);
+	_measureTest("ThreadPool executor, no grouped tasks",
+		[]()
+		{
+			parallelism::ThreadPool::ThreadPoolOpts opts;
+			auto myPool = make_shared<parallelism::ThreadPool>(opts);
+			execution::Executor<parallelism::ThreadPool> ex2(myPool);
+			execution::LoopHints lhints;
+			lhints.independentTasks = true;
+			auto barrier = ex2.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+			//	::tasking::Process::wait(10);
+				//++count; //para asegurar
+			},lhints);
+			::core::waitForBarrierThread(barrier);
+		}
+	);
 	return 0;
+	/*
 	spdlog::info("Doing {} iterations using ThreadPool executor",loopSize);
 	parallelism::ThreadPool::ThreadPoolOpts opts;
 //	opts.nThreads = 1;
@@ -202,11 +277,12 @@ int _testFor()
 	);
 	::core::waitForBarrierThread(barrier);
 	spdlog::info("Finished. Time: {}. Count = {}",timer.getMilliseconds()-t0,count);
+	*/
 	spdlog::debug("Termino");	
 	Thread::sleep(60000);
 	spdlog::debug("finish");
-	th1->finish();
-	th1->join();
+	// th1->finish();
+	// th1->join();
 	return result;
 }
 /**

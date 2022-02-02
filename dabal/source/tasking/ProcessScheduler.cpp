@@ -259,7 +259,15 @@ void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned 
 	mNewProcesses.push_back( std::make_pair(process,startTime) );
 }
 
+void ProcessScheduler::insertProcessNoLock( std::shared_ptr<Process> process,unsigned int startTime )
+{
+if (process == nullptr)
+		return;
+	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
 
+	//mProcessCount++;
+	mNewProcesses.push_back( std::make_pair(process,startTime) );
+}
 void ProcessScheduler::setTimer(std::shared_ptr<Timer> timer )
 {
  	mTimer = timer;
