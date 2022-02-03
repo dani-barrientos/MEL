@@ -1,6 +1,6 @@
 #include "test.h"
-#include <core/GenericThread.h>
-using core::GenericThread;
+#include <core/ThreadRunnable.h>
+using core::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
@@ -19,12 +19,12 @@ using tasking::Process;
 int _testLaunch()
 {
 	int result = 0;
-	auto th2 = GenericThread::createEmptyThread(true);	
+	auto th2 = ThreadRunnable::create(true);	
 
 	th2->fireAndForget(
 		[]()
 		{
-			auto th1 = GenericThread::createEmptyThread(false);			
+			auto th1 = ThreadRunnable::create(false);			
 			//---- tests executors			
 			spdlog::info("Launching first task block in a single thread (Executor<Runnable>)");
 			
@@ -69,7 +69,7 @@ int _testLaunch()
 			);
 			auto r = cont.getResult();			
 			spdlog::debug("Waiting for first task block...");			
-			th1->start();
+			th1->run();
 			auto wr = tasking::waitForFutureMThread(r);
 			if ( wr.isValid() )
 				spdlog::debug("First tasks completed successfully");
@@ -161,13 +161,14 @@ int _testFor()
 	_measureTest("Runnable executor with independent tasks and blocking on post",
 		[]() 
 		{
-			GenericThread* th = new GenericThread(true,false);
+			/*GenericThread* th = new GenericThread(true,false);
+			seguyir, mejorar interfaz-. unificar run y start
 //con autorun no se borra bien. segurametne si hago el finish antes sí, pero me gustaría algo más compacto
 			Thread::sleep(5000);
 		//		th->finish(); así mejor
 			delete th;
-			return;
-			auto th1 = GenericThread::createEmptyThread(true);
+			return;*/
+			auto th1 = ThreadRunnable::create(true);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
@@ -180,12 +181,13 @@ int _testFor()
 			},lhints,1
 			);
 			::core::waitForBarrierThread(barrier);
+			spdlog::debug("hecho");
 		}
 	);
 	_measureTest("Runnable executor with independent tasks,blocking on post and pausing thread",
 		[]() mutable
 		{
-			auto th1 = GenericThread::createEmptyThread(false);
+			auto th1 = ThreadRunnable::create(false);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
@@ -205,7 +207,7 @@ int _testFor()
 	_measureTest("Runnable executor without independent tasks",
 		[]()
 		{
-			auto th1 = GenericThread::createEmptyThread(true);
+			auto th1 = ThreadRunnable::create(true);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = false;

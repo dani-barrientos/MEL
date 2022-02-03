@@ -1,21 +1,27 @@
 #pragma once
 
-#include <core/Event.h>  
+#include <tasking/Runnable.h>
+#include <core/Event.h>
+using tasking::Runnable;
+
+#include <mpl/MemberEncapsulate.h>
+using mpl::makeMemberEncapsulate;
+
 #include <core/ThreadDefs.h>
 
+#include <mpl/ReturnAdaptor.h>
+using mpl::returnAdaptor;
 
-// #include <core/CallbackSubscriptor.h>
-// using core::CallbackSubscriptor;
+
+#include <core/CallbackSubscriptor.h>
+using core::CallbackSubscriptor;
 #include <memory>
 #include <parallelism/Barrier.h>
 #include <core/Future.h>
 #if defined (DABAL_POSIX)
 #include <pthread.h>
 #endif
-#include <functional>
-
-namespace core 
-{
+namespace core {
 	DABAL_API unsigned int getNumProcessors();
 	DABAL_API uint64_t getProcessAffinity();
 	//!Set affinity for current thread.
@@ -37,9 +43,11 @@ namespace core
 	 * it provides a few off-the-shelf features like task execution and few more things. Thread can of course
 	 * be inherited, but will require additional programming to handle things safely.
 	 * 
+	 * You can subscribe callback to thread end. It will be thrown just before onThreadEnd is called
 	 */
-	class DABAL_API Thread/*: 
-					public CallbackSubscriptor<::core::CSNoMultithreadPolicy,Thread*>*/
+	class DABAL_API Thread : public Runnable, 
+					public CallbackSubscriptor<::core::CSNoMultithreadPolicy,Thread*>
+					//,public std::enable_shared_from_this<Thread>
 	{
 
 #ifdef _WINDOWS
@@ -48,26 +56,13 @@ namespace core
 		friend void* _threadProc(void* param);
 #endif
 
-		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
+		DABAL_CORE_OBJECT_TYPEINFO;
 		public:
 			enum YieldPolicy {
 				YP_ANY_THREAD_ANY_PROCESSOR=0,
 				YP_ANY_THREAD_SAME_PROCESSOR
 			};
 			
-			/**
-			 * Starts the main thread routine.
-			 * Calling this function will force the main thread routine (Thread::run) to be spawned 
-			 * and will return automatically just after doing so.<br>
-			 * The thread will keep runing in background until Thread::run finishes.<br>
-			 * Thread status can be queried meanwhile through Thread::isRunning, and the final
-			 * result obtained via Thread::getResult, once it finishes.<br>
-			 * Callers are encouraged to allways call Thread::join before attempting to query the
-			 * result value or even exiting the main application.
-			 */		
-			template <class F> Thread(F&& f);
-			//not a thread
-			Thread();
 			/**				 
 			 * Creates a new thread with the given name.
 			 * New threads are always created in a suspended state, meaning no actual thread
@@ -89,8 +84,35 @@ namespace core
 			inline ThreadPriority getPriority() const;
 
 			
-			
-			
+			/**
+			 * Makes the main thread routine to be suspended.
+			 * If thread is no in THREAD_RUNNING, it hasn't effect
+			 * @return the number of pending "suspend" operations performed so far, or 0 if the
+			 * thread could not be suspended.
+			 *
+			 * @warning. keep an eye on it because between state change to THREAD_PAUSED and real pause ther is a gap. 
+			 * because is's done through a post
+			 *	It could be fixed with SignalObjectAndWait in Windows but I don't know how to do it in POSIX
+			 */
+			unsigned int suspend();
+			/**
+			 * Restarts a previously suspended thread.
+			 * @return the number of pending "suspend" operations before resume was called, or 0xFFFFFFFF
+			 * if the operation was not successful. If the value returned is greater than 1, the thread is
+			 * still suspended.
+			 * NOTE: Calling this method has no effect on platforms others than Windows.
+			 */
+			unsigned int resume();
+			/**
+			* overridden from Runnable for compatibility
+			* It calls terminate 
+			* @todo revisar no est� nada claro
+			*/
+			void finish() override { terminate(); }
+			/**
+			* overridden from Runnable. For compatibility. 
+			*/
+			bool finished()	override {return mState == THREAD_FINISHED;	}
 			/**
 			 * Forces the caller to wait for thread completion.
 			 * Calling this method will cause the calling thread to be wait until
@@ -146,17 +168,23 @@ namespace core
 			* Get thread state
 			* @return the thread's current state
 			*/
-			//inline EThreadState getState() const;
+			inline EThreadState getState() const;
 			/**
 			* returns if a terminate request is done (mEnd == true)
 			*/
-			//inline bool getTerminateRequest() const;
+			inline bool getTerminateRequest() const;
 
 			uint64_t getAffinity() const;
 			/**
 			* @todo no est� protegido frente a llamada con el hilo iniciandose
 			*/
 			bool setAffinity(uint64_t);
+
+			inline void setCrashReportingEnabled(bool cr);
+			inline bool isCrashReportingEnabled() const;
+
+			static void setDefaultCrashReportingEnabled(bool cr);
+			static bool isDefaultCrashReportingEnabled();
 			/**
 			* return minimun time(msecs) the system will wait with accuracy.
 			* it depends on underlying OS and hardware, but traditionally it's about 10-15 msecs
@@ -166,19 +194,10 @@ namespace core
 			{
 				//@todo por ahora pongo tiempo fijo "t�pico" para que se pueda usar y ya trataremos de que sea autom�tico o al menos m�s flexible
 				constexpr unsigned MINIMUM_SLEEP = 10;
-				return MINIMUM_SLEEP;				
+				return MINIMUM_SLEEP;
 			}
-			/**
-			* Forces thread termination
-			* Use with extreme caution; this method exists but it should
-			* rarely be used; it's always safer to invoke terminatRequest and
-			* wait for the Thread to terminate "naturally", instead of forcing
-			* it to quite.
-			* @param exitCode the exit code for the terminated thread.
-			*/
-			void terminate(unsigned int exitCode=0);
 		protected:
-			Thread(const char* name);
+			Thread(const char* name,unsigned int maxTaskSize = Runnable::DEFAULT_POOL_SIZE);
 			
 #ifdef _WINDOWS
 			HANDLE mHandle;
@@ -197,37 +216,87 @@ namespace core
 #if defined (DABAL_MACOSX) || defined(DABAL_IOS)
 			void* mARP; //The autorelease pool as an opaque-type
 #endif
+			Event mPauseEV;
+			string mName;
 			unsigned int mResult;
-			//EThreadState mState;
-			//volatile bool mEnd; // request
+			EThreadState mState;
+			volatile bool mEnd; //end request
+			bool mPausedWhenNoTasks; //true if was paused whene there aren't pending tasks. Que poco me gusta...
 			unsigned int mExitCode;
 			ThreadPriority mPriority;
 
-			
+			unsigned int runInternal();
+
+			/**
+			* suspend inmediately, can be called only from same thread execution
+			*/
+			::tasking::EGenericProcessResult suspendInternal(uint64_t millis,Process* proc);
+			/**
+			* called when thread begins to run
+			*/
+			virtual void onThreadStart(){};
+			/**
+			* called when thread finish to run. It's called just after last instruction, so you can
+			* delete thread if you want.
+			*/
+			virtual void onThreadEnd(){}; 
+			/**
+			 * @brief Called when join is done
+			 * 
+			 */
+			virtual void onJoined(){};
+
 			/**
 			* terminate request. It will be called in execution loop when
 			* a terminate is called. By default returns true, meaning that thread
 			* inmediately goes in THREAD_FINISHING. This doesn't mean that thread will terminate,
 			* because all task need to be finished
 			*/
-			//virtual bool terminateRequest(){ return mEnd; }
-			
+			virtual bool terminateRequest(){ return mEnd; }
+
+			/**
+			* Forces thread termination
+			* Use with extreme caution; this method exists but it should
+			* rarely be used; it's always safer to invoke terminatRequest and
+			* wait for the Thread to terminate "naturally", instead of forcing
+			* it to quite.
+			* @param exitCode the exit code for the terminated thread.
+			*/
+			virtual void terminate(unsigned int exitCode=0);
 
 		private:
-			std::function<void()> mFunction;
-			void _initialize();
-			void _start();
+			static bool DEFAULT_CR_ENABLED; //Global (default) crash reporting flag
+			bool mCREnabled; //Per-instance crash reporting flag
+			
+			/**
+			 * Starts the main thread routine.
+			 * Calling this function will force the main thread routine (Thread::run) to be spawned 
+			 * and will return automatically just after doing so.<br>
+			 * The thread will keep runing in background until Thread::run finishes.<br>
+			 * Thread status can be queried meanwhile through Thread::isRunning, and the final
+			 * result obtained via Thread::getResult, once it finishes.<br>
+			 * Callers are encouraged to allways call Thread::join before attempting to query the
+			 * result value or even exiting the main application.
+			 */			
+			unsigned int onRun();
+			inline void threadEnd()
+			{
+				triggerCallbacks(this);
+				onThreadEnd();
+			}						
 	};
-	template <class F> Thread::Thread(F&& f):mFunction(std::forward<F>(f))
+	
+	bool Thread::getTerminateRequest() const
 	{
-		_initialize();
-		_start();
+		return mEnd;
 	}
-	// bool Thread::getTerminateRequest() const
-	// {
-	// 	return mEnd;
-	// }
 
+	void Thread::setCrashReportingEnabled(bool cr) {
+		mCREnabled = cr;
+	}
+	bool Thread::isCrashReportingEnabled() const {
+		return mCREnabled;
+	}
 
 	ThreadId Thread::getThreadId() const
 	{
@@ -237,8 +306,14 @@ namespace core
 		return mHandle;
 #endif
 	}
-	
-	
+	bool Thread::isRunning() const 
+	{
+		return mState == THREAD_RUNNING;
+	}
+	EThreadState Thread::getState() const
+	{
+		return mState;
+	}
 	ThreadPriority Thread::getPriority() const {
 		return mPriority;
 	}
@@ -248,6 +323,69 @@ namespace core
 	}*/
 
 
+qué me aporta este frente a Thread simplemente?->vale, lo hice por temas de rendimiento y de llmar al onclycle begin y tal. a ve si merece la pena
+	template <class T> class Thread_Impl : public Thread
+	{
+	public:
+		Thread_Impl(const char* name,unsigned int maxTaskSize = Runnable::DEFAULT_POOL_SIZE);
+		~Thread_Impl()
+		{
+
+		}
+	protected:
+		
+
+		/**
+		* default actions por onCyclexxx
+		* these functions are intented to be orriden by children (using compile-time polymorphism)
+		*/
+		void onCycleBegin(){};
+		void onCycleEnd(){};
+		void oneIteration()
+		{
+			((T*)this)->onCycleBegin();
+			processTasks();
+			//@todo dormir/levantar thread en funcion de las tareas
+			((T*)this)->T::onCycleEnd();
+		}
+
+	};
+	template <class T>
+	Thread_Impl<T>::Thread_Impl(const char* name,unsigned int maxTaskSize) : 
+		Thread( name,maxTaskSize )
+		{
+			
+		}
+
+
+
+	template <class T> unsigned int Thread_Impl<T>::onRun()	
+	{
+		onThreadStart();
+		while ( mState != THREAD_FINISHING_DONE )
+		{
+			switch( mState )
+			{
+			case THREAD_RUNNING:
+				if ( terminateRequest() )
+				{
+					//end order was received
+					mState = THREAD_FINISHING;
+					getScheduler().killProcesses( false ); 
+				}
+				break;
+			case THREAD_FINISHING:
+				if ( getScheduler().getProcessCount() == 0 ) //forma cutre de hacerlo, vale por ahora
+				{
+					mState = THREAD_FINISHING_DONE;
+				}
+				break;
+            default:;
+			}
+			oneIteration(); 
+		}
+		return 1; // != 0 no error
+	}
 
 
 	/**

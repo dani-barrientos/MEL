@@ -21,15 +21,7 @@ namespace core
 		TP_NORMAL=0x03,	/**< Normal/standard priority. This is the default priority new threads are assigned if none is specified */
 		TP_HIGH=0x04,	/**< High priority. Use with caution. */
 		TP_HIGHEST=0x05 /**< Highest/realtime priority. May cause the system to become irresponsive while the thread is running. */
-	};
-	enum EThreadState { 
-		THREAD_INIT = binary<1>::value,
-		THREAD_RUNNING  = binary<10>::value,
-		THREAD_SUSPENDED = binary<100>::value,
-		THREAD_FINISHING = binary<1000>::value, 
-		THREAD_FINISHING_DONE = binary<10000>::value,
-		THREAD_FINISHED = binary<100000>::value
-	};
+	};	
 
 #ifdef WIN32
 	typedef DWORD ThreadId;

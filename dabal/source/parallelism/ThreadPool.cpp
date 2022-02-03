@@ -1,7 +1,5 @@
 #include <parallelism/ThreadPool.h>
 using parallelism::ThreadPool;
-#include <core/GenericThread.h>
-using core::GenericThread;
 
 
 
@@ -29,10 +27,10 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 		uint64_t pAff = applyAffinity?core::getProcessAffinity():0;
 		const uint64_t lastProc = 0x8000000000000000;
 		uint64_t coreSelector = lastProc;
-		mPool = new std::shared_ptr<Thread>[mNThreads];
+		mPool = new std::shared_ptr<ThreadRunnable>[mNThreads];
 		for (unsigned int i = 0; i < mNThreads; ++i)
 		{
-			auto th = GenericThread::createEmptyThread(false, false);
+			auto th = ThreadRunnable::create(false, false);
 			//spdlog::debug("ThreadPool. Create thread {}}",th->getThreadId());
 			mPool[i] = th;
 			if (pAff != 0 && applyAffinity)
@@ -53,7 +51,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 						spdlog::error("Error setting thread affinity");
 				}
 			}		
-			th->resume();  //need to start after setting affinity
+			th->run();  //need to start after setting affinity
 		}
 		
 	}
@@ -69,7 +67,7 @@ ThreadPool::~ThreadPool()
 	}
 	delete[]mPool;
 }
-std::shared_ptr<Thread> ThreadPool::selectThread(const ExecutionOpts& opts)
+std::shared_ptr<ThreadRunnable> ThreadPool::selectThread(const ExecutionOpts& opts)
 {
 	mLastIndex = _chooseIndex(opts);
 	return mPool[mLastIndex];

@@ -1,6 +1,6 @@
 #pragma once
-#include <core/Thread.h>
-using core::Thread;
+#include <core/ThreadRunnable.h>
+using core::ThreadRunnable;
 #include <parallelism/Barrier.h>
 using parallelism::Barrier;
 #include <mpl/Tuple.h>
@@ -82,10 +82,10 @@ namespace parallelism
 		 * @brief select thread for execution based on given opts
 		 * 
 		 */
-		std::shared_ptr<Thread> selectThread(const ExecutionOpts& opts);
+		std::shared_ptr<ThreadRunnable> selectThread(const ExecutionOpts& opts);
 	private:
 		ThreadPoolOpts mOpts;
-		std::shared_ptr<Thread>*	mPool;
+		std::shared_ptr<ThreadRunnable>*	mPool;
 		unsigned int		mNThreads;
 		volatile	int		mLastIndex;  //last thread used
 		/**

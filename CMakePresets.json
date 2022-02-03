@@ -28,6 +28,7 @@
         {
             "name": "Linux Base",
             "description": "Common things for Linux build",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
             "hidden": true,
             "generator": "Unix Makefiles",
             "cacheVariables": {
@@ -35,6 +36,74 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "DABAL_OS": "DABAL_LINUX",
                 "DABAL_API": "DABAL_POSIX"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Clang Linux Base (Debug)",
+            "description": "Common things for Clang debug build in Linux",
+            "hidden": true,
+            "inherits": "Linux Base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "DABAL_ARQ": "DABAL_X64_CLANG"   
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Clang Linux Base (Release)",
+            "description": "Common things for Clang release build in Linux",
+            "hidden": true,
+            "inherits": "Linux Base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "DABAL_ARQ": "DABAL_X64_CLANG"   
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "GCC Linux Base (Debug)",
+            "description": "Common things for Clang debug build in Linux",
+            "hidden": true,
+            "inherits": "Linux Base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "DABAL_ARQ": "DABAL_X64_GCC"   
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "GCC Linux Base (Release)",
+            "description": "Common things for Clang release build in Linux",
+            "hidden": true,
+            "inherits": "Linux Base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "DABAL_ARQ": "DABAL_X64_GCC"   
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -172,58 +241,6 @@
                         "Linux"
                     ]
                 }
-            }
-        },
-        {
-            "name": "Clang Linux (Debug)",
-            "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu (Debug)",
-            "description": "Using compilers: C = /bin/clang-11, CXX = /bin/clang++-11",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits": "Linux Base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "/bin/clang-11",
-                "CMAKE_CXX_COMPILER": "/bin/clang++-11",
-                "DABAL_ARQ": "DABAL_X64_CLANG"
-            }
-        },
-        {
-            "name": "Clang Linux (Release)",
-            "displayName": "Clang 11.0.0 x86_64-pc-linux-gnu (ReleaseDeb)",
-            "description": "Using compilers: C = /bin/clang-11, CXX = /bin/clang++-11",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits": "Linux Base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "/bin/clang-11",
-                "CMAKE_CXX_COMPILER": "/bin/clang++-11",
-                "DABAL_ARQ": "DABAL_X64_CLANG"
-            }
-        },
-        {
-            "name": "GCC Linux (Debug)",
-            "displayName": "GCC 10.3.0 x86_64-linux-gnu (Debug)",
-            "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-10, CXX = /bin/x86_64-linux-gnu-g++-10",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits": "Linux Base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-10",
-                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",
-                "DABAL_ARQ": "DABAL_X86_GCC"
-            }
-        },
-        {
-            "name": "GCC Linux (Release)",
-            "displayName": "GCC 10.3.0 x86_64-linux-gnu (Release)",
-            "description": "Using compilers: C = /bin/x86_64-linux-gnu-gcc-10, CXX = /bin/x86_64-linux-gnu-g++-10",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "inherits": "Linux Base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_C_COMPILER": "/bin/x86_64-linux-gnu-gcc-10",
-                "CMAKE_CXX_COMPILER": "/bin/x86_64-linux-gnu-g++-10",
-                "DABAL_ARQ": "DABAL_X64_GCC"
             }
         }
     ],

@@ -165,6 +165,13 @@ namespace tasking
 		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
 		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
 		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception		
+		enum class State
+		{
+			INITIALIZED, //!<only initialized, not running
+			RUNNING, //!<Running
+			FINISHED //!finshed, not running
+		};
+
 		inline ::core::ThreadId getOwnerThreadId() const { assert(mOwnerThread != 0); return mOwnerThread; }
 		/**
 		* Manually set the owner thread ID.
@@ -183,20 +190,15 @@ namespace tasking
 		RunnableInfo* mCurrentInfo;
 		ProcessScheduler	mTasks;
 		unsigned int		mMaxTaskSize;  //max number of tasks for each pool (the number of pools is dynamic)
-
 		::tasking::_private::MemZoneList mRTZone;
+		std::atomic<State>	mState;
+		CriticalSection	mMemPoolCS;		
+		::core::ThreadId	mOwnerThread;//thread executing Runnable		
+		
 		//! helper function. Create new pool and append it at front
 		::tasking::_private::RTMemPool* _addNewPool();
 		//! helper function to remove pool. Internally at least one pool remains, so maybe pool is not removed
 		void _removePool( ::tasking::_private::RTMemPool* );
-
-		//RTMemBlock*		mRTMemPool;
-		CriticalSection	mMemPoolCS;
-		//std::mutex mMemPoolCS;
-		::core::ThreadId	mOwnerThread;//thread executing Runnable
-		//typedef Callback<void,Runnable*>	TFinishEvent;
-		CallbackSubscriptor<::core::CSNoMultithreadPolicy, Runnable*> mFinishEvents;
-		void executeFinishEvents();
 		
 	protected:
 		/**
@@ -207,7 +209,6 @@ namespace tasking
 		/**
 		* Implements the runnable behaviour. To be overridden by concrete subclasses.
 		*/
-
 		virtual unsigned int onRun() = 0;
 		virtual void onPostTask(std::shared_ptr<Process> process){};
 
@@ -289,12 +290,7 @@ namespace tasking
 		template <class TRet,class ErrorType = core::ErrorInfo,class F> 
 			Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>);
 
-		/**
-		* subscribe to finish event. This event will be executed when Runnable finish,
-		* so, when onRun returns;
-		*/
-		template <class F>
-		void subscribeFinishEvent( F&& functor);
+		
 				
 		/**
 		* Checks for a given task to be acomplished
@@ -388,12 +384,7 @@ namespace tasking
 	{
 		return mTasks.getTimer();
 	}
-	template <class F>
-	void Runnable::subscribeFinishEvent( F&& functor)
-	{
-		//mFinishEvents.push_back( new TFinishEvent( functor, ::core::use_functor ) );
-		mFinishEvents.subscribeCallback(std::forward<F>(functor));
-	}
+	
 	template <class TRet,class ErrorType, class F> 
 	Future<TRet,ErrorType> Runnable::execute( F&& function)
 	{

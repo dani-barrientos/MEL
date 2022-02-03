@@ -1,7 +1,7 @@
 #include "test.h"
 #include <iostream>
-#include <core/GenericThread.h>
-using core::GenericThread;
+#include <core/ThreadRunnable.h>
+using core::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
@@ -128,8 +128,8 @@ static int _testMicroThreadingMonoThread()
 	spdlog::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 	int result = 0;
 	int sharedVar = 0;
-	auto th1 = GenericThread::createEmptyThread();
-	auto th2 = GenericThread::createEmptyThread();
+	//auto th1 = ThreadRunnable::create();
+	auto th2 = ThreadRunnable::create();
 
 
 	//th1->post( [th2](RUNNABLE_TASK_PARAMS)
@@ -195,7 +195,7 @@ static int _testMicroThreadingMonoThread()
 				// if ( p1 )
 				// 	p1->pause();
 				tasking::Process::wait(25000);
-				// spdlog::debug("Despierto proceso");
+				 spdlog::debug("Despierto proceso");
 				if ( p1 )
 				 	p1->wakeUp();
 			}
@@ -259,8 +259,8 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 */
 	Thread::sleep(60000);
 	spdlog::debug("finish");
-	th1->finish();
-	th1->join();
+	// th1->finish();
+	// th1->join();
 	return result;
 }
 //check performance launching a lot of tasks
@@ -273,8 +273,8 @@ int  _testPerformanceLotTasks()
 	constexpr int nIterations = 1;
 	constexpr int nTasks = 100000;
 
-	auto th1 = GenericThread::createEmptyThread(true,true,nTasks);
-	th1->start();	
+	auto th1 =ThreadRunnable::create(true,true,nTasks); //GenericThread::createEmptyThread(true,true,nTasks);
+	th1->run();	
 	uint64_t t0,t1;
 	int count = 0;
 	t0 = sTimer.getMilliseconds();

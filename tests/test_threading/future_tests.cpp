@@ -1,6 +1,6 @@
 #include "future_tests.h"
-#include <core/GenericThread.h>
-using core::GenericThread;
+#include <core/ThreadRunnable.h>
+using core::ThreadRunnable;
 using namespace std;
 #include <spdlog/spdlog.h>
 #include <mpl/LinkArgs.h>
@@ -35,30 +35,32 @@ struct MyErrorInfo : public ::core::ErrorInfo
 };
 
 
+
 template <size_t n>
-class MasterThread : public GenericThread
+class MasterThread : public ThreadRunnable
 {
 	public:
-		MasterThread(std::shared_ptr<Thread> producer,std::array<std::shared_ptr<Thread>,n> consumers,unsigned int maxTime) : 
-			GenericThread(false,true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime)
+		MasterThread(std::shared_ptr<ThreadRunnable> producer,std::array<std::shared_ptr<ThreadRunnable>,n> consumers,unsigned int maxTime) : 
+			ThreadRunnable(true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime)
 		{
 		}	
 	private:
 		typedef Future<int,MyErrorInfo> FutureType;
 
-		std::array<std::shared_ptr<Thread>,n> mConsumers;
-		std::shared_ptr<Thread> mProducer;
+		std::array<std::shared_ptr<ThreadRunnable>,n> mConsumers;
+		std::shared_ptr<ThreadRunnable> mProducer;
 		int				 mValueToAdd;
 		Barrier			mBarrier;
 		uint64_t		mLastDebugTime; //para mosrtar mensaje de debug de que todo va bien
 		uint64_t 		mStartTime;
 		unsigned int	mMaxTime; //msecs to do test
-		void onThreadStart() override
-		{			
+		unsigned int onRun() override
+		{
 			auto msecs = this->getTimer()->getMilliseconds();
 			mStartTime = msecs;
 			srand((unsigned)msecs);
 			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));					
+			return 0;
 		}
 		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p) 
 		{	
@@ -212,14 +214,14 @@ class MasterThread : public GenericThread
 				th->finish();				
 				//@todo qué pasa con el join? quiero esperar antes por los demas, ¿virtual?
 			}			
-		}
+		}		
 		void onJoined() override
 		{
             mProducer->join();
-			// for(auto th:mConsumers)
-			// {
-			// 	th->join();
-			// }
+			for(auto th:mConsumers)
+			{
+				th->join();
+			}
 		}
 };
 
@@ -236,18 +238,18 @@ esto está relacionado con el tema de devovler error, el valor y tal. Igual podr
 	int result = 0;
 	//@todo hasta que no haga bien lo del autodestroy, esto no está bien del todo. Deberia pasar los consumidores como shared_ptr
 	
-	auto producer = GenericThread::createEmptyThread(true,false);
+	auto producer = ThreadRunnable::create(true,false);
 	
     spdlog::set_level(spdlog::level::debug); // Set global log level
 	constexpr size_t n = 1;
 	constexpr unsigned int TESTTIME = 30*60*1000;
-	std::array< std::shared_ptr<Thread>,n> consumers;
+	std::array< std::shared_ptr<ThreadRunnable>,n> consumers;
 	for(size_t i=0;i<n;++i)
 	{
-		consumers[i] = GenericThread::createEmptyThread(true,false);
+		consumers[i] = ThreadRunnable::create(true,false);
 	}
 	auto master = make_shared<MasterThread<n>>(producer,consumers,TESTTIME);
-	master->start();	
+	master->run();	
 	master->join();	
 	
 	return result;

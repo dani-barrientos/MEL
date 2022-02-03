@@ -26,7 +26,9 @@ static CriticalSection gCurrrentThreadCS;
 	#import <sys/syscall.h>
 	#endif
 #endif
-
+#if defined _WINDOWS && defined _CRASHRPT
+#include <CrashRpt.h>
+#endif
 
 namespace core {
 
@@ -168,21 +170,31 @@ bool setAffinity(uint64_t affinity)
     return _setAffinity(affinity,gettid());
 #endif
 }
-DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Thread);
+DABAL_CORE_OBJECT_TYPEINFO_IMPL(Thread,Runnable);
 
 #ifdef _WINDOWS
 	DWORD WINAPI _threadProc(void* lpParameter)
 	{
 		Thread* t = (Thread*)lpParameter;
 		assert(t && "NULL Thread!");
-		DWORD result = 0;
-		//result = t->runInternal();
-		t->mFunction();
+#ifdef _CRASHRPT
+		bool doCR = t->isCrashReportingEnabled();
+		if (doCR) {
+			crInstallToCurrentThread2(0);
+		}
+#endif
+		DWORD result;
+		result = t->runInternal();
+#ifdef _CRASHRPT
+		if (doCR) {
+			crUninstallFromCurrentThread();
+		}
+#endif
 		return result;
 	}
 #endif
 #if defined(DABAL_POSIX)
-	void* _threadProc(void* param) {
+	void* _threadProc (void * param) {
 		Thread* t=(Thread*)param;
 		assert(t && "NULL Thread!");
         if ( t->mAffinity != 0 )
@@ -190,9 +202,10 @@ DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Thread);
 #if defined(_MACOSX) || defined(_IOS)
 		//Create the auto-release pool so anyone can call Objective-C code safely
 		t->mARP=[[NSAutoreleasePool alloc] init];
-#endif		
-		t->mFunction();
-		//t->mResult = t->runInternal();
+#endif
+		
+		yo creo que ahora estoy tendría que llamar al onRun ese del ThreadImpl
+		t->mResult = t->runInternal();
 #if defined(_MACOSX) || defined(_IOS)
 		//Destroy auto-release pool
 		[(NSAutoreleasePool*)t->mARP release];
@@ -201,25 +214,39 @@ DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Thread);
 }
 #endif	
 
-Thread::Thread()
-{
-	_initialize();
+bool Thread::DEFAULT_CR_ENABLED(true);
+void Thread::setDefaultCrashReportingEnabled(bool cr) {
+	DEFAULT_CR_ENABLED=cr;
 }
-void Thread::_initialize()
-{
-#ifdef _WINDOWS
-	mID = 0;
-#endif
+bool Thread::isDefaultCrashReportingEnabled() {
+	return DEFAULT_CR_ENABLED;
+}
 
+Thread::Thread(const char *name,unsigned int maxTaskSize):
+	Runnable(maxTaskSize),	
+	mName(name),	
+#ifdef _WINDOWS
+	mID(0),
+#endif
+	mState( THREAD_INIT ),
 #if defined (DABAL_POSIX)
-	mJoined = false;
+	mJoined(false),
 #endif
 #if defined (_MACOSX) || defined(_IOS)
-	mARP = nil;
+	mARP(nil),
 #endif
-	mHandle = 0;
-	mResult = 0;
-	mPriority = TP_NORMAL;
+	mPauseEV(true,false),
+	mHandle(0),
+	mResult(0),
+	//mCurrentTaskID(0),
+	//mProcessedTaskID(0),
+	//mTaskProcessingTime(50),
+	mPriority(TP_NORMAL) ,
+	mEnd( false ),
+	mPausedWhenNoTasks(false),
+	mCREnabled(Thread::DEFAULT_CR_ENABLED)
+	//,mSuspenOnNoTasks( false )
+	{
 	gCurrrentThreadCS.enter();
 	if ( !gCurrentThreadKeyCreated )
 	{
@@ -235,7 +262,48 @@ void Thread::_initialize()
 		_threadProc,
 		this,
 		CREATE_SUSPENDED,
-		&mID);	
+		&mID);
+	//Initialize affinity settings just once
+	/* PROBANDO
+	if (!gAffinity) {
+			gAffinity=true;
+			HANDLE hProcess = GetCurrentProcess();
+			BOOL ok=GetProcessAffinityMask(hProcess,&gProcessAffinity,&gSystemAffinity);
+			if (!ok) {
+				gSystemAffinity=gProcessAffinity=0;
+				gInitialAffinity=0;
+			}
+			else {
+				DWORD_PTR test;
+				gInitialAffinity=1;
+				test=gSystemAffinity & gInitialAffinity;
+				while (!test && gInitialAffinity) {
+					gInitialAffinity<<=1;
+				}
+				if (!test)
+					gInitialAffinity=gNextAffinity=0;
+				else {
+					gNextAffinity=gInitialAffinity;
+					gCS=new CriticalSection();
+					atexit(deleteCS);
+				}
+			}
+		}
+		//Set thread affinity, we just switch processor for each new thread created :P
+		if (gNextAffinity) {
+			DWORD_PTR res=SetThreadAffinityMask(mHandle,gNextAffinity);
+			if (res) {
+				gCS->enter();
+				gNextAffinity<<=1;
+				if (!(gNextAffinity & gSystemAffinity))
+					gNextAffinity=gInitialAffinity;
+				gCS->leave();
+			}
+			else {
+				Logger::getLogger()->error("Unable to set thread affinity mask (ERROR %d)",GetLastError());
+			}
+		}*/
+
 #endif
 #if defined (_MACOSX) || defined(_IOS)
 	if ([NSThread isMultiThreaded]!=YES) {
@@ -256,6 +324,7 @@ void Thread::_initialize()
 
 Thread::~Thread()
 {
+	spdlog::info("~Thread");
 #ifdef _WINDOWS
 		//maybe the thread was not started
 	if (mHandle && !CloseHandle(mHandle))
@@ -266,8 +335,7 @@ Thread::~Thread()
 	mID=0;
 #endif
 #if defined (DABAL_POSIX)
-	if (mHandle && !mJoined) 
-	{
+	if (mState==THREAD_RUNNING && !mJoined) {
 		join();
 	}
 #endif
@@ -306,15 +374,20 @@ int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 }
 #endif
 
-void Thread::_start() {
+unsigned int Thread::onRun() {
 
-	
+	if ( mState != THREAD_INIT )
+	{
+		spdlog::warn("Thread has been already started!!");
+		return;
+	}
+	mState = THREAD_RUNNING;
 #ifdef _WINDOWS
 	if (mHandle) {
 		DWORD sc=ResumeThread(mHandle);
 		if (sc!=1 && sc!=0)
 		{
-		//	sacar error del estilo  ("Thread not started (suspended count=%d)!",1,sc);
+		//	Logger::getLogger()->warnf("Thread not started (suspended count=%d)!",1,sc);
 		}
 	}
 #endif
@@ -351,9 +424,61 @@ using namespace ::std::string_literals;
 	}	
 #endif	
 }
-
-
 /*
+void Thread::start() {
+
+no tiene sentido, esto ahcerlo en el run o lo que sea necesario
+
+	if ( mState != THREAD_INIT )
+	{
+		spdlog::warn("Thread has been already started!!");
+		return;
+	}
+	mState = THREAD_RUNNING;
+#ifdef _WINDOWS
+	if (mHandle) {
+		DWORD sc=ResumeThread(mHandle);
+		if (sc!=1 && sc!=0)
+		{
+		//	Logger::getLogger()->warnf("Thread not started (suspended count=%d)!",1,sc);
+		}
+	}
+#endif
+#if defined (DABAL_POSIX)
+using namespace ::std::string_literals;
+	pthread_attr_t  attr;
+	int err;
+	//Then we setup thread attributes as "joinable"
+	if ((err=pthread_attr_init(&attr))) {
+		throw std::runtime_error( "Unable to initialize thread attributes: err="s+ std::to_string(err));
+	}
+	if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE)) { //PTHREAD_CREATE_DETACHED
+		pthread_attr_destroy(&attr);
+		throw std::runtime_error("Unable to set detached state!");
+	}
+
+	sched_param sp;
+	sp.sched_priority=priority2pthread(mPriority,mPriorityMin,mPriorityMax);
+	if (pthread_attr_setschedparam(&attr,&sp)) {
+		pthread_attr_destroy(&attr);
+		throw std::runtime_error("Unable to set thread priority!");
+	}
+
+	err = pthread_create(&mHandle, &attr, _threadProc, this);
+	if (err != 0) {
+		throw std::runtime_error("Unable to spawn new thread: err="s+ std::to_string(err));
+	}
+	
+	if ((err=pthread_attr_destroy(&attr))) {
+		#ifndef _ANDROID
+		pthread_cancel(mHandle);
+		#endif
+		throw std::runtime_error("Unable to destroy thread attribute!");
+	}	
+#endif	
+}
+*/
+
 ::tasking::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc) {
 	mPauseEV.wait();
 	return ::tasking::EGenericProcessResult::KILL;
@@ -362,7 +487,7 @@ unsigned int Thread::suspend()
 {
 	if ( mState == THREAD_RUNNING )
 	{
-		post(makeMemberEncapsulate(&Thread::suspendInternal,this)); //post as the first task for next iteration
+		post(makeMemberEncapsulate(&Thread::suspendInternal,this)/* ,HIGH_PRIORITY_TASK */); //post as the first task for next iteration
 		mState=THREAD_SUSPENDED; //aunque todav�a no se haya hecho el wait,
 								 //por la forma en que funcionan los eventos da igual, porque si se hace
 								 //un resume justo antes de procesarse la tarea "suspendInternal", implica que el set
@@ -389,8 +514,7 @@ unsigned int Thread::resume() {
 
 #endif
 }
-*/
-/*
+
 void Thread::terminate(unsigned int exitCode)
 {
 
@@ -411,6 +535,10 @@ void Thread::terminate(unsigned int exitCode)
 
 unsigned int Thread::runInternal() {
 
+
+ahora aquí sería meter lo que hace el onRun del threadImple
+ya esto viene desde la inicialización del hilo
+el tema es que quisiera mantener ese blucle principal del threadimple->puede neter otra virtual nueva_>ver si cuadra si queire heredar mi propio hilo
 	TLS::setValue( gCurrentThreadKey, this );
 	if ( !mEnd )
 	{
@@ -424,22 +552,27 @@ unsigned int Thread::runInternal() {
 	mState = THREAD_FINISHED;
 	return mResult;
 }
-*/
+
 bool Thread::join(unsigned int millis)
 {
-#ifdef _WINDOWS
-	//@todo por qu� no usar WaitForSingleObject?
-	DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
-	return status!=WAIT_TIMEOUT;
-#endif
-#if defined (DABAL_POSIX)
-	int err = pthread_join(mHandle, NULL/*result*/);
-	mJoined=!err;
-	if (err) {
-		spdlog::error("Error joining thread: err = {}", err);
+	//if ( !(mState & (THREAD_INIT | THREAD_FINISHED) ) )
+	{
+	#ifdef _WINDOWS
+		//@todo por qu� no usar WaitForSingleObject?
+		DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
+		onJoined();
+		return status!=WAIT_TIMEOUT;
+	#endif
+	#if defined (DABAL_POSIX)
+		int err = pthread_join(mHandle, NULL/*result*/);
+		mJoined=!err;
+		if (err) {
+			spdlog::error("Error joining thread: err = {}", err);
+		}
+		onJoined();
+		return mJoined;	
+	#endif
 	}
-	return mJoined;	
-#endif
 }
 
 void Thread::yield(YieldPolicy yp) {

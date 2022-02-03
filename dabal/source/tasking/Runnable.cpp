@@ -153,9 +153,10 @@ Runnable* Runnable::getCurrentRunnable()
 }
 
 Runnable::Runnable(unsigned int maxTaskSize):
+	mCurrentInfo(nullptr),
+	mState(State::INITIALIZED),
 	mMaxTaskSize(maxTaskSize),
-	mOwnerThread(0),  //�assume 0 is invalid thread id!!
-	mCurrentInfo(nullptr)
+	mOwnerThread(0)  //�assume 0 is invalid thread id!!
 {
 		
 	//create one default pool
@@ -185,7 +186,10 @@ Runnable::~Runnable() {
 
 
 unsigned int Runnable::run()
-{
+{	
+	if (mState == State::RUNNING)
+		return 1; //@todo definir codigos
+	mState = State::RUNNING;
 	//now initialize the value
 	RunnableInfo* ri = _getCurrentRunnableInfo();
 	if (ri == NULL)
@@ -199,20 +203,15 @@ unsigned int Runnable::run()
 	unsigned int result;
 	if (getTimer() == NULL)
 		setTimer(std::make_shared<Timer>());
-	mOwnerThread = ::core::getCurrentThreadId();
+/*
+@todo
+esto tampoco vale
+ahora con el hecho de que el run se ahce desde fuera, esto ya no cuadra...
+*/
+	mOwnerThread = ::core::getCurrentThreadId(); 
 	result = onRun();
-	executeFinishEvents();
-	ri->current = current;
-	/*Runnable* current = getCurrentRunnable();
-	TLS::setValue(gCurrentRunnableKey, this);	
-	unsigned int result;
-	if ( getTimer() == NULL  )
-		setTimer( new Timer() );
-	mOwnerThread = ::core::getCurrentThreadId();
-	result = onRun();
-	executeFinishEvents();
-	TLS::setValue(gCurrentRunnableKey, current);  //Restore previous
-	*/
+//@todo	tiene sentid ahora el current?	
+	ri->current = current;	
 	return result;
 }
 void Runnable::setTimer(std::shared_ptr<Timer> timer )
@@ -236,16 +235,5 @@ void Runnable::processTasks()
 	mCurrentInfo->current = this;
 	mTasks.executeProcesses();
 	mCurrentInfo->current = oldR;
-}
-
-//#pragma optimize("",off)
-
-void Runnable::executeFinishEvents()
-{
-	mFinishEvents.triggerCallbacks(this);
-	/*for( list< TFinishEvent* >::iterator i = mFinishEvents.begin() ; i != mFinishEvents.end(); ++i )
-	{
-		(**i)( this );
-	}*/
 }
 

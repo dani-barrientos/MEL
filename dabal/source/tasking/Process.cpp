@@ -304,7 +304,8 @@ void Process::wakeUp()
 	if ( mSwitched || mState == EProcessState::ASLEEP) 
 	{	
 		//notify scheduler
-		mOwnerProcessScheduler->processAwakened( shared_from_this() ); 
+		if( mState == EProcessState::ASLEEP )
+			mOwnerProcessScheduler->processAwakened( shared_from_this() ); 
 		setPeriod( 0 );
 	//	mState = mPreviousState; //creo que esto no debe ser aqui!!! LO HICE PORQUE EL SCHEDULER NO TENIA EN CUENTA SI SE HABÁI DESPERTADO
 		mWakeup = true;        
