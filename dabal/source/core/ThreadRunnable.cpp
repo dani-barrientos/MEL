@@ -153,11 +153,11 @@ void ThreadRunnable::terminate(unsigned int exitCode)
 		resume();
 	}else if ( mState == THREAD_INIT )
 	{
-		//TODO vigilar, esto no est� bien. Puede ocurrir que en este momento est� arrancado el hilo
+	/*	//TODO vigilar, esto no est� bien. Puede ocurrir que en este momento est� arrancado el hilo
 		#ifdef _WINDOWS
 		//in Windows we need to ResumeThread if it wasn't started. Other way it won't be removed from memory( I don't know why..)
 		ResumeThread( mHandle );
-		#endif
+		#endif*/
 	}
     mEnd = true;
     #ifdef USE_CUSTOM_EVENT
