@@ -187,6 +187,17 @@ Runnable::~Runnable() {
 
 unsigned int Runnable::run()
 {	
+
+	/*
+@todo esta funcion es poco consistente con el funcionamiento de threads. problemas:
+ - un usuario de un runnable, llamará de forma natura al run, sin saber si el runnable concreto se inicia de otra forma
+ - si ese run iniciase el hilo:
+	- esta función ya no se bloquearia, por lo que funcionamiento inconsistente
+	- además el runnableingo y el ownerthread dejaría nde tener sentdio aqui
+	SOLUCION
+	 - igual la cosa va por quitar el run, y que lo unic oque se exponga sea un "iterate" o similar, pero fastidia andar ahí con el runnableinfo y ownerthread..
+
+*/
 	if (mState == State::RUNNING)
 		return 1; //@todo definir codigos
 	mState = State::RUNNING;
@@ -203,11 +214,7 @@ unsigned int Runnable::run()
 	unsigned int result;
 	if (getTimer() == NULL)
 		setTimer(std::make_shared<Timer>());
-/*
-@todo
-esto tampoco vale
-ahora con el hecho de que el run se ahce desde fuera, esto ya no cuadra...
-*/
+
 	mOwnerThread = ::core::getCurrentThreadId(); 
 	result = onRun();
 //@todo	tiene sentid ahora el current?	
@@ -225,7 +232,7 @@ void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime
 	if ( lockScheduler)
 		mTasks.insertProcess( process,startTime );
 	else
-		mTasks.insertProcess( process,startTime );
+		mTasks.insertProcessNoLock( process,startTime );
 	onPostTask( process );
 }
 

@@ -185,6 +185,7 @@ namespace tasking
 	public:  //por temas de depuracion
 
 	private:
+	//get info on currently executing Runnable in current thread
 		static RunnableInfo* _getCurrentRunnableInfo();
 		friend class ::tasking::_private:: RunnableTask;
 		RunnableInfo* mCurrentInfo;
@@ -336,10 +337,7 @@ namespace tasking
 		p->setPeriod( period );
 		p->setAutoKill( autoKill );		
 		postTask(p,startTime,lockScheduler);
-		return p;
-				
-		// postTask(nullptr);
-		// return nullptr;
+		return p;	
 	}
 	template <class ProcessType ,class AllocatorType, class F>		
 	std::shared_ptr<Process> Runnable::fireAndForget(

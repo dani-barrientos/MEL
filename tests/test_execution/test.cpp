@@ -69,7 +69,7 @@ int _testLaunch()
 			);
 			auto r = cont.getResult();			
 			spdlog::debug("Waiting for first task block...");			
-			th1->run();
+			th1->start();
 			auto wr = tasking::waitForFutureMThread(r);
 			if ( wr.isValid() )
 				spdlog::debug("First tasks completed successfully");
@@ -132,7 +132,11 @@ int _testLaunch()
 }
 template <class F> void _measureTest(string text,F f)
 {
-	#define loopSize 100000
+	#ifdef NDEBUG
+		#define loopSize 1000'000
+	#else
+		#define loopSize 200'000
+	#endif
 	int mean = 0;
 	constexpr size_t iters = 20;
 	Timer timer;
@@ -158,21 +162,14 @@ int _testFor()
 	
 	spdlog::set_level(spdlog::level::info); // Set global log level
 
-	_measureTest("Runnable executor with independent tasks and blocking on post",
+	_measureTest("Runnable executor with independent tasks and lockOnce",
 		[]() 
-		{
-			/*GenericThread* th = new GenericThread(true,false);
-			seguyir, mejorar interfaz-. unificar run y start
-//con autorun no se borra bien. segurametne si hago el finish antes sí, pero me gustaría algo más compacto
-			Thread::sleep(5000);
-		//		th->finish(); así mejor
-			delete th;
-			return;*/
+		{		
 			auto th1 = ThreadRunnable::create(true);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
-			lhints.blockOnPost = true;
+			lhints.lockOnce = true;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
 			{								
@@ -184,14 +181,34 @@ int _testFor()
 			spdlog::debug("hecho");
 		}
 	);
-	_measureTest("Runnable executor with independent tasks,blocking on post and pausing thread",
+	_measureTest("Runnable executor with independent tasks and NO lockOnce on post",
+		[]() 
+		{
+		
+			auto th1 = ThreadRunnable::create(true);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = true;
+			lhints.lockOnce = false;
+			auto barrier = ex.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+				//::tasking::Process::wait(10);
+			},lhints,1
+			);
+			::core::waitForBarrierThread(barrier);
+			spdlog::debug("hecho");
+		}
+	);
+	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
 		[]() mutable
 		{
 			auto th1 = ThreadRunnable::create(false);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
-			lhints.blockOnPost = true;
+			lhints.lockOnce = true;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
 			{								
@@ -204,14 +221,34 @@ int _testFor()
 			th1->suspend();
 		}
 	);
-	_measureTest("Runnable executor without independent tasks",
+	_measureTest("Runnable executor with independent tasks,NO lockOnce on post and pausing thread",
+		[]() mutable
+		{
+			auto th1 = ThreadRunnable::create(false);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = true;
+			lhints.lockOnce = false;
+			auto barrier = ex.loop(0,loopSize,
+			[](int idx)
+			{								
+				spdlog::debug("iteracion {}",idx);
+				//::tasking::Process::wait(10);
+			},lhints,1
+			);
+			th1->resume();
+			::core::waitForBarrierThread(barrier);
+			th1->suspend();
+		}
+	);
+	_measureTest("Runnable executor WITHOUT independent tasks",
 		[]()
 		{
 			auto th1 = ThreadRunnable::create(true);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = false;
-			lhints.blockOnPost = true;
+			lhints.lockOnce = true;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
 			{								

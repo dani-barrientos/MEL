@@ -13,23 +13,10 @@ namespace core
 	/**
 	* @class ThreadRunnable
 	* @brief Thread with Runnable behaviour. 
-	*
-
-     ACTUALIZAR DOC
-	* A user can create a GenericThread if he wants to execute a functor in a separate
-	* thread. This functor must obey to signature: bool f( Thread* thread,bool kill)
-	*	Where:
-	*		- param[in] thread is the GenericThread container that use it
-	*		- param[in] kill. There is a petition of killing this thread, so you must take into account and
-	*			return true if you can terminate
-	*		- bool return. if you want the thread to terminate, return true
-	*
-	* If terminate is called outside thread, the functor should consider it (kill argument) and return true if it can exit, so
-	* thread will not finish until that functor returns true
-	* The thread is automatically destroyed when finished if autoDestroy parameter == true (@todo Should it be in Thread class?)
-	* @remarks The functor is executed using onCycleEnd because is more efficient than using a task
-	* but it will not be killed if you do Runnable::getTaskScheduler().killProcesses(), you must to use Thread::finish (the usual way)
-	*
+	* An instance of this class allow to receive task via Runnable available functions. The thread will be paused if no active tasks in its scheduler, that means:
+    * there isn't any task or the tasks are in sleep state. One a task is posted or a task is awake, the thread continues processing
+    * Destruction of a ThreadRunnable implies a join, waiting for the tasks to be completed. A kill signal is sent to all the tasks, but *not forced*, so is user's responsability
+    * to manage tasks correctly
 	*/
 	class DABAL_API ThreadRunnable : public Runnable
 	{
@@ -42,22 +29,35 @@ namespace core
             THREAD_FINISHING_DONE = binary<10000>::value,
             THREAD_FINISHED = binary<100000>::value
         };	
-		
-		static std::shared_ptr<ThreadRunnable> create( bool autoRun = true, bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
+		/**
+		 * @brief Create new ThreadRunnable
+		 * 
+		 * @param autoRun if false, thread will be created suspende (but really running). The reason to no call this parameter "createSuspended" is because legacy issues
+		 * @param maxTasksSize 
+		 * @return std::shared_ptr<ThreadRunnable> 
+		 */
+		static std::shared_ptr<ThreadRunnable> create( bool autoRun = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
 		{
-            auto th = new ThreadRunnable(autoDestroy,maxTasksSize);
-			//auto result = std::make_shared<ThreadRunnable>( autoDestroy,maxTasksSize );
+            auto th = new ThreadRunnable(maxTasksSize);
+            th->start();
             std::shared_ptr<ThreadRunnable> result(th);
-			if (autoRun)
-                result->run();
+			if (!autoRun)  //really means auto pause if no autorun, always create running
+                result->suspend();
 			return result;
 		}
         ~ThreadRunnable();
+        /**
+         * @brief Start Thread and con Runnable::run on its thread function
+         * @todo esto está así para ir tirando, pero es poco consistente con el interfaz de Runnable
+         * 
+         */
+        void start();
         void finish() override { terminate(0); }
         bool finished()	override {return getState() == THREAD_FINISHED;	}
 		bool join(unsigned int millis=0xFFFFFFFF);
         bool setAffinity(uint64_t aff){return mThread->setAffinity(aff);}
 
+        
         /**
          * Makes the main thread routine to be suspended.
          * If thread is no in THREAD_RUNNING, it hasn't effect
@@ -90,7 +90,6 @@ namespace core
 		std::condition_variable	mWaitForTasksCond;
 		std::mutex mCondMut;  //para pruebas con la condition varaible
 	#endif
-		bool		mAutoDestroy;
         volatile bool mEnd; // request
         EThreadState mState;
         Event mPauseEV;
@@ -104,9 +103,8 @@ namespace core
 	protected:
         /**
 		* @brief Create a thread with an empty loop, that continuosly processes posted tasks @see Runnable::post
-		* @param autoDestroy Thread will be deleted when finished ->REVISAR, NO BIEN IMPLEMENTADO		
 		*/
-        ThreadRunnable( bool autoDestroy = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE );
+        ThreadRunnable( unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE );
         virtual void onThreadStart(){}
         virtual void onThreadEnd(){}
         virtual void onJoined(){}

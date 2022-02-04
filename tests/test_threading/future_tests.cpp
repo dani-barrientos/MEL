@@ -238,7 +238,7 @@ esto está relacionado con el tema de devovler error, el valor y tal. Igual podr
 	int result = 0;
 	//@todo hasta que no haga bien lo del autodestroy, esto no está bien del todo. Deberia pasar los consumidores como shared_ptr
 	
-	auto producer = ThreadRunnable::create(true,false);
+	auto producer = ThreadRunnable::create(true);
 	
     spdlog::set_level(spdlog::level::debug); // Set global log level
 	constexpr size_t n = 1;
@@ -246,10 +246,10 @@ esto está relacionado con el tema de devovler error, el valor y tal. Igual podr
 	std::array< std::shared_ptr<ThreadRunnable>,n> consumers;
 	for(size_t i=0;i<n;++i)
 	{
-		consumers[i] = ThreadRunnable::create(true,false);
+		consumers[i] = ThreadRunnable::create(true);
 	}
 	auto master = make_shared<MasterThread<n>>(producer,consumers,TESTTIME);
-	master->run();	
+	master->start();	
 	master->join();	
 	
 	return result;

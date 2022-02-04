@@ -3,11 +3,13 @@ using core::ThreadRunnable;
 #include <mpl/MemberEncapsulate.h>
 
 
-ThreadRunnable::ThreadRunnable( bool autoDestroy ,unsigned int maxTasksSize):Runnable(maxTasksSize),mState(THREAD_INIT),mPauseEV(true,false),mThread(std::make_unique<Thread>())
+ThreadRunnable::ThreadRunnable( unsigned int maxTasksSize):Runnable(maxTasksSize),mState(THREAD_INIT),mEnd(false),
+	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
 }
 void ThreadRunnable::_execute()	
 {
+	mState = THREAD_RUNNING;
     onThreadStart();
     while ( mState != THREAD_FINISHING_DONE )
     {
@@ -38,9 +40,14 @@ void ThreadRunnable::_execute()
     //@todo  gestiono el audodestroye? no creo
     //return 1; // != 0 no error
 }
+void ThreadRunnable::start()
+{
+	mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::run,this));
+}
 unsigned int ThreadRunnable::onRun()
 {
-    mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
+    //mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
+	_execute();
     return 0; //??
 }
 bool ThreadRunnable::join(unsigned int millis)
@@ -131,7 +138,7 @@ void ThreadRunnable::onCycleEnd()
 {
 	unsigned int count = 0;	
     count = getActiveTaskCount();
-    if (/*!mEnd && */count == 0)
+    if (!mEnd && count == 0)
     {
 #ifdef USE_CUSTOM_EVENT
         mWaitForTasks.wait();

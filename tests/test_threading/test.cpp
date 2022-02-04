@@ -273,8 +273,8 @@ int  _testPerformanceLotTasks()
 	constexpr int nIterations = 1;
 	constexpr int nTasks = 100000;
 
-	auto th1 =ThreadRunnable::create(true,true,nTasks); //GenericThread::createEmptyThread(true,true,nTasks);
-	th1->run();	
+	auto th1 =ThreadRunnable::create(true,nTasks); //GenericThread::createEmptyThread(true,true,nTasks);
+	th1->start();	
 	uint64_t t0,t1;
 	int count = 0;
 	t0 = sTimer.getMilliseconds();

@@ -261,7 +261,7 @@ void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned 
 
 void ProcessScheduler::insertProcessNoLock( std::shared_ptr<Process> process,unsigned int startTime )
 {
-if (process == nullptr)
+	if (process == nullptr)
 		return;
 	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
 

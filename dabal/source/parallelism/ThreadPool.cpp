@@ -30,7 +30,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 		mPool = new std::shared_ptr<ThreadRunnable>[mNThreads];
 		for (unsigned int i = 0; i < mNThreads; ++i)
 		{
-			auto th = ThreadRunnable::create(false, false);
+			auto th = ThreadRunnable::create(false);
 			//spdlog::debug("ThreadPool. Create thread {}}",th->getThreadId());
 			mPool[i] = th;
 			if (pAff != 0 && applyAffinity)
@@ -51,7 +51,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 						spdlog::error("Error setting thread affinity");
 				}
 			}		
-			th->run();  //need to start after setting affinity
+			th->resume();  //need to start after setting affinity
 		}
 		
 	}

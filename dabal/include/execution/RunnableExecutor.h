@@ -18,7 +18,7 @@ namespace execution
      */
     struct RunnableExecutorLoopHints : public LoopHints
     {
-        bool blockOnPost = false; //!<if true,task is posted previous bloking Runnable internal scheduler
+        bool lockOnce = false; //!<if true,Runnable internal scheduler lock is taken before posting loop taksjs
     };
     /**
      * @brief Executor specialization using Runnable as execution agent
@@ -77,7 +77,7 @@ namespace execution
         auto ptr = mRunnable.lock();
         bool mustLock;
         if ( dynamic_cast<const RunnableExecutorLoopHints*>(&hints) )
-            mustLock = static_cast<const RunnableExecutorLoopHints&>(hints).blockOnPost;
+            mustLock = static_cast<const RunnableExecutorLoopHints&>(hints).lockOnce;
         else
             mustLock = false;
         if ( mustLock )
