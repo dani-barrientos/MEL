@@ -2,13 +2,11 @@
     "version": 2,
     "configurePresets": [
         {
-            "name": "Windows Base",
-            "description": "Common things for Windows build",
-            "hidden": true,          
-            "architecture": {
-                "value": "Win32",
-                "strategy": "set"
-            },
+            "name": "Windows Base (x86)",
+            "description": "Base Windows x86 build. define your custom preset in your CMakeUserPresets to set the compiler, inheriting from this",
+            "hidden": true,      
+            "toolset": "host=x64",
+            "architecture": "win32",     
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
@@ -22,6 +20,21 @@
                         "Windows"
                     ]
                 }
+            }
+        },
+        {
+            "name": "Windows x64",
+            "displayName": "Visual Studio Community 2019 Release - amd64",
+            "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",            
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "DABAL_OS": "DABAL_WINDOWS",
+                "DABAL_ARQ": "DABAL_X64_MSVC",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
             }
         },
         {
@@ -51,7 +64,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "DABAL_ARQ": "DABAL_X64_CLANG"   
+                "DABAL_ARQ": "DABAL_X64_CLANG"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -68,7 +81,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "DABAL_ARQ": "DABAL_X64_CLANG"   
+                "DABAL_ARQ": "DABAL_X64_CLANG"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -85,7 +98,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "DABAL_ARQ": "DABAL_X64_GCC"   
+                "DABAL_ARQ": "DABAL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -102,7 +115,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "DABAL_ARQ": "DABAL_X64_GCC"   
+                "DABAL_ARQ": "DABAL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -111,14 +124,6 @@
                     ]
                 }
             }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "Windows Release",
-            "description": "",
-            "displayName": "",
-            "configurePreset": "x86-release"
-        }
+        }        
     ]
 }

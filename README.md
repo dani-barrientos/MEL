@@ -8,6 +8,7 @@ There are 3 diferent macros that guide compilation based on target platform.
 - DABAL_API: API to use. It can be **DABAL_POSIX**. Else, API based on platform is used.
 - DABAL_ARQ: CPU arquitecture and compiler, fo assembler syntax resolution
 - by default, installing gcc o clang in a 64bit platform will only install 64 bi libraries. You need to installa all, using for example target_compile_options
+- CMAKE_BUILD_TYPE hasn't any effecto with Visual Studio Generator. It has to be done in a "build preset" with the "configuration" parameter
 
 # vcpkg
  vcpkg need to be installed. Follow instructions, among many other sites, https://vcpkg.io/en/getting-started.html. An environment variable VCPKG_ROOT pointing to vcpkg root

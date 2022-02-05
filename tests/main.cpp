@@ -25,9 +25,7 @@ using tests::TestManager;
  **/
 
 int main(int argc, const char* argv[])
-{	
-//ver cómo furrula y 
-	//tebngo que ver que tenga funcionalidad similar a los appedern, por el tema de redirigir la salida a donde quiera->creo que son los sink
+{		
 	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 	spdlog::error("Prueba error");
 	spdlog::set_level(spdlog::level::err); // Set global log level to err
