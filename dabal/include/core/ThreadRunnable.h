@@ -47,8 +47,9 @@ namespace core
 		}
         ~ThreadRunnable();
         /**
-         * @brief Start Thread and con Runnable::run on its thread function
-         * @todo esto está así para ir tirando, pero es poco consistente con el interfaz de Runnable
+         * @brief Start Thread
+         * Internally calls Runnablle::processTask in an infinite loop, with some other check for performance and state control
+         * virtual protected onRun is called before thread loop is set just in case children need to do custom job at that moment
          * 
          */
         void start();
@@ -105,20 +106,29 @@ namespace core
 		* @brief Create a thread with an empty loop, that continuosly processes posted tasks @see Runnable::post
 		*/
         ThreadRunnable( unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE );
+        /**
+         * @brief Called by start() function
+         * Children can override it to add custom behaviour
+         */
+        virtual void onStart(){};
+        /**
+         * @brief Called one time at the start of the thread loop, so, already in this thread context
+         * Don't confuse with onStart,which is called when start() is called, so called on the *caller thread*^context
+         */
         virtual void onThreadStart(){}
+        /**
+         * @brief Called when at the end of the thread loop
+         * 
+         */
         virtual void onThreadEnd(){}
+        //called after join is done
         virtual void onJoined(){}
 		void onCycleEnd();
 
-        /**
-		* overriden from Runnable
-		*/
-        unsigned int onRun() override;
 		/**
 		* overriden from Runnable
 		*/
 		void onPostTask(std::shared_ptr<Process> process) override;
-		
 	};    
 	
 }

@@ -60,6 +60,15 @@ ProcessScheduler::~ProcessScheduler(void)
 */
 void ProcessScheduler::executeProcesses()
 {
+	#ifndef NDEBUG
+	int stack;
+	if ( _stack == nullptr)
+		_stack = &stack;
+	else
+	{
+		assert(_stack==&stack && "ProcessScheduler::executeProcesses. Invalid stack!!");
+	}
+	#endif
 	if (mProcessCount == 0)
 		return;
 	

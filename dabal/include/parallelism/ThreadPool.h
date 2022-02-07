@@ -52,10 +52,7 @@ namespace parallelism
 
 		ThreadPool( const ThreadPoolOpts& opts );
 		~ThreadPool();
-		inline size_t getNumThreads() const
-		{
-			return mNThreads;
-		}
+		inline size_t getNumThreads() const{return mNThreads;}
 		struct ExecutionOpts {
 			bool useCallingThread = false;
 			bool groupTasks = true; //group task when number of tasks is greater than threads. This way, grouped tasks, are execute one after each

@@ -54,13 +54,12 @@ class MasterThread : public ThreadRunnable
 		uint64_t		mLastDebugTime; //para mosrtar mensaje de debug de que todo va bien
 		uint64_t 		mStartTime;
 		unsigned int	mMaxTime; //msecs to do test
-		unsigned int onRun() override
+		void onStart() override
 		{
 			auto msecs = this->getTimer()->getMilliseconds();
 			mStartTime = msecs;
 			srand((unsigned)msecs);
 			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));					
-			return 0;
 		}
 		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p) 
 		{	

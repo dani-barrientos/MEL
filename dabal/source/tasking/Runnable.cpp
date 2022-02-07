@@ -154,9 +154,9 @@ Runnable* Runnable::getCurrentRunnable()
 
 Runnable::Runnable(unsigned int maxTaskSize):
 	mCurrentInfo(nullptr),
-	mState(State::INITIALIZED),
+	//mState(State::INITIALIZED),
 	mMaxTaskSize(maxTaskSize),
-	mOwnerThread(0)  //�assume 0 is invalid thread id!!
+	mOwnerThread(0)  //assume 0 is invalid thread id!!
 {
 		
 	//create one default pool
@@ -171,6 +171,8 @@ Runnable::Runnable(unsigned int maxTaskSize):
 	
 	gCurrrentRunnableCS.leave();
 	_addNewPool();
+	//Create default timer. Can be overriden by calling
+	setTimer(std::make_shared<Timer>());
 }
 
 Runnable::~Runnable() {
@@ -183,44 +185,6 @@ Runnable::~Runnable() {
 	
 }
 
-
-
-unsigned int Runnable::run()
-{	
-
-	/*
-@todo esta funcion es poco consistente con el funcionamiento de threads. problemas:
- - un usuario de un runnable, llamará de forma natura al run, sin saber si el runnable concreto se inicia de otra forma
- - si ese run iniciase el hilo:
-	- esta función ya no se bloquearia, por lo que funcionamiento inconsistente
-	- además el runnableingo y el ownerthread dejaría nde tener sentdio aqui
-	SOLUCION
-	 - igual la cosa va por quitar el run, y que lo unic oque se exponga sea un "iterate" o similar, pero fastidia andar ahí con el runnableinfo y ownerthread..
-
-*/
-	if (mState == State::RUNNING)
-		return 1; //@todo definir codigos
-	mState = State::RUNNING;
-	//now initialize the value
-	RunnableInfo* ri = _getCurrentRunnableInfo();
-	if (ri == NULL)
-	{
-		ri = new RunnableInfo; //@todo ahora quedar� esta perdida de memoria
-		TLS::setValue(gCurrentRunnableKey, ri);
-	}
-	mCurrentInfo = ri;
-	Runnable* current = nullptr;
-	ri->current = this;
-	unsigned int result;
-	if (getTimer() == NULL)
-		setTimer(std::make_shared<Timer>());
-
-	mOwnerThread = ::core::getCurrentThreadId(); 
-	result = onRun();
-//@todo	tiene sentid ahora el current?	
-	ri->current = current;	
-	return result;
-}
 void Runnable::setTimer(std::shared_ptr<Timer> timer )
 {
 	mTasks.setTimer( timer );
@@ -238,6 +202,19 @@ void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime
 
 void Runnable::processTasks()
 {
+	if ( mOwnerThread == 0)  //first time?
+		mOwnerThread = ::core::getCurrentThreadId(); 
+	
+	if ( !mCurrentInfo )  //now initialize curranble info
+	{
+		RunnableInfo* ri = _getCurrentRunnableInfo();
+		if (ri == nullptr)
+		{
+			ri = new RunnableInfo; //@todo ahora quedar� esta perdida de memoria
+			TLS::setValue(gCurrentRunnableKey, ri);
+		}
+		mCurrentInfo = ri;
+	}
 	Runnable* oldR = mCurrentInfo->current;
 	mCurrentInfo->current = this;
 	mTasks.executeProcesses();

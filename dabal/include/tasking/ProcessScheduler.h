@@ -202,6 +202,9 @@ namespace tasking
 		volatile int32_t		mInactiveProcessCount;
 		std::shared_ptr<Process>	mPreviousProcess;
 		bool					mKillingProcess; //flag to mark when ther is a kill task pending
+		#ifndef NDEBUG
+		void* _stack = nullptr;
+		#endif
 
 		/**
 		* helper function

@@ -165,13 +165,15 @@ namespace tasking
 		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
 		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
 		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception		
-		enum class State
+	/*	
+	ahora no encaja mucho, ya veré con el tiempo
+	enum class State
 		{
 			INITIALIZED, //!<only initialized, not running
 			RUNNING, //!<Running
 			FINISHED //!finshed, not running
 		};
-
+*/
 		inline ::core::ThreadId getOwnerThreadId() const { assert(mOwnerThread != 0); return mOwnerThread; }
 		/**
 		* Manually set the owner thread ID.
@@ -192,7 +194,7 @@ namespace tasking
 		ProcessScheduler	mTasks;
 		unsigned int		mMaxTaskSize;  //max number of tasks for each pool (the number of pools is dynamic)
 		::tasking::_private::MemZoneList mRTZone;
-		std::atomic<State>	mState;
+		//std::atomic<State>	mState;
 		CriticalSection	mMemPoolCS;		
 		::core::ThreadId	mOwnerThread;//thread executing Runnable		
 		
@@ -203,14 +205,12 @@ namespace tasking
 		
 	protected:
 		/**
-		* Performs a controlled loop over the internal queue, excuting
+		* @brief Performs a controlled loop over the internal queue, executing
 		* pending tasks.
+		* This function must be called always from same place, without alterng the stack
 		*/
 		void processTasks();
-		/**
-		* Implements the runnable behaviour. To be overridden by concrete subclasses.
-		*/
-		virtual unsigned int onRun() = 0;
+		
 		virtual void onPostTask(std::shared_ptr<Process> process){};
 
 		/**
@@ -240,10 +240,6 @@ namespace tasking
 		Runnable(unsigned int maxTaskSize=DEFAULT_POOL_SIZE);
 		virtual ~Runnable();
 
-		/**
-		* performs some initializations and call onRun
-		*/
-		unsigned int run();
 		/**
 		* sends Runnable finish signal
 		* you must check for finished() to make sure

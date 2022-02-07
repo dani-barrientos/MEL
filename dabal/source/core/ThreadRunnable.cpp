@@ -40,16 +40,13 @@ void ThreadRunnable::_execute()
     //@todo  gestiono el audodestroye? no creo
     //return 1; // != 0 no error
 }
+
 void ThreadRunnable::start()
 {
-	mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::run,this));
+	onStart();
+	mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
 }
-unsigned int ThreadRunnable::onRun()
-{
-    //mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
-	_execute();
-    return 0; //??
-}
+
 bool ThreadRunnable::join(unsigned int millis)
 {
     bool result = mThread->join(millis);
