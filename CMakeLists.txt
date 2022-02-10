@@ -12,6 +12,7 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 
 project ("dabal")
+add_compile_definitions(PROCESSSCHEDULER_USE_LOCK_FREE)
 add_compile_definitions(${DABAL_OS})
 add_compile_definitions(${DABAL_API})
 add_compile_definitions(${DABAL_ARQ})

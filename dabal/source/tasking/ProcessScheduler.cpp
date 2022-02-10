@@ -28,11 +28,81 @@ using core::TLS;
 static TLS::TLSKey	gTLSCurrentProcessKey;
 static bool gTLSInited = false;
 static CriticalSection gPSCS;
+#ifdef PROCESSSCHEDULER_USE_LOCK_FREE	
+//initial memory for new posted tasks
+ProcessScheduler::NewTasksContainer::NewTasksContainer(size_t chunkSize,size_t maxSize):
+	mChunkSize(chunkSize),mMaxSize(maxSize)
+{
+	if ( maxSize > chunkSize )
+		mMaxSize = chunkSize;
+	//Create one chunk. it will grow when needed
+	mPool.emplace_back(chunkSize);
+	//mPool.resize(chunkSize);
+	mSize = chunkSize;
+}
+ProcessScheduler::NewTasksContainer::PoolType::value_type& ProcessScheduler::NewTasksContainer::operator[](size_t idx)
+{	
+	size_t nPool = idx/mChunkSize;
+	size_t newIdx = idx%mChunkSize;
+	
+	return mPool[nPool][newIdx];
+}
+size_t ProcessScheduler::NewTasksContainer::exchangeIdx(size_t v)
+{
+	return mCurrIdx.exchange(v);
+}
+void ProcessScheduler::NewTasksContainer::add(std::shared_ptr<Process>& process,unsigned int startTime)
+{	
+	size_t idx; 
+	idx = mCurrIdx.fetch_add(1,::std::memory_order_relaxed);  //no lo tengo claro todavía, estudiar
+	if ( idx >= size())
+	{
+		Lock lck(mSC);
+		size_t currSize = mSize.load(std::memory_order_relaxed);
+		//check size again
+		if ( idx >= currSize)
+		{
+			mPool.emplace_back(mChunkSize);
+			auto newSize = currSize + mChunkSize;
+			/*if ( newSize > mMaxSize)
+			{
+				poner a cero el indice y, ¿qué hago con el resto?
 
-ProcessScheduler::ProcessScheduler():
-	mTimer( nullptr )
-	//mRequestedTaskCount( 0 )
-	,mProcessCount( 0 ),
+			}else*/
+				mSize.store(newSize,std::memory_order_release);
+		}
+	}	
+	ElementType& element = operator[](idx);
+	element.st = startTime;	
+	element.p = std::move(process);
+	element.valid.store(true,std::memory_order_release);
+
+}
+void ProcessScheduler::NewTasksContainer::clear()
+{
+	mPool.clear();
+	mPool.emplace_back(mChunkSize);
+	mSize = 1;
+}
+
+void ProcessScheduler::NewTasksContainer::lock()
+{
+	Lock lck(mSC);
+}
+void ProcessScheduler::ProcessScheduler::resetPool()
+{
+	mNewProcesses.exchangeIdx(0);
+	mLastIdx = 0;
+	mNewProcesses.clear();
+}
+#endif
+ProcessScheduler::ProcessScheduler(size_t initialPoolSize,size_t maxNewTasks):
+	mLastIdx(0),
+	mTimer( nullptr ),
+#ifdef PROCESSSCHEDULER_USE_LOCK_FREE	
+	mNewProcesses(initialPoolSize,maxNewTasks),
+#endif
+	mProcessCount( 0 ),
 	mInactiveProcessCount( 0 ),
 	mKillingProcess( false ),
 	mProcessInfo(nullptr)
@@ -69,7 +139,7 @@ void ProcessScheduler::executeProcesses()
 		assert(_stack==&stack && "ProcessScheduler::executeProcesses. Invalid stack!!");
 	}
 	#endif
-	if (mProcessCount == 0)
+	if (mProcessCount.load(std::memory_order_relaxed) == 0)
 		return;
 	
 	if (mProcessInfo == nullptr)
@@ -88,29 +158,136 @@ void ProcessScheduler::executeProcesses()
 	//inserto procesos pendientes
 
 	//don't block if no new processes. size member is not atomic, but if a new process is being inserted in this moment, it will be inserted in next iteration
+	
+	//pruebas con metodo viejo
+#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+	
+	/*size_t endIdx = std::min(mNewProcesses.getCurrIdx(),mNewProcesses.size());
+	size_t count = endIdx; esto no es correcto si mienrtas espero por los remaining
+	se sobre pasas
+	do
+	{
+		for(size_t idx = 0;idx < endIdx; ++idx)
+		{
+			auto& element = mNewProcesses[idx];
+			//maybe producer thread hasn't inserted the process yet
+			//@todo cuidado que es un pair, podría estar uinsertado el proceso y no el tiempo
+			if ( element.first)
+			{
+				element.first->mLastUpdateTime = time; 
+				element.first->setProcessScheduler( this );
+				mProcessList.push_front( std::move(element) );
+				--count;
+			}
+		}
+	}while(count>0); //wait until all pendng elements are ready
+	auto oldIdx = mNewProcesses.exchangeIdx(0);
+	oldIdx = std::min(oldIdx,mNewProcesses.size());
+	//process remaining processes until now
+	count = oldIdx-endIdx;
+	do
+	{
+		for(size_t idx = endIdx;idx < oldIdx; ++idx)
+		{
+			auto& element = mNewProcesses[idx];
+			//maybe producer thread hasn't inserted the process yet
+			//@todo cuidado que es un pair, podría estar uinsertado el proceso y no el tiempo
+			if ( element.first)
+			{
+				element.first->mLastUpdateTime = time; 
+				element.first->setProcessScheduler( this );
+				mProcessList.push_front( std::move(element) );
+				--count;
+			}else
+				spdlog::info("VACIO 2");
+		}
+	}while(count>0);
+	*/
+
+	//size_t endIdx = std::min(mNewProcesses.getCurrIdx(),mNewProcesses.size());	
+	size_t endIdx = mNewProcesses.getCurrIdx();
+	if ( endIdx > mNewProcesses.size() )
+	{
+		mNewProcesses.lock();
+	}
+	bool empty;
+	NewTasksContainer::ElementType* element;
+	for(size_t idx = mLastIdx;idx < endIdx; ++idx)
+	{		
+		//maybe producer thread hasn't inserted the process yet
+		empty = true;
+		//auto& element = mNewProcesses[idx];
+		element = &mNewProcesses[idx];
+		do{
+			if ( element->valid)
+			//if ( element->p != nullptr && element->st != std::numeric_limits<unsigned int>::max())
+			{
+				element->p->mLastUpdateTime = time; 
+				element->p->setProcessScheduler( this );
+				//mProcessList.push_front( TProcessList::value_type(std::move(element->p),element->st) );
+				mProcessList.emplace_front( std::move(element->p),element->st );
+				element->st = std::numeric_limits<unsigned int>::max();
+				element->valid.store(false,std::memory_order_release);				
+				empty = false;
+			}
+			/*else
+			 	spdlog::info("VACIO");*/
+		}while(empty);
+	}
+	mLastIdx = endIdx;
+	/*
+	mNewProcesses.block(); //avoid producer threads to overcome this idx temporaryly
+	auto oldIdx = mNewProcesses.exchangeIdx(0);
+	if ( oldIdx > mNewProcesses.size() )
+	{
+		mNewProcesses.lock();
+	}
+	//process remaining processes until now
+
+	for(size_t idx = endIdx;idx < oldIdx; ++idx)
+	{
+		//maybe producer thread hasn't inserted the process yet
+		//@todo cuidado que es un pair, podría estar uinsertado el proceso y no el tiempo
+		empty = true;
+		auto& element = mNewProcesses[idx];
+		do
+		{
+		//	if ( element.valid)
+			if ( element.p != nullptr)
+			{
+				element.p->mLastUpdateTime = time; 
+				element.p->setProcessScheduler( this );
+				mProcessList.push_front( TProcessList::value_type(std::move(element.p),element.st) );
+				//element.valid.store(false,std::memory_order_release);				
+				empty = false;
+			 }
+			 //else
+			// 	spdlog::info("VACIO");		
+		}while(empty);
+	}
+	mNewProcesses.unblock();//remove barrier
+	*/
+
+
+#else
 	if ( !mNewProcesses.empty())
 	{
 		mCS.enter();
 		TNewProcesses::reverse_iterator i;
 		TNewProcesses::reverse_iterator end;
 		end = mNewProcesses.rend();
-		/*for( i = mNewProcesses.begin(); i != end; ++i )
-		{			
-			(*i).first->mLastUpdateTime = time; 
-			(*i).first->setProcessScheduler( this );
-			mProcessList.push_back( std::move(*i) );
-		}*/
-		
-		for( i = mNewProcesses.rbegin(); i != end; ++i )
+	
+		for( auto i = mNewProcesses.rbegin(); i != end; ++i )
 		{			
 			(*i).first->mLastUpdateTime = time; 
 			(*i).first->setProcessScheduler( this );
 			mProcessList.push_front( std::move(*i) );
-			//mProcessList.push_back( std::move(*i) );
 		}
 		mNewProcesses.clear();	
+		
 		mCS.leave();
 	}
+#endif
 	_executeProcesses( time,mProcessList);
 	mProcessInfo->current = previousProcess;
 }
@@ -205,10 +382,12 @@ void ProcessScheduler::_killTasks()
 		(*i).first->kill();
 	}
 	mCS.enter();
+	/*
+	@todo resolver
 	for( auto i = mNewProcesses.begin(); i != mNewProcesses.end(); ++i)
 	{
 		(*i).first->kill();
-	}
+	}*/
 
 	mCS.leave();
 	mKillingProcess = false;
@@ -260,13 +439,15 @@ void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned 
 {
 	if (process == nullptr)
 		return;
-	//mejorar esto. Intentar quitar el lock
 	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
-
-	Lock lck(mCS);  
-	//mProcessCount++;
+#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+	mNewProcesses.add( process,startTime );
+#else
+	Lock lck(mCS);
 	mNewProcesses.push_back( std::make_pair(process,startTime) );
+#endif
 }
+
 
 void ProcessScheduler::insertProcessNoLock( std::shared_ptr<Process> process,unsigned int startTime )
 {
@@ -274,9 +455,13 @@ void ProcessScheduler::insertProcessNoLock( std::shared_ptr<Process> process,uns
 		return;
 	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
 
-	//mProcessCount++;
+#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+	mNewProcesses.add( process,startTime );
+#else
 	mNewProcesses.push_back( std::make_pair(process,startTime) );
+#endif
 }
+
 void ProcessScheduler::setTimer(std::shared_ptr<Timer> timer )
 {
  	mTimer = timer;

@@ -95,14 +95,14 @@ RTMemPool* Runnable::_addNewPool()
 	RTMemPool auxPool;
 	//reserve memory and mark all blocks as free 
 	auxPool.owner = this;
-	auxPool.pool = (RTMemBlock*)malloc( sizeof(RTMemBlock)*mMaxTaskSize );
+	auxPool.pool = (RTMemBlock*)malloc( sizeof(RTMemBlock)*mMaxPoolSize );
 	auxPool.count = 0;
 	mRTZone.push_front(std::move(auxPool));
 	//@todo guardar iterador
 	auto poolIterator = mRTZone.getList().begin();
 	//poolIterator->iterator = poolIterator;
 	result = &(*poolIterator);
-	for ( unsigned int i = 0; i < mMaxTaskSize; ++i )
+	for ( unsigned int i = 0; i < mMaxPoolSize; ++i )
 	{
 		result->pool[i].memState = RTMemBlock::EMemState::FREE;
 		result->pool[i].owner = result;
@@ -152,10 +152,11 @@ Runnable* Runnable::getCurrentRunnable()
 	}*/
 }
 
-Runnable::Runnable(unsigned int maxTaskSize):
+Runnable::Runnable(unsigned int maxPoolSize,unsigned int maxNewTasks):
 	mCurrentInfo(nullptr),
 	//mState(State::INITIALIZED),
-	mMaxTaskSize(maxTaskSize),
+	mMaxPoolSize(maxPoolSize),
+	mTasks(maxPoolSize,maxNewTasks),
 	mOwnerThread(0)  //assume 0 is invalid thread id!!
 {
 		
@@ -170,7 +171,7 @@ Runnable::Runnable(unsigned int maxTaskSize):
 	}
 	
 	gCurrrentRunnableCS.leave();
-	_addNewPool();
+	//_addNewPool(); quitado hasta tener todo claro, pero parece que incluso inicializar el pool cuesta mucho cuando es grande
 	//Create default timer. Can be overriden by calling
 	setTimer(std::make_shared<Timer>());
 }

@@ -114,7 +114,7 @@
             "hidden": true,
             "inherits": "Linux Base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "DABAL_ARQ": "DABAL_X64_GCC"
             },
             "vendor": {

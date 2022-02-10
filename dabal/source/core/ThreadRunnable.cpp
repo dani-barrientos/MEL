@@ -3,7 +3,7 @@ using core::ThreadRunnable;
 #include <mpl/MemberEncapsulate.h>
 
 
-ThreadRunnable::ThreadRunnable( unsigned int maxTasksSize):Runnable(maxTasksSize),mState(THREAD_INIT),mEnd(false),
+ThreadRunnable::ThreadRunnable( unsigned int maxTasksSize,unsigned int maxNewTasks):Runnable(maxTasksSize,maxNewTasks),mState(THREAD_INIT),mEnd(false),
 	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
 }
@@ -19,7 +19,7 @@ void ThreadRunnable::_execute()
             if ( getTerminateRequest() )
             {
                 //end order was received
-                mState = THREAD_FINISHING;
+                mState = THREAD_FINISHING;				
                 getScheduler().killProcesses( false ); 
             }
             
@@ -29,6 +29,8 @@ void ThreadRunnable::_execute()
             {
                 mState = THREAD_FINISHING_DONE;
             }
+			resume(); //just in case is paused
+			mWaitForTasksCond.notify_one();
             break;
         default:;
         }

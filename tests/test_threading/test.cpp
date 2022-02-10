@@ -278,13 +278,13 @@ int  _testPerformanceLotTasks()
 	uint64_t t0,t1;
 	int count = 0;
 	t0 = sTimer.getMilliseconds();
-	auto steps = nTasks/th1->getMaxPoolTasks();
+	auto steps = nTasks/th1->getMaxPoolSize();
 	
 	for(int it = 0; it < nIterations; ++it)
 	{
 		for(int j = 0;j<steps;++j)
 		{
-			for(int i = 0; i < th1->getMaxPoolTasks(); ++i)
+			for(int i = 0; i < th1->getMaxPoolSize(); ++i)
 			{
 				++count;
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
@@ -306,7 +306,7 @@ int  _testPerformanceLotTasks()
 	{
 		for(int j = 0;j<steps;++j)
 		{
-			for(int i = 0; i < th1->getMaxPoolTasks(); ++i)
+			for(int i = 0; i < th1->getMaxPoolSize(); ++i)
 			{
 				++count;
 				th1->post( [count](RUNNABLE_TASK_PARAMS)
@@ -326,6 +326,53 @@ int  _testPerformanceLotTasks()
 	th1->join();
 	return result;
 }
+std::atomic<int> sCount(0);
+int _test_concurrent_post()
+{	
+	auto consumer =ThreadRunnable::create(true,512);
+	constexpr int NUM_POSTS = 20;
+	constexpr int NUM_ITERS = 1000;
+	std::array< std::shared_ptr<ThreadRunnable>,60> producers;
+	for(size_t i=0;i<producers.size();++i)
+	{
+		producers[i] = ThreadRunnable::create(true);
+	}
+
+	//consumer->suspend();
+
+	for(int c = 0; c < NUM_ITERS; c++ )
+	{
+		for(size_t i=0;i<producers.size();++i)
+		{
+			producers[i]->fireAndForget(
+				[consumer]()
+				{
+					for(auto i = 0; i < NUM_POSTS; ++i)
+					{
+						//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+						//if (::tasking::Process::wait(1000) == ::tasking::Process::ESwitchResult::ESWITCH_OK)
+						{
+							consumer->fireAndForget(
+								[]()
+								{
+									++sCount;
+								}
+							);
+						}
+					}
+				}
+			);
+		}
+	}
+	spdlog::info("Esperando...");
+	//consumer->resume();
+	Thread::sleep(10000);
+	if ( sCount == producers.size()*NUM_POSTS*NUM_ITERS )
+		spdlog::info("_test_concurrent_post OK. {} Posts",sCount);
+	else
+		spdlog::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",producers.size()*NUM_POSTS*NUM_ITERS,sCount);
+	return 0;
+}
 
 
 /**
@@ -335,6 +382,7 @@ int  _testPerformanceLotTasks()
  * 		0 = microthreading-mono thread
  * 		1 = lots of tasks
  * 		2 = Future uses
+ * 		3 = testing lock_free scheduler
  * @return int 
  */
 static int test()
@@ -357,6 +405,9 @@ static int test()
 					break;
 				case 2:
 					result = ::test_threading::test_futures();
+					break;
+				case 3:
+					result = _test_concurrent_post();
 					break;
 				default:;					
 			}

@@ -161,11 +161,14 @@ int _testFor()
 	
 	
 	spdlog::set_level(spdlog::level::info); // Set global log level
-
+	constexpr unsigned int CHUNK_SIZE = 512;//loopSize*2; //512
+	
+	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 	_measureTest("Runnable executor with independent tasks and lockOnce",
-		[]() 
-		{		
-			auto th1 = ThreadRunnable::create(true);
+		[th1]() 
+		{	
+			//la propia creacion del hilo es ligeramente lenta, y mientras más buffer de tareas, más tarda								
+			th1->resume();
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
@@ -179,13 +182,18 @@ int _testFor()
 			);
 			::core::waitForBarrierThread(barrier);
 			spdlog::debug("hecho");
+			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+				th1->getScheduler().resetPool();
+			#endif
+			th1->suspend();
 		}
 	);
+	
 	_measureTest("Runnable executor with independent tasks and NO lockOnce on post",
 		[]() 
 		{
 		
-			auto th1 = ThreadRunnable::create(true);
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
@@ -204,7 +212,7 @@ int _testFor()
 	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
 		[]() mutable
 		{
-			auto th1 = ThreadRunnable::create(false);
+			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
@@ -224,7 +232,7 @@ int _testFor()
 	_measureTest("Runnable executor with independent tasks,NO lockOnce on post and pausing thread",
 		[]() mutable
 		{
-			auto th1 = ThreadRunnable::create(false);
+			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
@@ -244,7 +252,7 @@ int _testFor()
 	_measureTest("Runnable executor WITHOUT independent tasks",
 		[]()
 		{
-			auto th1 = ThreadRunnable::create(true);
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = false;

@@ -161,6 +161,7 @@ namespace tasking
 		};
 	public:			
 		static const unsigned int DEFAULT_POOL_SIZE = 512;
+		static const unsigned int DEFAULT_MAX_NEW_TASKS = DEFAULT_POOL_SIZE*4;
 		
 		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
 		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
@@ -192,7 +193,7 @@ namespace tasking
 		friend class ::tasking::_private:: RunnableTask;
 		RunnableInfo* mCurrentInfo;
 		ProcessScheduler	mTasks;
-		unsigned int		mMaxTaskSize;  //max number of tasks for each pool (the number of pools is dynamic)
+		unsigned int		mMaxPoolSize;  //max number of tasks for each pool (the number of pools is dynamic)
 		::tasking::_private::MemZoneList mRTZone;
 		//std::atomic<State>	mState;
 		CriticalSection	mMemPoolCS;		
@@ -235,9 +236,11 @@ namespace tasking
 
 		/**
 		* Creates a new runnable object.
-		* @param maxTaskSize the maximum pending tasks allowed
+		* @param maxPoolSize initial size of task pool. Will grow until maxNewTasks is reached (in lock_free_mode)
+		* @param maxNewTasks maximum number of new tasks allowed for lock_free_mode. When this number of tasks is reached,
+		* all will continue working, but a little lock is aplied until processed. So, it's used as a way to improve performance
 		*/
-		Runnable(unsigned int maxTaskSize=DEFAULT_POOL_SIZE);
+		Runnable(unsigned int maxPoolSize=DEFAULT_POOL_SIZE,unsigned int maxNewTasks = DEFAULT_MAX_NEW_TASKS);
 		virtual ~Runnable();
 
 		/**
@@ -316,7 +319,7 @@ namespace tasking
 		{
 			return (unsigned int)getScheduler().getActiveProcessCount();
 		}
-		inline unsigned int getMaxPoolTasks() const{ return mMaxTaskSize;}
+		inline unsigned int getMaxPoolSize() const{ return mMaxPoolSize;}
 	private:
 
 	};

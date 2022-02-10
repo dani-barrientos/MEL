@@ -43,16 +43,54 @@ namespace tasking
 	{
 		typedef unsigned int ThreadID;
 		friend class Process;
+		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+		class NewTasksContainer
+		{		
+			public:	
+				struct ElementType
+				{
+					ElementType():p(nullptr),st(0),valid(false){}
+					std::shared_ptr<Process> p;
+					unsigned int st;
+					std::atomic<bool> valid;
+				};
+			private:
+				typedef std::vector<ElementType> PoolType;
+				std::atomic<size_t> mCurrIdx = 0;
+				std::atomic<size_t> mSize;
+				std::deque<PoolType> mPool;
+				//size_t mCurrIdx = 0;
+				size_t mChunkSize;
+				size_t mMaxSize;
+				CriticalSection mSC;
+			public:
+				NewTasksContainer(size_t chunkSize,size_t maxSize );
+				PoolType::value_type& operator[](size_t idx);
+				void add(std::shared_ptr<Process>& process,unsigned int startTime);
+				inline size_t getCurrIdx(){
+					 return mCurrIdx.load(std::memory_order_relaxed); //@todo no seguro, estudiar
+				}
+				void clear();
+				size_t size() const{return mSize.load(std::memory_order_acquire);}  //pruebas memoryorder
+				//return previous value
+				size_t exchangeIdx(size_t v);
+				void lock();
+
+		};
+		#endif
 	public:
 		typedef std::pair<std::shared_ptr<Process>,unsigned int> ProcessElement;
-		//typedef list<ProcessElement> TProcessList; //pairs of processes and starttime
 		typedef forward_list<ProcessElement> TProcessList; //pairs of processes and starttime
+		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+		typedef NewTasksContainer TNewProcesses;
+		#else
 		typedef std::deque< std::pair<std::shared_ptr<Process>,unsigned int> > TNewProcesses; //pairs of processes and starttime
-		ProcessScheduler();		
+		#endif
+		ProcessScheduler(size_t initialPoolSize,size_t maxNewTasks);
 		~ProcessScheduler(void);
 
 		/**
-		* =============================================================================
+		* insert new process to be executed. Execution order doesn't necessarily respect the post order
 		*
 		* @param process insert new process in scheduler
 		* @param starttime msecs to wait to start it
@@ -143,7 +181,7 @@ namespace tasking
 		inline CriticalSection& getLock(){ return mCS;}
 
         /**
-        * get current executing process in current thread
+        * get current executing process in currenexecutiont thread
         */
 		static std::shared_ptr<Process> getCurrentProcess();
 		
@@ -182,7 +220,13 @@ namespace tasking
 		{
 			mES.unsubscribeCallback(id);
 		}
-	private:
+
+		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+		//pruebas
+		void resetPool();
+		#endif
+	private:		
+
 		WakeSubscriptor mWS;
 		SleepSubscriptor mSS;
 		EvictSubscriptor mES;
@@ -194,13 +238,11 @@ namespace tasking
 		TProcessList mProcessList;
 		//new processes to insert next time
 		TNewProcesses  mNewProcesses;
-
+		size_t mLastIdx;	
 		mutable CriticalSection	mCS;		
 		std::shared_ptr<Timer>			mTimer;
-		//unsigned int			mProcessCount;
 		std::atomic<unsigned int> mProcessCount;
 		volatile int32_t		mInactiveProcessCount;
-		std::shared_ptr<Process>	mPreviousProcess;
 		bool					mKillingProcess; //flag to mark when ther is a kill task pending
 		#ifndef NDEBUG
 		void* _stack = nullptr;
@@ -250,15 +292,8 @@ namespace tasking
 
 	unsigned int ProcessScheduler::getProcessCount() const
 	{
-		//accediendo al size de cada lista puede dar una condici�n de carrera
-		/*return (unsigned int)(mNewProcesses.size() + mNewFinalProcesses.size() + mNewInitialProcesses.size() +
-			mProcessList.size() + mFinalProcesses.size() + mInitialProcesses.size());
-			*/
-		unsigned int result;
-		//mCS.enter();
-		result = mProcessCount; 
-		//mCS.leave();
-		return result;
+
+		return mProcessCount;
 	}
 	unsigned int ProcessScheduler::getActiveProcessCount() const
 	{

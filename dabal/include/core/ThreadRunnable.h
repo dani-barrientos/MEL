@@ -34,11 +34,12 @@ namespace core
 		 * 
 		 * @param autoRun if false, thread will be created suspende (but really running). The reason to no call this parameter "createSuspended" is because legacy issues
 		 * @param maxTasksSize 
+         * @param maxNewTasks maximum number of new task to posted until pool es reset, so incurring in a little extra cost
 		 * @return std::shared_ptr<ThreadRunnable> 
 		 */
-		static std::shared_ptr<ThreadRunnable> create( bool autoRun = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE )
+		static std::shared_ptr<ThreadRunnable> create( bool autoRun = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE,unsigned int maxNewTasks = Runnable::DEFAULT_MAX_NEW_TASKS )
 		{
-            auto th = new ThreadRunnable(maxTasksSize);
+            auto th = new ThreadRunnable(maxTasksSize,maxNewTasks);
             th->start();
             std::shared_ptr<ThreadRunnable> result(th);
 			if (!autoRun)  //really means auto pause if no autorun, always create running
@@ -105,7 +106,7 @@ namespace core
         /**
 		* @brief Create a thread with an empty loop, that continuosly processes posted tasks @see Runnable::post
 		*/
-        ThreadRunnable( unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE );
+        ThreadRunnable( unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE,unsigned int maxNewTasks = Runnable::DEFAULT_MAX_NEW_TASKS);
         /**
          * @brief Called by start() function
          * Children can override it to add custom behaviour
