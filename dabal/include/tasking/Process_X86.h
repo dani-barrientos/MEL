@@ -20,8 +20,7 @@ namespace tasking
         volatile void* mActualSP;
         volatile void* mIniSP;
         volatile void* mStackEnd;
-        volatile unsigned int mMXCSR;
-        volatile unsigned short	  mStackSize;
+        volatile unsigned short	 mStackSize;
         volatile unsigned char* mStack;
         volatile void* mIniBP; 
         volatile unsigned int mCapacity;

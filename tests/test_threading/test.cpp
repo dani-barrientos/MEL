@@ -14,6 +14,7 @@ using tests::TestManager;
 using tasking::Process;
 #include "future_tests.h"
 #include <tasking/utilities.h>
+#include <array>
 
 /**
  * @todo pensar en test neceasrios:
@@ -345,7 +346,7 @@ int _test_concurrent_post()
 		for(size_t i=0;i<producers.size();++i)
 		{
 			producers[i]->fireAndForget(
-				[consumer]()
+				[consumer,NUM_POSTS]()
 				{
 					for(auto i = 0; i < NUM_POSTS; ++i)
 					{

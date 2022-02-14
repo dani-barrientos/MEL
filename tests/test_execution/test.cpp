@@ -161,7 +161,7 @@ int _testFor()
 	
 	
 	spdlog::set_level(spdlog::level::info); // Set global log level
-	constexpr unsigned int CHUNK_SIZE = 512;//loopSize*2; //512
+	#define CHUNK_SIZE 512
 	
 	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 	_measureTest("Runnable executor with independent tasks and lockOnce",

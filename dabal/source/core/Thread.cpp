@@ -296,7 +296,7 @@ void Thread::sleep(const unsigned int millis) {
 #endif
 }
 
-#if defined(DABAL_MACOSX)
+#if defined(DABAL_MACOSX) || defined(DABAL_LINUX) ||defined(DABAL_IOS)
 int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 	switch (tp) {
 		case TP_HIGHEST:
@@ -463,7 +463,7 @@ uint64_t Thread::getAffinity() const
 bool Thread::setAffinity(uint64_t affinity)
 {
 	bool result = false;
-#ifdef _WINDOWS
+#ifdef DABAL_WINDOWS
 	DWORD_PTR aff = (DWORD_PTR)affinity;
 	DWORD_PTR oldAff = SetThreadAffinityMask(mHandle, aff);
 	result = oldAff != 0;
@@ -474,7 +474,7 @@ bool Thread::setAffinity(uint64_t affinity)
         _setAffinity(affinity, mHandle);
     }else
         return true; //@todo
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX)
 	mAffinity = affinity;
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
