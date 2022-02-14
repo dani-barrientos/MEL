@@ -210,7 +210,7 @@ esto tengo que estudiarlo a ver si realmente es necesario. no me fío
 #endif	
 
 Thread::Thread()
-{
+{	
 	_initialize();
 }
 void Thread::_initialize()
@@ -237,7 +237,9 @@ void Thread::_initialize()
 	}
 	gCurrrentThreadCS.leave();
 
-#ifdef _WINDOWS
+/*
+I think I should create it on start
+#ifdef DABAL_WINDOWS
 	mHandle=CreateThread(
 		NULL,
 		0,
@@ -246,6 +248,7 @@ void Thread::_initialize()
 		CREATE_SUSPENDED,
 		&mID);	
 #endif
+*/
 #if defined (DABAL_MACOSX) || defined(DABAL_IOS)
 /* @todoesto no me gusta nada,. revisar
 	if ([NSThread isMultiThreaded]!=YES) {
@@ -268,10 +271,11 @@ void Thread::_initialize()
 Thread::~Thread()
 {
 #ifdef _WINDOWS
-		//maybe the thread was not started
-	if (mHandle && !CloseHandle(mHandle))
+	//maybe the thread was not started
+	if (mHandle )
 	{
-		//Logger::getLogger()->warnf("Thread: unable to close handle %d",1,mHandle);
+		join();
+		CloseHandle(mHandle);
 		mHandle=0;
 	}
 	mID=0;
@@ -318,15 +322,15 @@ int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 void Thread::_start() {
 
 	
-#ifdef _WINDOWS
-	if (mHandle) {
-		DWORD sc=ResumeThread(mHandle);
-		if (sc!=1 && sc!=0)
-		{
-		//	sacar error del estilo  ("Thread not started (suspended count=%d)!",1,sc);
-		}
-	}
-#else 
+#ifdef DABAL_WINDOWS
+	mHandle=CreateThread(
+		NULL,
+		0,
+		_threadProc,
+		this,
+		0,
+		&mID);	
+#else
 using namespace ::std::string_literals;
 	pthread_attr_t  attr;
 	int err;
@@ -362,9 +366,14 @@ using namespace ::std::string_literals;
 
 bool Thread::join(unsigned int millis)
 {
-#ifdef _WINDOWS
-	//@todo por qu� no usar WaitForSingleObject?
-	DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
+#ifdef DABAL_WINDOWS
+	DWORD status=WaitForSingleObject(mHandle, millis);
+	if  (status == WAIT_FAILED )
+	{
+		DWORD err = GetLastError();
+		spdlog::error("Error joining thread. Err = 0x{:x}",err);
+
+	}
 	return status!=WAIT_TIMEOUT;
 #else
 	int err = pthread_join(mHandle, NULL/*result*/);

@@ -163,6 +163,7 @@ int _testFor()
 	spdlog::set_level(spdlog::level::info); // Set global log level
 	#define CHUNK_SIZE 512
 	
+	
 	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 	_measureTest("Runnable executor with independent tasks and lockOnce",
 		[th1]() 
@@ -208,7 +209,7 @@ int _testFor()
 			::core::waitForBarrierThread(barrier);
 			spdlog::debug("hecho");
 		}
-	);
+	);	
 	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
 		[]() mutable
 		{

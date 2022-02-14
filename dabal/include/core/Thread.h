@@ -180,8 +180,8 @@ namespace core
 		protected:
 			Thread(const char* name);
 			
-#ifdef _WINDOWS
-			HANDLE mHandle;
+#ifdef DABAL_WINDOWS
+			HANDLE mHandle = 0;
 			DWORD mID;
 			
 #elif defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
