@@ -1,7 +1,7 @@
 #pragma once
 #include <DabalLibType.h>
 #include <cstdint>
-#if defined(_MACOSX) || defined(_IOS)
+#if defined(DABAL_MACOSX) || defined(DABAL_IOS)
 #include <libkern/OSAtomic.h>
 #include <TargetConditionals.h>
 #elif !defined (WIN32) && !defined(_ANDROID)
@@ -34,7 +34,7 @@ namespace core {
 		};
 
 	}
-	#elif defined(_IOS)||defined(_ANDROID)
+	#elif defined(DABAL_IOS)||defined(_ANDROID)
     #if !TARGET_IPHONE_SIMULATOR
     volatile int32_t atomicIncrement(volatile int32_t* var)  __attribute__((naked));
     volatile int32_t atomicDecrement(volatile int32_t* var)  __attribute__((naked));
@@ -50,7 +50,7 @@ namespace core {
             return OSAtomicDecrement32( (int*)var );
         }
     #endif
-    #elif  defined(_MACOSX)
+    #elif  defined(DABAL_MACOSX)
 		#if TARGET_CPU_X86
 			extern "C"  int32_t atomicIncrement(volatile int32_t* var) __attribute__((fastcall));
 			extern "C"  int32_t atomicDecrement(volatile int32_t* var) __attribute__((fastcall));

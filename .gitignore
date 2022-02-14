@@ -1,6 +1,8 @@
 /out
 /tests/Testing
 /.vscode
+/build
+/CMakeFiles
 dabal/doc/html/___if_8h_source.html
 dabal/doc/html/_append_8h_source.html
 dabal/doc/html/_array_parameter_8h_source.html

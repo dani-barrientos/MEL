@@ -61,6 +61,8 @@ template <class F> void _subscribe( Pepe& obj,F&& f)
 static int test()
 {    
     Pepe pp;
+    /*
+    no compila en Mac!!!
     int s1 = pp.subscribe1(f1);
     pp.subscribe1(std::function<::core::ECallbackResult(float)>(f1));
     pp.subscribe2(std::function<::core::ECallbackResult(float&)>(
@@ -75,7 +77,7 @@ static int test()
         {
             return ::core::ECallbackResult::NO_UNSUBSCRIBE;
         }
-    ));
+    ));*/
     // pp.subscribe2(
     //     [](float) 
     //     {

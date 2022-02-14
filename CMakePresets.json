@@ -4,9 +4,9 @@
         {
             "name": "Windows Base (x86)",
             "description": "Base Windows x86 build. define your custom preset in your CMakeUserPresets to set the compiler, inheriting from this",
-            "hidden": true,      
+            "hidden": true,
             "toolset": "host=x64",
-            "architecture": "win32",     
+            "architecture": "win32",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
@@ -25,7 +25,7 @@
         {
             "name": "Windows x64",
             "displayName": "Visual Studio Community 2019 Release - amd64",
-            "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",            
+            "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
             "toolset": "host=x64",
             "architecture": "x64",
             "hidden": true,
@@ -46,8 +46,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "DABAL_OS": "DABAL_LINUX",
-                "DABAL_API": "DABAL_POSIX"
+                "DABAL_OS": "DABAL_LINUX"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {

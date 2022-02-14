@@ -1,11 +1,4 @@
-/**
- * now this file is commen for new (at 2020) ARM64 architecture for Mac
- */
-/*#if defined(_IOS) || defined(TARGET_CPU_ARM64)
 
-#include <TargetConditionals.h>
-#endif
-*/
 #if (/*TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR && */defined(__arm64__) )
 #include <TargetConditionals.h>
 #include <core/Process.h>

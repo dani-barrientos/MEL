@@ -3,6 +3,9 @@
 #include <cstddef>
 #include <new>
 #include <memory>
+#if defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
+#include <pthread.h>
+#endif
 /**
  * @deprecated 
  * use std::mutex and related instead
@@ -51,8 +54,7 @@ namespace core {
 				inline void leave();
 #ifdef _WINDOWS
 				CRITICAL_SECTION mCS;
-#endif
-#if defined(DABAL_POSIX)
+#else
 				pthread_mutex_t mCS;
 #endif
 			};
@@ -125,6 +127,6 @@ namespace core {
 }
 #ifdef _WINDOWS
 #include <core/CriticalSection_win32.inl>
-#elif defined(DABAL_POSIX)
+#else
 #include <core/CriticalSection_posix.inl>
 #endif

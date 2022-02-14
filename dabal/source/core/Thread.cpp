@@ -11,14 +11,16 @@ static TLS::TLSKey gCurrentThreadKey;
 static bool gCurrentThreadKeyCreated = false;
 static CriticalSection gCurrrentThreadCS;
 
-#if defined(_MACOSX) || defined(_IOS)
+/*#if defined(DABAL_MACOSX) || defined(DABAL_IOS)
 #import <Foundation/Foundation.h>
-#endif
-#if defined(_MACOSX) || defined(_IOS)
-#import <sys/sysctl.h>
+#endif*/
+#if defined(DABAL_MACOSX) || defined(DABAL_IOS)
+//#import <sys/sysctl.h>
+#include <sys/sysctl.h>
 #include <pthread.h>
-#import <mach/thread_act.h>
-#elif defined(DABAL_POSIX)
+//#import <mach/thread_act.h>
+#include <mach/thread_act.h>
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
@@ -46,13 +48,13 @@ unsigned int getNumProcessors()
 		initialAffinity <<= 1;
 	}
 	return result;
-#elif defined(_MACOSX) || defined(_IOS)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS)
 	unsigned int result = 0;
 	size_t size = sizeof(result);
 	if (sysctlbyname("hw.ncpu", &result, &size, NULL, 0))
 		result = 1;
 	return result;
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 	unsigned int count = 1;
 	count = sysconf(_SC_NPROCESSORS_ONLN);
 	return count;
@@ -70,7 +72,7 @@ uint64_t getProcessAffinity()
 	BOOL ok = GetProcessAffinityMask(hProcess, &processAffinity, &systemAffinity);
 	result = processAffinity;
 	return result;
-#elif defined(_MACOSX) || defined(_IOS)
+#elif defined(DABAL_MACOSX) || defined(_IOS)
     //macos and ios doesnt' allow affinity manipulation
 	result = 0;
 #elif defined(_ANDROID)
@@ -98,9 +100,9 @@ uint64_t getProcessAffinity()
 
 #ifdef _WINDOWS
 #define HANDLETYPE HANDLE
-#elif defined(_MACOSX) || defined(_IOS)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS)
 #define HANDLETYPE core::ThreadId
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 #define HANDLETYPE pid_t
 #endif
 //!helper
@@ -111,7 +113,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	DWORD_PTR aff = (DWORD_PTR)affinity;
 	DWORD_PTR oldAff = SetThreadAffinityMask(h, aff);
 	result = oldAff != 0;
-#elif defined(_MACOSX) || defined(_IOS)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS)
     //@todo macos X (and assume same for iOS) doesn't allow to setthe core for each thread. instead, it uses "groups" indetifying wich threads belong to
     //same gruop and then share L2 cache. So, this is not the concept intended with current function, and so leave ti unimplemented
     /*
@@ -133,7 +135,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
     }
      */
     return true;
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	for (size_t i = 0; i < sizeof(affinity) * 8; ++i)
@@ -162,9 +164,9 @@ bool setAffinity(uint64_t affinity)
 #ifdef _WINDOWS
     HANDLE h = GetCurrentThread();
     return _setAffinity(affinity,h);
-#elif defined(_MACOSX) || defined(_IOS)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS)
     return _setAffinity(affinity,0);  //i don't know how to get current thread id on macos, but it doesn't matter because affinity in this sense can't be modified
-#elif defined(DABAL_POSIX)
+#else
     return _setAffinity(affinity,gettid());
 #endif
 }
@@ -181,22 +183,28 @@ DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Thread);
 		return result;
 	}
 #endif
-#if defined(DABAL_POSIX)
+#if defined(DABAL_LINUX) || defined(DABAL_ANDROID) || defined(DABAL_IOS) || defined (DABAL_MACOSX)
 	void* _threadProc(void* param) {
 		Thread* t=(Thread*)param;
 		assert(t && "NULL Thread!");
         if ( t->mAffinity != 0 )
             t->setAffinity(t->mAffinity);
-#if defined(_MACOSX) || defined(_IOS)
+/*
+esto tengo que estudiarlo a ver si realmente es necesario. no me fío
+#if defined(DABAL_MACOSX) || defined(DABAL_IOS)
 		//Create the auto-release pool so anyone can call Objective-C code safely
 		t->mARP=[[NSAutoreleasePool alloc] init];
 #endif		
+*/
 		t->mFunction();
 		//t->mResult = t->runInternal();
-#if defined(_MACOSX) || defined(_IOS)
+		/*
+		lo mismo que el comentario anterior
+#if defined(DABAL_MACOSX) || defined(DABAL_IOS)
 		//Destroy auto-release pool
 		[(NSAutoreleasePool*)t->mARP release];
 #endif
+*/
 		return NULL;
 }
 #endif	
@@ -209,14 +217,15 @@ void Thread::_initialize()
 {
 #ifdef _WINDOWS
 	mID = 0;
-#endif
-
-#if defined (DABAL_POSIX)
+#else
 	mJoined = false;
 #endif
-#if defined (_MACOSX) || defined(_IOS)
+/*
+@todo
+#if defined (DABAL_MACOSX) || defined(DABAL_IOS)
 	mARP = nil;
 #endif
+*/
 	mHandle = 0;
 	mResult = 0;
 	mPriority = TP_NORMAL;
@@ -237,18 +246,20 @@ void Thread::_initialize()
 		CREATE_SUSPENDED,
 		&mID);	
 #endif
-#if defined (_MACOSX) || defined(_IOS)
+#if defined (DABAL_MACOSX) || defined(DABAL_IOS)
+/* @todoesto no me gusta nada,. revisar
 	if ([NSThread isMultiThreaded]!=YES) {
 		NSThread* t=[[NSThread alloc] init];
 		[t start];
 		assert([NSThread isMultiThreaded]==YES && "Cocoa is not running in multi-threaded mode!");
 		[t release];
 	}
+	*/
 #endif
-#if defined (_MACOSX) || defined(_IOS) 
+#if defined (DABAL_MACOSX) || defined(DABAL_IOS) 
 	mPriorityMin = sched_get_priority_min(SCHED_RR);
 	mPriorityMax = sched_get_priority_max(SCHED_RR);
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX)
 	mPriorityMin=sched_get_priority_min(SCHED_OTHER);
 	mPriorityMax=sched_get_priority_max(SCHED_OTHER);
 #endif
@@ -264,8 +275,7 @@ Thread::~Thread()
 		mHandle=0;
 	}
 	mID=0;
-#endif
-#if defined (DABAL_POSIX)
+#else
 	if (mHandle && !mJoined) 
 	{
 		join();
@@ -276,8 +286,7 @@ Thread::~Thread()
 void Thread::sleep(const unsigned int millis) {
 #ifdef _WINDOWS
 	Sleep(millis);
-#endif
-#if defined (DABAL_POSIX)
+#else
 	struct timespec req={0},rem={0};
 	time_t sec=(int)(millis/1000);
 	long millisec=millis-(sec*1000);
@@ -287,7 +296,7 @@ void Thread::sleep(const unsigned int millis) {
 #endif
 }
 
-#if defined(DABAL_POSIX)
+#if defined(DABAL_MACOSX)
 int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 	switch (tp) {
 		case TP_HIGHEST:
@@ -317,8 +326,7 @@ void Thread::_start() {
 		//	sacar error del estilo  ("Thread not started (suspended count=%d)!",1,sc);
 		}
 	}
-#endif
-#if defined (DABAL_POSIX)
+#else 
 using namespace ::std::string_literals;
 	pthread_attr_t  attr;
 	int err;
@@ -352,87 +360,13 @@ using namespace ::std::string_literals;
 #endif	
 }
 
-
-/*
-::tasking::EGenericProcessResult Thread::suspendInternal(uint64_t millis,Process* proc) {
-	mPauseEV.wait();
-	return ::tasking::EGenericProcessResult::KILL;
-}
-unsigned int Thread::suspend()
-{
-	if ( mState == THREAD_RUNNING )
-	{
-		post(makeMemberEncapsulate(&Thread::suspendInternal,this)); //post as the first task for next iteration
-		mState=THREAD_SUSPENDED; //aunque todav�a no se haya hecho el wait,
-								 //por la forma en que funcionan los eventos da igual, porque si se hace
-								 //un resume justo antes de procesarse la tarea "suspendInternal", implica que el set
-								 //hace que el siguiente wait no espere, lo cual es lo correcto
-	}
-	return 1;
-}
-
-unsigned int Thread::resume() {
-	if ( mState == THREAD_SUSPENDED )
-	{
-		mState = THREAD_RUNNING;
-#ifdef _WINDOWS
-		//DWORD sc=ResumeThread(mHandle);
-		mPauseEV.set();
-	}
-	//return mHandle?sc:0;
-	return 1;
-#endif
-#if defined (DABAL_POSIX)
-		mPauseEV.set();
-	}
-	return 1;
-
-#endif
-}
-*/
-/*
-void Thread::terminate(unsigned int exitCode)
-{
-
-	mEnd = true;
-	if ( mState == THREAD_SUSPENDED )
-	{
-		resume();
-	}else if ( mState == THREAD_INIT )
-	{
-		//TODO vigilar, esto no est� bien. Puede ocurrir que en este momento est� arrancado el hilo
-		#ifdef _WINDOWS
-		//in Windows we need to ResumeThread if it wasn't started. Other way it won't be removed from memory( I don't know why..)
-		ResumeThread( mHandle );
-		#endif
-	}
-	mExitCode = exitCode;
-}
-
-unsigned int Thread::runInternal() {
-
-	TLS::setValue( gCurrentThreadKey, this );
-	if ( !mEnd )
-	{
-		//don't run loop if it's finished. It could be possible to terminate a thread before is started, so it
-		//won't be executed
-		spdlog::debug("Thread::runInternal");
-		mResult=run();
-		//Triger finalization callbacks and invoke onThreadEnd 
-		threadEnd();
-	}
-	mState = THREAD_FINISHED;
-	return mResult;
-}
-*/
 bool Thread::join(unsigned int millis)
 {
 #ifdef _WINDOWS
 	//@todo por qu� no usar WaitForSingleObject?
 	DWORD status=WaitForMultipleObjects(1, &mHandle, TRUE, millis);
 	return status!=WAIT_TIMEOUT;
-#endif
-#if defined (DABAL_POSIX)
+#else
 	int err = pthread_join(mHandle, NULL/*result*/);
 	mJoined=!err;
 	if (err) {
@@ -450,7 +384,7 @@ void Thread::yield(YieldPolicy yp) {
 	else {
 		SwitchToThread();
 	}
-#elif defined(_MACOSX ) || defined(_IOS) || defined(_ANDROID)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID) || defined(DABAL_IOS) || defined (DABAL_MACOSX)
 	if (yp==YP_ANY_THREAD_ANY_PROCESSOR) {
 		Thread::sleep(0);
 	}
@@ -487,7 +421,8 @@ void Thread::setPriority(ThreadPriority tp) {
 	assert(r==TRUE);
 }
 #endif
-#if defined(DABAL_POSIX)
+#ifndef DABAL_WINDOWS
+
 void Thread::setPriority(ThreadPriority tp) {
 	if (mPriority==tp)
 		return;
@@ -532,7 +467,7 @@ bool Thread::setAffinity(uint64_t affinity)
 	DWORD_PTR aff = (DWORD_PTR)affinity;
 	DWORD_PTR oldAff = SetThreadAffinityMask(mHandle, aff);
 	result = oldAff != 0;
-#elif defined(_MACOSX) || defined(_IOS)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS)
 	mAffinity = affinity;
     if ( mHandle != 0 ) //not started yet
     {

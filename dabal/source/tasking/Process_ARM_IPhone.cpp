@@ -1,4 +1,4 @@
-#ifdef _IOS
+#ifdef DABAL_IOS
 #include <TargetConditionals.h>
 #endif
 

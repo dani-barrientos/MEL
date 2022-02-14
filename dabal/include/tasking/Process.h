@@ -14,18 +14,18 @@ using core::Callback;
 #include <memory>
 #include <mpl/Tuple.h>
 
-#if defined(_IOS) || defined(_MACOSX)
+#if defined(DABAL_IOS) || defined(DABAL_MACOSX)
 #include <TargetConditionals.h>
 #endif
 #if defined(DABAL_X86_GCC) || TARGET_CPU_X86 ||  _MSC_VER
 #include <tasking/Process_X86.h>
 #elif TARGET_CPU_X86_64
-    #include <tasking/Process_x86_64_MAC.h>
+    #include <tasking/Process_X64_MAC.h>
 #elif TARGET_CPU_ARM64
     #include <tasking/Process_ARM64_IPhone.h>
-#elif defined (_ARM_GCC) && (!defined(_IOS))
+#elif defined (_ARM_GCC) && (!defined(DABAL_IOS))
 #include <tasking/Process_ARM_GCC.h>
-#elif defined(_IOS)
+#elif defined(DABAl_IOS)
 	#if !TARGET_IPHONE_SIMULATOR
         #if defined(__arm__)
             #include <tasking/Process_ARM_IPhone.h>
@@ -40,23 +40,20 @@ using core::Callback;
 #elif defined (_ANDROID)
 	#include <core/Process_ARM_Android.h>
 #elif defined (DABAL_X64_GCC) ||defined (DABAL_X64_CLANG)
-	#include <tasking/Process_X86_64.h>
+	#include <tasking/Process_X64_GCC.h>
 #endif
-#if defined(_IOS) || defined(_MACOSX) || defined(_LINUX)
-    #define OPTIMIZE_FLAGS
+#if defined(DABAl_IOS) || defined(DABAL_MACOSX) 
+    #define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
 #elif defined(_ANDROID) 
 	#define OPTIMIZE_FLAGS
 #elif defined(_ARM_GCC) || defined(DABAL_X86_GCC) ||defined(DABAL_X64_GCC) 
 	#define OPTIMIZE_FLAGS __attribute__ ((optimize(0)))
 #elif defined(DABAL_X64_CLANG)
 	#define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
-#elif defined(_MSC_VER)
+#elif defined(DABAL_WINDOWS)
 	#define OPTIMIZE_FLAGS
 #endif
 
-#include <core/CallbackSubscriptor.h>
-using core::CallbackSubscriptor;
-#include <core/Future.h>
 /**
  * @brief Tasking system
  * @details Based on the concept of *microthread*, which is represented by class Process. A microthread alows to have cooperative multitasking, such that a single

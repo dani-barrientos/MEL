@@ -28,7 +28,7 @@ char* StringUtil::copy(char* aDestination, const char* aSource, int32_t aSourceS
         return strcpy(aDestination, aSource);
     #endif
 		return aDestination;
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID) || defined(DABAL_IOS) || defined (DABAL_MACOSX)
 		return strcpy(aDestination, aSource);
 #endif
 	}

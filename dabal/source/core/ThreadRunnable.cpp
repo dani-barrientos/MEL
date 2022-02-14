@@ -83,7 +83,7 @@ unsigned int ThreadRunnable::resume() {
 	//return mHandle?sc:0;
 	return 1;
 #endif
-#if defined (DABAL_POSIX)
+#if defined(DABAL_LINUX) || defined(DABAL_ANDROID) || defined(DABAL_IOS) || defined (DABAL_MACOSX)
 		mPauseEV.set();
 	}
 	return 1;

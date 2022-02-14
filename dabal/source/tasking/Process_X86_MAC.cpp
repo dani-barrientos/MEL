@@ -1,4 +1,4 @@
-#if defined(_IOS) || defined(_MACOSX)
+#if defined(DABAL_) || defined(DABAL_MACOSX)
 #include <TargetConditionals.h>
 #endif
 

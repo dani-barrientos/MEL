@@ -1,4 +1,4 @@
-#if defined(DABAL_POSIX)
+#if defined(DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined(DABAL_IOS)
 #include <core/Event.h>
 #include <pthread.h>
 #include <sys/time.h>

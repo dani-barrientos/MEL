@@ -1,15 +1,15 @@
-#if defined(_IOS) || defined(_MACOSX)
+#if defined(DABAL_MACOSX)
 #include <TargetConditionals.h>
 #endif
 
 #if (TARGET_IPHONE_SIMULATOR || TARGET_OS_MAC) && TARGET_CPU_X86_64
 //version para MAC y simulador de IPhone y IPad
-#include <core/Process.h>
+#include <tasking/Process.h>
 
-using core::Process;
-using core::MThreadAttributtes;
+using tasking::Process;
+using tasking::MThreadAttributtes;
 
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 
 
 #define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)
@@ -25,7 +25,7 @@ using core::MThreadAttributtes;
 volatile void Process::checkMicrothread( uint64_t msegs )
 {
      MThreadAttributtes* realThis = this;
-     asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax");
+     asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax","rbp","rsp");
      asm volatile("mov %%rbx,(%P[v])(%%rax)"::[v] "i" (mIniRBXOFF) );
      asm volatile("mov %%r12,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF) );
      asm volatile("mov %%r13,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+8) );
@@ -56,7 +56,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
                   "pop %rbp");
      asm volatile ("ret" );
      asm volatile("continueExecuting:" );
-     execute( msegs );
+     _execute( msegs );
 }
 
 volatile void fakeFunction()
@@ -103,7 +103,7 @@ volatile void fakeFunction()
  
 void Process::_switchProcess( )
 {
-    Process* p = ProcessScheduler::getCurrentProcess();
+    Process* p = ProcessScheduler::getCurrentProcess().get();
     MThreadAttributtes* mt = p;
     char needAlignment=false;
     asm volatile("test $0xf,%rsp");

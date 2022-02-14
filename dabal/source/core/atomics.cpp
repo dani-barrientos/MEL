@@ -1,7 +1,7 @@
 #include <core/atomics.h>
 
 
-#if defined(_MACOSX) && (TARGET_CPU_X86_64 || TARGET_CPU_X86)
+#if defined(DABAL_MACOSX) && (TARGET_CPU_X86_64 || TARGET_CPU_X86)
     #if TARGET_CPU_X86_64 
     asm(
         ".globl _atomicIncrement\n"
@@ -41,7 +41,7 @@
         );
     #endif
 
-#elif (defined (_IOS) || defined(_ANDROID)) && !TARGET_IPHONE_SIMULATOR && defined(__arm__)
+#elif (defined (DABAL_IOS) || defined(_ANDROID)) && !TARGET_IPHONE_SIMULATOR && defined(__arm__)
 volatile int32_t core::atomicIncrement(volatile int32_t* var)
 {
     asm volatile( "1:" );

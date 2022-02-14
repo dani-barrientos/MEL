@@ -25,7 +25,6 @@ namespace tasking
         volatile bool mSwitched;
         volatile unsigned int mStackSize;
         volatile unsigned int mCapacity;
-
     };
 }
 ///@endcond

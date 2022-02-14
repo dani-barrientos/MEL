@@ -336,7 +336,7 @@ namespace text {
 	int32_t StringUtil::compareIgnoreCase(const char *str1, const char *str2) {
 #ifdef _WINDOWS
 		return _stricmp(str1,str2);
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined(DABAL_IOS)
 		return strcasecmp(str1,str2);
 #else
 		return strcmp(str1,str2);
@@ -347,7 +347,7 @@ namespace text {
 	{
 #ifdef _WINDOWS
 		return _strnicmp(str1, str2, aN);
-#elif defined(_MACOSX) || defined(_IOS) || defined(_ANDROID)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS) || defined(_ANDROID)
 		return strncasecmp(str1,str2,aN);
 #else
 		return strncmp(str1,str2,aN);

@@ -2,9 +2,9 @@
 #include <DabalLibType.h>
 #include <stdint.h>
 #ifdef WIN32
-#elif defined (_IOS) || defined(_MACOSX)
+#elif defined (DABAL_IOS) || defined(DABAL_MACOSX)
 #include <mach/mach_time.h>
-#elif defined (DABAL_POSIX)
+#elif defined (DABAL_LINUX)
 #include <time.h>
 #endif
 #include <core/CriticalSection.h>	
@@ -71,10 +71,10 @@ namespace core
 #ifdef WIN32
 		uint64_t mFrequency;
 		mutable uint64_t mLastTime; //!last measured time in milliseconds
-#elif defined (_IOS) || defined(_MACOSX) 
+#elif defined (DABAL_IOS) || defined(DABAL_MACOSX) 
 		mach_timebase_info_data_t mTimeBase;
 		mutable uint64_t mLastTime;
-#elif defined (DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 		mutable uint64_t mLastTime;
 #endif
 		uint64_t   mMsActive; //! active time in milliseconds
@@ -90,11 +90,11 @@ namespace core
 			uint64_t tmp;
 			QueryPerformanceCounter((LARGE_INTEGER*)&tmp);
 			result = (tmp - mReference)*1000/mFrequency;  //because counter/frecuency = seconds
-		#elif defined(_IOS) || defined(_MACOSX)
+		#elif defined(DABAL_IOS) || defined(DABAL_MACOSX)
 			uint64_t tmp=mach_absolute_time();
 			uint64_t elapsed=tmp-mReference;
 			result = (elapsed * mTimeBase.numer )/mTimeBase.denom;
-		#elif defined(DABAL_POSIX)
+		#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 			timespec ts;
 			uint64_t tmp;
 			int chk(clock_gettime(CLOCK_MONOTONIC, &ts));

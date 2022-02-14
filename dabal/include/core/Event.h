@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DabalLibType.h>
-#if defined (DABAL_POSIX)
+#if defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
 #include <pthread.h>
 #endif
 namespace core {
@@ -21,7 +21,7 @@ namespace core {
 				EVENT_WAIT_OK, //!< wait was ok
 				EVENT_WAIT_TIMEOUT, //!< time out while waiting
 				EVENT_WAIT_ERROR}; //!< unknown error
-#if defined(DABAL_POSIX)
+#if defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
 			static const int EVENT_WAIT_INFINITE = -1;
 #elif defined(_WIN32)		
 			static const int EVENT_WAIT_INFINITE = INFINITE;
@@ -62,7 +62,7 @@ namespace core {
 
 		private:
 			Event( const Event& ev2 ){}
-#if defined(DABAL_POSIX)
+#if defined(DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined(DABAL_IOS)
 			mutable bool mSignaled;
 			bool mAutoRelease;
 			mutable pthread_mutex_t _mutex;

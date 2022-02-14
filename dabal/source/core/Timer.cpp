@@ -28,7 +28,7 @@ void Timer::reset() {
 #ifdef _WINDOWS
 	QueryPerformanceFrequency((LARGE_INTEGER*)&mFrequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&mReference);
-#elif defined(_IOS) || defined(_MACOSX)
+#elif defined(DABAL_IOS) || defined(DABAL_MACOSX)
 	kern_return_t err = mach_timebase_info( &mTimeBase );	//this converts mach_time to nanoseconds
 	if (err) {
 		mTimeBase.numer=0;
@@ -65,9 +65,9 @@ void Timer::resume()
 		//chage reference time to current moment
 #ifdef WIN32
 		QueryPerformanceCounter((LARGE_INTEGER*)&mReference);
-#elif defined(_IOS) || defined(_MACOSX)
+#elif defined(DABAL_IOS) || defined(DABAL_MACOSX)
 		mReference=mach_absolute_time();
-#elif defined(DABAL_POSIX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID) 
 	timespec ts;
 	if (!clock_gettime(CLOCK_MONOTONIC,&ts))
 		mReference=ts.tv_sec * 1000 + (ts.tv_nsec/1000000);

@@ -9,7 +9,7 @@
 #include <memory>
 #include <parallelism/Barrier.h>
 #include <core/Future.h>
-#if defined (DABAL_POSIX)
+#if defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
 #include <pthread.h>
 #endif
 #include <functional>
@@ -44,7 +44,7 @@ namespace core
 
 #ifdef _WINDOWS
 		friend DWORD WINAPI _threadProc(void* /*__in LPVOID*/);
-#elif defined (DABAL_POSIX)
+#else
 		friend void* _threadProc(void* param);
 #endif
 
@@ -184,7 +184,7 @@ namespace core
 			HANDLE mHandle;
 			DWORD mID;
 			
-#elif defined (DABAL_POSIX)
+#elif defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
 		ThreadId mHandle = 0;
         #if !defined (DABAL_MACOSX) && !defined(DABAL_IOS)
 		pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc

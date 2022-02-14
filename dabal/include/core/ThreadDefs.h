@@ -4,7 +4,7 @@ using mpl::binary;
 
 #ifdef WIN32
 	#include <Windows.h>
-#elif defined (DABAL_POSIX)
+#else
 	#include <pthread.h>
 #endif 
 /**
@@ -25,8 +25,7 @@ namespace core
 
 #ifdef WIN32
 	typedef DWORD ThreadId;
-#endif
-#if defined (DABAL_POSIX)
+#else
 	typedef pthread_t ThreadId;
 #endif
 
@@ -37,7 +36,7 @@ namespace core
 	{
 	#ifdef _WINDOWS
 		return GetCurrentThreadId();
-	#elif defined (DABAL_POSIX)
+	#else
 		return pthread_self();	
 	#endif
 	}
