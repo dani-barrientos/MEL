@@ -2,7 +2,9 @@
 #include <core/ThreadRunnable.h>
 using core::ThreadRunnable;
 using namespace std;
+#ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
+		#endif
 #include <mpl/LinkArgs.h>
 #include <mpl/Ref.h>
 #include <string>
@@ -16,7 +18,9 @@ struct MyErrorInfo : public ::core::ErrorInfo
 {
 	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
 	{
+		#ifdef USE_SPDLOG
 		spdlog::debug("MyErrorInfo");
+		#endif
 	}
 	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
 	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
@@ -71,7 +75,9 @@ class MasterThread : public ThreadRunnable
 			int nSinglethreads = 0;
 			auto prodIdx = rand()%(n+1);
 			mValueToAdd = rand()%50;  //value to add to input in consumers
+			#ifdef USE_SPDLOG
 			spdlog::debug("Producer idx {} de {}. Consumers must add {} to their input",prodIdx,n,mValueToAdd);
+		#endif
 			int nTasks = 0;
 
 			//pause consumer. They will be started when al ltask posted
@@ -103,8 +109,10 @@ class MasterThread : public ThreadRunnable
 								if ( wr.isValid())
 								{
 									auto val = channel.getValue().value() + mValueToAdd;
+									#ifdef USE_SPDLOG
 									if ( val != wr.value())
 										spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
+									#endif
 								}
 							
 								mBarrier.set();	
@@ -128,8 +136,11 @@ class MasterThread : public ThreadRunnable
 						mpl::linkFunctor<void,TYPELIST()>(
 							makeMemberEncapsulate(&MasterThread::_producerTask,this),channel)
 					);
+			
 			}
+			#ifdef USE_SPDLOG
 			spdlog::debug("{} jobs have been launched, from which {} are single threads",nTasks,nSinglethreads);
+		#endif
 
 			mBarrier = Barrier(nTasks);
 			for(auto th:mConsumers)
@@ -139,7 +150,9 @@ class MasterThread : public ThreadRunnable
 			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
 			if ( r != ::tasking::Event_mthread::EVENTMT_WAIT_OK )
 			{
+				#ifdef USE_SPDLOG
 				spdlog::error("Wait for responses failed!!!!");
+		#endif
 				this->finish();  
 				return ::tasking::EGenericProcessResult::KILL; 
 			}
@@ -147,12 +160,16 @@ class MasterThread : public ThreadRunnable
 				{
 					mLastDebugTime = msecs;
 					auto t1 = getTimer()->getMilliseconds();
+					#ifdef USE_SPDLOG
 					spdlog::info("Wait for responses ok. Time waiting: {} msecs",t1-t0);
+		#endif
 				}
 			
 			if ( msecs - mStartTime > mMaxTime)
 			{
+				#ifdef USE_SPDLOG
 				spdlog::info("Maximum test time reached. Finishing");
+		#endif
 				this->finish();  
 				return ::tasking::EGenericProcessResult::KILL; 
 			}else			
@@ -167,27 +184,37 @@ class MasterThread : public ThreadRunnable
 			auto value = rand()%max;
             if ( value >= max*errProb )
             {
+				#ifdef USE_SPDLOG
 			    spdlog::debug("Genero valor = {}",value);
+		#endif
                 output.setValue(value);
             }else
             {
                 output.setError(MyErrorInfo(0,"PRUEBA ERROR"));
+				#ifdef USE_SPDLOG
                 spdlog::debug("Genero error");
+		#endif
             }			
 		}
 		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
 		{
 			// int tam = rand()%1000;
 			// int arr[tam];  //Uvale, qué susto, esto no es standard. Funciona en gcc y clang pero no es standard
+			#ifdef USE_SPDLOG
 			spdlog::debug("Task {} waits for input",taskId);
+		#endif
 			auto wr = ::tasking::waitForFutureMThread(input);
 			if ( wr.isValid() )
 			{
 				output.setValue(wr.value() + mValueToAdd);
+				#ifdef USE_SPDLOG
 				spdlog::debug("Task {} gets value {}",taskId,input.getValue().value());
+		#endif
 			}else
 			{
+				#ifdef USE_SPDLOG
 				spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
+		#endif
 					output.setError( MyErrorInfo(0,""));
 			}			
 			mBarrier.set();
@@ -198,10 +225,14 @@ class MasterThread : public ThreadRunnable
 			auto wr = ::core::waitForFutureThread(input);
 			if ( wr.isValid() )
 			{
+				#ifdef USE_SPDLOG
 				spdlog::debug("Thread {} gets value {}",taskId,wr.value());
+		#endif
 			}else
 			{
+				#ifdef USE_SPDLOG
 				spdlog::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
+		#endif
 			}		
 			mBarrier.set();
 		}
@@ -239,7 +270,9 @@ esto está relacionado con el tema de devovler error, el valor y tal. Igual podr
 	
 	auto producer = ThreadRunnable::create(true);
 	
+	#ifdef USE_SPDLOG
     spdlog::set_level(spdlog::level::debug); // Set global log level
+		#endif
 	constexpr size_t n = 1;
 	constexpr unsigned int TESTTIME = 30*60*1000;
 	std::array< std::shared_ptr<ThreadRunnable>,n> consumers;

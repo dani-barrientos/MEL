@@ -11,7 +11,9 @@ using tasking::MThreadAttributtes;
 #undef max
 #include <limits>
 #include <assert.h>
+#ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
+#endif
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 

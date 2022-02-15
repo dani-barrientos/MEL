@@ -9,10 +9,11 @@ using tests::CommandLine;
 #include <TestManager.h>
 using tests::TestManager;
 #include <iostream>
+#ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
 #include <spdlog/cfg/env.h>  // support for loading levels from the environment variable
 #include <spdlog/fmt/ostr.h> // support for user defined types
-
+#endif
 
 #define LIST_OPTION "list"
 #define TEST_OPTION "t"
@@ -26,6 +27,7 @@ using tests::TestManager;
 
 int main(int argc, const char* argv[])
 {		
+	#ifdef USE_SPDLOG
 	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 	spdlog::error("Prueba error");
 	spdlog::set_level(spdlog::level::err); // Set global log level to err
@@ -37,11 +39,14 @@ int main(int argc, const char* argv[])
 	#else
 	spdlog::info( "ESTAMOS EN DEBUG");
 	#endif
+	#endif
 	
   	std::cout << "Running main with "<<argc<<" arguments:\n";
 	for(int i =0;i<argc;++i)	
 	{
+		#ifdef USE_SPDLOG
 		spdlog::debug("\t{}\n",argv[i]);
+		#endif
 	}
 	CommandLine::createSingleton(argc,argv);
 	// const char* arg[] = {"kk","-list","-t","callbacks"};	
@@ -76,3 +81,15 @@ int main(int argc, const char* argv[])
 	else return 0;
 	
 }
+#ifdef _ANDROID
+#include <jni.h>
+#include <string>
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_dabal_main_MainActivity_stringFromJNI(
+        JNIEnv* env,
+        jobject /* this */) {
+    std::string hello = "Hello from C++";
+    return env->NewStringUTF(hello.c_str());
+}
+#endif

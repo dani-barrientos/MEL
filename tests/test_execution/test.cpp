@@ -4,7 +4,9 @@ using core::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
+#ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
+		#endif
 #include <CommandLine.h>
 #include <mpl/LinkArgs.h>
 #include <mpl/Ref.h>
@@ -26,17 +28,21 @@ int _testLaunch()
 		{
 			auto th1 = ThreadRunnable::create(false);			
 			//---- tests executors			
+			#ifdef USE_SPDLOG
 			spdlog::info("Launching first task block in a single thread (Executor<Runnable>)");
+		#endif
 			
 			execution::Executor<Runnable> ex(th1);
 			auto cont = ex.launch<int>(  
 				[](const auto& v)
-				{					
+				{		
+					#ifdef USE_SPDLOG
 					if ( v.isValid() )
 						//spdlog::debug("Value = {}",v.value());
 						spdlog::debug("Value ");
 					else
 						spdlog::error("Error = {}",v.error().errorMsg);
+		#endif			
 					::tasking::Process::wait(4000);
 					// throw std::runtime_error("Error mierdoso");
 					
@@ -44,13 +50,18 @@ int _testLaunch()
 				}
 			).next<void>([](const auto& v)
 			{
+				
 				if ( v.isValid() )
 				{
+				#ifdef USE_SPDLOG
 					spdlog::debug("Value = {}",v.value());
+				#endif
 				}
 				else
 				{
+					#ifdef USE_SPDLOG
 					spdlog::error("Error = {}",v.error().errorMsg);
+					#endif
 					throw std::runtime_error("Otro error");
 				}
 			}).next<void>(
@@ -58,26 +69,35 @@ int _testLaunch()
 				{
 					if ( v.isValid() )
 					{
+						#ifdef USE_SPDLOG
 						spdlog::debug("Value");
+		#endif
 					}
 					else
 					{
+						#ifdef USE_SPDLOG
 						spdlog::error("Error = {}",v.error().errorMsg);
+		#endif
 					}	
 					throw std::runtime_error("Otro error");
 				}
 			);
 			auto r = cont.getResult();			
+			#ifdef USE_SPDLOG
 			spdlog::debug("Waiting for first task block...");			
+		#endif
 			th1->start();
 			auto wr = tasking::waitForFutureMThread(r);
+			#ifdef USE_SPDLOG
 			if ( wr.isValid() )
 				spdlog::debug("First tasks completed successfully");
 			else
 				spdlog::debug("First tasks completed with error {}",wr.error().errorMsg); 
+		#endif
 
-
+#ifdef USE_SPDLOG
 			spdlog::info("Launching second task block in a thread pool (Executor<ThreadPool>)");
+		#endif
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			parallelism::ThreadPool::ExecutionOpts exopts;
@@ -85,10 +105,12 @@ int _testLaunch()
 			auto r2 = ex2.launch<int>(  
 				[](const auto& v)
 				{
+					#ifdef USE_SPDLOG
 					if ( v.isValid() )
 						spdlog::debug("Value = {}",v.value());
 					else
 						spdlog::error("Error = {}",v.error().errorMsg);
+		#endif
 					::tasking::Process::wait(2000);
 					throw std::runtime_error("Error mierdoso"); //pruebas lanzamiento excepciones
 					return 5;
@@ -97,34 +119,42 @@ int _testLaunch()
 			{
 				if ( v.isValid() )
 				{
+					#ifdef USE_SPDLOG
 					spdlog::debug("Value = {}",v.value());
+		#endif
 					return "pepe";	
 				}
 				else
 				{
+					#ifdef USE_SPDLOG
 					spdlog::error("Error = {}",v.error().errorMsg);
-						throw std::runtime_error("Error final");
+		#endif
+					throw std::runtime_error("Error final");
 				}
 			}).next<int>([](const auto& v)
 			{
+				#ifdef USE_SPDLOG
 				if ( v.isValid() )
 					spdlog::debug("Value = {}",v.value());
 				else
 					spdlog::error("Error = {}",v.error().errorMsg);
+		#endif
 				return 1;
 			}).getResult();
+			#ifdef USE_SPDLOG
 			spdlog::debug("Waiting for second task block...");			
+		#endif
 			auto wr2 = tasking::waitForFutureMThread(r2);
+			#ifdef USE_SPDLOG
 			if ( wr2.isValid() )
 				spdlog::debug("Second task block completed successfully");
 			else
 				spdlog::debug("Second task block completed with error {}",wr2.error().errorMsg);  
+		#endif
 			
 		}
 	);				
-	spdlog::debug("Termino");	
 	Thread::sleep(60000);
-	spdlog::debug("finish");
 	th2->finish();
 	th2->join();
 	
@@ -140,7 +170,9 @@ template <class F> void _measureTest(string text,F f)
 	int mean = 0;
 	constexpr size_t iters = 20;
 	Timer timer;
+	#ifdef USE_SPDLOG
 	spdlog::info("Doing {} iterations using {}",loopSize,text);	
+		#endif
 	for(size_t i = 0; i < iters;i++)
 	{
 		auto t0 = timer.getMilliseconds();
@@ -153,17 +185,19 @@ template <class F> void _measureTest(string text,F f)
 	}
 	mean /= iters;
 
+#ifdef USE_SPDLOG
 	spdlog::info("Finished. Time: {}",mean);
+		#endif
 }
 int _testFor()
 {
 	int result = 0;
 	
-	
+	#ifdef USE_SPDLOG
 	spdlog::set_level(spdlog::level::info); // Set global log level
+
+	#endif
 	#define CHUNK_SIZE 512
-	
-	
 	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 	_measureTest("Runnable executor with independent tasks and lockOnce",
 		[th1]() 
@@ -176,13 +210,17 @@ int _testFor()
 			lhints.lockOnce = true;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 				//::tasking::Process::wait(10);
 			},lhints,1
 			);
 			::core::waitForBarrierThread(barrier);
+			#ifdef USE_SPDLOG
 			spdlog::debug("hecho");
+		#endif
 			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
 				th1->getScheduler().resetPool();
 			#endif
@@ -201,13 +239,17 @@ int _testFor()
 			lhints.lockOnce = false;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 				//::tasking::Process::wait(10);
 			},lhints,1
 			);
 			::core::waitForBarrierThread(barrier);
+			#ifdef USE_SPDLOG
 			spdlog::debug("hecho");
+		#endif
 		}
 	);	
 	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
@@ -220,8 +262,10 @@ int _testFor()
 			lhints.lockOnce = true;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 				//::tasking::Process::wait(10);
 			},lhints,1
 			);
@@ -240,8 +284,10 @@ int _testFor()
 			lhints.lockOnce = false;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 				//::tasking::Process::wait(10);
 			},lhints,1
 			);
@@ -260,8 +306,10 @@ int _testFor()
 			lhints.lockOnce = true;
 			auto barrier = ex.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 				//::tasking::Process::wait(10);
 			},lhints,1
 			);
@@ -280,8 +328,10 @@ int _testFor()
 			lhints.independentTasks = false;
 			auto barrier = ex2.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 			//	::tasking::Process::wait(10);
 				//++count; //para asegurar
 			},lhints);
@@ -298,8 +348,10 @@ int _testFor()
 			lhints.independentTasks = true;
 			auto barrier = ex2.loop(0,loopSize,
 			[](int idx)
-			{								
+			{	
+				#ifdef USE_SPDLOG
 				spdlog::debug("iteracion {}",idx);
+		#endif							
 			//	::tasking::Process::wait(10);
 				//++count; //para asegurar
 			},lhints);
@@ -326,9 +378,9 @@ int _testFor()
 	::core::waitForBarrierThread(barrier);
 	spdlog::info("Finished. Time: {}. Count = {}",timer.getMilliseconds()-t0,count);
 	*/
-	spdlog::debug("Termino");	
+	
 	Thread::sleep(60000);
-	spdlog::debug("finish");
+	
 	// th1->finish();
 	// th1->join();
 	return result;
@@ -363,7 +415,9 @@ static int test()
 		}
 		catch(const std::exception& e)
 		{
+			#ifdef USE_SPDLOG
 			spdlog::error(e.what());
+		#endif
 		}		
 	}else
 		result = defaultTest(); //by default

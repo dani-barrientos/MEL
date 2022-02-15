@@ -5,7 +5,9 @@ using core::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
+#ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
+#endif
 #include <CommandLine.h>
 #include <mpl/LinkArgs.h>
 #include <mpl/Ref.h>
@@ -74,7 +76,9 @@ class MyProcess : public Process
 		{
 			int aux = mVar;
 			++mVar;
+			#ifdef USE_SPDLOG
 			spdlog::debug("MyProcess");
+			#endif
 			::tasking::Process::wait(70050);
 			mVar = aux;
 		}	
@@ -87,7 +91,9 @@ class MyTask
 	MyTask(Process* target,int& var):mTarget(target),mVar(var){}
 	::tasking::EGenericProcessResult operator()(uint64_t,Process*)
 	{
+		#ifdef USE_SPDLOG
 		spdlog::debug("MyTask");
+		#endif
 		++mVar;
 		if ( mTarget )
 			mTarget->pause();
@@ -103,7 +109,9 @@ class MyTask
 ::tasking::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
 {
 	++var;
+	#ifdef USE_SPDLOG
 	spdlog::debug("staticFuncTask");
+	#endif
 	return ::tasking::EGenericProcessResult::CONTINUE;
 }
 static Timer sTimer;
@@ -116,8 +124,10 @@ uint64_t constexpr TIME_MARGIN = 10;
 void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 {
 	auto elapsed = std::abs((int64_t)t1-(int64_t)t0);
+		#ifdef USE_SPDLOG
 	if ( elapsed > TIME_MARGIN)
 		spdlog::warn("Margin time overcome {}. Info: {}",elapsed,text);
+	#endif
 }
 
 static int _testMicroThreadingMonoThread()
@@ -126,7 +136,9 @@ static int _testMicroThreadingMonoThread()
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
 	size_t s3 = sizeof(MThreadAttributtes);
+	#ifdef USE_SPDLOG
 	spdlog::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
+	#endif
 	int result = 0;
 	int sharedVar = 0;
 	//auto th1 = ThreadRunnable::create();
@@ -139,7 +151,9 @@ static int _testMicroThreadingMonoThread()
 		std::shared_ptr<Process> p1=th2->post([th2](uint64_t t,Process* p)
 		{
 			static bool firstTime = true;
+			#ifdef USE_SPDLOG
 			spdlog::debug("Ejecuto p1");
+			#endif
 			if ( firstTime )
 			{
 				firstTime = false;
@@ -154,49 +168,66 @@ static int _testMicroThreadingMonoThread()
 
 		
 				auto fr = ::tasking::waitForFutureMThread(fut,2000);
+				#ifdef USE_SPDLOG
 				if ( !fr.isValid())
 					spdlog::error(fr.error().errorMsg);
 				else
 					spdlog::error(fr.value());
+				#endif
 				// if ( fr != ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
 				// {
 				// 	spdlog::error(fut.getValue().error().errorMsg);
 				// }
+				#ifdef USE_SPDLOG
 				spdlog::debug("espero en p1");
+		#endif
 				auto wr = tasking::Process::wait(10000);
+				#ifdef USE_SPDLOG
 				spdlog::debug("vuelvo a esperar en p1");
+		#endif
 				// esto tengo que arreglarlo para que, si soy autokill, no vuelva a esperar si está en trying_tokill
 				// meditar sobre estos temas, no me convence demasiado la forma en que está planteado
 				//wr = tasking::Process::wait(10000);
 				wr = tasking::Process::switchProcess(true);
 				wr = tasking::Process::sleep();
+				#ifdef USE_SPDLOG
 				spdlog::debug("fin espera en p1");
+		#endif
 				/*
 				 * no me convence nada el tema del kill y demas. Cosas que pasan:
 				 *  - aunque tenga el autokill a false, igual convenía enterarme mejor de que se me intenta matar. En realidad lo sé si consulto el state.Lo que
 
 				 * - por otro lado, aunque tenga el autokill, después vuelve a hacerme el kill->tengo que impedirlo
 				 */
+			
 			}
+			#ifdef USE_SPDLOG
 			spdlog::debug("Continuo");
+		#endif
 			return ::tasking::EGenericProcessResult::CONTINUE;
 		},autokill,2000,000);
 		th2->fireAndForget(
 			[p1]()
 			{
+				#ifdef USE_SPDLOG
 				spdlog::debug("Ejecuto p2");
+		#endif
 				tasking::Process::wait(4000);
 				// spdlog::debug("Pauso proceso");
 				//  if ( p1 )
 				//  	p1->pause();
 			//	tasking::Process::wait(1000);
+			#ifdef USE_SPDLOG
 				spdlog::debug("Mato proceso");
+		#endif
 				p1->kill();
 				// spdlog::debug("Vuelvo a pausar proceso");
 				// if ( p1 )
 				// 	p1->pause();
 				tasking::Process::wait(25000);
+				#ifdef USE_SPDLOG
 				 spdlog::debug("Despierto proceso");
+		#endif
 				if ( p1 )
 				 	p1->wakeUp();
 			}
@@ -215,7 +246,9 @@ static int _testMicroThreadingMonoThread()
 		spdlog::debug("waiting for execution");
 		tasking::waitForFutureMThread(r);
 		*/
+	#ifdef USE_SPDLOG
 		spdlog::debug("execution done");
+		#endif
 	//	return ::tasking::EGenericProcessResult::KILL;
 	}
 //,true,3000);
@@ -259,7 +292,9 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 - 
 */
 	Thread::sleep(60000);
+	#ifdef USE_SPDLOG
 	spdlog::debug("finish");
+		#endif
 	// th1->finish();
 	// th1->join();
 	return result;
@@ -290,7 +325,6 @@ int  _testPerformanceLotTasks()
 				++count;
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
-					//spdlog::debug("Lambda {}",count);
 					return ::tasking::EGenericProcessResult::KILL;
 				},true,1000,0);		
 			}
@@ -299,7 +333,9 @@ int  _testPerformanceLotTasks()
 		Thread::sleep(10);
 	}
 	t1 = sTimer.getMilliseconds();	
+	#ifdef USE_SPDLOG
 	spdlog::info("Time launching {} tasks with global new: {} msecs",nTasks,t1-t0);
+		#endif
 	Thread::sleep(2000);
 	t0 = sTimer.getMilliseconds();	;
 	count = 0;
@@ -321,7 +357,9 @@ int  _testPerformanceLotTasks()
 		Thread::sleep(10);
 	}
 	t1 = sTimer.getMilliseconds();
+	#ifdef USE_SPDLOG
 	spdlog::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
+		#endif
 	Thread::sleep(45000);
 	th1->finish();
 	th1->join();
@@ -330,10 +368,10 @@ int  _testPerformanceLotTasks()
 std::atomic<int> sCount(0);
 int _test_concurrent_post()
 {	
-	auto consumer =ThreadRunnable::create(true,512);
-	constexpr int NUM_POSTS = 20;
-	constexpr int NUM_ITERS = 1000;
-	std::array< std::shared_ptr<ThreadRunnable>,60> producers;
+	auto consumer =ThreadRunnable::create(true,500,2000);
+	constexpr int NUM_POSTS = 4;
+	constexpr int NUM_ITERS = 700;
+	std::array< std::shared_ptr<ThreadRunnable>,1> producers;
 	for(size_t i=0;i<producers.size();++i)
 	{
 		producers[i] = ThreadRunnable::create(true);
@@ -365,13 +403,17 @@ int _test_concurrent_post()
 			);
 		}
 	}
+	#ifdef USE_SPDLOG
 	spdlog::info("Esperando...");
+		#endif
 	//consumer->resume();
 	Thread::sleep(10000);
+	#ifdef USE_SPDLOG
 	if ( sCount == producers.size()*NUM_POSTS*NUM_ITERS )
 		spdlog::info("_test_concurrent_post OK. {} Posts",sCount);
 	else
 		spdlog::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",producers.size()*NUM_POSTS*NUM_ITERS,sCount);
+		#endif
 	return 0;
 }
 

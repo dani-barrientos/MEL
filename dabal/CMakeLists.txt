@@ -35,8 +35,11 @@ endif()
 
 
 target_include_directories(dabal PUBLIC "include")
-find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(dabal PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
+if (USE_SPDLOG)
+    find_package(spdlog CONFIG REQUIRED)
+    target_link_libraries(tests spdlog::spdlog spdlog::spdlog_header_only)
+endif()
+
 
 
 #parece que no hay version 32 bits de spdlog meter un define -> hacer funcion cmake para devovler true si arquitectura 32 bits

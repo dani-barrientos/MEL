@@ -5,7 +5,9 @@
 using mpl::makeMemberEncapsulate;
 #include <core/TLS.h>
 using core::TLS;
+#ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
+#endif
 
 static TLS::TLSKey gCurrentThreadKey;
 static bool gCurrentThreadKeyCreated = false;
@@ -152,7 +154,9 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	{
 		int err = errno;
 		//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
+		#ifdef USE_SPDLOG
 		spdlog::error("Error setting thread affinity. {}", err);
+#endif
 	}
 	
 #endif
@@ -379,7 +383,9 @@ bool Thread::join(unsigned int millis)
 	int err = pthread_join(mHandle, NULL/*result*/);
 	mJoined=!err;
 	if (err) {
+		#ifdef USE_SPDLOG
 		spdlog::error("Error joining thread: err = {}", err);
+#endif
 	}
 	return mJoined;	
 #endif

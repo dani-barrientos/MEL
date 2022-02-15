@@ -102,8 +102,7 @@ namespace core
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			if (mTriggering)
 			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+//				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
 				for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
 				{
 					if (i->id == id)
@@ -141,8 +140,7 @@ namespace core
 				result = ++mCurrId;
 			if (mTriggering)
 			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
+//				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
 				PendingOperation po;
 				po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
 				po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
@@ -173,8 +171,7 @@ namespace core
 			if (mTriggering)
 			{
 
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
+//				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
 				typename CallbackListType::iterator i = mCallbacks.begin();
 				while (i != mCallbacks.end())
 				{
@@ -264,8 +261,7 @@ namespace core
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again!!");
+//				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again!!");
 				return;
 			}
 			BaseType::mTriggering = true;
@@ -304,8 +300,7 @@ namespace core
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
 			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again!!");
+				//spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again!!");
 				return;
 			}
 			BaseType::mTriggering = true;
@@ -435,9 +430,8 @@ namespace core
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			result = ++mCurrId;
 			if (mTriggering)
-			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while subscribing!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering subscribing!!");
+			{				
+			//	spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering subscribing!!");
 				PendingOperation po;
 				po.op = PendingOperation::EOperation::O_SUBSCRIPTION;
 				po.info = std::move(CallbackInfo(std::shared_ptr<CallbackType>(cb), result));
@@ -471,9 +465,8 @@ namespace core
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 					
 			if (mTriggering)
-			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");					
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
+			{				
+				//spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
 				for (typename CallbackListType::iterator i = mCallbacks.begin(), j = mCallbacks.end(); i != j; ++i)
 				{
 					if (i->id == id)
@@ -512,8 +505,7 @@ namespace core
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(mSC);
 			if (mTriggering)
 			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while unsubscribing!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
+				//spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering unsubscribing!!");
 				typename CallbackListType::iterator i = mCallbacks.begin();
 				while (i != mCallbacks.end())
 				{
@@ -604,9 +596,8 @@ namespace core
 		{			
 			_private::_Lock<mpl::isSame<ThreadingPolicy, ::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 			if (BaseType::mTriggering)
-			{
-				//::logging::Logger::getLogger()->debug("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
-				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again YYY!!");
+			{				
+				//spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again YYY!!");
 				return;
 			}
 			BaseType::mTriggering = true;

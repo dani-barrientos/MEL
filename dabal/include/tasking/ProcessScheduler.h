@@ -58,23 +58,26 @@ namespace tasking
 				typedef std::vector<ElementType> PoolType;
 				std::atomic<size_t> mCurrIdx = 0;
 				std::atomic<size_t> mSize;
-				std::deque<PoolType> mPool;
-				//size_t mCurrIdx = 0;
+				std::deque<PoolType> mPool;				
 				size_t mChunkSize;
 				size_t mMaxSize;
+				volatile bool mInvalidate;
 				CriticalSection mSC;
 			public:
 				NewTasksContainer(size_t chunkSize,size_t maxSize );
 				PoolType::value_type& operator[](size_t idx);
 				void add(std::shared_ptr<Process>& process,unsigned int startTime);
-				inline size_t getCurrIdx(){
-					 return mCurrIdx.load(std::memory_order_relaxed); //@todo no seguro, estudiar
+				inline size_t getCurrIdx(std::memory_order mo = std::memory_order_relaxed){
+					 return mCurrIdx.load(mo);
 				}
 				void clear();
 				size_t size() const{return mSize.load(std::memory_order_acquire);}  //pruebas memoryorder
 				//return previous value
-				size_t exchangeIdx(size_t v);
+				size_t exchangeIdx(size_t v,std::memory_order order = std::memory_order_seq_cst);
 				void lock();
+				bool isInvalidate() const{ return mInvalidate;}
+				void setInvalidate(bool v){ mInvalidate = v;}
+				size_t getMaxSize() const{ return mMaxSize;}
 
 		};
 		#endif
