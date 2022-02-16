@@ -40,7 +40,7 @@ void Timer::reset() {
 	else
 		mTimeBase.denom*=1000000;
 	mReference=mach_absolute_time();
-#elif defined(_ANDROID)
+#elif defined(DABAL_ANDROID)
 	timespec ts;
 	mReference=0;
 	if (!clock_gettime(CLOCK_MONOTONIC,&ts))

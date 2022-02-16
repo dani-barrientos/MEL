@@ -6,15 +6,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add source to this project's executable.
 add_compile_definitions(DABAL_IMPORTS)
-add_executable (tests "main.cpp")
+
+
+#add_executable (tests "main.cpp")
+add_library(tests SHARED  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
+"test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp")
 target_include_directories(tests PUBLIC "common/include")
-target_sources(tests PRIVATE  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
+#[[target_sources(tests PRIVATE  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
 "test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp"
-)
+)]]
 
 #add_link_options()
 target_link_libraries(tests "dabal")
-if(DABAL_API STREQUAL "DABAL_POSIX")
+if(DABAL_OS STREQUAL "DABAL_LINUX")
     target_link_libraries(tests "pthread")
 endif()
 #copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
@@ -24,15 +28,18 @@ add_custom_command(TARGET tests POST_BUILD        # Adds a post-build event to M
         $<TARGET_FILE_DIR:dabal>"/dabal.dll"      # <--this is in-file
         $<TARGET_FILE_DIR:tests>)                 # <--this is out-file path
 endif()
-if (USE_SPDLOG)
+if (USE_SPDLOG)    
+    message ("Tests is using spdlog")
     find_package(spdlog CONFIG REQUIRED)
     target_link_libraries(tests spdlog::spdlog spdlog::spdlog_header_only)
 endif()
 
+#[[
 enable_testing()
 add_test(NAME Run1 COMMAND tests -t callbacks)
 add_test(NAME Run2 COMMAND tests -t threading -n 0)
 add_test(NAME Run3 COMMAND tests -t threading -n 1)
 add_test(NAME Run4 COMMAND tests -t threading -n 2)
+]]
 
 

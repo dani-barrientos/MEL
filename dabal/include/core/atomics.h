@@ -4,7 +4,7 @@
 #if defined(DABAL_MACOSX) || defined(DABAL_IOS)
 #include <libkern/OSAtomic.h>
 #include <TargetConditionals.h>
-#elif !defined (WIN32) && !defined(_ANDROID)
+#elif !defined (WIN32) && !defined(DABAL_ANDROID)
 //#include <atomic>  //use standard atomics because we have > C++11 available
 
 #endif
@@ -34,7 +34,8 @@ namespace core {
 		};
 
 	}
-	#elif defined(DABAL_IOS)||defined(_ANDROID)
+	#elif defined(DABAL_IOS)||defined(DABAL_ANDROID)
+	
     #if !TARGET_IPHONE_SIMULATOR
     volatile int32_t atomicIncrement(volatile int32_t* var)  __attribute__((naked));
     volatile int32_t atomicDecrement(volatile int32_t* var)  __attribute__((naked));

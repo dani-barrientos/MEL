@@ -46,7 +46,8 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "DABAL_OS": "DABAL_LINUX"
+                "DABAL_OS": "DABAL_LINUX",
+                "USE_SPDLOG":true
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {

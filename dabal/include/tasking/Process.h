@@ -37,14 +37,14 @@ using core::Callback;
 	#else
 		#include <core/Process_X86.h>
 	#endif
-#elif defined (_ANDROID)
-	#include <core/Process_ARM_Android.h>
+#elif defined (DABAL_ANDROID)
+	#include <tasking/Process_ARM_Android.h>
 #elif defined (DABAL_X64_GCC) ||defined (DABAL_X64_CLANG)
 	#include <tasking/Process_X64_GCC.h>
 #endif
 #if defined(DABAl_IOS) || defined(DABAL_MACOSX) 
     #define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
-#elif defined(_ANDROID) 
+#elif defined(DABAL_ANDROID) 
 	#define OPTIMIZE_FLAGS
 #elif defined(_ARM_GCC) || defined(DABAL_X86_GCC) ||defined(DABAL_X64_GCC) 
 	#define OPTIMIZE_FLAGS __attribute__ ((optimize(0)))

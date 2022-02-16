@@ -3,7 +3,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_definitions(DABAL_EXPORTS)
 
-
 add_library(dabal SHARED "source/core/atomics.cpp" "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/core/Timer.cpp"
@@ -25,6 +24,8 @@ elseif(DABAL_OS STREQUAL "DABAL_MACOSX")
     target_sources(dabal PRIVATE "source/tasking/Process_X64_MAC.cpp")
 elseif(DABAL_OS STREQUAL "DABAL_LINUX" AND (DABAL_ARQ STREQUAL "DABAL_X64_CLANG" OR DABAL_ARQ STREQUAL "DABAL_X64_GCC") )
     target_sources(dabal PRIVATE "source/tasking/Process_X64_GCC.cpp")
+elseif(DABAL_OS STREQUAL "DABAL_ANDROID")
+    target_sources(dabal PRIVATE "source/tasking/Process_ARM_Android.cpp")
 elseif(DABAL_ARQ STREQUAL "DABAL_X86_CLANG" OR DABAL_ARQ STREQUAL "DABAL_X86_GCC")
     message("Building dabal 32 bits")
    # target_sources(dabal PRIVATE "source/tasking/Process_X86_GCC.cpp")
@@ -36,8 +37,11 @@ endif()
 
 target_include_directories(dabal PUBLIC "include")
 if (USE_SPDLOG)
+    message ("Dabal is using spdlog")
     find_package(spdlog CONFIG REQUIRED)
-    target_link_libraries(tests spdlog::spdlog spdlog::spdlog_header_only)
+    target_link_libraries(dabal spdlog::spdlog spdlog::spdlog_header_only)
+else()
+    message ("Dabal is NOT using spdlog")
 endif()
 
 

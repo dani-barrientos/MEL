@@ -198,6 +198,11 @@ int _testFor()
 
 	#endif
 	#define CHUNK_SIZE 512
+	spdlog::info("INICIO");
+    {
+        auto th1 = ThreadRunnable::create(true, CHUNK_SIZE);
+    }
+    spdlog::info("FIN");
 	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 	_measureTest("Runnable executor with independent tasks and lockOnce",
 		[th1]() 

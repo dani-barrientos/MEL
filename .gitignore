@@ -3,8 +3,9 @@
 /tests/CMakeFiles
 /.vscode
 /build
-/android
 /CMakeFiles
 /dabal/CMakeFiles
 /dabal/doc
 CMakeUserPresets.json
+android/main/.gradle
+android/main/.idea

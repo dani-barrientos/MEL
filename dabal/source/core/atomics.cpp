@@ -41,7 +41,7 @@
         );
     #endif
 
-#elif (defined (DABAL_IOS) || defined(_ANDROID)) && !TARGET_IPHONE_SIMULATOR && defined(__arm__)
+#elif (defined (DABAL_IOS) || defined(DABAL_ANDROID)) && !TARGET_IPHONE_SIMULATOR && defined(__arm__)
 volatile int32_t core::atomicIncrement(volatile int32_t* var)
 {
     asm volatile( "1:" );

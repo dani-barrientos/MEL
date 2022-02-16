@@ -347,7 +347,7 @@ namespace text {
 	{
 #ifdef _WINDOWS
 		return _strnicmp(str1, str2, aN);
-#elif defined(DABAL_MACOSX) || defined(DABAL_IOS) || defined(_ANDROID)
+#elif defined(DABAL_MACOSX) || defined(DABAL_IOS) || defined(DABAL_ANDROID)
 		return strncasecmp(str1,str2,aN);
 #else
 		return strncmp(str1,str2,aN);

@@ -77,7 +77,7 @@ uint64_t getProcessAffinity()
 #elif defined(DABAL_MACOSX) || defined(_IOS)
     //macos and ios doesnt' allow affinity manipulation
 	result = 0;
-#elif defined(_ANDROID)
+#elif defined(DABAL_ANDROID)
 	cpu_set_t set;
 	CPU_ZERO(&set);
 	int ok = sched_getaffinity(0, sizeof(set), &set);
@@ -266,7 +266,7 @@ I think I should create it on start
 #if defined (DABAL_MACOSX) || defined(DABAL_IOS) 
 	mPriorityMin = sched_get_priority_min(SCHED_RR);
 	mPriorityMax = sched_get_priority_max(SCHED_RR);
-#elif defined(DABAL_LINUX)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROIDç)
 	mPriorityMin=sched_get_priority_min(SCHED_OTHER);
 	mPriorityMax=sched_get_priority_max(SCHED_OTHER);
 #endif
@@ -304,7 +304,7 @@ void Thread::sleep(const unsigned int millis) {
 #endif
 }
 
-#if defined(DABAL_MACOSX) || defined(DABAL_LINUX) ||defined(DABAL_IOS)
+#if defined(DABAL_MACOSX) || defined(DABAL_LINUX) ||defined(DABAL_IOS) || defined(DABAL_ANDROID)
 int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 	switch (tp) {
 		case TP_HIGHEST:
@@ -360,7 +360,7 @@ using namespace ::std::string_literals;
 	}
 	
 	if ((err=pthread_attr_destroy(&attr))) {
-		#ifndef _ANDROID
+		#ifndef DABAL_ANDROID
 		pthread_cancel(mHandle);
 		#endif
 		throw std::runtime_error("Unable to destroy thread attribute!");
@@ -446,7 +446,7 @@ void Thread::setPriority(ThreadPriority tp) {
     if (mHandle) {
         sched_param sp;
         sp.sched_priority = priority2pthread(mPriority,mPriorityMin,mPriorityMax);
-#ifdef _ANDROID
+#ifdef DABAL_ANDROID
 		#define __PLATFORM_POLICY SCHED_OTHER
 #else
 		//SCHED_RR vs SCHED_FIFO?

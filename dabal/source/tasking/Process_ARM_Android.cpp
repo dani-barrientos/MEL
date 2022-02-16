@@ -1,10 +1,10 @@
 #ifdef DABAL_ANDROID
 
-#include <core/Process.h>
-using core::Process;
-using core::MThreadAttributtes;
+#include <tasking/Process.h>
+using tasking::Process;
+using tasking::MThreadAttributtes;
 
-#include <core/ProcessScheduler.h>
+#include <tasking/ProcessScheduler.h>
 
 #ifdef __arm__
 	#define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)
@@ -57,7 +57,7 @@ volatile void Process::checkMicrothread(uint64_t msegs )
 
 	asm volatile("2:");
 
-	execute( msegs );
+	_execute( msegs );
 
 	asm volatile( "3:");
 	asm volatile( "add r4,r4,%[v]":: [v] "i" (mRegistersOFF):"r4" );
@@ -103,7 +103,7 @@ volatile void fakeFunction( )
 
 void Process::_switchProcess( )
 {
-	Process* p = ProcessScheduler::getCurrentProcess();
+	auto p = ProcessScheduler::getCurrentProcess().get();
 	MThreadAttributtes* mt = p;
 	asm volatile( "ldr r0,%0\n"::"m" (mt):"r0");
 	asm volatile( "bl wrapperSwitch" );	
@@ -176,7 +176,7 @@ volatile void Process::checkMicrothread(uint64_t msegs)
 
 	asm volatile("2:");
 
-	execute(msegs);
+	_execute(msegs);
 	//    asm volatile( "continueexecuting:");
 continueexecuting:
 	asm volatile("mov x10,x19"); //temporary, because X10 could have changed
@@ -242,7 +242,7 @@ volatile void fakeFunction()
 }
 void Process::_switchProcess()
 {
-	Process* p = ProcessScheduler::getCurrentProcess();
+	auto p = ProcessScheduler::getCurrentProcess().get();
 	MThreadAttributtes* mt = p;
 
 

@@ -20,9 +20,9 @@ namespace tasking
 		volatile void*	mIniSP;
 		volatile int	mRegisters[13];
 		volatile double	mCoRegisters[16];
-		volatile void*	mStackEnd; 
+		volatile void*	mStackEnd;
+		volatile unsigned char*	mStack;
 		volatile unsigned int	mStackSize;
-		volatile unsigned char*	mStack; 
 		volatile unsigned int	mCapacity;
 #elif defined(__aarch64__)
 		volatile bool mSwitched;
@@ -31,9 +31,9 @@ namespace tasking
 		volatile int64_t mRegisters[11]; //x19-x29. Lr is not neccesary because it's saved in atack in function prolog
 		volatile int64_t mVRegisters[8];  //64 bottom bits of v8-v15
 		volatile void* mStackEnd;
-		volatile unsigned int	  mStackSize;
 		volatile unsigned char* mStack;
 		volatile unsigned int mCapacity;
+		volatile unsigned int mStackSize;
 #endif
 	};
 }
