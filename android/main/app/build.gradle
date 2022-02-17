@@ -15,16 +15,20 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                arguments '-DDABAL_OS=DABAL_ANDROID' , '-DANDROID_ARM_MODE=arm','-DUSE_SPDLOG=true' ,
+                arguments '-DANDROID_STL=c++_shared', '-DDABAL_OS=DABAL_ANDROID' , '-DANDROID_ARM_MODE=arm','-DUSE_SPDLOG=true' ,
                         '-DCMAKE_TOOLCHAIN_FILE='+System.getenv("VCPKG_ROOT")+'/scripts/buildsystems/vcpkg.cmake',
-                        '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+System.getenv("ANDROID_NDK_HOME")+'/build/cmake/android.toolchain.cmake',
-                        '-DVCPKG_TARGET_TRIPLET=arm64-android'
-                cppFlags += '-std=c++17 -DXXUSE_CUSTOM_EVENT'
+                        '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+System.getenv("ANDROID_NDK_HOME")+'/build/cmake/android.toolchain.cmake'
+                //arguments += '-DVCPKG_TARGET_TRIPLET=arm64-android'
+                cppFlags += '-std=c++17'
+                /*if (org.gradle.native.architecture.arm64) {
+                    arguments += '-DVCPKG_TARGET_TRIPLET=arm64-android'
+                    cppFlags += '-std=c++17'
+                }*/
             }
         }
         ndk
         {
-            abiFilters "arm64-v8a"
+            abiFilters "armeabi-v7a", "arm64-v8a"
         }
     }
     buildTypes {

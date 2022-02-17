@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">main</string>
     <string-array name="test_array">
-        <item>callbacks</item>
         <item>execution</item>
+        <item>callbacks</item>
         <item>threading</item>
         <item>parallelism</item>
     </string-array>

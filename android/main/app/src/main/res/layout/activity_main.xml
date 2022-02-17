@@ -21,16 +21,19 @@
         android:layout_width="409dp"
         android:layout_height="wrap_content"
         android:entries="@array/test_array"
-        tools:layout_editor_absoluteX="275dp"
+        tools:layout_editor_absoluteX="286dp"
         tools:layout_editor_absoluteY="110dp" />
 
     <Button
         android:id="@+id/bExecute"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="1132dp"
         android:onClick="executeClick"
+        android:rotationX="-10"
+        android:rotationY="-52"
         android:text="Execute"
-        tools:layout_editor_absoluteX="71dp"
-        tools:layout_editor_absoluteY="134dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:layout_editor_absoluteY="259dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

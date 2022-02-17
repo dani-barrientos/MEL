@@ -2,7 +2,6 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_definitions(DABAL_EXPORTS)
-
 add_library(dabal SHARED "source/core/atomics.cpp" "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/core/Timer.cpp"

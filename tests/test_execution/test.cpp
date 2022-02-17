@@ -407,7 +407,7 @@ static int test()
 {
 
 	int result = 1;
-	TestManager::TestType defaultTest = _testLaunch;
+	TestManager::TestType defaultTest = _testFor;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
 	{
@@ -423,7 +423,9 @@ static int test()
 					result = _testFor();
 					break;				
 				default:
-					spdlog::error("Test number {} doesn't exist",n);
+					spdlog::warn("Test number {} doesn't exist. Executing default test",n);
+					result = _testFor();
+
 			}
 		}
 		catch(const std::exception& e)

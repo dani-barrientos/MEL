@@ -55,6 +55,7 @@ jobject /* this */,jobjectArray commands) {
     }
     //const char* arg[] = {"","-t","execution","-n","1","-ls",loopSize};
     int result = testsMain(size + 1,args);
+    //int result = testsMain(size + 1,arg);
     for(size_t i = 1; i < size+1; ++i)
     {
         delete [] args[i];
