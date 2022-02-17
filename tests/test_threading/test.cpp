@@ -487,3 +487,10 @@ void test_threading::registerTest()
 {
     TestManager::getSingleton().registerTest(TEST_NAME,"threading tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",test);
 }
+void test_threading::allTests()
+{
+	_testMicroThreadingMonoThread();
+	_testPerformanceLotTasks();
+	::test_threading::test_futures();
+	 _test_concurrent_post();	
+}

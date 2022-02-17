@@ -141,3 +141,7 @@ void test_callbacks::registerTest()
 {
     TestManager::getSingleton().registerTest(TEST_NAME,"callbacks and callbacksubscriptor tests",test);
 }
+void test_callbacks::allTests()
+{
+    test();
+}

@@ -441,3 +441,8 @@ void test_execution::registerTest()
 {
     TestManager::getSingleton().registerTest(TEST_NAME,"execution tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",test);
 }
+void test_execution::allTests()
+{
+	_testLaunch();
+	_testFor();
+}

@@ -34,8 +34,9 @@ target_link_libraries(main "tests")
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
 enable_testing()
 add_test(NAME Run1 COMMAND main -t callbacks)
-add_test(NAME Run2 COMMAND main -t threading -n 0)
-add_test(NAME Run3 COMMAND main -t threading -n 1)
-add_test(NAME Run4 COMMAND main -t threading -n 2)
+add_test(NAME Run2 COMMAND main -t execution -n 3)
+add_test(NAME Run3 COMMAND main -t threading -n 0)
+add_test(NAME Run4 COMMAND main -t threading -n 1)
+add_test(NAME Run5 COMMAND main -t threading -n 2)
 
 

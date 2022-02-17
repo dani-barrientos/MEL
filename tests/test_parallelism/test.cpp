@@ -295,3 +295,7 @@ void test_parallelism::registerTest()
 {
     TestManager::getSingleton().registerTest(TEST_NAME,"parallelism tests",test);
 }
+void test_parallelism::allTests()
+{
+    test();
+}

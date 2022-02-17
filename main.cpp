@@ -3,5 +3,5 @@
 
 int main(int argc, const char* argv[])
 {		
-	return testsMain(argc,argv);		
+	return testsMain(argc,argv);
 }

@@ -18,11 +18,9 @@ using tests::TestManager;
 
 #define LIST_OPTION "list"
 #define TEST_OPTION "t"
-
-int testsMain(int argc,const char* argv[])
+static void _initialize()
 {
-
-	#ifdef USE_SPDLOG
+#ifdef USE_SPDLOG
 	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 	spdlog::error("Prueba error");
 	spdlog::set_level(spdlog::level::err); // Set global log level to err
@@ -35,6 +33,15 @@ int testsMain(int argc,const char* argv[])
 	spdlog::info( "ESTAMOS EN DEBUG");
 	#endif
 	#endif
+	test_callbacks::registerTest();
+	test_threading::registerTest(); 
+	test_parallelism::registerTest();
+	test_execution::registerTest();
+
+}
+int testsMain(int argc,const char* argv[])
+{
+	_initialize();
 	
   	std::cout << "Running main with "<<argc<<" arguments:\n";
 	for(int i =0;i<argc;++i)	
@@ -46,11 +53,7 @@ int testsMain(int argc,const char* argv[])
 	CommandLine::createSingleton(argc,argv);
 	// const char* arg[] = {"kk","-list","-t","callbacks"};	
 	// CommandLine::createSingleton(4,arg);
-	test_callbacks::registerTest();
-	test_threading::registerTest(); 
-	test_parallelism::registerTest();
-	test_execution::registerTest();
-
+	
 	if ( CommandLine::getSingleton().getOption(LIST_OPTION) != std::nullopt )
 	{
 		const auto& testmap = TestManager::getSingleton().getTests();
@@ -74,4 +77,12 @@ int testsMain(int argc,const char* argv[])
 	if (currTest)
 		return currTest();
 	else return 0;	
+}
+int allTests()
+{
+	_initialize();
+	test_callbacks::allTests();
+	test_threading::allTests();
+	test_parallelism::allTests();
+	test_execution::allTests();
 }
