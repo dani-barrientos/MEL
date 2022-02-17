@@ -80,10 +80,10 @@ namespace core
 		{
 			return subscribeCreatedCallback(new CallbackType(callback, ::core::use_function), se);
 		}
-		/*int subscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(std::function< ECallbackResult(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return subscribeCreatedCallback(new CallbackType(callback, ::core::use_function), se);
-		}*/
+		}
 		/**
 		* std::function lacks operator ==, so need to use unsubscribecallback(int id) or use any other mpl function capabilities
 		*/
@@ -352,10 +352,10 @@ namespace core
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
 		}
-		/*int subscribeCallback(std::function< TRet()>& callback, SubscriptionEmplacement se)
+		int subscribeCallback(std::function< ECallbackResult()>& callback, SubscriptionEmplacement se)
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
-		}*/
+		}
 		template <class U>
 		int subscribeCallback(U&& callback, SubscriptionEmplacement se=SE_BACK)
 		{
@@ -636,11 +636,11 @@ namespace core
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
 		}
-
-		/*int subscribeCallback(std::function< TRet(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
+		int subscribeCallback(std::function< ECallbackResult(VARIABLE_ARGS_DECL)>& callback, SubscriptionEmplacement se=SE_BACK)
 		{
 			return BaseType::subscribeCreatedCallback(new typename BaseType::CallbackType(callback, ::core::use_function), se);
-		}*/
+		}
+		
 		template <class U> int subscribeCallback(U&& functor, SubscriptionEmplacement se=SE_BACK)
 		{
 			return BaseType::subscribeCallback(std::forward<U>(functor), se );

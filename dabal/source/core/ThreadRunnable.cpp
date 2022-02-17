@@ -20,9 +20,10 @@ void ThreadRunnable::_execute()
             {
                 //end order was received
                 mState = THREAD_FINISHING;				
-                getScheduler().killProcesses( false ); 
+                getScheduler().killProcesses( false );
+				resume(); //just in case is paused
+				_signalWakeup();
             }
-            
             break;
         case THREAD_FINISHING:
             if ( getScheduler().getProcessCount() == 0 )
@@ -30,8 +31,8 @@ void ThreadRunnable::_execute()
                 mState = THREAD_FINISHING_DONE;
             }
 			resume(); //just in case is paused
-			mWaitForTasksCond.notify_one();
-            break;
+			_signalWakeup();
+			break;
         default:;
         }
         processTasks();
@@ -39,7 +40,6 @@ void ThreadRunnable::_execute()
     }
     onThreadEnd();
     mState = THREAD_FINISHED;
-    //@todo  gestiono el audodestroye? no creo
     //return 1; // != 0 no error
 }
 
@@ -93,6 +93,7 @@ unsigned int ThreadRunnable::resume() {
 ThreadRunnable::~ThreadRunnable()
 {
     finish();
+    join();
 }
 /*
 void ThreadRunnable::onThreadEnd()
@@ -105,39 +106,21 @@ void ThreadRunnable::onThreadEnd()
 
 */
 void ThreadRunnable::onPostTask(std::shared_ptr<Process> process)
-{		
-#ifdef USE_CUSTOM_EVENT
-	mWaitForTasks.set();
-#else
-	{
-		std::lock_guard<std::mutex> lk(mCondMut);
-		mSignaled = true;
-	}
-	mWaitForTasksCond.notify_one();
-	
-#endif	
+{
+	_signalWakeup();
 }
 
 ::core::ECallbackResult ThreadRunnable::_processAwaken(std::shared_ptr<Process> p)
-{	
-#ifdef USE_CUSTOM_EVENT
-	mWaitForTasks.set();
-#else
-	{
-		std::lock_guard<std::mutex> lk(mCondMut);
-		mSignaled = true;
-	}
-	mWaitForTasksCond.notify_one();
-#endif
-
+{
+	_signalWakeup();
 	//::spdlog::debug("GenericThread::_processWaken");
 	return ECallbackResult::NO_UNSUBSCRIBE;
 }
 void ThreadRunnable::onCycleEnd()
 {
-	unsigned int count = 0;	
+	unsigned int count = 0;
     count = getActiveTaskCount();
-    if (!mEnd && count == 0)
+    if ( !mEnd && count == 0)
     {
 #ifdef USE_CUSTOM_EVENT
         mWaitForTasks.wait();
@@ -166,7 +149,12 @@ void ThreadRunnable::terminate(unsigned int exitCode)
 		#endif*/
 	}
     mEnd = true;
-    #ifdef USE_CUSTOM_EVENT
+	_signalWakeup();
+	//??mExitCode = exitCode;
+}
+void ThreadRunnable::_signalWakeup()
+{
+#ifdef USE_CUSTOM_EVENT
 	mWaitForTasks.set();
 #else
 	{
@@ -175,5 +163,4 @@ void ThreadRunnable::terminate(unsigned int exitCode)
 	}
 	mWaitForTasksCond.notify_one();
 #endif
-	//??mExitCode = exitCode;
 }

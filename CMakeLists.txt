@@ -1,5 +1,5 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
+﻿# CMakeList.txt : Top-level CMake project file
+# main executable using tests library for executing tests
 #
 cmake_minimum_required (VERSION 3.8)
 set(CMAKE_CXX_STANDARD 17)
@@ -27,16 +27,15 @@ endif()
 # Include sub-projects.
 add_subdirectory("dabal")
 add_subdirectory ("tests")
-add_executable (main "tests/main.cpp")
+add_executable (main "main.cpp")
 target_link_libraries(main "dabal")
 target_link_libraries(main "tests")
-target_include_directories(main PUBLIC "tests/common/include")
 
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
 enable_testing()
-add_test(NAME Run1 COMMAND tests -t callbacks)
-add_test(NAME Run2 COMMAND tests -t threading -n 0)
-add_test(NAME Run3 COMMAND tests -t threading -n 1)
-add_test(NAME Run4 COMMAND tests -t threading -n 2)
+add_test(NAME Run1 COMMAND main -t callbacks)
+add_test(NAME Run2 COMMAND main -t threading -n 0)
+add_test(NAME Run3 COMMAND main -t threading -n 1)
+add_test(NAME Run4 COMMAND main -t threading -n 2)
 
 

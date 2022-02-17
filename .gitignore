@@ -9,3 +9,5 @@
 CMakeUserPresets.json
 android/main/.gradle
 android/main/.idea
+android/main/app/.cxx
+android/main/app/build

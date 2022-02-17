@@ -1,5 +1,6 @@
 ﻿// sample.cpp : Defines the entry point for the application.
 //
+#include "tests_main.h"
 #include "test_callbacks/test.h"
 #include "test_threading/test.h"
 #include "test_parallelism/test.h"
@@ -17,16 +18,10 @@ using tests::TestManager;
 
 #define LIST_OPTION "list"
 #define TEST_OPTION "t"
-/**
- * main tests execution.
- * command line:
- *  -list list all available test
- *  -t <NAME>  execute given test
- * eachs test has it's own command line arguments
- **/
 
-int main(int argc, const char* argv[])
-{		
+int testsMain(int argc,const char* argv[])
+{
+
 	#ifdef USE_SPDLOG
 	spdlog::info("Probando spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 	spdlog::error("Prueba error");
@@ -78,6 +73,5 @@ int main(int argc, const char* argv[])
 	
 	if (currTest)
 		return currTest();
-	else return 0;
-	
+	else return 0;	
 }

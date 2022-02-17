@@ -160,13 +160,13 @@ int _testLaunch()
 	
 	return result;
 }
-template <class F> void _measureTest(string text,F f)
+#ifdef NDEBUG
+#define DEFAULT_LOOPSIZE 1000'000
+#else
+#define DEFAULT_LOOPSIZE 200'000
+#endif
+template <class F> void _measureTest(string text,F f, size_t loopSize)
 {
-	#ifdef NDEBUG
-		#define loopSize 1000'000
-	#else
-		#define loopSize 200'000
-	#endif
 	int mean = 0;
 	constexpr size_t iters = 20;
 	Timer timer;
@@ -192,20 +192,22 @@ template <class F> void _measureTest(string text,F f)
 int _testFor()
 {
 	int result = 0;
-	
 	#ifdef USE_SPDLOG
 	spdlog::set_level(spdlog::level::info); // Set global log level
 
-	#endif
+    #endif
+
+    int loopSize = DEFAULT_LOOPSIZE;
+    //check for loopsize options, if given
+	auto opt = tests::CommandLine::getSingleton().getOption("ls");
+	if ( opt != nullopt) {
+		loopSize = std::stol(opt.value());
+	}
 	#define CHUNK_SIZE 512
-	spdlog::info("INICIO");
-    {
-        auto th1 = ThreadRunnable::create(true, CHUNK_SIZE);
-    }
-    spdlog::info("FIN");
+
 	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 	_measureTest("Runnable executor with independent tasks and lockOnce",
-		[th1]() 
+		[th1,loopSize]()
 		{	
 			//la propia creacion del hilo es ligeramente lenta, y mientras más buffer de tareas, más tarda								
 			th1->resume();
@@ -213,7 +215,8 @@ int _testFor()
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
 			lhints.lockOnce = true;
-			auto barrier = ex.loop(0,loopSize,
+			const int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -230,19 +233,19 @@ int _testFor()
 				th1->getScheduler().resetPool();
 			#endif
 			th1->suspend();
-		}
+		},loopSize
 	);
-	
+
 	_measureTest("Runnable executor with independent tasks and NO lockOnce on post",
-		[]() 
+		[loopSize]()
 		{
-		
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
 			lhints.lockOnce = false;
-			auto barrier = ex.loop(0,loopSize,
+			const int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -252,20 +255,19 @@ int _testFor()
 			},lhints,1
 			);
 			::core::waitForBarrierThread(barrier);
-			#ifdef USE_SPDLOG
-			spdlog::debug("hecho");
-		#endif
-		}
-	);	
+		},loopSize
+	);
+
 	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
-		[]() mutable
+		[loopSize]() mutable
 		{
 			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
 			lhints.lockOnce = true;
-			auto barrier = ex.loop(0,loopSize,
+			int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -277,17 +279,18 @@ int _testFor()
 			th1->resume();
 			::core::waitForBarrierThread(barrier);
 			th1->suspend();
-		}
+		},loopSize
 	);
 	_measureTest("Runnable executor with independent tasks,NO lockOnce on post and pausing thread",
-		[]() mutable
+		[loopSize]() 	
 		{
 			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
 			lhints.lockOnce = false;
-			auto barrier = ex.loop(0,loopSize,
+			const int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -299,17 +302,18 @@ int _testFor()
 			th1->resume();
 			::core::waitForBarrierThread(barrier);
 			th1->suspend();
-		}
+		},loopSize
 	);
 	_measureTest("Runnable executor WITHOUT independent tasks",
-		[]()
+		[loopSize]()
 		{
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = false;
 			lhints.lockOnce = true;
-			auto barrier = ex.loop(0,loopSize,
+			const int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -319,19 +323,20 @@ int _testFor()
 			},lhints,1
 			);
 			::core::waitForBarrierThread(barrier);
-		}
+		},loopSize
 	);
 	//parallelism::ThreadPool::ThreadPoolOpts opts;
 	//auto myPool = make_shared<parallelism::ThreadPool>(opts);
 	_measureTest("ThreadPool executor, grouped tasks",
-		[]()
+		[loopSize]()
 		{
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			execution::Executor<parallelism::ThreadPool> ex2(myPool);
 			execution::LoopHints lhints;
 			lhints.independentTasks = false;
-			auto barrier = ex2.loop(0,loopSize,
+			const int idx0 = 0;
+			auto barrier = ex2.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -341,17 +346,18 @@ int _testFor()
 				//++count; //para asegurar
 			},lhints);
 			::core::waitForBarrierThread(barrier);
-		}
+		},loopSize
 	);
 	_measureTest("ThreadPool executor, no grouped tasks",
-		[]()
+		[loopSize]()
 		{
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			execution::Executor<parallelism::ThreadPool> ex2(myPool);
 			execution::LoopHints lhints;
 			lhints.independentTasks = true;
-			auto barrier = ex2.loop(0,loopSize,
+			const int idx0 = 0;
+			auto barrier = ex2.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				#ifdef USE_SPDLOG
@@ -361,7 +367,7 @@ int _testFor()
 				//++count; //para asegurar
 			},lhints);
 			::core::waitForBarrierThread(barrier);
-		}
+		},loopSize
 	);
 	return 0;
 	/*
@@ -393,7 +399,8 @@ int _testFor()
 /**
  * @brief execution tests
  * commandline options
-????
+	-n: test number (0->test launch; 1->test for)
+  	-ls: loop size for test number 1
  * @return int 
  */
 static int test()
@@ -415,7 +422,8 @@ static int test()
 				case 1:
 					result = _testFor();
 					break;				
-				default:;					
+				default:
+					spdlog::error("Test number {} doesn't exist",n);
 			}
 		}
 		catch(const std::exception& e)

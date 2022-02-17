@@ -43,7 +43,6 @@ add_library( # Sets the name of the library.
         native-lib.cpp)
 target_link_libraries(main "dabal")
 target_link_libraries(main "tests")
-target_include_directories(main PUBLIC "tests/common/include")
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
 # default, you only need to specify the name of the public NDK library

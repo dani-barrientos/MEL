@@ -63,6 +63,12 @@ static int test()
     Pepe pp;
 
     int s1 = pp.subscribe1(f1);
+
+    const std::function<::core::ECallbackResult(float)> f = [](float v)
+    {
+        return ::core::ECallbackResult::UNSUBSCRIBE;
+    };
+    pp.subscribe1(f);
     pp.subscribe1(std::function<::core::ECallbackResult(float)>(f1));
     pp.subscribe2(std::function<::core::ECallbackResult(float&)>(
         [](float)

@@ -88,9 +88,9 @@ namespace core
 	#ifdef USE_CUSTOM_EVENT
 		Event	mWaitForTasks; 
 	#else
-		bool mSignaled;
+		volatile bool mSignaled;
 		std::condition_variable	mWaitForTasksCond;
-		std::mutex mCondMut;  //para pruebas con la condition varaible
+		std::mutex mCondMut;
 	#endif
         volatile bool mEnd; // request
         EThreadState mState;
@@ -102,6 +102,7 @@ namespace core
         * suspend inmediately, can be called only from same thread execution
         */
 		::tasking::EGenericProcessResult _suspendInternal(uint64_t millis,Process* proc);
+		void _signalWakeup();
 	protected:
         /**
 		* @brief Create a thread with an empty loop, that continuosly processes posted tasks @see Runnable::post

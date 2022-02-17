@@ -371,7 +371,7 @@ int _test_concurrent_post()
 	auto consumer =ThreadRunnable::create(true,500,2000);
 	constexpr int NUM_POSTS = 4;
 	constexpr int NUM_ITERS = 700;
-	std::array< std::shared_ptr<ThreadRunnable>,1> producers;
+	std::array< std::shared_ptr<ThreadRunnable>,60> producers;
 	for(size_t i=0;i<producers.size();++i)
 	{
 		producers[i] = ThreadRunnable::create(true);

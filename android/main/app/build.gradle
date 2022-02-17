@@ -19,7 +19,7 @@ android {
                         '-DCMAKE_TOOLCHAIN_FILE='+System.getenv("VCPKG_ROOT")+'/scripts/buildsystems/vcpkg.cmake',
                         '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+System.getenv("ANDROID_NDK_HOME")+'/build/cmake/android.toolchain.cmake',
                         '-DVCPKG_TARGET_TRIPLET=arm64-android'
-                cppFlags += '-std=c++17'
+                cppFlags += '-std=c++17 -DXXUSE_CUSTOM_EVENT'
             }
         }
         ndk
@@ -27,44 +27,12 @@ android {
             abiFilters "arm64-v8a"
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     buildTypes {
         release {
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable true
         }
 
     }

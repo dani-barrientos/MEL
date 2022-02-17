@@ -26,9 +26,9 @@ static CriticalSection gCurrrentThreadCS;
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
-	#ifdef DABAL_ANDROID
+	/*#ifdef DABAL_ANDROID
 	#import <sys/syscall.h>
-	#endif
+	#endif*/
 #endif
 
 
@@ -116,7 +116,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	DWORD_PTR oldAff = SetThreadAffinityMask(h, aff);
 	result = oldAff != 0;
 #elif defined(DABAL_MACOSX) || defined(DABAL_IOS)
-    //@todo macos X (and assume same for iOS) doesn't allow to setthe core for each thread. instead, it uses "groups" indetifying wich threads belong to
+    //@todo macos X (and assume same for iOS) doesn't allow to set the core for each thread. instead, it uses "groups" indetifying which threads belong to
     //same gruop and then share L2 cache. So, this is not the concept intended with current function, and so leave ti unimplemented
     /*
     pthread_t handle = pthread_self();
@@ -370,6 +370,8 @@ using namespace ::std::string_literals;
 
 bool Thread::join(unsigned int millis)
 {
+	if ( !mJoined)
+	{
 #ifdef DABAL_WINDOWS
 	DWORD status=WaitForSingleObject(mHandle, millis);
 	if  (status == WAIT_FAILED )
@@ -378,7 +380,7 @@ bool Thread::join(unsigned int millis)
 		spdlog::error("Error joining thread. Err = 0x{:x}",err);
 
 	}
-	return status!=WAIT_TIMEOUT;
+	mJoined = status!=WAIT_TIMEOUT; 
 #else
 	int err = pthread_join(mHandle, NULL/*result*/);
 	mJoined=!err;
@@ -387,8 +389,9 @@ bool Thread::join(unsigned int millis)
 		spdlog::error("Error joining thread: err = {}", err);
 #endif
 	}
-	return mJoined;	
+	}
 #endif
+	return mJoined;	
 }
 
 void Thread::yield(YieldPolicy yp) {
@@ -451,6 +454,7 @@ void Thread::setPriority(ThreadPriority tp) {
 #else
 		//SCHED_RR vs SCHED_FIFO?
 		#define __PLATFORM_POLICY SCHED_RR
+
 #endif
         int ret = pthread_setschedparam(mHandle, __PLATFORM_POLICY, &sp);
 		#pragma unused(ret)
