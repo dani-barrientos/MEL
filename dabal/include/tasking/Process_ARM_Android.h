@@ -28,8 +28,8 @@ namespace tasking
 		volatile bool mSwitched;
 		volatile void*	mLR;
 		volatile void* mIniSP;
-		volatile int64_t mRegisters[11]; //x19-x29. Lr is not neccesary because it's saved in atack in function prolog
-		volatile int64_t mVRegisters[8];  //64 bottom bits of v8-v15
+		volatile int64_t mRegisters[11]; //x19-x29. Lr is not necces	ary because it's saved in stack in function prolog
+	    volatile int64_t mVRegisters[8];  //64 bottom bits of v8-v15
 		volatile void* mStackEnd;
 		volatile unsigned char* mStack;
 		volatile unsigned int mCapacity;

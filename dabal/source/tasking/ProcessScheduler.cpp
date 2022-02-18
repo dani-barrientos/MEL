@@ -137,9 +137,9 @@ void ProcessScheduler::executeProcesses()
 		assert(_stack==&stack && "ProcessScheduler::executeProcesses. Invalid stack!!");
 	}
 	#endif
-	if (mProcessCount.load(std::memory_order_relaxed) == 0)
+	/*if (mProcessCount.load(std::memory_order_relaxed) == 0)
 		return;
-	
+	*/
 	if (mProcessInfo == nullptr)
 	{
 		auto pi = _getCurrentProcessInfo();
@@ -286,6 +286,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 	{
 		TProcessList::iterator i = processes.begin();
 		TProcessList::iterator end = processes.end();
+		//TProcessList::iterator prev;
 		TProcessList::iterator prev = processes.before_begin();
 		Process::EProcessState state;
 		while( i != end )
@@ -294,7 +295,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 			
 			if ( p->getAsleep())
 			{
-				++i;
+				prev = i++;
 				continue;
 			}
 			mProcessInfo->current = p;
@@ -326,7 +327,7 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 				mProcessCount.fetch_sub(1,::std::memory_order_relaxed);
 				p->setProcessScheduler( NULL ); //nobody is scheduling the process
 				mES.triggerCallbacks(p);
-				i = processes.erase_after(prev);
+				i = processes.erase_after(prev);				
 				//i = processes.erase( i );
 			}else
 			{

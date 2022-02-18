@@ -6,10 +6,10 @@ using core::ThreadRunnable;
 ThreadRunnable::ThreadRunnable( unsigned int maxTasksSize,unsigned int maxNewTasks):Runnable(maxTasksSize,maxNewTasks),mState(THREAD_INIT),mEnd(false),
 	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
+	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&ThreadRunnable::_processAwaken, this));
 }
 void ThreadRunnable::_execute()	
 {
-	mState = THREAD_RUNNING;
     onThreadStart();
     while ( mState != THREAD_FINISHING_DONE )
     {
@@ -45,8 +45,12 @@ void ThreadRunnable::_execute()
 
 void ThreadRunnable::start()
 {
-	onStart();
-	mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
+	if ( mState == THREAD_INIT )
+	{
+		mState = THREAD_RUNNING;
+		onStart();
+		mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
+	}
 }
 
 bool ThreadRunnable::join(unsigned int millis)

@@ -68,8 +68,11 @@ class MasterThread : public ThreadRunnable
 		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p) 
 		{	
 			constexpr auto mthreadProb = 0.7f; //probability of task being a microthread instead blocking thread
+			//constexpr auto mthreadProb = 1.0f; //probability of task being a microthread instead blocking thread
 			constexpr auto newTaskProb = 0.5f; //probability of launching a new task
+			//constexpr auto newTaskProb = 1.0f; //probability of launching a new task
 			constexpr auto maxTasks = 500;
+			//constexpr auto maxTasks = 1;
 			//a common future ("channel") is created so producer will put ther its value and cosumers wait for it
 			FutureType channel;            
 			int nSinglethreads = 0;
@@ -97,6 +100,7 @@ class MasterThread : public ThreadRunnable
 				{
 					do
 					{
+						spdlog::debug("launch task {}",nTasks);
 						FutureType result;
 						mConsumers[i]->post(
 							mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
@@ -138,7 +142,7 @@ class MasterThread : public ThreadRunnable
 					);
 			
 			}
-			#ifdef USE_SPDLOG
+		#ifdef USE_SPDLOG
 			spdlog::debug("{} jobs have been launched, from which {} are single threads",nTasks,nSinglethreads);
 		#endif
 
@@ -146,30 +150,30 @@ class MasterThread : public ThreadRunnable
 			for(auto th:mConsumers)
 				th->resume();
 			auto t0 = getTimer()->getMilliseconds();
-            constexpr unsigned MAX_TIME = 3500;
+            constexpr unsigned MAX_TIME = 5500;
 			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
 			if ( r != ::tasking::Event_mthread::EVENTMT_WAIT_OK )
 			{
-				#ifdef USE_SPDLOG
-				spdlog::error("Wait for responses failed!!!!");
+			#ifdef USE_SPDLOG
+				spdlog::error("Wait for responses failed!!!!. {} workers remaining",mBarrier.getActiveWorkers());
 		#endif
 				this->finish();  
 				return ::tasking::EGenericProcessResult::KILL; 
 			}
-			else if ( (msecs - mLastDebugTime) > 5000 )
+			else if ( (msecs - mLastDebugTime) >= 5000 )
 				{
 					mLastDebugTime = msecs;
 					auto t1 = getTimer()->getMilliseconds();
-					#ifdef USE_SPDLOG
+				#ifdef USE_SPDLOG
 					spdlog::info("Wait for responses ok. Time waiting: {} msecs",t1-t0);
-		#endif
+				#endif
 				}
 			
 			if ( msecs - mStartTime > mMaxTime)
 			{
-				#ifdef USE_SPDLOG
+			#ifdef USE_SPDLOG
 				spdlog::info("Maximum test time reached. Finishing");
-		#endif
+			#endif
 				this->finish();  
 				return ::tasking::EGenericProcessResult::KILL; 
 			}else			
@@ -180,27 +184,29 @@ class MasterThread : public ThreadRunnable
 			//generar el output como sea (tiempo aleatorio, etc..)
 			//@note remember C++11 has cool functions for random numbers in <random> header
 			constexpr unsigned max = 20;
-            constexpr auto errProb = 0.2f;
+            constexpr auto errProb = 0.2;
+			//constexpr auto errProb = 0.0;
 			auto value = rand()%max;
+			Process::wait(200); //pruebas
             if ( value >= max*errProb )
             {
-				#ifdef USE_SPDLOG
+			#ifdef USE_SPDLOG
 			    spdlog::debug("Genero valor = {}",value);
-		#endif
+			#endif
                 output.setValue(value);
             }else
             {
                 output.setError(MyErrorInfo(0,"PRUEBA ERROR"));
-				#ifdef USE_SPDLOG
+			#ifdef USE_SPDLOG
                 spdlog::debug("Genero error");
-		#endif
+			#endif
             }			
 		}
 		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
 		{
 			// int tam = rand()%1000;
 			// int arr[tam];  //Uvale, qué susto, esto no es standard. Funciona en gcc y clang pero no es standard
-			#ifdef USE_SPDLOG
+		#ifdef USE_SPDLOG
 			spdlog::debug("Task {} waits for input",taskId);
 		#endif
 			auto wr = ::tasking::waitForFutureMThread(input);
@@ -209,12 +215,12 @@ class MasterThread : public ThreadRunnable
 				output.setValue(wr.value() + mValueToAdd);
 				#ifdef USE_SPDLOG
 				spdlog::debug("Task {} gets value {}",taskId,input.getValue().value());
-		#endif
+				#endif
 			}else
 			{
-				#ifdef USE_SPDLOG
+			#ifdef USE_SPDLOG
 				spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
-		#endif
+			#endif
 					output.setError( MyErrorInfo(0,""));
 			}			
 			mBarrier.set();
@@ -271,9 +277,9 @@ esto está relacionado con el tema de devovler error, el valor y tal. Igual podr
 	auto producer = ThreadRunnable::create(true);
 	
 	#ifdef USE_SPDLOG
-    spdlog::set_level(spdlog::level::debug); // Set global log level
+    spdlog::set_level(spdlog::level::info); // Set global log level
 		#endif
-	constexpr size_t n = 1;
+	constexpr size_t n = 10;
 	constexpr unsigned int TESTTIME = 30*60*1000;
 	std::array< std::shared_ptr<ThreadRunnable>,n> consumers;
 	for(size_t i=0;i<n;++i)

@@ -41,7 +41,7 @@ namespace tasking
                     std::function<::core::ECallbackResult( const ::core::FutureValue<T,ErrorType>&)>([this](const ::core::FutureValue<T,ErrorType>& ) 
                     {
                         mEvent.set();
-                    //   spdlog::debug("Event was set for Thread {}",threadid);
+                     //  spdlog::debug("Event was set for Thread {}");
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                 },msecs); 

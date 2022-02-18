@@ -142,9 +142,17 @@ static int _testMicroThreadingMonoThread()
 	int result = 0;
 	int sharedVar = 0;
 	//auto th1 = ThreadRunnable::create();
-	auto th2 = ThreadRunnable::create();
+	auto th2 = ThreadRunnable::create(true);
+	th2->fireAndForget([]()
+	{
+		spdlog::info("HECHO");
+	});
+	th2->fireAndForget([]()
+	{
+		spdlog::info("HECHO 2");
+	});
 
-
+/*
 	//th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
 		bool autokill = true;
@@ -193,12 +201,12 @@ static int _testMicroThreadingMonoThread()
 				#ifdef USE_SPDLOG
 				spdlog::debug("fin espera en p1");
 		#endif
-				/*
-				 * no me convence nada el tema del kill y demas. Cosas que pasan:
-				 *  - aunque tenga el autokill a false, igual convenía enterarme mejor de que se me intenta matar. En realidad lo sé si consulto el state.Lo que
+				
+				//  no me convence nada el tema del kill y demas. Cosas que pasan:
+				//   - aunque tenga el autokill a false, igual convenía enterarme mejor de que se me intenta matar. En realidad lo sé si consulto el state.Lo que
 
-				 * - por otro lado, aunque tenga el autokill, después vuelve a hacerme el kill->tengo que impedirlo
-				 */
+				//  - por otro lado, aunque tenga el autokill, después vuelve a hacerme el kill->tengo que impedirlo
+				 
 			
 			}
 			#ifdef USE_SPDLOG
@@ -232,25 +240,13 @@ static int _testMicroThreadingMonoThread()
 				 	p1->wakeUp();
 			}
 		);
-//revisar execute
-/*
-		 auto r = th2->execute<int>(
-			[p1]()
-			{
-				::Process::wait(3000);
-				p1->pause();
-				return 6;
-			}
-		);
-		
-		spdlog::debug("waiting for execution");
-		tasking::waitForFutureMThread(r);
-		*/
+
 	#ifdef USE_SPDLOG
 		spdlog::debug("execution done");
 		#endif
 	//	return ::tasking::EGenericProcessResult::KILL;
 	}
+	*/
 //,true,3000);
 	
 	/*
@@ -431,7 +427,7 @@ int _test_concurrent_post()
 static int test()
 {
 	int result = 1;
-	TestManager::TestType defaultTest = _testPerformanceLotTasks;
+	TestManager::TestType defaultTest = ::test_threading::test_futures;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
 	{
