@@ -100,7 +100,9 @@ class MasterThread : public ThreadRunnable
 				{
 					do
 					{
+						#if USE_SPDLOG
 						spdlog::debug("launch task {}",nTasks);
+		#endif
 						FutureType result;
 						mConsumers[i]->post(
 							mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(

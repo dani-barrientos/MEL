@@ -147,11 +147,15 @@ static int _testMicroThreadingMonoThread()
 	auto th2 = ThreadRunnable::create(true);
 	th2->fireAndForget([]()
 	{
+		#if USE_SPDLOG
 		spdlog::info("HECHO");
+		#endif
 	});
 	th2->fireAndForget([]()
 	{
+		#if USE_SPDLOG
 		spdlog::info("HECHO 2");
+		#endif
 	});
 
 /*
@@ -419,7 +423,17 @@ int _throwExc(int& v)
 	v = rand();
 	throw v;
 }
-
+struct MyException
+{
+	int code;
+	string msg;
+};
+void _throwMyException(int& v)
+{
+	v = rand();
+//	throw v;
+	throw MyException{v,"MyException "+std::to_string(v)};
+}
 int _testExceptions()
 {
 	auto th1 = ThreadRunnable::create(true);
@@ -427,18 +441,44 @@ int _testExceptions()
 		 [](RUNNABLE_TASK_PARAMS)
 		 {
 			int val;
+		//	tasking::Process::wait(2000);
 			try
 			{
+				#if USE_SPDLOG
 				spdlog::debug("Task1: Context switch");
-				tasking::Process::wait(2000);
+		#endif
+			//	tasking::Process::wait(2000);
+			#if USE_SPDLOG
+				spdlog::debug("Task1: Another context switch");
+		#endif
+			//	tasking::Process::wait(500);
+
+#if USE_SPDLOG
 				spdlog::debug("Task1: Throw exception");
-				_throwExc(val);
+		#endif
+				_throwMyException(val);
+				#if USE_SPDLOG
+				spdlog::error("Task1: After throw exception. Shouldn't occur");
+		#endif
 			}catch(int v)
 			{
+				#if USE_SPDLOG
 				if ( v == val)
-					spdlog::info("Task1: Captured exception ok");
+					spdlog::info("Task1: Captured exception ok.");
 				else
 					spdlog::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+		#endif
+				tasking::Process::wait(5000);
+			}catch(MyException& exc)
+			{
+				#if USE_SPDLOG
+				if ( exc.code == val)
+				{
+					spdlog::info("Task1: Captured exception ok. msg ={}",exc.msg);
+				}
+				else
+					spdlog::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
+		#endif
 				tasking::Process::wait(5000);
 			}			
 			
@@ -451,16 +491,29 @@ int _testExceptions()
 			 int val;
 			try
 			{
+				#if USE_SPDLOG
 				spdlog::debug("Task2: Context switch");
+		#endif
 				tasking::Process::wait(3000);
+				#if USE_SPDLOG
 				spdlog::debug("Task2: Throw exception");
+		#endif
 				_throwExc(val);
+				#if USE_SPDLOG
+				spdlog::error("Task2: After throw exception. Shouldn't occur");
+		#endif
 			}catch( int v)
 			{
 				if ( v == val)
-					spdlog::info("Task2: Captured exception ok");
+				{
+				//	spdlog::info("Task2: Captured exception ok");
+				}
 				else
+				{
+					#if USE_SPDLOG
 					spdlog::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+		#endif
+				}
 			}			
 			
 			 return ::tasking::EGenericProcessResult::CONTINUE;
