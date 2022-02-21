@@ -30,7 +30,13 @@ add_subdirectory ("tests")
 add_executable (main "main.cpp")
 target_link_libraries(main "dabal")
 target_link_libraries(main "tests")
-
+#copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
+if(DABAL_OS STREQUAL "DABAL_WINDOWS")
+add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to MyTest
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+        $<TARGET_FILE_DIR:dabal>"/dabal.dll"      # <--this is in-file
+        $<TARGET_FILE_DIR:main>)                 # <--this is out-file path
+endif()
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
 enable_testing()
 add_test(NAME Run1 COMMAND main -t callbacks)
