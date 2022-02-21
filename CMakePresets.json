@@ -13,7 +13,7 @@
                 "DABAL_OS": "DABAL_WINDOWS",
                 "DABAL_ARQ": "DABAL_X86_MSVC",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "USE_SPDLOG":true
+                "USE_SPDLOG": true
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -36,7 +36,7 @@
                 "DABAL_ARQ": "DABAL_X64_MSVC",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "USE_SPDLOG":true
+                "USE_SPDLOG": true
             }
         },
         {
@@ -49,7 +49,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "DABAL_OS": "DABAL_LINUX",
-                "USE_SPDLOG":true
+                "USE_SPDLOG": true
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -126,6 +126,24 @@
                     ]
                 }
             }
-        }        
+        }
+    ],
+    "testPresets": [        
+        {
+            "name": "AllTests",
+            "hidden": true,
+            "filter": {
+                "include": {
+                    "name": "RunAll"
+                }
+            },
+            "execution": {
+                "stopOnFailure": true
+            },
+            "output": {
+                "verbosity": "verbose"
+            }
+        }
     ]
+    
 }

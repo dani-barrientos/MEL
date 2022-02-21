@@ -184,5 +184,12 @@
             "configurePreset": "VS2019(x64)",
             "configuration": "RelWithDebInfo"
         }
+    ],
+    "testPresets": [        
+        {
+            "name": "GCC Tests (Debug)",
+            "inherits": "AllTests",
+            "configurePreset": "GCC Linux (Debug)"
+        }
     ]
 }

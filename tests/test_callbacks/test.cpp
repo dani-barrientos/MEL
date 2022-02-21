@@ -1,4 +1,5 @@
 #include "test.h"
+using test_callbacks::TestCallbacks;
 #include <iostream>
 #include <core/CallbackSubscriptor.h>
 using core::CallbackSubscriptor;
@@ -6,6 +7,8 @@ using core::CallbackSubscriptor;
 using mpl::Int2Type;
 #include <TestManager.h>
 using tests::TestManager;
+
+const std::string TestCallbacks::TEST_NAME = "callbacks";
 
 ::core::ECallbackResult f1(float a)
 {
@@ -58,7 +61,7 @@ template <class F> void _subscribe( Pepe& obj,F&& f)
 {
 	obj.subscribe2(std::forward<F>(f));
 }
-static int test()
+int TestCallbacks::onExecuteTest()
 {    
     Pepe pp;
 
@@ -137,11 +140,12 @@ int test_callbacks::test()
     return 0;
 }
 */
-void test_callbacks::registerTest()
+void TestCallbacks::registerTest()
 {
-    TestManager::getSingleton().registerTest(TEST_NAME,"callbacks and callbacksubscriptor tests",test);
+    TestManager::getSingleton().registerTest(TEST_NAME,"callbacks and callbacksubscriptor tests",std::make_unique<TestCallbacks>());
 }
-void test_callbacks::allTests()
+
+int TestCallbacks::onExecuteAllTests()
 {
-    test();
+    return executeTest();
 }

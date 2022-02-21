@@ -1,4 +1,5 @@
 #include "test.h"
+using test_execution::TestExecution;
 #include <core/ThreadRunnable.h>
 using core::ThreadRunnable;
 using namespace std;
@@ -17,7 +18,7 @@ using tasking::Process;
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
 
-
+const std::string TestExecution::TEST_NAME = "execution";
 int _testLaunch()
 {
 	int result = 0;
@@ -403,11 +404,11 @@ int _testFor()
   	-ls: loop size for test number 1
  * @return int 
  */
-static int test()
+int TestExecution::onExecuteTest()
 {
-
 	int result = 1;
-	TestManager::TestType defaultTest = _testFor;
+	typedef int(*TestType)();
+	TestType defaultTest = _testFor;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
 	{
@@ -439,12 +440,13 @@ static int test()
 		
 	return result;
 }
-void test_execution::registerTest()
+void TestExecution::registerTest()
 {
-    TestManager::getSingleton().registerTest(TEST_NAME,"execution tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",test);
+    TestManager::getSingleton().registerTest(TEST_NAME,"execution tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",std::make_unique<TestExecution>());
 }
-void test_execution::allTests()
+int TestExecution::onExecuteAllTests()
 {
 	_testLaunch();
 	_testFor();
+	return 0;
 }

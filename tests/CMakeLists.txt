@@ -9,8 +9,8 @@ add_compile_definitions(DABAL_IMPORTS)
 
 
 #add_executable (tests "main.cpp")
-add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
-"test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp")
+add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "common/source/BaseTest.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
+"test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp" )
 target_include_directories(tests PUBLIC "common/include")
 #[[target_sources(tests PRIVATE  "common/source/CommandLine.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
 "test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp"
@@ -27,14 +27,5 @@ if (USE_SPDLOG)
     find_package(spdlog CONFIG REQUIRED)
     target_link_libraries(tests spdlog::spdlog spdlog::spdlog_header_only)
 endif()
-
-#[[
-enable_testing()
-add_test(NAME Run1 COMMAND tests -t callbacks)
-add_test(NAME Run2 COMMAND tests -t threading -n 0)
-add_test(NAME Run3 COMMAND tests -t threading -n 1)
-add_test(NAME Run4 COMMAND tests -t threading -n 2)
-]]
-
 
 

@@ -1,4 +1,5 @@
 #include "test.h"
+using test_parallelism::TestParallelism;
 #include <TestManager.h>
 using tests::TestManager;
 #include <parallelism/ThreadPool.h>
@@ -13,6 +14,7 @@ using core::Timer;
 #include <random>
 #include <sstream>
 
+const std::string TestParallelism::TEST_NAME = "parallelism";
 static std::atomic<int> sAt = 0;
 class Base
 {
@@ -63,7 +65,7 @@ class TestResult
         string mName;
         std::vector<unsigned int> mData;//time for each Thread
 };
-static int test()
+int TestParallelism::onExecuteTest()
 {
 	int result = 0;
     #ifdef USE_SPDLOG
@@ -291,11 +293,11 @@ static int test()
 
     return result;
 }
-void test_parallelism::registerTest()
+void TestParallelism::registerTest()
 {
-    TestManager::getSingleton().registerTest(TEST_NAME,"parallelism tests",test);
+    TestManager::getSingleton().registerTest(TEST_NAME,"parallelism tests",std::make_unique<TestParallelism>());
 }
-void test_parallelism::allTests()
+int TestParallelism::onExecuteAllTests()
 {
-    test();
+    return executeTest(); //same tests as individual
 }

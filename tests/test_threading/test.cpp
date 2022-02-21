@@ -1,4 +1,5 @@
 #include "test.h"
+using namespace test_threading;
 #include <iostream>
 #include <core/ThreadRunnable.h>
 using core::ThreadRunnable;
@@ -18,6 +19,7 @@ using tasking::Process;
 #include <tasking/utilities.h>
 #include <array>
 
+const std::string TestThreading::TEST_NAME = "threading";
 /**
  * @todo pensar en test neceasrios:
  *  - mono hilo + microhilos
@@ -436,7 +438,7 @@ int _testExceptions()
 				if ( v == val)
 					spdlog::info("Task1: Captured exception ok");
 				else
-					spdlog::error("Task1: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+					spdlog::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
 				tasking::Process::wait(5000);
 			}			
 			
@@ -468,21 +470,12 @@ int _testExceptions()
 	return 0;
 }
 
-/**
- * @brief Tasking tests
- * commandline options
- * -n <number> -> test number:
- * 		0 = microthreading-mono thread
- * 		1 = lots of tasks
- * 		2 = Future uses
- * 		3 = testing lock_free scheduler
- * 		4 = microthread+exceptions
- * @return int 
- */
-static int test()
+
+int TestThreading::onExecuteTest()
 {
 	int result = 1;
-	TestManager::TestType defaultTest = ::test_threading::test_futures;
+	typedef int(*TestType)();
+	TestType defaultTest = ::test_threading::test_futures;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
 	{
@@ -537,14 +530,16 @@ static int test()
 	
 	return 0;
 }
-void test_threading::registerTest()
+void TestThreading::registerTest()
 {
-    TestManager::getSingleton().registerTest(TEST_NAME,"threading tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",test);
+    TestManager::getSingleton().registerTest(TEST_NAME,"threading tests:\n - 0 = mono thread;\n - 1 = performance launching a bunch of tasks",make_unique<TestThreading>());
 }
-void test_threading::allTests()
+int TestThreading::onExecuteAllTests()
 {
 	_testMicroThreadingMonoThread();
 	_testPerformanceLotTasks();
 	::test_threading::test_futures();
 	 _test_concurrent_post();	
+	 _testExceptions();
+	 return 0;
 }

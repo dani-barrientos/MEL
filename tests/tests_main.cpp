@@ -18,6 +18,7 @@ using tests::TestManager;
 
 #define LIST_OPTION "list"
 #define TEST_OPTION "t"
+#define ALL_TESTS_OPTION "a"
 static void _initialize()
 {
 #ifdef USE_SPDLOG
@@ -33,10 +34,10 @@ static void _initialize()
 	spdlog::info( "ESTAMOS EN DEBUG");
 	#endif
 	#endif
-	test_callbacks::registerTest();
-	test_threading::registerTest(); 
-	test_parallelism::registerTest();
-	test_execution::registerTest();
+	test_callbacks::TestCallbacks::registerTest();
+	test_threading::TestThreading::registerTest(); 
+	test_parallelism::TestParallelism::registerTest();
+	test_execution::TestExecution::registerTest();
 
 }
 int testsMain(int argc,const char* argv[])
@@ -62,28 +63,31 @@ int testsMain(int argc,const char* argv[])
 			std::cout << key << " -> " << val.first <<'\n';
 		}
 	}
-	TestManager::TestType currTest = nullptr;
-	auto testOpt = CommandLine::getSingleton().getOption(TEST_OPTION);
-	if (  testOpt != std::nullopt )
+	if ( CommandLine::getSingleton().getOption(ALL_TESTS_OPTION))
+	{		
+		auto& testmap = TestManager::getSingleton().getTests();
+		for(auto& test:testmap)
+		{
+			test.second.second->executeAllTests();
+		}
+		return 0;
+	}else
 	{
-		const string& name = testOpt.value();
-		currTest = TestManager::getSingleton().getTest(name);
-		std::cout << "Running test: " << name << '\n';
+		tests::BaseTest* currTest(nullptr);
+		auto testOpt = CommandLine::getSingleton().getOption(TEST_OPTION);
+		if (  testOpt != std::nullopt )
+		{
+			const string& name = testOpt.value();
+			currTest = TestManager::getSingleton().getTest(name).get();
+			std::cout << "Running test: " << name << '\n';
+			
+		}
+		// else
+		// 	currTest = TestManager::getSingleton().getTest(test_threading::TEST_NAME);
 		
+		if (currTest)
+			return currTest->executeTest();
+		else return 0;	
 	}
-	// else
-	// 	currTest = TestManager::getSingleton().getTest(test_threading::TEST_NAME);
-	
-	if (currTest)
-		return currTest();
-	else return 0;	
 }
-int allTests()
-{
-	_initialize();
-	test_callbacks::allTests();
-	test_threading::allTests();
-	test_parallelism::allTests();
-	test_execution::allTests();
-	return 0;
-}
+

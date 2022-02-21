@@ -38,9 +38,11 @@ add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to My
         $<TARGET_FILE_DIR:main>)                 # <--this is out-file path
 endif()
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
-enable_testing()
+include(CTest)
+#enable_testing()
+add_test(NAME RunAll COMMAND main -a)
 add_test(NAME Run1 COMMAND main -t callbacks)
-add_test(NAME Run2 COMMAND main -t execution -n 3)
+add_test(NAME Run2 COMMAND main -t execution -n 2)
 add_test(NAME Run3 COMMAND main -t threading -n 0)
 add_test(NAME Run4 COMMAND main -t threading -n 1)
 add_test(NAME Run5 COMMAND main -t threading -n 2)
