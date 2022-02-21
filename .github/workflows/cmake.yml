@@ -28,7 +28,8 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       # run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      run: cmake --preset ${{env.BUILD_TYPE}}
+      #run: cmake --preset ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -DDABAL_OS=DABAL_LINUX -DDABAL_ARQ=DABAL_X64_GCC      
 
     - name: Test
       working-directory: ${{github.workspace}}/build
