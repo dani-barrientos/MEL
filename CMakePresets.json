@@ -12,7 +12,8 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "DABAL_OS": "DABAL_WINDOWS",
                 "DABAL_ARQ": "DABAL_X86_MSVC",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "USE_SPDLOG":true
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -34,7 +35,8 @@
                 "DABAL_OS": "DABAL_WINDOWS",
                 "DABAL_ARQ": "DABAL_X64_MSVC",
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "USE_SPDLOG":true
             }
         },
         {

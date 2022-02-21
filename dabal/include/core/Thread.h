@@ -177,19 +177,17 @@ namespace core
 			* @param exitCode the exit code for the terminated thread.
 			*/
 			void terminate(unsigned int exitCode=0);
-		protected:
+		private:
 			Thread(const char* name);
-			
+			bool mJoined;
 #ifdef DABAL_WINDOWS
 			HANDLE mHandle = 0;
 			DWORD mID;
-			
 #elif defined (DABAL_LINUX) || defined (DABAL_MACOSX) || defined(DABAL_ANDROID) || defined (DABAL_IOS)
 		ThreadId mHandle = 0;
         #if !defined (DABAL_MACOSX) && !defined(DABAL_IOS)
 		pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc
 		#endif
-			bool mJoined;
 			int	mPriorityMin;
 			int mPriorityMax;
 			uint64_t mAffinity = 0; //affinity to set on start. if 0, is ignored
@@ -197,23 +195,9 @@ namespace core
 #if defined (DABAL_MACOSX) || defined(DABAL_IOS)
 			void* mARP; //The autorelease pool as an opaque-type
 #endif
-			unsigned int mResult;
-			//EThreadState mState;
-			//volatile bool mEnd; // request
 			unsigned int mExitCode;
 			ThreadPriority mPriority;
 
-			
-			/**
-			* terminate request. It will be called in execution loop when
-			* a terminate is called. By default returns true, meaning that thread
-			* inmediately goes in THREAD_FINISHING. This doesn't mean that thread will terminate,
-			* because all task need to be finished
-			*/
-			//virtual bool terminateRequest(){ return mEnd; }
-			
-
-		private:
 			std::function<void()> mFunction;
 			void _initialize();
 			void _start();

@@ -219,10 +219,9 @@ Thread::Thread()
 }
 void Thread::_initialize()
 {
+	mJoined = false;
 #ifdef _WINDOWS
 	mID = 0;
-#else
-	mJoined = false;
 #endif
 /*
 @todo
@@ -231,7 +230,6 @@ void Thread::_initialize()
 #endif
 */
 	mHandle = 0;
-	mResult = 0;
 	mPriority = TP_NORMAL;
 	gCurrrentThreadCS.enter();
 	if ( !gCurrentThreadKeyCreated )
@@ -266,7 +264,7 @@ I think I should create it on start
 #if defined (DABAL_MACOSX) || defined(DABAL_IOS) 
 	mPriorityMin = sched_get_priority_min(SCHED_RR);
 	mPriorityMax = sched_get_priority_max(SCHED_RR);
-#elif defined(DABAL_LINUX) || defined(DABAL_ANDROIDç)
+#elif defined(DABAL_LINUX) || defined(DABAL_ANDROID)
 	mPriorityMin=sched_get_priority_min(SCHED_OTHER);
 	mPriorityMax=sched_get_priority_max(SCHED_OTHER);
 #endif
@@ -387,10 +385,10 @@ bool Thread::join(unsigned int millis)
 	if (err) {
 		#ifdef USE_SPDLOG
 		spdlog::error("Error joining thread: err = {}", err);
+		#endif
+	}
 #endif
 	}
-	}
-#endif
 	return mJoined;	
 }
 

@@ -85,4 +85,5 @@ int allTests()
 	test_threading::allTests();
 	test_parallelism::allTests();
 	test_execution::allTests();
+	return 0;
 }
