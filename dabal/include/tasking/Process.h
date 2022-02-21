@@ -187,7 +187,6 @@ namespace tasking
 		* @see switchProcess for comments
 		*/
 		static ESwitchResult wait( unsigned int msegs ) OPTIMIZE_FLAGS; 
-
 		/**
 		* wrapper for _switchProcess
 		* @return true if process received kill signal

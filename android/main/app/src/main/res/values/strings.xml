@@ -4,6 +4,7 @@
         <item>execution</item>
         <item>callbacks</item>
         <item>threading</item>
+        <item>threading exceptions</item>
         <item>parallelism</item>
     </string-array>
 </resources>

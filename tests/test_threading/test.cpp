@@ -412,7 +412,61 @@ int _test_concurrent_post()
 		#endif
 	return 0;
 }
+int _throwExc(int& v)
+{
+	v = rand();
+	throw v;
+}
 
+int _testExceptions()
+{
+	auto th1 = ThreadRunnable::create(true);
+	th1->post(
+		 [](RUNNABLE_TASK_PARAMS)
+		 {
+			int val;
+			try
+			{
+				spdlog::debug("Task1: Context switch");
+				tasking::Process::wait(2000);
+				spdlog::debug("Task1: Throw exception");
+				_throwExc(val);
+			}catch(int v)
+			{
+				if ( v == val)
+					spdlog::info("Task1: Captured exception ok");
+				else
+					spdlog::error("Task1: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+				tasking::Process::wait(5000);
+			}			
+			
+			 return ::tasking::EGenericProcessResult::CONTINUE;
+		 }
+	);
+	th1->post(
+		 [](RUNNABLE_TASK_PARAMS)
+		 {
+			 int val;
+			try
+			{
+				spdlog::debug("Task2: Context switch");
+				tasking::Process::wait(3000);
+				spdlog::debug("Task2: Throw exception");
+				_throwExc(val);
+			}catch( int v)
+			{
+				if ( v == val)
+					spdlog::info("Task2: Captured exception ok");
+				else
+					spdlog::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+			}			
+			
+			 return ::tasking::EGenericProcessResult::CONTINUE;
+		 }
+	);
+	Thread::sleep(15000);
+	return 0;
+}
 
 /**
  * @brief Tasking tests
@@ -422,6 +476,7 @@ int _test_concurrent_post()
  * 		1 = lots of tasks
  * 		2 = Future uses
  * 		3 = testing lock_free scheduler
+ * 		4 = microthread+exceptions
  * @return int 
  */
 static int test()
@@ -447,6 +502,9 @@ static int test()
 					break;
 				case 3:
 					result = _test_concurrent_post();
+					break;
+				case 4:
+					result = _testExceptions();
 					break;
 				default:;					
 			}

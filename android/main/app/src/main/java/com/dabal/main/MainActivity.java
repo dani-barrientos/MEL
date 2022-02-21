@@ -49,7 +49,21 @@ public class MainActivity extends AppCompatActivity {
     {
         Spinner tl = binding.spinnerTests;
         String text = ((TextView) tl.getSelectedView()).getText().toString();
-        String[] commandLine = {"-t",text};
+        String[] commandLine=null;
+        //forma muy cutre, lo sé
+        switch (text)
+        {
+            case "threading":
+                commandLine = new String[]{"-t","threading"};
+                break;
+            case "threading exceptions":
+                commandLine = new String[]{"-t","threading","-n","4"};
+                break;
+            case "callbacks":
+                commandLine = new String[]{"-t","threading"};
+                break;
+        }
+        //String[] commandLine = {"-t",text};
         mainJNI(commandLine);
     }
 
