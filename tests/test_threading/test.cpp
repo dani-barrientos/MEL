@@ -370,26 +370,49 @@ int _throwExc(int& v)
 	v = rand();
 	throw v;
 }
-
-int _testExceptions(::tests::BaseTest* test)
+struct MyException
+{
+	int code;
+	string msg;
+};
+void _throwMyException(int& v)
+{
+	v = rand();
+//	throw v;
+	throw MyException{v,"MyException "+std::to_string(v)};
+}
+int _testExceptions( tests::BaseTest* test)
 {
 	auto th1 = ThreadRunnable::create(true);
 	th1->post(
 		 [](RUNNABLE_TASK_PARAMS)
 		 {
 			int val;
+		//	tasking::Process::wait(2000);
 			try
 			{
 				text::debug("Task1: Context switch");
 				tasking::Process::wait(2000);
 				text::debug("Task1: Throw exception");
 				_throwExc(val);
+
+				_throwMyException(val);
+				text::error("Task1: After throw exception. Shouldn't occur");
 			}catch(int v)
 			{
 				if ( v == val)
 					text::info("Task1: Captured exception ok");
 				else
 					text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+				tasking::Process::wait(5000);
+			}catch(MyException& exc)
+			{
+				if ( exc.code == val)
+				{
+					text::info("Task1: Captured exception ok. msg ={}",exc.msg);
+				}
+				else
+					text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
 				tasking::Process::wait(5000);
 			}			
 			
@@ -402,10 +425,14 @@ int _testExceptions(::tests::BaseTest* test)
 			 int val;
 			try
 			{
+
 				text::debug("Task2: Context switch");
 				tasking::Process::wait(3000);
 				text::debug("Task2: Throw exception");
 				_throwExc(val);
+			#if USE_SPDLOG
+				spdlog::error("Task2: After throw exception. Shouldn't occur");
+		#endif
 			}catch( int v)
 			{
 				if ( v == val)

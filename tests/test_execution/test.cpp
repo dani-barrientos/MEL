@@ -352,7 +352,9 @@ int TestExecution::onExecuteTest()
 					result = _testFor();
 					break;				
 				default:
+				#if USE_SPDLOG
 					spdlog::warn("Test number {} doesn't exist. Executing default test",n);
+		#endif
 					result = _testFor();
 
 			}
