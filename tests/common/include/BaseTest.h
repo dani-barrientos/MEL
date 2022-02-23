@@ -13,6 +13,7 @@ namespace tests
              */
             int executeTest();
             int executeAllTests();
+            void setFailed();
         protected:
             virtual int onExecuteTest() = 0;
             virtual int onExecuteAllTests() = 0;

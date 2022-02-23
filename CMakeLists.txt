@@ -38,13 +38,19 @@ add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to My
         $<TARGET_FILE_DIR:main>)                 # <--this is out-file path
 endif()
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
-include(CTest)
-#enable_testing()
-add_test(NAME RunAll COMMAND main -a)
-add_test(NAME Run1 COMMAND main -t callbacks)
-add_test(NAME Run2 COMMAND main -t execution -n 2)
-add_test(NAME Run3 COMMAND main -t threading -n 0)
-add_test(NAME Run4 COMMAND main -t threading -n 1)
-add_test(NAME Run5 COMMAND main -t threading -n 2)
+enable_testing() #se supone que no es necesario haciendo luego el include.., pero en algun sitio vi que también lo ponen
+include(CTest) 
 
+set (failRegex "Fail")
+add_test(NAME RunAll COMMAND main -a)
+add_test(NAME TestCallbacks COMMAND main -t callbacks)
+add_test(NAME TestExecution.Launch COMMAND main -t execution -n 0)
+add_test(NAME TestExecution.For COMMAND main -t execution -n 1)
+add_test(NAME TestThreading.SimpleMicrothreads COMMAND main -t threading -n 0)
+add_test(NAME TestThreading.LotsTasks COMMAND main -t threading -n 1)
+add_test(NAME TestThreading.FutureTests COMMAND main -t threading -n 2)
+add_test(NAME TestThreading.LockFree COMMAND main -t threading -n 3)
+add_test(NAME TestThreading.Exceptions COMMAND main -t threading -n 4)
+set_property(TEST RunAll TestCallbacks TestExecution.Launch TestExecution.For  TestThreading.SimpleMicrothreads 
+TestThreading.LotsTasks TestThreading.FutureTests TestThreading.LockFree TestThreading.Exceptions PROPERTY FAIL_REGULAR_EXPRESSION "${failRegex}")
 

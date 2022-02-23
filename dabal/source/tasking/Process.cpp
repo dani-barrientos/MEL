@@ -11,9 +11,6 @@ using tasking::MThreadAttributtes;
 #undef max
 #include <limits>
 #include <assert.h>
-#ifdef USE_SPDLOG
-#include <spdlog/spdlog.h>
-#endif
 
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 
@@ -215,44 +212,7 @@ Process::ESwitchResult Process::sleep( )
 {
 	return _postSleep(_preSleep());
 }
-/*
-Process::ESwitchResult Process::_sleep( Callback<void,void>* postSleep )
-{
-	//return _postSleep(_preSleep());
-	
-	ESwitchResult result;
-	auto p = ProcessScheduler::getCurrentProcess();
-	const auto state = p->getState();
-	if ( state == EProcessState::ASLEEP ) //it hasn't any sense, but just in case this condition could be reached
-	{
-		spdlog::warn("Process_sleep: process is already asleep");
-		return ESwitchResult::ESWITCH_ERROR;
-	}
-	p->mPreviousState = state;
-	p->mState = EProcessState::ASLEEP;
-	p->mOwnerProcessScheduler->processAsleep(p);
-	unsigned int currentPeriod = p->getPeriod();
-	p->setPeriod( std::numeric_limits<unsigned int>::max() ); //maximum period
-	auto prevSwitch = p->mSwitched;
-	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
-	//trigger callback
-	if ( postSleep )
-	{
-		(*postSleep)();
-		delete postSleep;
-	}
-	if (!prevSwitch) {//!no multithread safe!!
-		result = switchProcess(false);
-	}
-	else {
-		result = ESwitchResult::ESWITCH_OK;
-	}
-	p->setPeriod( currentPeriod );
-	p->mState = p->mPreviousState;
-	return result;
-	
-}
-*/
+
 
 //return: 0 -> false, 1 = true; 2 = already asleep, 3 = process killed 
 mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()

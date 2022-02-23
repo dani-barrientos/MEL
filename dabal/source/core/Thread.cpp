@@ -5,9 +5,7 @@
 using mpl::makeMemberEncapsulate;
 #include <core/TLS.h>
 using core::TLS;
-#ifdef USE_SPDLOG
-#include <spdlog/spdlog.h>
-#endif
+#include <text/logger.h>
 
 static TLS::TLSKey gCurrentThreadKey;
 static bool gCurrentThreadKeyCreated = false;
@@ -153,10 +151,8 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	if (!result)
 	{
 		int err = errno;
-		//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
-		#ifdef USE_SPDLOG
-		spdlog::error("Error setting thread affinity. {}", err);
-#endif
+		//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);		
+		text::error("Error setting thread affinity. {}", err);
 	}
 	
 #endif
@@ -375,7 +371,7 @@ bool Thread::join(unsigned int millis)
 	if  (status == WAIT_FAILED )
 	{
 		DWORD err = GetLastError();
-		spdlog::error("Error joining thread. Err = 0x{:x}",err);
+		text::error("Error joining thread. Err = 0x{:x}",err);
 
 	}
 	mJoined = status!=WAIT_TIMEOUT; 
@@ -383,9 +379,7 @@ bool Thread::join(unsigned int millis)
 	int err = pthread_join(mHandle, NULL/*result*/);
 	mJoined=!err;
 	if (err) {
-		#ifdef USE_SPDLOG
-		spdlog::error("Error joining thread: err = {}", err);
-		#endif
+		text::error("Error joining thread: err = {}", err);
 	}
 #endif
 	}
@@ -529,13 +523,13 @@ bool Thread::setAffinity(uint64_t affinity)
 		Event::EWaitCode wait(const ::parallelism::Barrier& barrier,unsigned int msecs)
 		{
 			Event::EWaitCode eventresult;
-		 	//spdlog::info("Waiting for event");
+		 	//text::info("Waiting for event");
 			int evId;
 			evId = barrier.subscribeCallback(
 				std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([this](const ::parallelism::BarrierData& ) 
 				{
 					 mEvent.set();
-				    //spdlog::info("Event was set");
+				    //text::info("Event was set");
 					return ::core::ECallbackResult::UNSUBSCRIBE; 
 				}));
 			eventresult = mEvent.wait(msecs); 

@@ -13,6 +13,7 @@ using core::Timer;
 #include <list>
 #include <random>
 #include <sstream>
+#include <text/logger.h>
 
 const std::string TestParallelism::TEST_NAME = "parallelism";
 static std::atomic<int> sAt = 0;
@@ -98,9 +99,7 @@ int TestParallelism::onExecuteTest()
     constexpr const char* PARALLEL_VECTOR_ITERATOR = "Parallel vector iterator";
     constexpr const char* PARALLEL_LIST_ITERATOR = "Parallel list iterator";
     auto numCores = ::core::getNumProcessors();
-    #ifdef USE_SPDLOG
-    spdlog::info("Running test from 1 thread to {}. Number of cores is {}",maxThreads,numCores);
-		#endif
+    text::info("Running test from 1 thread to {}. Number of cores is {}",maxThreads,numCores);
     //go through the diferent collections, in the straight way (monothread)    
     auto t0 = timer.getMilliseconds();
     decltype(t0) elapsed;
@@ -111,9 +110,7 @@ int TestParallelism::onExecuteTest()
             obj->f();
         }
     elapsed = timer.getMilliseconds()-t0;
-    #ifdef USE_SPDLOG
-    spdlog::info("Straight method (array). Time: {}",elapsed);
-		#endif
+    text::info("Straight method (array). Time: {}",elapsed);
     auto test = std::make_unique<TestResult>(PARALLEL_ARRAY_INDEXED,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
     test = std::make_unique<TestResult>(PARALLEL_ARRAY_ITERATOR,maxThreads,elapsed);
@@ -125,9 +122,7 @@ int TestParallelism::onExecuteTest()
             obj->f();
         }
     elapsed = timer.getMilliseconds()-t0;
-    #ifdef USE_SPDLOG
-    spdlog::info("Straight method (vector). Time: {}",elapsed);
-		#endif
+    text::info("Straight method (vector). Time: {}",elapsed);
     test = std::make_unique<TestResult>(PARALLEL_VECTOR_INDEXED,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
     test = std::make_unique<TestResult>(PARALLEL_VECTOR_ITERATOR,maxThreads,elapsed);
@@ -139,9 +134,7 @@ int TestParallelism::onExecuteTest()
             obj->f();
         }
     elapsed = timer.getMilliseconds()-t0;
-    #ifdef USE_SPDLOG
-    spdlog::info("Straight method (list). Time: {}",elapsed);    
-		#endif
+    text::info("Straight method (list). Time: {}",elapsed);    
     test = std::make_unique<TestResult>(PARALLEL_LIST_ITERATOR,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
 
@@ -149,11 +142,9 @@ int TestParallelism::onExecuteTest()
          
     for(int i = 1; i <= maxThreads;++i)
     {
-        #ifdef USE_SPDLOG
-        spdlog::info("Using {} threads",i);
+        text::info("Using {} threads",i);
         if ( i == numCores)
-            spdlog::info("Same number of CPU cores"); 
-		#endif
+            text::info("Same number of CPU cores"); 
         opts.nThreads = i;    
         ThreadPool myPool(opts);
         ThreadPool::ExecutionOpts exopts;
@@ -172,38 +163,32 @@ int TestParallelism::onExecuteTest()
             ::core::waitForBarrierThread(::parallelism::_for(&myPool,exopts,begin,end,[&objs](int idx)
                 {
                     objs[idx]->f();
-                //  spdlog::debug("it {}",idx);
+                //  text::debug("it {}",idx);
                 })
             );
            
         elapsed = timer.getMilliseconds()-t0;
-        #ifdef USE_SPDLOG
-        spdlog::info("Parallel method indexing (array). Time: {}",elapsed);
-		#endif
+        text::info("Parallel method indexing (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_INDEXED]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
             ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,begin,end,[&objs2](int idx)
                 {
                     objs2[idx]->f();
-                //  spdlog::debug("it {}",idx);
+                //  text::debug("it {}",idx);
                 }));            
         elapsed = timer.getMilliseconds()-t0;
-        #ifdef USE_SPDLOG
-        spdlog::info("Parallel method indexing (vector). Time: {}",elapsed);
-		#endif
+        text::info("Parallel method indexing (vector). Time: {}",elapsed);
         results[PARALLEL_VECTOR_INDEXED]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();        
         for(int i = 0; i < tries; ++i )
             ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs.begin(),objs.end(),[](decltype(objs)::iterator i  )
                 {
                     (*i)->f();
-                //  spdlog::debug("it {}",idx);
+                //  text::debug("it {}",idx);
                 }));        
         elapsed = timer.getMilliseconds()-t0;
-        #ifdef USE_SPDLOG
-        spdlog::info("Parallel method with iterators (array). Time: {}",elapsed);
-		#endif
+        text::info("Parallel method with iterators (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_ITERATOR]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
@@ -212,9 +197,7 @@ int TestParallelism::onExecuteTest()
                     (*i)->f();
                 }));
         elapsed = timer.getMilliseconds()-t0;
-        #ifdef USE_SPDLOG
-        spdlog::info("Parallel method with iterators (vector). Time: {}",elapsed);
-		#endif
+        text::info("Parallel method with iterators (vector). Time: {}",elapsed);
         results[PARALLEL_VECTOR_ITERATOR]->addTime(i,elapsed);
         
         t0 = timer.getMilliseconds();
@@ -224,9 +207,7 @@ int TestParallelism::onExecuteTest()
                     (*i)->f();
                 }));
         elapsed = timer.getMilliseconds()-t0;
-        #ifdef USE_SPDLOG
-        spdlog::info("Parallel method with iterators (list). Time: {}",elapsed);
-		#endif
+        text::info("Parallel method with iterators (list). Time: {}",elapsed);
         results[PARALLEL_LIST_ITERATOR]->addTime(i,elapsed);
         
        
@@ -242,15 +223,11 @@ int TestParallelism::onExecuteTest()
         
     }
     //show results
-    #ifdef USE_SPDLOG
-    spdlog::info("Results:");
-		#endif
+    text::info("Results:");
     for(const auto& result:results)
     {
         const auto& test = result.second;
-        #ifdef USE_SPDLOG
-        spdlog::info("  Test: {}",test->getName());
-		#endif
+        text::info("  Test: {}",test->getName());
         const auto& data = test->getData();
         unsigned int min = std::numeric_limits<unsigned int>::max();
         unsigned int max = 0;
@@ -284,11 +261,10 @@ int TestParallelism::onExecuteTest()
         {
             str<< element.second*100.f/test->getBaseTime() << "% ("<<element.first+1<<") ";  //number of threads is plus 1
         }
-        #ifdef USE_SPDLOG
-        spdlog::info(str.str());
-        spdlog::info("      Best time = {}% for {} threads",min*100.f/test->getBaseTime(),minIdx+1);
-        spdlog::info("      Worst time = {}% for {} threads",max*100.f/test->getBaseTime(),maxIdx+1);
-		#endif
+        text::info(str.str());
+        text::info("      Best time = {}% for {} threads",min*100.f/test->getBaseTime(),minIdx+1);
+        text::info("      Worst time = {}% for {} threads",max*100.f/test->getBaseTime(),maxIdx+1);
+		
     }
 
     return result;

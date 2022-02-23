@@ -6,7 +6,7 @@ namespace core
 	using ::mpl::TypeTraits;
 	/**
 	* wrapper for values that are accessed concurrently.
-	* @todo hay que refinar esta idea, hecha a prisa y corriendo
+	* @todo hay que refinar esta idea, hecha a prisa y corriendo. Realmente se corresponde con los atomic, asÃ­ que ya no creo que tenga sentido
 	*/
 
 	template <class T> class SyncValue
@@ -31,7 +31,7 @@ namespace core
 		}
 		bool operator==( typename TypeTraits<T>::ParameterType value ) const
 		{
-			//TODO debería proteger aqui??
+			//TODO deberï¿½a proteger aqui??
 			return mValue == value;
 		}
         template <class U>

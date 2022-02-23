@@ -2,9 +2,7 @@
 #include <core/ThreadRunnable.h>
 using core::ThreadRunnable;
 using namespace std;
-#ifdef USE_SPDLOG
-#include <spdlog/spdlog.h>
-		#endif
+#include <text/logger.h>
 #include <mpl/LinkArgs.h>
 #include <mpl/Ref.h>
 #include <string>
@@ -12,15 +10,14 @@ using namespace std;
 #include <parallelism/Barrier.h>
 using ::parallelism::Barrier;
 #include <array>
+#include <CommandLine.h>
 
 //Test with custom error
 struct MyErrorInfo : public ::core::ErrorInfo
 {
 	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
 	{
-		#ifdef USE_SPDLOG
-		spdlog::debug("MyErrorInfo");
-		#endif
+		text::debug("MyErrorInfo");
 	}
 	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
 	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
@@ -37,17 +34,72 @@ struct MyErrorInfo : public ::core::ErrorInfo
 		return *this;
 	}
 };
+//donde lo guardo?
+struct _Stack
+{
+	vector<int> _stack;
+	_Stack(volatile int* end,volatile int* start)
+	{
+		volatile int* _start;
+		volatile int* _end;
+		if ( end < start )
+		{
+			_start = end;
+			_end = start;
+
+		}else
+		{
+			_start = start;
+			_end = end;
+		}
+		while(_start!=_end)
+		{
+			_stack.push_back((int)(*_start++));			
+		}
+	}
+	bool compare(volatile int* end,volatile int* start)
+	{
+		volatile int* _start;
+		volatile int* _end;
+		if ( end < start )
+		{
+			_start = end;
+			_end = start;
+
+		}else
+		{
+			_start = start;
+			_end = end;
+		}
+		
+		for(int v:_stack)
+		{
+			if ( v != *_start++)
+				return false;
+		}
+		return true;
+	}
+};
+#define CHECK_STACK_SAVE(end,start) \
+	_Stack _stck(end,start);
 
 
+#define CHECK_STACK_VERIFY(end,start,test) \
+	if ( !_stck.compare(end,start) ){ \
+		test->setFailed();/*finish();*/} \
 
 template <size_t n>
 class MasterThread : public ThreadRunnable
 {
 	public:
-		MasterThread(std::shared_ptr<ThreadRunnable> producer,std::array<std::shared_ptr<ThreadRunnable>,n> consumers,unsigned int maxTime) : 
-			ThreadRunnable(true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime)
+		MasterThread(std::shared_ptr<ThreadRunnable> producer,std::array<std::shared_ptr<ThreadRunnable>,n> consumers,unsigned int maxTime,::tests::BaseTest* test) : 
+			ThreadRunnable(true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime),mTest(test)
 		{
 		}	
+		~MasterThread()
+		{
+
+		}
 	private:
 		typedef Future<int,MyErrorInfo> FutureType;
 
@@ -58,6 +110,7 @@ class MasterThread : public ThreadRunnable
 		uint64_t		mLastDebugTime; //para mosrtar mensaje de debug de que todo va bien
 		uint64_t 		mStartTime;
 		unsigned int	mMaxTime; //msecs to do test
+		::tests::BaseTest* mTest;
 		void onStart() override
 		{
 			auto msecs = this->getTimer()->getMilliseconds();
@@ -77,10 +130,8 @@ class MasterThread : public ThreadRunnable
 			FutureType channel;            
 			int nSinglethreads = 0;
 			auto prodIdx = rand()%(n+1);
-			mValueToAdd = rand()%50;  //value to add to input in consumers
-			#ifdef USE_SPDLOG
-			spdlog::debug("Producer idx {} de {}. Consumers must add {} to their input",prodIdx,n,mValueToAdd);
-		#endif
+			mValueToAdd = rand()%50;  //value to add to input in consumers			
+			text::debug("Producer idx {} de {}. Consumers must add {} to their input",prodIdx,n,mValueToAdd);		
 			int nTasks = 0;
 
 			//pause consumer. They will be started when al ltask posted
@@ -100,12 +151,46 @@ class MasterThread : public ThreadRunnable
 				{
 					do
 					{
-						spdlog::debug("launch task {}",nTasks);
+						text::debug("launch task {}",nTasks);
 						FutureType result;
-						mConsumers[i]->post(
-							mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
-							makeMemberEncapsulate(&MasterThread::_consumerTask,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
-						);
+						//Select different stakc sizes
+						auto idx = rand()%4;
+						switch (idx)
+						{
+						case 0:
+							mConsumers[i]->post(
+								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								makeMemberEncapsulate(&MasterThread::_consumerTask<10>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
+							);
+							break;
+						case 1:
+							mConsumers[i]->post(
+								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								makeMemberEncapsulate(&MasterThread::_consumerTask<100>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
+							);
+							break;
+						case 2:
+							mConsumers[i]->post(
+								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								makeMemberEncapsulate(&MasterThread::_consumerTask<1000>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
+							);
+							break;							
+						case 3:
+							mConsumers[i]->post(
+								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								makeMemberEncapsulate(&MasterThread::_consumerTask<2000>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
+							);
+							break;
+						case 4:
+							mConsumers[i]->post(
+								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								makeMemberEncapsulate(&MasterThread::_consumerTask<64>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
+							);
+							break;
+						default:
+							break;
+						}
+						
 						++nTasks; //take next task into account
 						post( [this,channel,result](uint64_t,Process*)
 							{
@@ -113,10 +198,8 @@ class MasterThread : public ThreadRunnable
 								if ( wr.isValid())
 								{
 									auto val = channel.getValue().value() + mValueToAdd;
-									#ifdef USE_SPDLOG
 									if ( val != wr.value())
-										spdlog::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
-									#endif
+										text::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
 								}
 							
 								mBarrier.set();	
@@ -142,9 +225,7 @@ class MasterThread : public ThreadRunnable
 					);
 			
 			}
-		#ifdef USE_SPDLOG
-			spdlog::debug("{} jobs have been launched, from which {} are single threads",nTasks,nSinglethreads);
-		#endif
+			text::debug("{} jobs have been launched, from which {} are single threads",nTasks,nSinglethreads);
 
 			mBarrier = Barrier(nTasks);
 			for(auto th:mConsumers)
@@ -154,9 +235,7 @@ class MasterThread : public ThreadRunnable
 			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
 			if ( r != ::tasking::Event_mthread::EVENTMT_WAIT_OK )
 			{
-			#ifdef USE_SPDLOG
-				spdlog::error("Wait for responses failed!!!!. {} workers remaining",mBarrier.getActiveWorkers());
-		#endif
+				text::error("Wait for responses failed!!!!. {} workers remaining",mBarrier.getActiveWorkers());
 				this->finish();  
 				return ::tasking::EGenericProcessResult::KILL; 
 			}
@@ -164,16 +243,12 @@ class MasterThread : public ThreadRunnable
 				{
 					mLastDebugTime = msecs;
 					auto t1 = getTimer()->getMilliseconds();
-				#ifdef USE_SPDLOG
-					spdlog::info("Wait for responses ok. Time waiting: {} msecs",t1-t0);
-				#endif
+					text::info("Wait for responses ok. Time waiting: {} msecs",t1-t0);
 				}
 			
 			if ( msecs - mStartTime > mMaxTime)
 			{
-			#ifdef USE_SPDLOG
-				spdlog::info("Maximum test time reached. Finishing");
-			#endif
+				text::info("Maximum test time reached. Finishing");
 				this->finish();  
 				return ::tasking::EGenericProcessResult::KILL; 
 			}else			
@@ -187,58 +262,56 @@ class MasterThread : public ThreadRunnable
             constexpr auto errProb = 0.2;
 			//constexpr auto errProb = 0.0;
 			auto value = rand()%max;
-			Process::wait(200); //pruebas
+			unsigned int waitTime = rand()%1000;
+			Process::wait(waitTime);
             if ( value >= max*errProb )
             {
-			#ifdef USE_SPDLOG
-			    spdlog::debug("Genero valor = {}",value);
-			#endif
+			    text::debug("Genero valor = {}",value);
                 output.setValue(value);
             }else
             {
                 output.setError(MyErrorInfo(0,"PRUEBA ERROR"));
-			#ifdef USE_SPDLOG
-                spdlog::debug("Genero error");
-			#endif
+                text::debug("Genero error");
             }			
 		}
-		::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
-		{
-			// int tam = rand()%1000;
-			// int arr[tam];  //Uvale, qué susto, esto no es standard. Funciona en gcc y clang pero no es standard
-		#ifdef USE_SPDLOG
-			spdlog::debug("Task {} waits for input",taskId);
-		#endif
+		template <int N> ::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
+		{						
+			int arr[N];	
+			//fill arr with random numbers
+			for( size_t i= 0; i < N;++i )
+			{
+				arr[i] = rand();
+			//	como lo chequeo?->guardar pila en algun sitio, con indice o similar
+			}
+			unsigned int waitTime = rand()%150;			
+			text::debug("Task {} waits for input",taskId);
+			CHECK_STACK_SAVE(&(arr[0]),&(arr[N-1]))
+			Process::wait(waitTime); //random wait
 			auto wr = ::tasking::waitForFutureMThread(input);
 			if ( wr.isValid() )
 			{
 				output.setValue(wr.value() + mValueToAdd);
-				#ifdef USE_SPDLOG
-				spdlog::debug("Task {} gets value {}",taskId,input.getValue().value());
-				#endif
+				text::debug("Task {} gets value {}",taskId,input.getValue().value());
 			}else
 			{
-			#ifdef USE_SPDLOG
-				spdlog::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
-			#endif
+				text::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
 					output.setError( MyErrorInfo(0,""));
 			}			
 			mBarrier.set();
+			CHECK_STACK_VERIFY(&(arr[0]),&(arr[N-1]),mTest)
 			return ::tasking::EGenericProcessResult::KILL;
 		}
 		void _consumerTaskAsThread(FutureType input,int taskId ) 
 		{
+			unsigned int waitTime = rand()%150;
+			Process::wait(waitTime); //random wait
 			auto wr = ::core::waitForFutureThread(input);
 			if ( wr.isValid() )
-			{
-				#ifdef USE_SPDLOG
-				spdlog::debug("Thread {} gets value {}",taskId,wr.value());
-		#endif
+			{				
+				text::debug("Thread {} gets value {}",taskId,wr.value());		
 			}else
 			{
-				#ifdef USE_SPDLOG
-				spdlog::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
-		#endif
+				text::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
 			}		
 			mBarrier.set();
 		}
@@ -260,35 +333,47 @@ class MasterThread : public ThreadRunnable
 			}
 		}
 };
-
-int test_threading::test_futures()
+//helper for mkasterthread destroy
+struct ThreadRunnableProxy
 {
-/*
-triggerOnDone: ¿tiene sentido? sería para llamar a un callback desde el Runnable adecaudo->¿merece la pena? sí->
-¿otro nombre?
-¿cómo resuelvo lo del kill? no me gusta mucho que esa opción esté ahí
-esto está relacionado con el tema de devovler error, el valor y tal. Igual podría devovler el exception?? la cuestión es que si es otro
-¿merecerá la pena devolver un optional (o mejor un variant) con el valor y el error si hubiese?->
-¿sería malo pasar ese variant al triggerondone?
-*/
+	std::shared_ptr<ThreadRunnable> mPtr;
+	ThreadRunnableProxy(std::shared_ptr<ThreadRunnable> ptr ):mPtr(ptr){}
+	~ThreadRunnableProxy()
+	{
+		mPtr->finish();
+		mPtr->join(); 
+	}
+
+};
+int test_threading::test_futures( tests::BaseTest* test)
+{
 	int result = 0;
 	//@todo hasta que no haga bien lo del autodestroy, esto no está bien del todo. Deberia pasar los consumidores como shared_ptr
 	
 	auto producer = ThreadRunnable::create(true);
 	
-	#ifdef USE_SPDLOG
+#ifdef USE_SPDLOG
     spdlog::set_level(spdlog::level::info); // Set global log level
-		#endif
-	constexpr size_t n = 10;
-	constexpr unsigned int TESTTIME = 30*60*1000;
+#endif
+	constexpr size_t n = 1;
+	constexpr unsigned int DEFAULT_TESTTIME = 60*1000;
+	unsigned int testTime;
+	//get test time (seconds)
+	auto opt = tests::CommandLine::getSingleton().getOption("tt");
+	if ( opt != nullopt)
+	{
+		testTime = std::stoi(opt.value())*1000;
+	}else
+		testTime = DEFAULT_TESTTIME;
+	text::info("Test time {}",testTime);
 	std::array< std::shared_ptr<ThreadRunnable>,n> consumers;
 	for(size_t i=0;i<n;++i)
 	{
 		consumers[i] = ThreadRunnable::create(true);
 	}
-	auto master = make_shared<MasterThread<n>>(producer,consumers,TESTTIME);
+	auto master = make_shared<MasterThread<n>>(producer,consumers,testTime,test);
+	ThreadRunnableProxy proxy(master);
 	master->start();	
-	master->join();	
-	
+		
 	return result;
 }

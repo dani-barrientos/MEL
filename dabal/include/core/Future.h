@@ -36,10 +36,10 @@ namespace core
 			 */
 			bool isValid() const{ return Base::index() == 0;}
 			// wrapper for std::get.  Same rules as std::Get, so bad_variant_access is thrown if not a valid value
-			T& value() {
+			typename mpl::TypeTraits<T>::ParameterType value() {
 				return std::get<T>(*this);
 			}
-			const T& value() const {
+			const typename  mpl::TypeTraits<T>::ParameterType value() const {
 				return std::get<T>(*this);
 			}
 			const ErrorType& error() const

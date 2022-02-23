@@ -141,7 +141,23 @@
                 "stopOnFailure": true
             },
             "output": {
-                "verbosity": "verbose"
+                "verbosity": "default"
+            }
+        },
+        {
+            "name": "ThreadingTests",
+            "hidden": true,
+            "filter": {
+                "include": {
+                    "name": "TestThreading.FutureTests"
+                }
+            },
+            "execution": {
+                "stopOnFailure": true                
+            },
+            "output": {
+                "verbosity":"default",
+                "outputOnFailure": true
             }
         }
     ]

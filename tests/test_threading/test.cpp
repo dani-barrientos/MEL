@@ -6,9 +6,8 @@ using core::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
-#ifdef USE_SPDLOG
-#include <spdlog/spdlog.h>
-#endif
+#include <text/logger.h>
+
 #include <CommandLine.h>
 #include <mpl/LinkArgs.h>
 #include <mpl/Ref.h>
@@ -78,9 +77,7 @@ class MyProcess : public Process
 		{
 			int aux = mVar;
 			++mVar;
-			#ifdef USE_SPDLOG
-			spdlog::debug("MyProcess");
-			#endif
+			text::debug("MyProcess");
 			::tasking::Process::wait(70050);
 			mVar = aux;
 		}	
@@ -93,9 +90,7 @@ class MyTask
 	MyTask(Process* target,int& var):mTarget(target),mVar(var){}
 	::tasking::EGenericProcessResult operator()(uint64_t,Process*)
 	{
-		#ifdef USE_SPDLOG
-		spdlog::debug("MyTask");
-		#endif
+		text::debug("MyTask");
 		++mVar;
 		if ( mTarget )
 			mTarget->pause();
@@ -111,9 +106,7 @@ class MyTask
 ::tasking::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
 {
 	++var;
-	#ifdef USE_SPDLOG
-	spdlog::debug("staticFuncTask");
-	#endif
+	text::debug("staticFuncTask");
 	return ::tasking::EGenericProcessResult::CONTINUE;
 }
 static Timer sTimer;
@@ -126,44 +119,30 @@ uint64_t constexpr TIME_MARGIN = 10;
 void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 {
 	auto elapsed = std::abs((int64_t)t1-(int64_t)t0);
-		#ifdef USE_SPDLOG
 	if ( elapsed > TIME_MARGIN)
-		spdlog::warn("Margin time overcome {}. Info: {}",elapsed,text);
-	#endif
+		text::warn("Margin time overcome {}. Info: {}",elapsed,text);
 }
 
-static int _testMicroThreadingMonoThread()
+static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
 	size_t s3 = sizeof(MThreadAttributtes);
-	#ifdef USE_SPDLOG
-	spdlog::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
-	#endif
+	text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
+	
 	int result = 0;
 	int sharedVar = 0;
-	//auto th1 = ThreadRunnable::create();
+	auto th1 = ThreadRunnable::create();
 	auto th2 = ThreadRunnable::create(true);
-	th2->fireAndForget([]()
-	{
-		spdlog::info("HECHO");
-	});
-	th2->fireAndForget([]()
-	{
-		spdlog::info("HECHO 2");
-	});
 
-/*
-	//th1->post( [th2](RUNNABLE_TASK_PARAMS)
+	th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
 		bool autokill = true;
 		std::shared_ptr<Process> p1=th2->post([th2](uint64_t t,Process* p)
 		{
 			static bool firstTime = true;
-			#ifdef USE_SPDLOG
-			spdlog::debug("Ejecuto p1");
-			#endif
+			text::debug("Ejecuto p1");
 			if ( firstTime )
 			{
 				firstTime = false;
@@ -178,31 +157,25 @@ static int _testMicroThreadingMonoThread()
 
 		
 				auto fr = ::tasking::waitForFutureMThread(fut,2000);
-				#ifdef USE_SPDLOG
 				if ( !fr.isValid())
-					spdlog::error(fr.error().errorMsg);
+					text::error(fr.error().errorMsg);
 				else
-					spdlog::error(fr.value());
-				#endif
+					text::debug("{}",fr.value());
+			
 				// if ( fr != ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
 				// {
 				// 	spdlog::error(fut.getValue().error().errorMsg);
 				// }
-				#ifdef USE_SPDLOG
-				spdlog::debug("espero en p1");
-		#endif
-				auto wr = tasking::Process::wait(10000);
-				#ifdef USE_SPDLOG
-				spdlog::debug("vuelvo a esperar en p1");
-		#endif
+				text::debug("espero en p1");
+				auto wr = tasking::Process::wait(10000);			
+				text::debug("vuelvo a esperar en p1");
+
 				// esto tengo que arreglarlo para que, si soy autokill, no vuelva a esperar si está en trying_tokill
 				// meditar sobre estos temas, no me convence demasiado la forma en que está planteado
 				//wr = tasking::Process::wait(10000);
 				wr = tasking::Process::switchProcess(true);
 				wr = tasking::Process::sleep();
-				#ifdef USE_SPDLOG
-				spdlog::debug("fin espera en p1");
-		#endif
+				text::debug("fin espera en p1");
 				
 				//  no me convence nada el tema del kill y demas. Cosas que pasan:
 				//   - aunque tenga el autokill a false, igual convenía enterarme mejor de que se me intenta matar. En realidad lo sé si consulto el state.Lo que
@@ -211,45 +184,34 @@ static int _testMicroThreadingMonoThread()
 				 
 			
 			}
-			#ifdef USE_SPDLOG
-			spdlog::debug("Continuo");
-		#endif
+			text::debug("Continuo");
 			return ::tasking::EGenericProcessResult::CONTINUE;
 		},autokill,2000,000);
 		th2->fireAndForget(
 			[p1]()
 			{
-				#ifdef USE_SPDLOG
-				spdlog::debug("Ejecuto p2");
-		#endif
+				text::debug("Ejecuto p2");
 				tasking::Process::wait(4000);
 				// spdlog::debug("Pauso proceso");
 				//  if ( p1 )
 				//  	p1->pause();
 			//	tasking::Process::wait(1000);
-			#ifdef USE_SPDLOG
-				spdlog::debug("Mato proceso");
-		#endif
+				text::debug("Mato proceso");
 				p1->kill();
 				// spdlog::debug("Vuelvo a pausar proceso");
 				// if ( p1 )
 				// 	p1->pause();
 				tasking::Process::wait(25000);
-				#ifdef USE_SPDLOG
-				 spdlog::debug("Despierto proceso");
-		#endif
+				text::debug("Despierto proceso");
 				if ( p1 )
 				 	p1->wakeUp();
 			}
 		);
 
-	#ifdef USE_SPDLOG
-		spdlog::debug("execution done");
-		#endif
-	//	return ::tasking::EGenericProcessResult::KILL;
+		text::debug("execution done");
+		return ::tasking::EGenericProcessResult::KILL;
 	}
-	*/
-//,true,3000);
+	,true,3000);
 	
 	/*
 	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
@@ -289,17 +251,15 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
  - incrementar/dec variable de forma que deba siempre ser isgreaterequal
 - 
 */
-	Thread::sleep(60000);
-	#ifdef USE_SPDLOG
-	spdlog::debug("finish");
-		#endif
+	text::debug("finish");
 	// th1->finish();
 	// th1->join();
-	return result;
+	
+	return 0;
 }
 //check performance launching a lot of tasks
 //@todo habrái que hacerlo con un profiler, un sistema de benchmarking...
-int  _testPerformanceLotTasks()
+int  _testPerformanceLotTasks(tests::BaseTest* test)
 {
 //algo tengo mal en los presets que en window dsrelease no tira, lo raro es que está gemnerando una caprta debug aunque sea relase
 //parece ser que es por cosas del generador de MSVC que no sabe la configuracion
@@ -324,16 +284,15 @@ int  _testPerformanceLotTasks()
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
 					return ::tasking::EGenericProcessResult::KILL;
-				},true,1000,0);		
+				},false,1000,0);		
 			}
 			::Thread::sleep(1) ;//to wait for taks
 		}
 		Thread::sleep(10);
 	}
 	t1 = sTimer.getMilliseconds();	
-	#ifdef USE_SPDLOG
-	spdlog::info("Time launching {} tasks with global new: {} msecs",nTasks,t1-t0);
-		#endif
+	text::info("Time launching {} tasks with global new: {} msecs",nTasks,t1-t0);
+
 	Thread::sleep(2000);
 	t0 = sTimer.getMilliseconds();	;
 	count = 0;
@@ -348,23 +307,19 @@ int  _testPerformanceLotTasks()
 				{
 					//spdlog::debug("Lambda {}",count);
 					return ::tasking::EGenericProcessResult::KILL;
-				},true,1000,0);
+				},false,1000,0);
 			}	
 			::Thread::sleep(1) ;//wait for tasks finished
 		}
 		Thread::sleep(10);
 	}
 	t1 = sTimer.getMilliseconds();
-	#ifdef USE_SPDLOG
-	spdlog::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
-		#endif
-	Thread::sleep(45000);
-	th1->finish();
-	th1->join();
+	text::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
+	//Thread::sleep(45000);	
 	return result;
 }
 std::atomic<int> sCount(0);
-int _test_concurrent_post()
+int _test_concurrent_post( ::tests::BaseTest* test)
 {	
 	auto consumer =ThreadRunnable::create(true,500,2000);
 	constexpr int NUM_POSTS = 4;
@@ -401,17 +356,13 @@ int _test_concurrent_post()
 			);
 		}
 	}
-	#ifdef USE_SPDLOG
-	spdlog::info("Esperando...");
-		#endif
+	text::info("Esperando...");
 	//consumer->resume();
 	Thread::sleep(10000);
-	#ifdef USE_SPDLOG
 	if ( sCount == producers.size()*NUM_POSTS*NUM_ITERS )
-		spdlog::info("_test_concurrent_post OK. {} Posts",sCount);
+		text::info("_test_concurrent_post OK. {} Posts",sCount.load());
 	else
-		spdlog::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",producers.size()*NUM_POSTS*NUM_ITERS,sCount);
-		#endif
+		text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",producers.size()*NUM_POSTS*NUM_ITERS,sCount.load());
 	return 0;
 }
 int _throwExc(int& v)
@@ -420,7 +371,7 @@ int _throwExc(int& v)
 	throw v;
 }
 
-int _testExceptions()
+int _testExceptions(::tests::BaseTest* test)
 {
 	auto th1 = ThreadRunnable::create(true);
 	th1->post(
@@ -429,16 +380,16 @@ int _testExceptions()
 			int val;
 			try
 			{
-				spdlog::debug("Task1: Context switch");
+				text::debug("Task1: Context switch");
 				tasking::Process::wait(2000);
-				spdlog::debug("Task1: Throw exception");
+				text::debug("Task1: Throw exception");
 				_throwExc(val);
 			}catch(int v)
 			{
 				if ( v == val)
-					spdlog::info("Task1: Captured exception ok");
+					text::info("Task1: Captured exception ok");
 				else
-					spdlog::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+					text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
 				tasking::Process::wait(5000);
 			}			
 			
@@ -451,16 +402,16 @@ int _testExceptions()
 			 int val;
 			try
 			{
-				spdlog::debug("Task2: Context switch");
+				text::debug("Task2: Context switch");
 				tasking::Process::wait(3000);
-				spdlog::debug("Task2: Throw exception");
+				text::debug("Task2: Throw exception");
 				_throwExc(val);
 			}catch( int v)
 			{
 				if ( v == val)
-					spdlog::info("Task2: Captured exception ok");
+					text::info("Task2: Captured exception ok");
 				else
-					spdlog::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+					text::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
 			}			
 			
 			 return ::tasking::EGenericProcessResult::CONTINUE;
@@ -474,7 +425,7 @@ int _testExceptions()
 int TestThreading::onExecuteTest()
 {
 	int result = 1;
-	typedef int(*TestType)();
+	typedef int(*TestType)(tests::BaseTest*);
 	TestType defaultTest = ::test_threading::test_futures;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
@@ -485,19 +436,19 @@ int TestThreading::onExecuteTest()
 			switch(n)
 			{
 				case 0:
-					result = _testMicroThreadingMonoThread();
+					result = _testMicroThreadingMonoThread( this );
 					break;
 				case 1:
-					result = _testPerformanceLotTasks();
+					result = _testPerformanceLotTasks(this);
 					break;
 				case 2:
-					result = ::test_threading::test_futures();
+					result = ::test_threading::test_futures( this );
 					break;
 				case 3:
-					result = _test_concurrent_post();
+					result = _test_concurrent_post(this);
 					break;
 				case 4:
-					result = _testExceptions();
+					result = _testExceptions(this);
 					break;
 				default:;					
 			}
@@ -507,7 +458,7 @@ int TestThreading::onExecuteTest()
 			std::cerr << e.what() << '\n';
 		}		
 	}else
-		result = defaultTest(); //by default
+		result = defaultTest(this); //by default
 		
 	
 	// th1->post( std::function<bool(uint64_t ,Process*)>([](RUNNABLE_TASK_PARAMS)
@@ -536,10 +487,10 @@ void TestThreading::registerTest()
 }
 int TestThreading::onExecuteAllTests()
 {
-	_testMicroThreadingMonoThread();
-	_testPerformanceLotTasks();
-	::test_threading::test_futures();
-	 _test_concurrent_post();	
-	 _testExceptions();
+	_testMicroThreadingMonoThread( this );
+	_testPerformanceLotTasks(this);
+	::test_threading::test_futures(this);
+	 _test_concurrent_post(this);	
+	 _testExceptions(this);
 	 return 0;
 }
