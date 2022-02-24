@@ -23,4 +23,5 @@ There are 3 diferent macros that guide compilation based on target platform.
  Definiendola en el $HOME/.profile con export, funciona todo ya bien
  # testing
  execute ctest in out/build/[required configuration]/tests
+ need to add option -D XX to cmake tools configuration (Ctest args).At this moment, the passed XX seems to be ignored
  

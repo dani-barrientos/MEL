@@ -38,8 +38,6 @@ add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to My
         $<TARGET_FILE_DIR:main>)                 # <--this is out-file path
 endif()
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include
-enable_testing() #se supone que no es necesario haciendo luego el include.., pero en algun sitio vi que también lo ponen
-include(CTest) 
 
 set (failRegex "Fail")
 add_test(NAME RunAll COMMAND main -a)
@@ -53,4 +51,8 @@ add_test(NAME TestThreading.LockFree COMMAND main -t threading -n 3)
 add_test(NAME TestThreading.Exceptions COMMAND main -t threading -n 4)
 set_property(TEST RunAll TestCallbacks TestExecution.Launch TestExecution.For  TestThreading.SimpleMicrothreads 
 TestThreading.LotsTasks TestThreading.FutureTests TestThreading.LockFree TestThreading.Exceptions PROPERTY FAIL_REGULAR_EXPRESSION "${failRegex}")
+
+enable_testing() #se supone que no es necesario haciendo luego el include.., pero en algun sitio vi que también lo ponen
+include(CTest) 
+
 

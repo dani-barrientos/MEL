@@ -34,14 +34,14 @@ struct MyErrorInfo : public ::core::ErrorInfo
 		return *this;
 	}
 };
-//donde lo guardo?
+
 struct _Stack
 {
-	vector<int> _stack;
-	_Stack(volatile int* end,volatile int* start)
+	vector<uint8_t> _stack;
+	_Stack(volatile uint8_t* end,volatile uint8_t* start)
 	{
-		volatile int* _start;
-		volatile int* _end;
+		volatile uint8_t* _start;
+		volatile uint8_t* _end;
 		if ( end < start )
 		{
 			_start = end;
@@ -54,13 +54,15 @@ struct _Stack
 		}
 		while(_start!=_end)
 		{
-			_stack.push_back((int)(*_start++));			
+			uint8_t val = *_start;
+			_stack.push_back(val);
+			++_start;
 		}
 	}
-	bool compare(volatile int* end,volatile int* start)
+	bool compare(volatile uint8_t* end,volatile uint8_t* start)
 	{
-		volatile int* _start;
-		volatile int* _end;
+		volatile uint8_t* _start;
+		volatile uint8_t* _end;
 		if ( end < start )
 		{
 			_start = end;
@@ -72,7 +74,7 @@ struct _Stack
 			_end = end;
 		}
 		
-		for(int v:_stack)
+		for(auto v:_stack)
 		{
 			if ( v != *_start++)
 				return false;
@@ -86,7 +88,7 @@ struct _Stack
 
 #define CHECK_STACK_VERIFY(end,start,test) \
 	if ( !_stck.compare(end,start) ){ \
-		test->setFailed();/*finish();*/} \
+		test->setFailed();/*finish();*/} 
 
 template <size_t n>
 class MasterThread : public ThreadRunnable
@@ -285,7 +287,8 @@ class MasterThread : public ThreadRunnable
 			}
 			unsigned int waitTime = rand()%150;			
 			text::debug("Task {} waits for input",taskId);
-			CHECK_STACK_SAVE(&(arr[0]),&(arr[N-1]))
+			CHECK_STACK_SAVE((uint8_t*)&(arr[0]),(uint8_t*)&(arr[N-1]))
+			//CHECK_STACK_SAVE((uint8_t*)&(arr[N-4]),(uint8_t*)&(arr[0]))
 			Process::wait(waitTime); //random wait
 			auto wr = ::tasking::waitForFutureMThread(input);
 			if ( wr.isValid() )
@@ -296,9 +299,10 @@ class MasterThread : public ThreadRunnable
 			{
 				text::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
 					output.setError( MyErrorInfo(0,""));
-			}			
+			}
 			mBarrier.set();
-			CHECK_STACK_VERIFY(&(arr[0]),&(arr[N-1]),mTest)
+			CHECK_STACK_VERIFY((uint8_t*)&(arr[0]),(uint8_t*)&(arr[N-1]),mTest)
+			//CHECK_STACK_VERIFY((uint8_t*)&(arr[N-4]),(uint8_t*)&(arr[0]),mTest)
 			return ::tasking::EGenericProcessResult::KILL;
 		}
 		void _consumerTaskAsThread(FutureType input,int taskId ) 
@@ -355,8 +359,8 @@ int test_threading::test_futures( tests::BaseTest* test)
 #ifdef USE_SPDLOG
     spdlog::set_level(spdlog::level::info); // Set global log level
 #endif
-	constexpr size_t n = 1;
-	constexpr unsigned int DEFAULT_TESTTIME = 60*1000;
+	constexpr size_t n = 10;
+	constexpr unsigned int DEFAULT_TESTTIME = 10*1000;
 	unsigned int testTime;
 	//get test time (seconds)
 	auto opt = tests::CommandLine::getSingleton().getOption("tt");

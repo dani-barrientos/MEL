@@ -18,7 +18,7 @@ using tasking::Process;
 
 const std::string TestExecution::TEST_NAME = "execution";
 //b aseictest for launching task in executio agents
-int _testLaunch()
+int _testLaunch( tests::BaseTest* test)
 {
 	int result = 0;
 	auto th2 = ThreadRunnable::create(true);	
@@ -140,12 +140,12 @@ Thread::sleep(10000);
 #else
 #define DEFAULT_LOOPSIZE 200'000
 #endif
-template <class F> void _measureTest(string text,F f, size_t loopSize)
+template <class F> void _measureTest(string txt,F f, size_t loopSize)
 {
 	int mean = 0;
 	constexpr size_t iters = 20;
 	Timer timer;
-	text::info("Doing {} iterations using {}",loopSize,text);	
+	text::info("Doing {} iterations using {}",loopSize,txt);	
 	for(size_t i = 0; i < iters;i++)
 	{
 		auto t0 = timer.getMilliseconds();
@@ -158,9 +158,11 @@ template <class F> void _measureTest(string text,F f, size_t loopSize)
 	}
 	mean /= iters;
 
-	text::info("Finished. Time: {}",mean);
+//se podrán enlazar medidas?? es decir, por estructurarlo estaría bien 
+	tests::BaseTest::addMeasurement(txt+" time:",mean);
+	//text::info("Finished. Time: {}",mean);
 }
-int _testFor()
+int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
 	#if USE_SPDLOG
@@ -303,6 +305,8 @@ int _testFor()
 			::core::waitForBarrierThread(barrier);
 		},loopSize
 	);
+	/*
+	lo quito por ahora porque es mucho más lento y es bobada
 	_measureTest("ThreadPool executor, no grouped tasks",
 		[loopSize]()
 		{
@@ -321,7 +325,8 @@ int _testFor()
 			},lhints);
 			::core::waitForBarrierThread(barrier);
 		},loopSize
-	);
+	);*/
+	
 	return 0;
 	
 }
@@ -335,7 +340,7 @@ int _testFor()
 int TestExecution::onExecuteTest()
 {
 	int result = 1;
-	typedef int(*TestType)();
+	typedef int(*TestType)(tests::BaseTest* );
 	TestType defaultTest = _testFor;
 	auto opt = tests::CommandLine::getSingleton().getOption("n");
 	if ( opt != nullopt)
@@ -346,16 +351,16 @@ int TestExecution::onExecuteTest()
 			switch(n)
 			{
 				case 0:
-					result = _testLaunch();
+					result = _testLaunch(this);
 					break;
 				case 1:
-					result = _testFor();
+					result = _testFor(this);
 					break;				
 				default:
 				#if USE_SPDLOG
 					spdlog::warn("Test number {} doesn't exist. Executing default test",n);
 		#endif
-					result = _testFor();
+					result = _testFor(this);
 
 			}
 		}
@@ -364,7 +369,7 @@ int TestExecution::onExecuteTest()
 			text::error(e.what());
 		}		
 	}else
-		result = defaultTest(); //by default
+		result = defaultTest(this); //by default
 		
 	return result;
 }
@@ -374,7 +379,7 @@ void TestExecution::registerTest()
 }
 int TestExecution::onExecuteAllTests()
 {
-	_testLaunch();
-	_testFor();
+	_testLaunch(this);
+	_testFor(this);
 	return 0;
 }
