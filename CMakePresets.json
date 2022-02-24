@@ -126,6 +126,32 @@
                     ]
                 }
             }
+        },
+        {
+            "name": "Mac Debug Base",
+            "hidden":true,
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "DABAL_OS":"DABAL_MACOSX",
+                "DABAL_ARQ": "DABAL_X64_CLANG",
+                "USE_SPDLOG":true
+            }
+        },
+        {
+            "name": "Mac Release Base",
+            "hidden":true,
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "DABAL_OS":"DABAL_MACOSX",
+                 "DABAL_ARQ": "DABAL_X64_CLANG",
+                "USE_SPDLOG":true
+            }
         }
     ],
     "testPresets": [        
