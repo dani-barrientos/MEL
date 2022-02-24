@@ -7,6 +7,7 @@ namespace tests
     {        
         public:
             BaseTest( string name );
+            virtual ~BaseTest(){};
             /**
              * @brief Execute test reading CommandLine to parse concrete options
              * It calls virtual protected onExecuteTests which must be implemented in children
