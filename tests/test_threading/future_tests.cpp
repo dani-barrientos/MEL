@@ -11,6 +11,8 @@ using namespace std;
 using ::parallelism::Barrier;
 #include <array>
 #include <CommandLine.h>
+#include <vector>
+using std::vector;
 
 //Test with custom error
 struct MyErrorInfo : public ::core::ErrorInfo
