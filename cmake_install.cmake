@@ -1,4 +1,4 @@
-# Install script for directory: /home/dani/trabajo/proyectos/dabal
+# Install script for directory: /mnt/c/Users/danba/proyectos_personales/dabal
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -37,15 +37,10 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
 endif()
 
-# Set default install directory permissions.
-if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/usr/bin/objdump")
-endif()
-
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/dani/trabajo/proyectos/dabal/dabal/cmake_install.cmake")
-  include("/home/dani/trabajo/proyectos/dabal/tests/cmake_install.cmake")
+  include("/mnt/c/Users/danba/proyectos_personales/dabal/dabal/cmake_install.cmake")
+  include("/mnt/c/Users/danba/proyectos_personales/dabal/tests/cmake_install.cmake")
 
 endif()
 
@@ -57,5 +52,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/dani/trabajo/proyectos/dabal/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/c/Users/danba/proyectos_personales/dabal/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

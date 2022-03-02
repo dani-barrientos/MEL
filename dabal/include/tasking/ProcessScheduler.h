@@ -245,7 +245,7 @@ namespace tasking
 		mutable CriticalSection	mCS;		
 		std::shared_ptr<Timer>			mTimer;
 		std::atomic<unsigned int> mProcessCount;
-		volatile int32_t		mInactiveProcessCount;
+		std::atomic<int32_t>		mInactiveProcessCount;
 		bool					mKillingProcess; //flag to mark when ther is a kill task pending
 		#ifndef NDEBUG
 		void* _stack = nullptr;

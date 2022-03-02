@@ -15,3 +15,12 @@ Testing/TAG
 Testing/20220223-1840/Test.xml
 Testing/Temporary/CTestCostData.txt
 Testing/Temporary/LastTest_20220223-1840.log
+/DartConfiguration.tcl
+/CTestTestfile.cmake
+cmake_install.cmake
+CTestConfig.cmake
+.vs/CMake Overview
+dabal/cmake_install.cmake
+dabal/Makefile
+tests/cmake_install.cmake
+tests/Makefile

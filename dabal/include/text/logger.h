@@ -1,6 +1,8 @@
 #pragma once
 #ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
+#else
+#include <iostream>
 #endif
 #include <string>
 /**
@@ -13,6 +15,9 @@ namespace text
     {
         #ifdef USE_SPDLOG
         spdlog::debug(std::move(s),std::forward<Args>(args)...);
+        #else
+        //por poner algo por ahora
+        std::cout <<"[debug] " << s << std::endl;
         #endif
         //@todo use format for C++20
     }
@@ -20,6 +25,9 @@ namespace text
     {
         #ifdef USE_SPDLOG
         spdlog::info(std::move(s),std::forward<Args>(args)...);
+        #else
+        //por poner algo por ahora
+        std::cout <<"[info] "  << s << std::endl;
         #endif
         //@todo use format for C++20
     }
@@ -27,6 +35,9 @@ namespace text
     {
         #ifdef USE_SPDLOG
         spdlog::error(std::move(s),std::forward<Args>(args)...);
+        #else
+        //por poner algo por ahora
+        std::cout <<"[error] "  << s << std::endl;
         #endif
         //@todo use format for C++20
     }
@@ -34,13 +45,20 @@ namespace text
     {
         #ifdef USE_SPDLOG
         spdlog::warn(std::move(s),std::forward<Args>(args)...);
+        #else
+        //por poner algo por ahora
+        std::cout <<"[warn] "  << s << std::endl;
         #endif
+
         //@todo use format for C++20
     }
     template<class ...Args> void critical(std::string s,Args&&... args)
     {
         #ifdef USE_SPDLOG
         spdlog::critical(std::move(s),std::forward<Args>(args)...);
+        #else
+        //por poner algo por ahora
+        std::cout <<"[critical] "  << s << std::endl;
         #endif
         //@todo use format for C++20
     }

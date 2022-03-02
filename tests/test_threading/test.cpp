@@ -125,6 +125,9 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
+	#ifdef USE_SPDLOG
+	spdlog::set_level(spdlog::level::debug);
+	#endif
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
@@ -133,7 +136,18 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	
 	int result = 0;
 	int sharedVar = 0;
+	
 	auto th1 = ThreadRunnable::create();
+	/*th1->post([](RUNNABLE_TASK_PARAMS)
+	{
+		std::cout << "UNO" << std::endl;
+		tasking::Process::wait(2500);
+		std::cout << "DOS" << std::endl;
+		return ::tasking::EGenericProcessResult::CONTINUE;
+	},true,1000);
+	Thread::sleep(120000);
+	return 0;
+*/
 	auto th2 = ThreadRunnable::create(true);
 
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)
@@ -391,10 +405,10 @@ int _testExceptions( tests::BaseTest* test)
 		//	tasking::Process::wait(2000);
 			try
 			{
-				text::debug("Task1: Context switch");
+				text::info("Task1: Context switch");
 				tasking::Process::wait(2000);
-				text::debug("Task1: Throw exception");
-				_throwExc(val);
+				text::info("Task1: Throw exception");
+				//_throwExc(val);
 
 				_throwMyException(val);
 				text::error("Task1: After throw exception. Shouldn't occur");
@@ -426,9 +440,9 @@ int _testExceptions( tests::BaseTest* test)
 			try
 			{
 
-				text::debug("Task2: Context switch");
+				text::info("Task2: Context switch");
 				tasking::Process::wait(3000);
-				text::debug("Task2: Throw exception");
+				text::info("Task2: Throw exception");
 				_throwExc(val);
 			#if USE_SPDLOG
 				spdlog::error("Task2: After throw exception. Shouldn't occur");

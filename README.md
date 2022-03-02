@@ -14,6 +14,7 @@ There are 3 diferent macros that guide compilation based on target platform.
  - Cosas Android:
     - necesario instalar expresamente las librerias android de spdlog (/vcpkg install spdlog --triplet arm-android y --triplet arm64-android) .Seguir las instrucciones dadas en https://vcpkg.readthedocs.io/en/latest/users/android/#android-build-requirements, pero básicamente se trata de definir la variable de entorno ANDROID_NDK_HOME para que sepa compilar esas librerias, y está.
     - para poder compilar y depurar el codigo y demás, dado que Android Studio requiere una estructura concreta (al menos con el cokmportamiento por defecto), es necesario añadir enlaces simbolicos a las carpetas dabal y tests dentro de la carpeta src/main/cpp. 
+ - Cosas Windows: necesario instalar triplet x64-windows para usar spdlog en x64, que seguramente no la instala por defecto
 # vcpkg
  vcpkg need to be installed. Follow instructions, among many other sites, https://vcpkg.io/en/getting-started.html. An environment variable VCPKG_ROOT pointing to vcpkg root
  need to be set. @todo algo no entiendo, esta variable parece que la usa el propio vcpkg si está definida, de forma que si la tengo en las variables de entorno, al menos en mi instalación kubuntu, da error al ejecutarlo porque usa ese varaible. por ejemplo, si se hace ./vcpkg install <lo que sea> da error de que "No such file or directory". Si se ejecuta con --debug se ven más logs y se ve que concatena el path actual con el VCPKG_ROOT.

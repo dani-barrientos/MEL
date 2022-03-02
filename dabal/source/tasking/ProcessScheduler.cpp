@@ -23,7 +23,6 @@ using mpl::returnAdaptor;
 #include <core/TLS.h>
 using core::TLS;
 #include <cassert>
-#include <core/atomics.h>
 #include <core/Thread.h> //para pruebas, QUITAR!!!
 
 static TLS::TLSKey	gTLSCurrentProcessKey;
@@ -288,7 +287,6 @@ void ProcessScheduler::_executeProcesses( uint64_t time,TProcessList& processes 
 		TProcessList::iterator end = processes.end();
 		//TProcessList::iterator prev;
 		TProcessList::iterator prev = processes.before_begin();
-		Process::EProcessState state;
 		while( i != end )
 		{
 			p = i->first;
@@ -474,12 +472,12 @@ std::shared_ptr<Process> ProcessScheduler::getCurrentProcess()
 }
 void ProcessScheduler::processAwakened(std::shared_ptr<Process> p)
 {
-	::core::atomicDecrement( &mInactiveProcessCount );
+	mInactiveProcessCount.fetch_sub(1,::std::memory_order_relaxed);
 	_triggerWakeEvents(p);
 }
 void ProcessScheduler::processAsleep(std::shared_ptr<Process>p)
 {
-	::core::atomicIncrement(&mInactiveProcessCount);
+	mInactiveProcessCount.fetch_add(1,::std::memory_order_relaxed);
 	_triggerSleepEvents(p);
 }
 void ProcessScheduler::_triggerSleepEvents(std::shared_ptr<Process> p)

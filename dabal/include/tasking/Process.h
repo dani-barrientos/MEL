@@ -17,7 +17,7 @@ using core::Callback;
 #if defined(DABAL_IOS) || defined(DABAL_MACOSX)
 #include <TargetConditionals.h>
 #endif
-#if defined(DABAL_X86_GCC) || TARGET_CPU_X86 ||  _MSC_VER
+#if defined(DABAL_X86_GCC) || TARGET_CPU_X86 ||  defined(DABAL_X86_MSVC)
 #include <tasking/Process_X86.h>
 #elif TARGET_CPU_X86_64
     #include <tasking/Process_X64_MAC.h>
@@ -41,6 +41,8 @@ using core::Callback;
 	#include <tasking/Process_ARM_Android.h>
 #elif defined (DABAL_X64_GCC) ||defined (DABAL_X64_CLANG)
 	#include <tasking/Process_X64_GCC.h>
+#elif defined (DABAL_WINDOWS) && defined (DABAL_X64_MSVC)
+	#include <tasking/Process_X64_MSVC.h>
 #endif
 #if defined(DABAl_IOS) || defined(DABAL_MACOSX) 
     #define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
@@ -239,7 +241,7 @@ namespace tasking
 		 * wakeup an asleep process or an evicted process (that process having called swtich or wait)
 		 */
 		void wakeUp();
-
+void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
 	private:
 		//static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static mpl::Tuple<TYPELIST(int,Process*,unsigned int)> _preSleep() OPTIMIZE_FLAGS;
@@ -258,7 +260,7 @@ namespace tasking
 		* main execution block
 		* @param msegs    msegs
 		*/
-		void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
+		//void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
 		volatile void checkMicrothread(uint64_t msegs ) OPTIMIZE_FLAGS;
 		/**
 		* execution function. It calls update() when time > mPeriod
