@@ -158,16 +158,14 @@ template <class F> void _measureTest(string txt,F f, size_t loopSize)
 	}
 	mean /= iters;
 
-//se podrán enlazar medidas?? es decir, por estructurarlo estaría bien 
 	tests::BaseTest::addMeasurement(txt+" time:",mean);
-	//text::info("Finished. Time: {}",mean);
+	text::info("Finished. Time: {}",mean);
 }
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
-	#if USE_SPDLOG
-	spdlog::set_level(spdlog::level::info); // Set global log level
-#endif
+	text::set_level(text::level::info);
+	
     int loopSize = DEFAULT_LOOPSIZE;
     //check for loopsize options, if given
 	auto opt = tests::CommandLine::getSingleton().getOption("ls");
@@ -176,13 +174,36 @@ int _testFor(tests::BaseTest* test)
 	}
 	#define CHUNK_SIZE 512
 
-	auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
+	
 	_measureTest("Runnable executor with independent tasks and lockOnce",
-		[th1,loopSize]()
+		[loopSize]()
 		{	
+
 			//la propia creacion del hilo es ligeramente lenta, y mientras más buffer de tareas, más tarda								
-			th1->resume();
-			execution::Executor<Runnable> ex(th1);	
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			// th1->fireAndForget([loopSize]()
+			// {
+			// 	auto th = ThreadRunnable::getCurrentThreadRunnable();
+			// 	execution::Executor<Runnable> ex(th);			
+			// 	execution::RunnableExecutorLoopHints lhints;
+			// 	lhints.independentTasks = true;
+			// 	lhints.lockOnce = true;
+			// 	const int idx0 = 0;
+			// 	auto barrier = ex.loop(idx0,loopSize,
+			// 	[](int idx)
+			// 	{					
+			// 		text::debug("iteracion {}",idx);
+			// 		//::tasking::Process::wait(10);
+			// 	},lhints,1
+			// 	);
+			// 	::tasking::waitForBarrierMThread(barrier);
+			// 	text::debug("hecho");
+			// 	#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+			// 		th->getScheduler().resetPool();
+			// 	#endif
+			// },0,false);
+
+			execution::Executor<Runnable> ex(th1);			
 			execution::RunnableExecutorLoopHints lhints;
 			lhints.independentTasks = true;
 			lhints.lockOnce = true;
@@ -199,7 +220,6 @@ int _testFor(tests::BaseTest* test)
 			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
 				th1->getScheduler().resetPool();
 			#endif
-			th1->suspend();
 		},loopSize
 	);
 

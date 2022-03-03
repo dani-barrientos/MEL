@@ -16,6 +16,8 @@ using tasking::MThreadAttributtes;
 #define mIniBPOFF offsetof( MThreadAttributtes,mIniRBP)
 #define mIniRBXOFF offsetof( MThreadAttributtes,mIniRBX)
 #define mRegistersOFF offsetof( MThreadAttributtes,mRegisters)
+#define mFpcsrOFF offsetof( MThreadAttributtes,mFpcsr)
+#define mMxcsrOFF offsetof( MThreadAttributtes,mMxcsr)
 
 
 volatile void Process::checkMicrothread( uint64_t msegs ) 
@@ -37,6 +39,8 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      asm volatile("mov %%r15,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+24) );
      asm volatile("mov %%rsp,(%P[v])(%%rax)"::[v] "i" (mIniSPOFF));
      asm volatile("mov %%rbp,(%P[v])(%%rax)"::[v] "i" (mIniBPOFF));
+     asm volatile("fnstcw (%P[v])(%%rax)"::[v] "i" (mFpcsrOFF));
+     asm volatile("stmxcsr (%P[v])(%%rax)"::[v] "i" (mMxcsrOFF));
      asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF):"cc" );
      asm volatile("jz continueExecuting");
      asm volatile( "movb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF));
@@ -51,7 +55,12 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      asm volatile("rep movsq":::"%rdi","%rsi");
      asm volatile("mov %rdi,%rsp");
      asm volatile("add $8,%rsp");
-     asm volatile( "cld\n"
+     asm volatile( "cld");
+     //@todo pendiente de resovler esto. El tema está en vigilar el alineamiento,
+     /*asm volatile("ldmxcsr (%rsp)\n "
+     "fldcw 4(%rsp)\n"
+     "add $4,%rsp");*/
+     asm volatile(
                   "pop %r15\n"
                   "pop %r14\n"
                   "pop %r13\n"
@@ -71,9 +80,13 @@ volatile void fakeFunction()
      "push %r12\n"
      "push %r13\n"
      "push %r14\n"
-     "push %r15\n"
-                  
+     "push %r15\n"                    
     );
+    //@todo pendiente de resovler esto. El tema está en vigilar el alineamiento,
+    //vigilarlo al llamar a resizestack
+    /*asm volatile("sub $8,%rsp"); //space for fpcsr and mxcsr
+    asm volatile("stmxcsr (%rsp)\n" 
+    "fnstcw 4(%rsp)");*/
     asm volatile( "mov %rdi,%r12");
     asm volatile("movb $1,(%P[v])(%%r12)"::[v] "i" (mSwitchedOFF));
     asm volatile("mov (%P[v])(%%r12),%%r13"::[v] "i" (mIniSPOFF));
@@ -82,6 +95,7 @@ volatile void fakeFunction()
     asm volatile("sub %rsp,%r13");
     asm volatile( "sub $8,%rsp" );
     asm volatile( "mov %r13,%rsi" );
+
     asm volatile( "call resizeStack":::"memory");
     asm volatile("mov %r13,%rcx");
     asm volatile("mov %r14,%rsi");
@@ -98,6 +112,8 @@ volatile void fakeFunction()
     asm volatile("mov (%P[v])(%%r12),%%r13"::[v] "i" (mRegistersOFF+8) );
     asm volatile("mov (%P[v])(%%r12),%%r14"::[v] "i" (mRegistersOFF+16) );
     asm volatile("mov (%P[v])(%%r12),%%r15"::[v] "i" (mRegistersOFF+24) );
+    asm volatile("fldcw (%P[v])(%%r12)"::[v] "i" (mFpcsrOFF) );
+    asm volatile("ldmxcsr (%P[v])(%%r12)"::[v] "i" (mMxcsrOFF) );
     asm volatile("mov (%P[v])(%%r12),%%r12"::[v] "i" (mRegistersOFF) );
 
     asm volatile("pop %rbp");

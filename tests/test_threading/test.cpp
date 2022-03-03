@@ -125,9 +125,7 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
-	#ifdef USE_SPDLOG
-	spdlog::set_level(spdlog::level::debug);
-	#endif
+	text::set_level(text::level::debug);
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
@@ -138,16 +136,25 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	int sharedVar = 0;
 	
 	auto th1 = ThreadRunnable::create();
-	/*th1->post([](RUNNABLE_TASK_PARAMS)
+	th1->post([](RUNNABLE_TASK_PARAMS)
 	{
+		auto th = ThreadRunnable::getCurrentThreadRunnable(); 
 		std::cout << "UNO" << std::endl;
 		tasking::Process::wait(2500);
 		std::cout << "DOS" << std::endl;
 		return ::tasking::EGenericProcessResult::CONTINUE;
 	},true,1000);
+	// th1->post([](RUNNABLE_TASK_PARAMS)
+	// {
+	// 	tasking::Process::wait(100);
+	// 	std::cout << "TRES" << std::endl;
+	// 	tasking::Process::wait(2200);
+	// 	std::cout << "CUATRO" << std::endl;
+	// 	return ::tasking::EGenericProcessResult::CONTINUE;
+	// },true,700);
 	Thread::sleep(120000);
 	return 0;
-*/
+
 	auto th2 = ThreadRunnable::create(true);
 
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)

@@ -277,6 +277,7 @@ namespace tasking
 		std::shared_ptr<Process> fireAndForget(
 			F&& task_proc,
 			unsigned int startTime = 0,
+			bool autoKill=true,
 			bool lockScheduler = true);
 		/**
 		* executes a function in a context of the Runnable.
@@ -342,7 +343,8 @@ namespace tasking
 	std::shared_ptr<Process> Runnable::fireAndForget(
 			F&& f,
 			unsigned int startTime,
-			bool lockScheduler)
+			bool autoKill,
+			bool lockScheduler )
 	{
 		// return post<ProcessType,AllocatorType>(
 		// 	RUNNABLE_CREATETASK
@@ -361,7 +363,7 @@ namespace tasking
 				f();
 				return ::tasking::EGenericProcessResult::KILL;
 			}
-			,true,0,startTime,lockScheduler
+			,autoKill,0,startTime,lockScheduler
 		);
 	}
 

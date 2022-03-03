@@ -13,7 +13,7 @@ namespace parallelism
 	private:
 		BarrierData(size_t nWorkers):mActiveWorkers(nWorkers){}		
 		void set();		
-		inline int getActiveWorkers() const { return mActiveWorkers; }
+		inline size_t getActiveWorkers() const { return mActiveWorkers; }
 		template <class F> auto subscribeCallback(F&& f)
 		{
 			volatile auto protectMe = shared_from_this();
@@ -28,7 +28,7 @@ namespace parallelism
 			return Subscriptor::unsubscribeCallback(std::forward<F>(f));
 		}
 	protected:
-		int	mActiveWorkers;  //para implementacion ingenua
+		size_t	mActiveWorkers; 
 		::core::CriticalSection mCS;
 
 	};
@@ -57,7 +57,7 @@ namespace parallelism
 		{
 			mData->set();
 		}
-		inline int getActiveWorkers() const
+		inline size_t getActiveWorkers() const
 		{ 
 			return mData->getActiveWorkers(); 
 		}

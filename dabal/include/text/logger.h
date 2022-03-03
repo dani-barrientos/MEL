@@ -1,4 +1,5 @@
 #pragma once
+#include <DabalLibType.h>
 #ifdef USE_SPDLOG
 #include <spdlog/spdlog.h>
 #else
@@ -11,6 +12,17 @@
  */
 namespace text
 {
+    namespace level
+    {
+        enum ELevel {debug,info,err,warn,critical};
+        #ifndef USE_SPDLOG                
+        namespace _private
+        {
+            static ELevel sLevel;
+        }
+        #endif
+    }
+    void DABAL_API set_level(::text::level::ELevel level);    
     template<class ...Args> void debug(std::string s,Args&&... args)
     {
         #ifdef USE_SPDLOG

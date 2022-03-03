@@ -3,13 +3,9 @@
 #include <mpl/MemberEncapsulate.h>
 
 using mpl::makeMemberEncapsulate;
-#include <core/TLS.h>
-using core::TLS;
+
 #include <text/logger.h>
 
-static TLS::TLSKey gCurrentThreadKey;
-static bool gCurrentThreadKeyCreated = false;
-static CriticalSection gCurrrentThreadCS;
 
 /*#if defined(DABAL_MACOSX) || defined(DABAL_IOS)
 #import <Foundation/Foundation.h>
@@ -196,6 +192,7 @@ esto tengo que estudiarlo a ver si realmente es necesario. no me fío
 		t->mARP=[[NSAutoreleasePool alloc] init];
 #endif		
 */
+		
 		t->mFunction();
 		//t->mResult = t->runInternal();
 		/*
@@ -227,13 +224,7 @@ void Thread::_initialize()
 */
 	mHandle = 0;
 	mPriority = TP_NORMAL;
-	gCurrrentThreadCS.enter();
-	if ( !gCurrentThreadKeyCreated )
-	{
-		TLS::createKey( gCurrentThreadKey );
-		gCurrentThreadKeyCreated = true;
-	}
-	gCurrrentThreadCS.leave();
+	
 
 /*
 I think I should create it on start
@@ -456,16 +447,7 @@ void Thread::setPriority(ThreadPriority tp) {
 }
 #endif
 
-Thread* Thread::getCurrentThread()
-{
-	if ( gCurrentThreadKeyCreated ) //not multithread-safe but it shouldn't be a problem
-	{
-		return (Thread*)TLS::getValue( gCurrentThreadKey );
-	}else
-	{
-		return NULL;
-	}
-}
+
 uint64_t Thread::getAffinity() const
 {
 	//@todo  uff, en Windows es mortal esto

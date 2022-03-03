@@ -7,7 +7,7 @@ add_library(dabal SHARED  "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/core/Timer.cpp"
  "source/core/Type.cpp" "source/core/Thread.cpp" "source/core/ThreadRunnable.cpp" "source/core/TLS.cpp" 
 "source/core/Event_win32.cpp" "source/core/Event_posix.cpp" "include/tasking/CriticalSection_mthread.h"  "include/DabalLibType.h"
- "source/parallelism/Barrier.cpp" "source/tasking/utilities.cpp"
+ "source/parallelism/Barrier.cpp" "source/tasking/utilities.cpp" "source/text/logger.cpp"
 "source/parallelism/ThreadPool.cpp" "include/parallelism/For.h" "include/execution/Executor.h" "include/execution/Continuation.h" "include/execution/RunnableExecutor.h"
 )
 #set_target_properties(dabal PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")

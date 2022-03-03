@@ -124,8 +124,8 @@ class MasterThread : public ThreadRunnable
 		}
 		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p) 
 		{	
-			//constexpr auto mthreadProb = 0.7f; //probability of task being a microthread instead blocking thread
-			constexpr auto mthreadProb = 0.0f; //probability of task being a microthread instead blocking thread
+			constexpr auto mthreadProb = 0.7f; //probability of task being a microthread instead blocking thread
+			//constexpr auto mthreadProb = 1.0f; //probability of task being a microthread instead blocking thread
 			constexpr auto newTaskProb = 0.5f; //probability of launching a new task
 			//constexpr auto newTaskProb = 0.0f; //probability of launching a new task
 			constexpr auto maxTasks = 500;
@@ -358,9 +358,8 @@ int test_threading::test_futures( tests::BaseTest* test)
 	
 	auto producer = ThreadRunnable::create(true);
 	
-#ifdef USE_SPDLOG
-    spdlog::set_level(spdlog::level::debug); // Set global log level
-#endif
+	text::set_level(text::level::debug);
+
 	constexpr size_t n = 10;
 	constexpr unsigned int DEFAULT_TESTTIME = 60*1000;
 	unsigned int testTime;

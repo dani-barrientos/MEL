@@ -241,7 +241,7 @@ namespace tasking
 		 * wakeup an asleep process or an evicted process (that process having called swtich or wait)
 		 */
 		void wakeUp();
-void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
+
 	private:
 		//static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static mpl::Tuple<TYPELIST(int,Process*,unsigned int)> _preSleep() OPTIMIZE_FLAGS;
@@ -260,7 +260,7 @@ void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
 		* main execution block
 		* @param msegs    msegs
 		*/
-		//void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
+		void _execute(uint64_t msegs) OPTIMIZE_FLAGS;
 		volatile void checkMicrothread(uint64_t msegs ) OPTIMIZE_FLAGS;
 		/**
 		* execution function. It calls update() when time > mPeriod

@@ -144,7 +144,7 @@ void ProcessScheduler::executeProcesses()
 		auto pi = _getCurrentProcessInfo();
 		if (pi == nullptr)
 		{
-			pi = new ProcessInfo; //
+			pi = new ProcessInfo; //will lead to a leak
 			TLS::setValue(gTLSCurrentProcessKey, pi);
 		}
 		mProcessInfo = pi;

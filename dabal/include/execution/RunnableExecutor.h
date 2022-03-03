@@ -93,7 +93,7 @@ namespace execution
                         {
                             functor(i);
                             result.set();
-                        },0,!mustLock
+                        },0,true,!mustLock
                     );
             }else
             {
@@ -105,7 +105,7 @@ namespace execution
                                 functor(i);            
                             }            
                             result.set();
-                        },0,!mustLock
+                        },0,true,!mustLock
                     );           
             }
             if ( mustLock )

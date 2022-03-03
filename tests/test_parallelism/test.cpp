@@ -69,9 +69,7 @@ class TestResult
 int TestParallelism::onExecuteTest()
 {
 	int result = 0;
-    #ifdef USE_SPDLOG
-    spdlog::set_level(spdlog::level::info); // Set global log level
-		#endif
+    text::set_level(text::level::info);    
     Timer timer;
     constexpr int n = 100000;
     constexpr int tries = 50;

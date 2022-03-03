@@ -132,12 +132,7 @@ namespace core
 			 */
 			static void yield(YieldPolicy yp=YP_ANY_THREAD_SAME_PROCESSOR);
 
-			/**
-			* return current executing thread. NULL if any.
-			* result can be NULL if current executing thread is not a Thread type (for example, main application thread
-			* or thread created through API functions
-			*/
-			static Thread* getCurrentThread();
+			
 			/**
 			* return handle for this thread
 			*/

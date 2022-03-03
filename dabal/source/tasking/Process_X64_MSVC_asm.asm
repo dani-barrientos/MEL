@@ -3,32 +3,62 @@
     Attributes STRUCT
         IniRSP QWORD ?;
         StackEnd QWORD ?;
-        Stack QWORD ?;
+        Stack QWORD ?;        
         RegBP QWORD ?;
         RegBX QWORD ? ;
+        RegSI QWORD ? ;
+        RegDI QWORD ? ;
         Reg12 QWORD ?
         Reg13 QWORD ?
         Reg14 QWORD ?
         Reg15 QWORD ?
+        ALIGN 16
+        RegXMM6 OWORD ?
+        RegXMM7 OWORD ?
+        RegXMM8 OWORD ?
+        RegXMM9 OWORD ?
+        RegXMM10 OWORD ?
+        RegXMM11 OWORD ?
+        RegXMM12 OWORD ?
+        RegXMM13 OWORD ?
+        RegXMM14 OWORD ?
+        RegXMM15 OWORD ?
         ;Switched BYTE ? ; cuidado con alineamientos,claro!!!
-        Switched DWORD ?
+        Switched WORD ?  ;
+        RegFPCSR WORD ?
+        RegMXCSR DWORD ?;
         StackSize DWORD ?;
     Attributes ENDS
     EXTERN resizeStack:PROC
-    EXTERN Process_execute:PROC
-;para pruebas
+    ;EXTERN Process_execute:PROC
+
+;void _checkMicrothread(MThreadAttributtes*,uint64_t msegs);
 _checkMicrothread PROC
 
     mov rax,rcx; //save rcx because it will be modified later
+    mov [rcx+Attributes.RegBP],rbp; 
     mov [rcx+Attributes.RegBX],rbx;
+    mov [rcx+Attributes.RegSI],rsi;
+    mov [rcx+Attributes.RegDI],rdi;
     mov [rcx+Attributes.Reg12],r12;
     mov [rcx+Attributes.Reg13],r13;
     mov [rcx+Attributes.Reg14],r14;
     mov [rcx+Attributes.Reg15],r15;
-    mov [rcx+Attributes.IniRSP],rsp;
- ;@todo   creo que esto es un problema porque al llamarme aquí cambia el bp, así que creo que tendré que llamar con un jmp o similar
-    ;mov [rcx+Attributes.RegBP],rbp; 
-    mov [rcx+Attributes.RegBP],rsp ; COMO PARECE QUE EL RBP NO LO USA, VOY A USAR EL SP
+    mov [rcx+Attributes.IniRSP],rsp;     
+    ;SSE2 registers 128 bits no-volatile
+    movdqa [rcx+Attributes.RegXMM6],xmm6
+    movdqa [rcx+Attributes.RegXMM7],xmm7
+    movdqa [rcx+Attributes.RegXMM8],xmm8
+    movdqa [rcx+Attributes.RegXMM9],xmm9 
+    movdqa [rcx+Attributes.RegXMM10],xmm10
+    movdqa [rcx+Attributes.RegXMM11],xmm11
+    movdqa [rcx+Attributes.RegXMM12],xmm12
+    movdqa [rcx+Attributes.RegXMM13],xmm13
+    movdqa [rcx+Attributes.RegXMM14],xmm14
+    movdqa [rcx+Attributes.RegXMM15],xmm15
+    fnstcw [rcx+Attributes.RegFPCSR]
+    stmxcsr DWORD PTR [rcx+Attributes.RegMXCSR]; 
+ 
     cmp BYTE PTR [rcx+Attributes.Switched],0
     je continueExecuting_1
     mov[rcx+Attributes.Switched],BYTE PTR 0
@@ -43,98 +73,76 @@ _checkMicrothread PROC
     mov rsp,rdi
     add rsp,8
     cld    
+    
+    movdqa xmm6,[rsp]
+    movdqa xmm7,[rsp+16]
+    movdqa xmm8,[rsp+32]
+    movdqa xmm9,[rsp+48]
+    movdqa xmm10,[rsp+64]
+    movdqa xmm11,[rsp+80]
+    movdqa xmm12,[rsp+96]
+    movdqa xmm13,[rsp+112]
+    movdqa xmm14,[rsp+128]
+    movdqa xmm15,[rsp+144]
+    ldmxcsr DWORD PTR [rsp+160]; 
+    fldcw [rsp+164]
+    add rsp,10*16+8
+    
     pop r15
     pop r14
     pop r13
     pop r12
+    pop rdi
+    pop rsi
     pop rbx
-    pop rbp
+    pop rbp   
     ret
+
     continueExecuting_1:
     mov rcx,rax
     sub rsp,32 ;space for arguments, as defined by calling convention in MSVC
-    call Process_execute
+    mov r15,0
+    ;check alignment
+    test rsp,0fh
+    jz callfunction
+    mov r15,8
+    sub rsp,8 ;//no entiendo por qué tengo esto. la cuestion es que debo guardar el offset que sume..
+    
+callfunction:
+    mov rcx,r8
+    call r9
+    ;call Process_execute
     add rsp,32
+    add rsp,r15
     ret 
 _checkMicrothread ENDP
-;first argument, by convention, is in rcx
-_checkMT  PROC
- 
-  ;save registers 
-;  tengo que encontrar forma de no tener que redefinir el struct    
-    mov rax,rcx; //save rcx because it will be modified later
-    mov [rcx+Attributes.RegBX],rbx;
-    mov [rcx+Attributes.Reg12],r12;
-    mov [rcx+Attributes.Reg13],r13;
-    mov [rcx+Attributes.Reg14],r14;
-    mov [rcx+Attributes.Reg15],r15;
-    mov [rcx+Attributes.IniRSP],rsp;
- ;@todo   creo que esto es un problema porque al llamarme aquí cambia el bp, así que creo que tendré que llamar con un jmp o similar
-    ;mov [rcx+Attributes.RegBP],rbp; 
-    mov [rcx+Attributes.RegBP],rsp ; COMO PARECE QUE EL RBP NO LO USA, VOY A USAR EL SP
-    cmp BYTE PTR [rcx+Attributes.Switched],0
-    je continueExecuting
-    mov[rcx+Attributes.Switched],BYTE PTR 0
-    std 
-    mov ecx,[rax+Attributes.StackSize]
-    shr ecx,3
-    sub rsp,8
-    mov rdi,rsp
-    mov rsi,[rax+Attributes.StackEnd]
-    sub rsi,8
-    rep movsq
-    mov rsp,rdi
-    add rsp,8
-    cld
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    pop rbp
-    ;ret
 
-    ; mov %[v],%%rax"::[v] "m" (realThis):"rax");
-    ;  asm volatile("mov %%rbx,(%P[v])(%%rax)"::[v] "i" (mIniRBXOFF) );
-    ;  asm volatile("mov %%r12,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF) );
-    ;  asm volatile("mov %%r13,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+8) );
-    ;  asm volatile("mov %%r14,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+16) );
-    ;  asm volatile("mov %%r15,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+24) );
-    ;  asm volatile("mov %%rsp,(%P[v])(%%rax)"::[v] "i" (mIniSPOFF));
-    ;  asm volatile("mov %%rbp,(%P[v])(%%rax)"::[v] "i" (mIniBPOFF));
-    ;  asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF):"cc" );
-    ;  asm volatile("jz continueExecuting");
-    ;  asm volatile( "movb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF));
-    ;  asm volatile( "std\n");
-    ;  asm volatile( "mov (%P[v])(%%rax),%%ecx"::[v] "i" (mStackSizeOFF) );
-    ;  asm volatile( "shr $3,%ecx");
-    ;  asm volatile( "sub $8,%rsp" );
-    ;  asm volatile("mov %rsp,%rdi\n");
-    ;  asm volatile("mov (%P[v])(%%rax),%%rsi"::[v] "i" (mStackEndOFF) );
-
-    ;  asm volatile("sub $8,%%rsi":::"cc" );
-    ;  asm volatile("rep movsq":::"%rdi","%rsi");
-    ;  asm volatile("mov %rdi,%rsp");
-    ;  asm volatile("add $8,%rsp");
-    ;  asm volatile( "cld\n"
-    ;               "pop %r15\n"
-    ;               "pop %r14\n"
-    ;               "pop %r13\n"
-    ;               "pop %r12\n"
-    ;               "pop %rbx\n"
-    ;               "pop %rbp");
-    ;  asm volatile ("ret" );
-    continueExecuting:
- 
-    ret 
-_checkMT  ENDP
+;void _switchMT(MThreadAttributtes*)
 _switchMT PROC
     push rbp
     push rbx
+    push rsi
+    push rdi
     push r12
     push r13
     push r14
     push r15
+
+    ;at function call, stack must be aligned to 16 byte. rip "unalign it". so need to add another 8 bytes to the 10 xmm registers
+    sub rsp,10*16+8
+    movdqa [rsp],xmm6
+    movdqa [rsp+16],xmm7
+    movdqa [rsp+32],xmm8
+    movdqa [rsp+48],xmm9
+    movdqa [rsp+64],xmm10
+    movdqa [rsp+80],xmm11
+    movdqa [rsp+96],xmm12
+    movdqa [rsp+112],xmm13
+    movdqa [rsp+128],xmm14
+    movdqa [rsp+144],xmm15
+    stmxcsr DWORD PTR [rsp+160]; 
+    fnstcw [rsp+164]
+    
     mov r12,rcx ;MThreadAttributtes*
     mov [r12+Attributes.Switched],BYTE PTR 1
     mov r13,[r12+Attributes.IniRSP]
@@ -143,60 +151,91 @@ _switchMT PROC
     sub r13,rsp
     sub rsp,8
     mov rdx,r13  ;//size parameter in ecx 
+    sub rsp,32 ;space for arguments, as defined by calling convention in MSVC
+    mov r15,0
+    ;check alignment
+    test rsp,0fh
+    jz callfunction
+    mov r15,8
+    sub rsp,8  ;if not aligned to 16, at least is aligned to 8 (sure??)
+callfunction:
     call resizeStack
     mov rcx,r13
     mov rsi,r14
+    add rsp,32
+    add rsp,r15 ;add alignment
+    
     std
     shr rcx,3
     mov rdi,[r12+Attributes.StackEnd]
     sub rdi,8
     rep movsq
-    cld
-    mov rsp,[r12+Attributes.RegBP] ;@todo funciona de chiripa
+    cld          
+    mov rsp,[r12+Attributes.IniRSP] 
+    mov rbp,[r12+Attributes.RegBP]         
     mov rbx,[r12+Attributes.RegBX]
+    mov rsi,[r12+Attributes.RegSI]
+    mov rdi,[r12+Attributes.RegDI]
     mov r13,[r12+Attributes.Reg13]
     mov r14,[r12+Attributes.Reg14]
     mov r15,[r12+Attributes.Reg15]
+    movdqa xmm6,[r12+Attributes.RegXMM6]
+    movdqa xmm7,[r12+Attributes.RegXMM7]
+    movdqa xmm8,[r12+Attributes.RegXMM8]
+    movdqa xmm9,[r12+Attributes.RegXMM9] 
+    movdqa xmm10,[r12+Attributes.RegXMM10]
+    movdqa xmm11,[r12+Attributes.RegXMM11]
+    movdqa xmm12,[r12+Attributes.RegXMM12]
+    movdqa xmm13,[r12+Attributes.RegXMM13]
+    movdqa xmm14,[r12+Attributes.RegXMM14]
+    movdqa xmm15,[r12+Attributes.RegXMM15]
+    fldcw [r12+Attributes.RegFPCSR]; 
+    ldmxcsr DWORD PTR [r12+Attributes.RegMXCSR]; 
     mov r12,[r12+Attributes.Reg12] 
-    ;pop rbp no vale si no se guardó el marco de pila...
     ret
-
-;  asm volatile( "push %rbp\n"
-;      "push %rbx\n"
-;      "push %r12\n"
-;      "push %r13\n"
-;      "push %r14\n"
-;      "push %r15\n"
-                  
-;     );
-;     asm volatile( "mov %rdi,%r12");
-;     asm volatile("movb $1,(%P[v])(%%r12)"::[v] "i" (mSwitchedOFF));
-;     asm volatile("mov (%P[v])(%%r12),%%r13"::[v] "i" (mIniSPOFF));
-;     asm volatile("mov %r13,%r14");
-;     asm volatile("sub $8,%r14");   
-;     asm volatile("sub %rsp,%r13");
-;     asm volatile( "sub $8,%rsp" );
-;     asm volatile( "mov %r13,%rsi" );
-;     asm volatile( "call resizeStack":::"memory");
-;     asm volatile("mov %r13,%rcx");
-;     asm volatile("mov %r14,%rsi");
-    
-;     asm volatile("std\n"
-;                 "shr $3,%rcx");
-;     asm volatile("mov (%P[v])(%%r12),%%rdi"::[v] "i" (mStackEndOFF) );
-;     asm volatile("sub $8,%%rdi":::"cc");
-;     asm volatile("rep movsq":::"%rdi","%rsi" );
-;     asm volatile("cld");
-
-;     asm volatile("mov (%P[v])(%%r12),%%rsp"::[v] "i" (mIniBPOFF));
-;     asm volatile("mov (%P[v])(%%r12),%%rbx"::[v] "i" (mIniRBXOFF) );
-;     asm volatile("mov (%P[v])(%%r12),%%r13"::[v] "i" (mRegistersOFF+8) );
-;     asm volatile("mov (%P[v])(%%r12),%%r14"::[v] "i" (mRegistersOFF+16) );
-;     asm volatile("mov (%P[v])(%%r12),%%r15"::[v] "i" (mRegistersOFF+24) );
-;     asm volatile("mov (%P[v])(%%r12),%%r12"::[v] "i" (mRegistersOFF) );
-
-;     asm volatile("pop %rbp");
-;     asm volatile("ret");
 _switchMT ENDP
-    END
+
+ ; _checkMT  PROC
  
+;   ;save registers 
+; ;  tengo que encontrar forma de no tener que redefinir el struct    
+;     mov rax,rcx; //save rcx because it will be modified later
+;     mov [rcx+Attributes.RegBX],rbx;
+;     mov [rcx+Attributes.Reg12],r12;
+;     mov [rcx+Attributes.Reg13],r13;
+;     mov [rcx+Attributes.Reg14],r14;
+;     mov [rcx+Attributes.Reg15],r15;
+;     mov [rcx+Attributes.IniRSP],rsp;
+    
+;  ;@todo   creo que esto es un problema porque al llamarme aquí cambia el bp, así que creo que tendré que llamar con un jmp o similar
+;     ;mov [rcx+Attributes.RegBP],rbp; 
+;     mov [rcx+Attributes.RegBP],rsp ; COMO PARECE QUE EL RBP NO LO USA, VOY A USAR EL SP
+;     cmp BYTE PTR [rcx+Attributes.Switched],0
+;     je continueExecuting
+;     mov[rcx+Attributes.Switched],BYTE PTR 0
+;     std 
+;     mov ecx,[rax+Attributes.StackSize]
+;     shr ecx,3
+;     sub rsp,8
+;     mov rdi,rsp
+;     mov rsi,[rax+Attributes.StackEnd]
+;     sub rsi,8
+;     rep movsq
+;     mov rsp,rdi
+;     add rsp,8
+;     cld
+;     pop r15
+;     pop r14
+;     pop r13
+;     pop r12
+;     pop rdi
+;     pop rsi
+;     pop rbx
+;     pop rbp
+   
+;     continueExecuting:
+ 
+;     ret 
+; _checkMT  ENDP
+
+   END

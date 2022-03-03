@@ -19,6 +19,7 @@ namespace core
     * to manage tasks correctly
 	*/
 	class DABAL_API ThreadRunnable : public Runnable
+        ,public std::enable_shared_from_this<ThreadRunnable>
 	{
 	public:
         enum EThreadState { 
@@ -82,8 +83,17 @@ namespace core
         EThreadState getState() const{return mState;}
         void terminate(unsigned int exitCode);
         bool getTerminateRequest(){ return mEnd; }
-        
+        /**
+        * return current executing ThreadRunnable. nullptr if any.
+        * result can be NULL if current executing thread is not a Thread type (for example, main application thread
+        * or thread created through API functions
+        */
+        static ThreadRunnable* getCurrentThreadRunnable();
 	private:
+        // struct ThreadInfo
+        // {
+        //     std::shared_ptr<ThreadRunnable> tr;
+        // };
         std::unique_ptr<Thread> mThread;
 	#ifdef USE_CUSTOM_EVENT
 		Event	mWaitForTasks; 

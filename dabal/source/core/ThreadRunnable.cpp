@@ -1,15 +1,31 @@
 #include <core/ThreadRunnable.h>
 using core::ThreadRunnable;
 #include <mpl/MemberEncapsulate.h>
+#include <core/TLS.h>
+using core::TLS;
+
+static TLS::TLSKey gCurrentThreadKey;
+static bool gCurrentThreadKeyCreated = false;
+static CriticalSection gCurrrentThreadCS;
 
 
 ThreadRunnable::ThreadRunnable( unsigned int maxTasksSize,unsigned int maxNewTasks):Runnable(maxTasksSize,maxNewTasks),mState(THREAD_INIT),mEnd(false),
 	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
 	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&ThreadRunnable::_processAwaken, this));
+	gCurrrentThreadCS.enter();
+	if ( !gCurrentThreadKeyCreated )
+	{
+		TLS::createKey( gCurrentThreadKey );
+		gCurrentThreadKeyCreated = true;
+	}
+	gCurrrentThreadCS.leave();
 }
 void ThreadRunnable::_execute()	
 {
+	
+	//TLS::setValue( gCurrentThreadKey,new ThreadInfo{shared_from_this()} );
+	TLS::setValue( gCurrentThreadKey,this );
     onThreadStart();
     while ( mState != THREAD_FINISHING_DONE )
     {
@@ -167,4 +183,13 @@ void ThreadRunnable::_signalWakeup()
 	}
 	mWaitForTasksCond.notify_one();
 #endif
+}
+ThreadRunnable* ThreadRunnable::getCurrentThreadRunnable()
+{
+	return (ThreadRunnable*)TLS::getValue( gCurrentThreadKey );
+	// ThreadInfo* ti = (ThreadInfo*)TLS::getValue( gCurrentThreadKey );
+	// if ( ti )
+	// 	return ti->tr;
+	// else
+	// 	return nullptr;
 }
