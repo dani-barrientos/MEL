@@ -181,45 +181,46 @@ int _testFor(tests::BaseTest* test)
 
 			//la propia creacion del hilo es ligeramente lenta, y mientras más buffer de tareas, más tarda								
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-			// th1->fireAndForget([loopSize]()
-			// {
-			// 	auto th = ThreadRunnable::getCurrentThreadRunnable();
-			// 	execution::Executor<Runnable> ex(th);			
-			// 	execution::RunnableExecutorLoopHints lhints;
-			// 	lhints.independentTasks = true;
-			// 	lhints.lockOnce = true;
-			// 	const int idx0 = 0;
-			// 	auto barrier = ex.loop(idx0,loopSize,
-			// 	[](int idx)
-			// 	{					
-			// 		text::debug("iteracion {}",idx);
-			// 		//::tasking::Process::wait(10);
-			// 	},lhints,1
-			// 	);
-			// 	::tasking::waitForBarrierMThread(barrier);
-			// 	text::debug("hecho");
-			// 	#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-			// 		th->getScheduler().resetPool();
-			// 	#endif
-			// },0,false);
-
-			execution::Executor<Runnable> ex(th1);			
-			execution::RunnableExecutorLoopHints lhints;
-			lhints.independentTasks = true;
-			lhints.lockOnce = true;
-			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,
-			[](int idx)
-			{					
-				text::debug("iteracion {}",idx);
-				//::tasking::Process::wait(10);
-			},lhints,1
-			);
-			::core::waitForBarrierThread(barrier);
-			text::debug("hecho");
-			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-				th1->getScheduler().resetPool();
-			#endif
+			core::Event event;			
+			th1->fireAndForget([th1,loopSize,&event]()
+			{
+				execution::Executor<Runnable> ex(th1);			
+				execution::RunnableExecutorLoopHints lhints;
+				lhints.independentTasks = true;
+				lhints.lockOnce = true;
+				const int idx0 = 0;
+				auto barrier = ex.loop(idx0,loopSize,
+				[](int idx)
+				{					
+					text::debug("iteracion {}",idx);
+					//::tasking::Process::wait(10);
+				},lhints,1
+				);
+				::tasking::waitForBarrierMThread(barrier);
+				text::debug("hecho");
+				#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+					th1->getScheduler().resetPool();
+				#endif
+				event.set();
+			},0,false);
+			event.wait();
+			// execution::Executor<Runnable> ex(th1);			
+			// execution::RunnableExecutorLoopHints lhints;
+			// lhints.independentTasks = true;
+			// lhints.lockOnce = true;
+			// const int idx0 = 0;
+			// auto barrier = ex.loop(idx0,loopSize,
+			// [](int idx)
+			// {					
+			// 	text::debug("iteracion {}",idx);
+			// 	//::tasking::Process::wait(10);
+			// },lhints,1
+			// );
+			// ::core::waitForBarrierThread(barrier);
+			// text::debug("hecho");
+			// #ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+			// 	th1->getScheduler().resetPool();
+			// #endif
 		},loopSize
 	);
 
