@@ -250,7 +250,8 @@ namespace tasking
 		virtual void finish() = 0;
 		virtual bool finished() = 0;
 
-		
+		static std::function<bool()> _killTrue;
+		static std::function<bool()> _killFalse;
 		/**
 		* Posts a new execution request over a functor
 		* The execution is NOT guaranteed to be taken into account inmediatly.
@@ -262,10 +263,10 @@ namespace tasking
 		* @param[in] startTime milliseconds to begin task
 		* @return the process created for this task
 		*/
-		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F>
+		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F,class KF = const std::function<bool()>&>
 		std::shared_ptr<Process> post(
 			F&& task_proc,
-			bool autoKill = false,
+			KF&& killFunction=_killFalse,
 			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
 			unsigned int period = 0,unsigned int startTime = 0,
 			bool lockScheduler = true);
@@ -273,11 +274,11 @@ namespace tasking
 		 * @brief Convenient function to post no periodic task with signature void f()
 		 * @param[in] task_proc functor with signature void f(void)
 		 */
-		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F>		
+		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F,class KF = const std::function<bool()>&>		
 		std::shared_ptr<Process> fireAndForget(
 			F&& task_proc,
 			unsigned int startTime = 0,
-			bool autoKill=true,
+			KF&& killFunction=_killTrue,
 			bool lockScheduler = true);
 		/**
 		* executes a function in a context of the Runnable.
@@ -325,25 +326,24 @@ namespace tasking
 
 	};
 	
-	template <class ProcessType,class AllocatorType,class F>
+	template <class ProcessType,class AllocatorType,class F,class KF>
 	std::shared_ptr<Process> Runnable::post(
 		F&& task_proc,
-		bool autoKill,
-		// ETaskPriority priority ,
+		KF&& killFunction,
 		unsigned int period,unsigned int startTime,bool lockScheduler )
 	{
 		::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
-		p->setAutoKill( autoKill );		
+		p->setKillCallback( ::std::forward<KF>(killFunction) );
 		postTask(p,startTime,lockScheduler);
 		return p;	
 	}
-	template <class ProcessType ,class AllocatorType, class F>		
+	template <class ProcessType ,class AllocatorType, class F,class KF>		
 	std::shared_ptr<Process> Runnable::fireAndForget(
 			F&& f,
 			unsigned int startTime,
-			bool autoKill,
+			KF&& killFunction,
 			bool lockScheduler )
 	{
 		// return post<ProcessType,AllocatorType>(
@@ -363,7 +363,7 @@ namespace tasking
 				f();
 				return ::tasking::EGenericProcessResult::KILL;
 			}
-			,autoKill,0,startTime,lockScheduler
+			,std::forward<KF>(killFunction),0,startTime,lockScheduler
 		);
 	}
 
@@ -409,7 +409,7 @@ namespace tasking
 						, ::tasking::EGenericProcessResult::KILL
 						)
 				),
-				 false  //@todo revisar cómo debería ser
+				 Runnable::_killFalse  //@todo revisar cómo debería ser
 				, 0
 
 			);		

@@ -20,9 +20,9 @@ namespace tasking
 	public:
 		typedef std::function<EGenericProcessResult (uint64_t,Process*)> GenericCallback;
 	private:
-		GenericCallback			mProcessCallback;
-		volatile EGenericProcessResult			mUpdateResult;
-		bool					mAutoKill;
+		GenericCallback					mProcessCallback;
+		std::function<bool ()> 			mKillCallback;
+		volatile EGenericProcessResult	mUpdateResult;
 
 	public:
 		/**
@@ -38,13 +38,8 @@ namespace tasking
 		*/
 		template <class F> void setProcessCallback( F&& functor );
 		inline const GenericProcess::GenericCallback& getProcessCallback() const;
-		/**
-		* set if process will be atomatically killed when kill signal is received
-		* instead waiting for internal callback to terminate.
-		* Class default is "false"
-		*/
-		inline void setAutoKill( bool value );
-		inline bool getAutoKill() const;
+		template <class F> void setKillCallback( F&& functor );
+		
 		/*
 		* set callback to execute on process init
 		* @param[in] functor. A functor with signature bool f(unsigned int msegs, Process* )
@@ -83,14 +78,10 @@ namespace tasking
 	{
 		return mProcessCallback;
 	}
-	void GenericProcess::setAutoKill( bool value )
+	template <class F> void GenericProcess::setKillCallback( F&& functor )
 	{
-		mAutoKill = value;
+		mKillCallback = std::forward<F>(functor);
 	}
-	bool GenericProcess::getAutoKill() const
-	{
-		return mAutoKill;
-	}
-
+	
 
 };

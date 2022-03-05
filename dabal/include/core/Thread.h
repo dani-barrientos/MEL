@@ -174,7 +174,7 @@ namespace core
 			void terminate(unsigned int exitCode=0);
 		private:
 			Thread(const char* name);
-			bool mJoined;
+			enum class EJoinResult{JOINED_NONE,JOINED_OK,JOINED_ERROR} mJoinResult;
 #ifdef DABAL_WINDOWS
 			HANDLE mHandle = 0;
 			DWORD mID;

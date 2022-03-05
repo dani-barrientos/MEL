@@ -212,7 +212,7 @@ Thread::Thread()
 }
 void Thread::_initialize()
 {
-	mJoined = false;
+	mJoinResult = EJoinResult::JOINED_NONE;
 #ifdef _WINDOWS
 	mID = 0;
 #endif
@@ -269,7 +269,7 @@ Thread::~Thread()
 	}
 	mID=0;
 #else
-	if (mHandle && !mJoined) 
+	if (mHandle && mJoinResult == EJoinResult::JOINED_NONE) 
 	{
 		join();
 	}
@@ -355,7 +355,7 @@ using namespace ::std::string_literals;
 
 bool Thread::join(unsigned int millis)
 {
-	if ( !mJoined)
+	if ( mJoinResult == EJoinResult::JOINED_NONE)
 	{
 #ifdef DABAL_WINDOWS
 	DWORD status=WaitForSingleObject(mHandle, millis);
@@ -365,16 +365,32 @@ bool Thread::join(unsigned int millis)
 		text::error("Error joining thread. Err = 0x{:x}",err);
 
 	}
+	mirar como puedo saber si hay deadlock
 	mJoined = status!=WAIT_TIMEOUT; 
 #else
 	int err = pthread_join(mHandle, NULL/*result*/);
-	mJoined=!err;
-	if (err) {
-		text::error("Error joining thread: err = {}", err);
-	}
+	
+	if ( err != 0)
+	{
+		mJoinResult = EJoinResult::JOINED_ERROR;
+		switch(err)
+		{
+			case EDEADLK:
+				text::error("Error joining thread, deadloack. Maybe thread is destroyed from this thread context");	
+				break;
+			case EINVAL:
+				text::error("Error joining thread. Thread not joinable");	
+				break;
+			case ESRCH:
+				text::error("Error joining thread. Thread {} doesn't exist",mHandle);
+				break;
+		}
+	}else
+		mJoinResult = EJoinResult::JOINED_OK;
+	
 #endif
 	}
-	return mJoined;	
+	return mJoinResult == EJoinResult::JOINED_OK;	
 }
 
 void Thread::yield(YieldPolicy yp) {

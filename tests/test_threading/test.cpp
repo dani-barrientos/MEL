@@ -143,7 +143,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		tasking::Process::wait(2500);
 		std::cout << "DOS" << std::endl;
 		return ::tasking::EGenericProcessResult::CONTINUE;
-	},true,1000);
+	},Runnable::_killTrue,1000);
 	// th1->post([](RUNNABLE_TASK_PARAMS)
 	// {
 	// 	tasking::Process::wait(100);
@@ -159,7 +159,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
-		bool autokill = true;
+		auto& autokill = Runnable::_killTrue;
 		std::shared_ptr<Process> p1=th2->post([th2](uint64_t t,Process* p)
 		{
 			static bool firstTime = true;
@@ -232,7 +232,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		text::debug("execution done");
 		return ::tasking::EGenericProcessResult::KILL;
 	}
-	,true,3000);
+	,Runnable::_killTrue,3000);
 	
 	/*
 	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
@@ -305,7 +305,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
 					return ::tasking::EGenericProcessResult::KILL;
-				},false,1000,0);		
+				},Runnable::_killFalse,1000,0);		
 			}
 			::Thread::sleep(1) ;//to wait for taks
 		}
@@ -328,7 +328,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 				{
 					//spdlog::debug("Lambda {}",count);
 					return ::tasking::EGenericProcessResult::KILL;
-				},false,1000,0);
+				},Runnable::_killFalse,1000,0);
 			}	
 			::Thread::sleep(1) ;//wait for tasks finished
 		}

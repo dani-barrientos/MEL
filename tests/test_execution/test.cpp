@@ -182,9 +182,10 @@ int _testFor(tests::BaseTest* test)
 			//la propia creacion del hilo es ligeramente lenta, y mientras más buffer de tareas, más tarda								
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			core::Event event;			
-			th1->fireAndForget([th1,loopSize,&event]()
+			execution::Executor<Runnable> ex(th1);
+			//passing th1 as shared_ptr (as needed by executors) can lead to destruction of the thread inside this task, so leading to a deadlock in THread join
+			th1->fireAndForget([&ex,loopSize,&event]()
 			{
-				execution::Executor<Runnable> ex(th1);			
 				execution::RunnableExecutorLoopHints lhints;
 				lhints.independentTasks = true;
 				lhints.lockOnce = true;
@@ -202,7 +203,7 @@ int _testFor(tests::BaseTest* test)
 					th1->getScheduler().resetPool();
 				#endif
 				event.set();
-			},0,false);
+			},0,Runnable::_killFalse);
 			event.wait();
 			// execution::Executor<Runnable> ex(th1);			
 			// execution::RunnableExecutorLoopHints lhints;

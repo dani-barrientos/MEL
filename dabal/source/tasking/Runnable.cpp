@@ -89,6 +89,8 @@ void ::tasking::_private::RunnableTask::operator delete(void* ptr, Runnable*) no
 }
 DABAL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
 
+std::function<bool()> Runnable::_killTrue;
+std::function<bool()> Runnable::_killFalse([]{return false;});
 RTMemPool* Runnable::_addNewPool()
 {
 	RTMemPool* result;
