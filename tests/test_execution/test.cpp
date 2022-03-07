@@ -136,9 +136,9 @@ Thread::sleep(10000);
 	return result;
 }
 #ifdef NDEBUG
-#define DEFAULT_LOOPSIZE 1000'000
+#define DEFAULT_LOOPSIZE 500'000
 #else
-#define DEFAULT_LOOPSIZE 200'000
+#define DEFAULT_LOOPSIZE 100'000
 #endif
 template <class F> void _measureTest(string txt,F f, size_t loopSize)
 {
@@ -161,6 +161,12 @@ template <class F> void _measureTest(string txt,F f, size_t loopSize)
 	tests::BaseTest::addMeasurement(txt+" time:",mean);
 	text::info("Finished. Time: {}",mean);
 }
+auto gTestFunc=[](int idx)
+	{
+		text::debug("iteracion pre {}",idx);
+		::tasking::Process::switchProcess(true);
+		text::debug("iteracion post {}",idx);
+	};
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
@@ -172,56 +178,23 @@ int _testFor(tests::BaseTest* test)
 	if ( opt != nullopt) {
 		loopSize = std::stol(opt.value());
 	}
-	#define CHUNK_SIZE 512
-
+	#define CHUNK_SIZE 512	
 	
 	_measureTest("Runnable executor with independent tasks and lockOnce",
 		[loopSize]()
 		{	
-
-			//la propia creacion del hilo es ligeramente lenta, y mientras más buffer de tareas, más tarda								
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-			core::Event event;			
-			execution::Executor<Runnable> ex(th1);
-			//passing th1 as shared_ptr (as needed by executors) can lead to destruction of the thread inside this task, so leading to a deadlock in THread join
-			th1->fireAndForget([&ex,loopSize,&event]()
-			{
-				execution::RunnableExecutorLoopHints lhints;
-				lhints.independentTasks = true;
-				lhints.lockOnce = true;
-				const int idx0 = 0;
-				auto barrier = ex.loop(idx0,loopSize,
-				[](int idx)
-				{					
-					text::debug("iteracion {}",idx);
-					//::tasking::Process::wait(10);
-				},lhints,1
-				);
-				::tasking::waitForBarrierMThread(barrier);
-				text::debug("hecho");
-				#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-					th1->getScheduler().resetPool();
-				#endif
-				event.set();
-			},0,Runnable::_killFalse);
-			event.wait();
-			// execution::Executor<Runnable> ex(th1);			
-			// execution::RunnableExecutorLoopHints lhints;
-			// lhints.independentTasks = true;
-			// lhints.lockOnce = true;
-			// const int idx0 = 0;
-			// auto barrier = ex.loop(idx0,loopSize,
-			// [](int idx)
-			// {					
-			// 	text::debug("iteracion {}",idx);
-			// 	//::tasking::Process::wait(10);
-			// },lhints,1
-			// );
-			// ::core::waitForBarrierThread(barrier);
-			// text::debug("hecho");
-			// #ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-			// 	th1->getScheduler().resetPool();
-			// #endif
+			execution::Executor<Runnable> ex(th1);			
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = true;
+			lhints.lockOnce = true;
+			const int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
+			::core::waitForBarrierThread(barrier);
+			text::debug("hecho");
+			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+				th1->getScheduler().resetPool();
+			#endif
 		},loopSize
 	);
 
@@ -234,12 +207,7 @@ int _testFor(tests::BaseTest* test)
 			lhints.independentTasks = true;
 			lhints.lockOnce = false;
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,
-			[](int idx)
-			{	
-				text::debug("iteracion {}",idx);
-				//::tasking::Process::wait(10);
-			},lhints,1
+			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
 			);
 			::core::waitForBarrierThread(barrier);
 		},loopSize
@@ -254,13 +222,7 @@ int _testFor(tests::BaseTest* test)
 			lhints.independentTasks = true;
 			lhints.lockOnce = true;
 			int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,
-			[](int idx)
-			{	
-				text::debug("iteracion {}",idx);
-				//::tasking::Process::wait(10);
-			},lhints,1
-			);
+			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
 			th1->resume();
 			::core::waitForBarrierThread(barrier);
 			th1->suspend();
@@ -275,13 +237,7 @@ int _testFor(tests::BaseTest* test)
 			lhints.independentTasks = true;
 			lhints.lockOnce = false;
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,
-			[](int idx)
-			{	
-				text::debug("iteracion {}",idx);
-				//::tasking::Process::wait(10);
-			},lhints,1
-			);
+			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
 			th1->resume();
 			::core::waitForBarrierThread(barrier);
 			th1->suspend();
@@ -296,13 +252,7 @@ int _testFor(tests::BaseTest* test)
 			lhints.independentTasks = false;
 			lhints.lockOnce = true;
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,
-			[](int idx)
-			{	
-				text::debug("iteracion {}",idx);
-				//::tasking::Process::wait(10);
-			},lhints,1
-			);
+			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
 			::core::waitForBarrierThread(barrier);
 		},loopSize
 	);
@@ -317,13 +267,7 @@ int _testFor(tests::BaseTest* test)
 			execution::LoopHints lhints;
 			lhints.independentTasks = false;
 			const int idx0 = 0;
-			auto barrier = ex2.loop(idx0,loopSize,
-			[](int idx)
-			{	
-				text::debug("iteracion {}",idx);
-			//	::tasking::Process::wait(10);
-				//++count; //para asegurar
-			},lhints);
+			auto barrier = ex2.loop(idx0,loopSize,gTestFunc,lhints);
 			::core::waitForBarrierThread(barrier);
 		},loopSize
 	);
