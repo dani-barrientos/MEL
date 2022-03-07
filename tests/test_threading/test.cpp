@@ -135,15 +135,18 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	int result = 0;
 	int sharedVar = 0;
 	
-	auto th1 = ThreadRunnable::create();
-	th1->post([](RUNNABLE_TASK_PARAMS)
 	{
-		auto th = ThreadRunnable::getCurrentThreadRunnable(); 
-		std::cout << "UNO" << std::endl;
-		tasking::Process::wait(2500);
-		std::cout << "DOS" << std::endl;
-		return ::tasking::EGenericProcessResult::CONTINUE;
-	},Runnable::_killTrue,1000);
+		auto th1 = ThreadRunnable::create();
+		th1->post([th1](RUNNABLE_TASK_PARAMS)
+		{
+			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
+			std::cout << "UNO" << std::endl;
+			tasking::Process::wait(2500);
+			std::cout << "DOS" << std::endl;
+			tasking::Process::wait(1000);
+			return ::tasking::EGenericProcessResult::KILL;
+		},Runnable::_killTrue,1000);
+	}
 	// th1->post([](RUNNABLE_TASK_PARAMS)
 	// {
 	// 	tasking::Process::wait(100);
@@ -154,7 +157,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	// },true,700);
 	Thread::sleep(120000);
 	return 0;
-
+	auto th1 = ThreadRunnable::create();
 	auto th2 = ThreadRunnable::create(true);
 
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)

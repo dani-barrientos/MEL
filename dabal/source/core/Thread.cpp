@@ -359,14 +359,26 @@ bool Thread::join(unsigned int millis)
 	{
 #ifdef DABAL_WINDOWS
 	DWORD status=WaitForSingleObject(mHandle, millis);
-	if  (status == WAIT_FAILED )
+	//una forma de detectar el hilo es ver que el hilo actual es él mismo
+	mJoinResult = EJoinResult::JOINED_ERROR;
+	switch(status)
 	{
-		DWORD err = GetLastError();
-		text::error("Error joining thread. Err = 0x{:x}",err);
-
+		case WAIT_OBJECT_0:
+			mJoinResult = EJoinResult::JOINED_OK;
+			break;
+		case WAIT_FAILED:
+		{
+			DWORD err = GetLastError();
+			text::error("Error joining thread. Err = 0x{:x}",err);
+		}
+			break;
+			//@todo log en deadlock
+		case WAIT_TIMEOUT:
+			text::error("Error joining thread.Time out exceeded");
+		default:			
+			break;
+		
 	}
-	mirar como puedo saber si hay deadlock
-	mJoined = status!=WAIT_TIMEOUT; 
 #else
 	int err = pthread_join(mHandle, NULL/*result*/);
 	
