@@ -126,6 +126,7 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
 	text::set_level(text::level::debug);
+	auto lvl = text::get_level();
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
@@ -137,12 +138,12 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	
 	{
 		auto th1 = ThreadRunnable::create();
-		th1->post([](RUNNABLE_TASK_PARAMS)
+		th1->post([th1](RUNNABLE_TASK_PARAMS)
 		{
 			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
-			std::cout << "UNO" << std::endl;
+			text::debug("UNO");
 			tasking::Process::wait(2500);
-			std::cout << "DOS" << std::endl;
+			text::debug("DOS");
 			tasking::Process::wait(1000);
 			return ::tasking::EGenericProcessResult::KILL;
 		},Runnable::_killTrue,1000);

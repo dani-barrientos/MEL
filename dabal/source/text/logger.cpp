@@ -1,6 +1,6 @@
 #include <text/logger.h>
 
-//text::level::ELevel text::level::_private::sLevel;
+::text::level::ELevel text::level::_private::sLevel = ::text::level::ELevel::critical;
 void text::set_level(::text::level::ELevel level)
 {
 #ifdef USE_SPDLOG
@@ -27,4 +27,12 @@ void text::set_level(::text::level::ELevel level)
 #else
     level::_private::sLevel = level;
 #endif
+}
+::text::level::ELevel text::get_level()
+{
+    #ifdef USE_SPDLOG
+    return spdlog::get_level();
+    #else
+    return text::level::_private::sLevel;
+    #endif
 }
