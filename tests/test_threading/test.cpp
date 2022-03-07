@@ -125,7 +125,7 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
-	text::set_level(text::level::debug);
+	text::set_level(text::level::info);
 	auto lvl = text::get_level();
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
