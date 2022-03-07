@@ -18,7 +18,7 @@ namespace text
         #ifndef USE_SPDLOG                
         namespace _private
         {
-            extern ELevel sLevel;
+            extern ELevel DABAL_API sLevel;
         }
         #endif
     }
