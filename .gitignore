@@ -26,3 +26,5 @@ tests/cmake_install.cmake
 tests/Makefile
 Testing/20220305-1622/Test.xml
 Testing/Temporary/LastTest_20220305-1622.log
+.vs/slnx.sqlite
+.vs/slnx.sqlite-journal

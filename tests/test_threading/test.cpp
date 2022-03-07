@@ -137,7 +137,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	
 	{
 		auto th1 = ThreadRunnable::create();
-		th1->post([th1](RUNNABLE_TASK_PARAMS)
+		th1->post([](RUNNABLE_TASK_PARAMS)
 		{
 			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
 			std::cout << "UNO" << std::endl;
