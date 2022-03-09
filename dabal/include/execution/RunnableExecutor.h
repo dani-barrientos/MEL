@@ -55,69 +55,78 @@ namespace execution
         
     template <class TArg, class I, class F>	 ExFuture<Runnable,void> loop(ExFuture<Runnable,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
     {        
+
+//@TODODEBO METER EL LOOP COMO MIEMBRO DEL EXECUTOR Y HACERLO COO ALGORIMO. Y ASÍ QUE DEVUELVA UNA BARRERA
+
         ExFuture<Runnable,void> result(fut.ex);
-        typedef typename std::decay<I>::type DecayedIt;
-		constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
-        if ( fut.ex.getRunnable().expired())
-        {
-            result.setError(core::ErrorInfo(0,"Runnable has been destroyed"));
-            return result;
-        }
-        bool mustLock = fut.ex.getOpts().lockOnce;
-        bool autoKill = fut.ex.getOpts().autoKill;
-        bool independentTasks = fut.ex.getOpts().independentTasks;
-        int length;
-        if constexpr (isArithIterator)
-            length = (end-begin);
-        else
-            length = std::distance(begin, end);
-        int nElements = independentTasks?(length+increment-1)/increment:1; //round-up        
-        auto ptr = fut.ex.getRunnable().lock();        
-        if ( mustLock )
-            ptr->getScheduler().getLock().enter();
-        try
-        {
-            ::parallelism::Barrier barrier(nElements);
-            if ( independentTasks)
-            {        
-                for(auto i = begin; i < end;i+=increment)
-                    ptr->fireAndForget(
-                        [functor,barrier,i]() mutable
-                        {
-                            functor(i);
-                            barrier.set();
-                        },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
-                    );
-            }else
+        fut.subscribeCallback(
+            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(functor),result,begin,end,increment](const typename core::FutureValue<TArg>& input)  mutable
             {
-                ptr->fireAndForget(
-                        [functor,barrier,begin,end,increment]() mutable
+                typedef typename std::decay<I>::type DecayedIt;
+                constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
+                if ( ex.getRunnable().expired())
+                {
+                    result.setError(core::ErrorInfo(0,"Runnable has been destroyed"));
+                    return ::core::ECallbackResult::UNSUBSCRIBE; 
+                }
+                bool mustLock = ex.getOpts().lockOnce;
+                bool autoKill = ex.getOpts().autoKill;
+                bool independentTasks = ex.getOpts().independentTasks;
+                int length;
+                if constexpr (isArithIterator)
+                    length = (end-begin);
+                else
+                    length = std::distance(begin, end);
+                int nElements = independentTasks?(length+increment-1)/increment:1; //round-up        
+                auto ptr = ex.getRunnable().lock();        
+                if ( mustLock )
+                    ptr->getScheduler().getLock().enter();
+                try
+                {
+                    ::parallelism::Barrier barrier(nElements);
+                    if ( independentTasks)
+                    {        
+                        for(auto i = begin; i < end;i+=increment)
+                            ptr->fireAndForget(
+                                [f,barrier,i,input]() mutable
+                                {
+                                    f(i,input);
+                                    barrier.set();
+                                },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
+                            );
+                    }else
+                    {
+                        ptr->fireAndForget(
+                                [f,barrier,begin,end,increment,input]() mutable
+                                {
+                                    for(auto i = begin; i < end;i+=increment)
+                                    {
+                                        f(i,input);            
+                                    }            
+                                    barrier.set();
+                                },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
+                            );           
+                    }
+                    if ( mustLock )
+                        ptr->getScheduler().getLock().leave();
+
+                    barrier.subscribeCallback(
+                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
                         {
-                            for(auto i = begin; i < end;i+=increment)
-                            {
-                                functor(i);            
-                            }            
-                            barrier.set();
-                        },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
-                    );           
-            }
-            if ( mustLock )
-                ptr->getScheduler().getLock().leave();
+                            result.setValue();
+                            return ::core::ECallbackResult::UNSUBSCRIBE; 
+                        }));
 
-			barrier.subscribeCallback(
-				std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
-				{
-					result.setValue();
-					return ::core::ECallbackResult::UNSUBSCRIBE; 
-				}));
-
-        }catch(...)
-        {
-            if ( mustLock )
-                ptr->getScheduler().getLock().leave();
-            result.setValue();
-        }
-        
+                }catch(...)
+                {
+                    if ( mustLock )
+                        ptr->getScheduler().getLock().leave();
+                    result.setValue();
+                }
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            })
+        );
+              
         return result;               
     }
     

@@ -31,14 +31,27 @@ int _testLaunch( tests::BaseTest* test)
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;
-		auto kk = execution::loop(execution::schedule(ex),idx0,loopSize,
-			[](int idx)
-			{
-				::tasking::Process::wait(1000);
-				text::info("It {}",idx);				
+		auto kk1 = execution::launch(ex,
+			[]()
+			{		
+				text::info("Launch kk");			
+				::tasking::Process::wait(5000);					
+				throw std::runtime_error("Error1");
+				return "pepe";
 			}
 		);
-		auto kk2 = execution::next(kk,[](const auto& v)->int
+		auto kk2 = execution::loop(kk1,idx0,loopSize,
+			[](int idx,const auto& v)
+			{
+				::tasking::Process::wait(1000);
+				if ( v.isValid() )
+					text::info("It {}. Value = {}",idx,v.value());				
+				else
+					text::info("It {}. Error = {}",idx,v.error().errorMsg);				
+
+			}
+		);
+		auto kk3 = execution::next(kk2,[](const auto& v)->int
 		{								
 			text::info("Launch waiting");
 			if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
@@ -50,7 +63,7 @@ int _testLaunch( tests::BaseTest* test)
 			return 4;
 		}
 		);
-		::core::waitForFutureThread(kk2);
+		::core::waitForFutureThread(kk3);
 		text::info("Done!!");
 		}
 		//---
@@ -93,12 +106,26 @@ int _testLaunch( tests::BaseTest* test)
 		ex.setOpts({true,true});
 		{
 		const int idx0 = 0;
-		const int loopSize = 10;
-		auto kk = execution::loop(execution::schedule(ex),idx0,loopSize,
-			[](int idx)
+		const int loopSize = 10;		
+		auto kk1 = execution::launch(ex,
+			[]()
+			{		
+				text::info("Launch TP kk");			
+				::tasking::Process::wait(5000);					
+				//throw std::runtime_error("Error1");
+				return "pepe";
+			}
+		);
+		auto kk = execution::loop(kk1/*execution::schedule(ex)*/,idx0,loopSize,
+			[](int idx,const auto& v)
 			{
 				::tasking::Process::wait(1000);
-				text::info("It {}",idx);				
+				if ( v.isValid())
+				{
+					text::info("It {}. Value = {}",idx,v.value());				
+				}else
+					text::error("It {} .Err = {}",idx,v.error().errorMsg);				
+				
 			}
 		);
 		text::info("voy a esperar");

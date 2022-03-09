@@ -56,19 +56,24 @@ namespace execution
     template <class TArg, class I, class F>	 ExFuture<ThreadPool,void> loop(ExFuture<ThreadPool,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
     {        
         ExFuture<ThreadPool,void> result(fut.ex);
-        //@todo tratar de generalizar para que estas opciones se puedan indicar..
-        ThreadPool::ExecutionOpts exopts;
-        exopts.useCallingThread = false;
-        exopts.groupTasks = !fut.ex.getOpts().independentTasks;
-        auto barrier = ::parallelism::_for(fut.ex.getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );
-        barrier.subscribeCallback(
-            std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+        fut.subscribeCallback(
+            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(functor),result,begin,end,increment](const typename core::FutureValue<TArg>& input)  mutable
             {
-                result.setValue();
+                ThreadPool::ExecutionOpts exopts;
+                exopts.useCallingThread = false;
+                exopts.groupTasks = !ex.getOpts().independentTasks;
+                auto barrier = ::parallelism::_for(ex.getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::bind(std::forward<F>(f),std::placeholders::_1,input),increment );
+                barrier.subscribeCallback(
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+                    {
+                        result.setValue();
+                        return ::core::ECallbackResult::UNSUBSCRIBE; 
+                    }));
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
-            }));
+            }));       
+        
         return result;
-    }
+    };
   
     typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
 }
