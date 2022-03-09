@@ -26,18 +26,33 @@ int _testLaunch( tests::BaseTest* test)
 		auto th2 = ThreadRunnable::create(true);	
 		execution::Executor<Runnable> ex(th1);		
 		ex.setOpts({true,false,false});
-		//----
-		// auto kk = execution::launch(ex,
-		// 	[](const auto& v)
-		// 	{					
-		// 		text::info("Tp Launch waiting");
-		// 		if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
-		// 			text::info("TP Launch done {}",v);
-		// 		else
-		// 			text::info("TP Launch killed");
-		// 		return 4;
-		// 	},7
-		// );
+		
+		//----		
+		{
+		const int idx0 = 0;
+		const int loopSize = 10;
+		auto kk = execution::loop(execution::schedule(ex),idx0,loopSize,
+			[](int idx)
+			{
+				::tasking::Process::wait(1000);
+				text::info("It {}",idx);				
+			}
+		);
+		auto kk2 = execution::next(kk,[](const auto& v)->int
+		{								
+			text::info("Launch waiting");
+			if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+			{
+				//throw std::runtime_error("Error1");
+				text::info("Launch done");
+			}else
+				text::info("Launch killed");
+			return 4;
+		}
+		);
+		::core::waitForFutureThread(kk2);
+		text::info("Done!!");
+		}
 		//---
 		auto fut = execution::next(execution::schedule(ex),
 					[](const auto& v)->int
@@ -75,7 +90,21 @@ int _testLaunch( tests::BaseTest* test)
 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
 		parallelism::ThreadPool::ExecutionOpts exopts;
 		execution::Executor<parallelism::ThreadPool> ex(myPool);
-		ex.setOpts({true,false,true});
+		ex.setOpts({true,true});
+		{
+		const int idx0 = 0;
+		const int loopSize = 10;
+		auto kk = execution::loop(execution::schedule(ex),idx0,loopSize,
+			[](int idx)
+			{
+				::tasking::Process::wait(1000);
+				text::info("It {}",idx);				
+			}
+		);
+		text::info("voy a esperar");
+		::core::waitForFutureThread(kk);
+		text::info("terminó");
+		}
 		auto fut = execution::launch(ex,
 			[](string v)
 			{					
@@ -253,24 +282,25 @@ int _testFor(tests::BaseTest* test)
 	int result = 0;
 	// text::set_level(text::level::info);
 	
-    // int loopSize = DEFAULT_LOOPSIZE;
-    // //check for loopsize options, if given
-	// auto opt = tests::CommandLine::getSingleton().getOption("ls");
-	// if ( opt != nullopt) {
-	// 	loopSize = std::stol(opt.value());
-	// }
-	// #define CHUNK_SIZE 512	
+    int loopSize = DEFAULT_LOOPSIZE;
+    //check for loopsize options, if given
+	auto opt = tests::CommandLine::getSingleton().getOption("ls");
+	if ( opt != nullopt) {
+		loopSize = std::stol(opt.value());
+	}
+	#define CHUNK_SIZE 512	
 	
 	// _measureTest("Runnable executor with independent tasks and lockOnce",
 	// 	[loopSize]()
 	// 	{	
 	// 		auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 	// 		execution::Executor<Runnable> ex(th1);			
-	// 		execution::RunnableExecutorLoopHints lhints;
-	// 		lhints.independentTasks = true;
-	// 		lhints.lockOnce = true;
+	// 		execution::RunnableExecutorOpts opts;
+	// 		opts.independentTasks = true;
+	// 		opts.lockOnce = true;
+	// 		ex.setOpts(opts);
 	// 		const int idx0 = 0;
-	// 		auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
+	// 		auto barrier = execution::loop(ex,idx0,loopSize,gTestFunc,1);
 	// 		::core::waitForBarrierThread(barrier);
 	// 		text::debug("hecho");
 	// 		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
@@ -279,21 +309,21 @@ int _testFor(tests::BaseTest* test)
 	// 	},loopSize
 	// );
 
-	// _measureTest("Runnable executor with independent tasks and NO lockOnce on post",
-	// 	[loopSize]()
-	// 	{
-	// 		auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-	// 		execution::Executor<Runnable> ex(th1);	
-	// 		execution::RunnableExecutorLoopHints lhints;
-	// 		lhints.independentTasks = true;
-	// 		lhints.lockOnce = false;
-	// 		const int idx0 = 0;
-	// 		auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
-	// 		);
-	// 		::core::waitForBarrierThread(barrier);
-	// 	},loopSize
-	// );
-
+	/*_measureTest("Runnable executor with independent tasks and NO lockOnce on post",
+		[loopSize]()
+		{
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorLoopHints lhints;
+			lhints.independentTasks = true;
+			lhints.lockOnce = false;
+			const int idx0 = 0;
+			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
+			);
+			::core::waitForBarrierThread(barrier);
+		},loopSize
+	);
+*/
 	// _measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
 	// 	[loopSize]() mutable
 	// 	{
@@ -345,10 +375,11 @@ int _testFor(tests::BaseTest* test)
 	// 		parallelism::ThreadPool::ThreadPoolOpts opts;
 	// 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
 	// 		execution::Executor<parallelism::ThreadPool> ex2(myPool);
-	// 		execution::LoopHints lhints;
-	// 		lhints.independentTasks = false;
+	// 		execution::ThreadPoolExecutorOpts exopts;
+	// 		exopts.independentTasks = false;
+	// 		ex2.setOpts(exopts);
 	// 		const int idx0 = 0;
-	// 		auto barrier = ex2.loop(idx0,loopSize,gTestFunc,lhints);
+	// 		auto barrier = execution::loop(ex2,idx0,loopSize,gTestFunc);
 	// 		::core::waitForBarrierThread(barrier);
 	// 	},loopSize
 	// );

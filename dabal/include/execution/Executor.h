@@ -81,7 +81,8 @@ namespace execution
      * @brief attach a functor to execute when input fut is complete
      * Given functor will be executed inf the input ExFuture executor. 
      */
-    template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)>> next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
+    template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)>> 
+        next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
     {                
         typedef std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)> TRet;
         ExFuture<ExecutorAgent,TRet> result(fut.ex);
@@ -113,12 +114,12 @@ namespace execution
     }
     /**
      * @brief overload meaning same as next, for ease of use
-    NECESITO DEDUCCIÓN DE RETORNO EN NEXT
-     */
-  /*  template <class ExecutorAgent,class TRet1,class TRet2,class F> ExFuture<ExecutorAgent,TRet2> operator | (const ExFuture<ExecutorAgent,TRet1>& f1,F&& f)
-    {
-        return next<TRet(f1,std::forward(f);
-    }
     */
+//    estoy pijo, en la propuesta el | no es el then, es solo una forma de pasar resutlado
+//     template <class ExecutorAgent,class TRet1,class TRet2,class F> ExFuture<ExecutorAgent,TRet2> operator | (const ExFuture<ExecutorAgent,TRet1>& f1,F&& f)
+//     {
+//         return next(f1,std::forward(f));
+//     }
+    
 
 }

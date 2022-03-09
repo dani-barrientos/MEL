@@ -13,7 +13,6 @@ namespace execution
     {
         bool independentTasks = true; //<! if true, try to make each iteration independent
         //opcion temporal, espero poder quitarla
-        bool lockOnce = false; //!<if true,Runnable internal scheduler lock is taken before posting loop taksks
         bool autoKill = true; //!<if true, launched tasks will be autokilled if the Runnable receives a kill signal, else, Runanble won't finish until tasks finished
     };
     template <> class Executor<ThreadPool>
@@ -26,6 +25,8 @@ namespace execution
             Executor& operator=( Executor&& ex){mPool = std::move(ex.mPool);mOpts = ex.mOpts;return *this;}
             void setOpts(const ThreadPoolExecutorOpts& opts){ mOpts = opts;}
             const ThreadPoolExecutorOpts& getOpts(){ return mOpts;}
+            std::weak_ptr<ThreadPool>& getPool(){ return mPool;}
+            const std::weak_ptr<ThreadPool>& getPool() const{ return mPool;}
             //template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment = 1);
             template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet> output) const
             {
@@ -52,6 +53,22 @@ namespace execution
             std::weak_ptr<ThreadPool> mPool;      
             ThreadPoolExecutorOpts mOpts;  
     };    
+    template <class TArg, class I, class F>	 ExFuture<ThreadPool,void> loop(ExFuture<ThreadPool,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
+    {        
+        ExFuture<ThreadPool,void> result(fut.ex);
+        //@todo tratar de generalizar para que estas opciones se puedan indicar..
+        ThreadPool::ExecutionOpts exopts;
+        exopts.useCallingThread = false;
+        exopts.groupTasks = !fut.ex.getOpts().independentTasks;
+        auto barrier = ::parallelism::_for(fut.ex.getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );
+        barrier.subscribeCallback(
+            std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+            {
+                result.setValue();
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            }));
+        return result;
+    }
   
     typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
 }

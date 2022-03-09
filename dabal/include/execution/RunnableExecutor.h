@@ -52,70 +52,74 @@ namespace execution
             std::weak_ptr<Runnable> mRunnable; 
             RunnableExecutorOpts    mOpts;            
     };        
-      
-    /*
-    template <class I, class F>	 ::parallelism::Barrier loop(Executor<Runnable> ex,I&& begin, I&& end, F&& functor, const LoopHints& hints,int increment)
+        
+    template <class TArg, class I, class F>	 ExFuture<Runnable,void> loop(ExFuture<Runnable,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
     {        
+        ExFuture<Runnable,void> result(fut.ex);
         typedef typename std::decay<I>::type DecayedIt;
 		constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
-        if ( mRunnable.expired())
-            return ::parallelism::Barrier((size_t)0);
+        if ( fut.ex.getRunnable().expired())
+        {
+            result.setError(core::ErrorInfo(0,"Runnable has been destroyed"));
+            return result;
+        }
+        bool mustLock = fut.ex.getOpts().lockOnce;
+        bool autoKill = fut.ex.getOpts().autoKill;
+        bool independentTasks = fut.ex.getOpts().independentTasks;
         int length;
         if constexpr (isArithIterator)
             length = (end-begin);
         else
             length = std::distance(begin, end);
-        int nElements = hints.independentTasks?(length+increment-1)/increment:1; //round-up        
-        auto ptr = mRunnable.lock();
-        bool mustLock;
-        bool autoKill;
-        if ( dynamic_cast<const RunnableExecutorLoopHints*>(&hints) )
-        {
-            mustLock = static_cast<const RunnableExecutorLoopHints&>(hints).lockOnce;
-            autoKill = static_cast<const RunnableExecutorLoopHints&>(hints).autoKill;
-        }
-        else
-        {
-            mustLock = false;
-            autoKill = true;
-        }
+        int nElements = independentTasks?(length+increment-1)/increment:1; //round-up        
+        auto ptr = fut.ex.getRunnable().lock();        
         if ( mustLock )
             ptr->getScheduler().getLock().enter();
         try
         {
-            ::parallelism::Barrier result(nElements);
-            if ( hints.independentTasks)
+            ::parallelism::Barrier barrier(nElements);
+            if ( independentTasks)
             {        
                 for(auto i = begin; i < end;i+=increment)
                     ptr->fireAndForget(
-                        [functor,result,i]() mutable
+                        [functor,barrier,i]() mutable
                         {
                             functor(i);
-                            result.set();
+                            barrier.set();
                         },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
                     );
             }else
             {
                 ptr->fireAndForget(
-                        [functor,result,begin,end,increment]() mutable
+                        [functor,barrier,begin,end,increment]() mutable
                         {
                             for(auto i = begin; i < end;i+=increment)
                             {
                                 functor(i);            
                             }            
-                            result.set();
+                            barrier.set();
                         },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
                     );           
             }
             if ( mustLock )
-                ptr->getScheduler().getLock().leave();launch<NewRet,TRet>(f,mResult.getValue());
+                ptr->getScheduler().getLock().leave();
+
+			barrier.subscribeCallback(
+				std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+				{
+					result.setValue();
+					return ::core::ECallbackResult::UNSUBSCRIBE; 
+				}));
+
+        }catch(...)
         {
             if ( mustLock )
                 ptr->getScheduler().getLock().leave();
-            return ::parallelism::Barrier();
+            result.setValue();
         }
-                    
+        
+        return result;               
     }
-    */
+    
     typedef Executor<Runnable> RunnableExecutor; //alias
 }

@@ -116,6 +116,23 @@
             "hidden": true,
             "inherits": "Linux Base",
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "DABAL_ARQ": "DABAL_X64_GCC"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "GCC Linux Base (Release with deb info)",
+            "description": "Common things for Clang release build in Linux",
+            "hidden": true,
+            "inherits": "Linux Base",
+            "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "DABAL_ARQ": "DABAL_X64_GCC"
             },
