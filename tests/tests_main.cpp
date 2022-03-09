@@ -18,10 +18,8 @@ using tests::TestManager;
 #define ALL_TESTS_OPTION "a"
 static void _initialize()
 {
-#ifdef USE_SPDLOG
-	spdlog::info("Using spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
-	//spdlog::set_level(spdlog::level::debug); // Set global log level to debug	
-#endif
+	text::info("Using spdlog {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+
 #ifdef NDEBUG
 	text::info( "Release execution");
 #else

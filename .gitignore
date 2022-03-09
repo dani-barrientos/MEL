@@ -27,3 +27,5 @@ tests/Makefile
 Testing
 .vs/slnx.sqlite
 .vs/slnx.sqlite-journal
+dabal/include/execution/Continuation_COPY.h
+dabal/include/execution/ThreadPoolExecutor_COPY.h

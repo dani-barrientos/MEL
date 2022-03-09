@@ -20,21 +20,29 @@ namespace core
 		//@remarks negative error code is reserved for internal errors
 		int		error;  //there was error. Error code. Very simple for now. 
 		std::string errorMsg;
-//		virtual ~ErrorInfo(){}
 	};
-	template <class T,class ErrorType> class FutureValue : public std::variant<T,ErrorType>
+	struct NotAvailable
 	{
-		typedef std::variant<T,ErrorType> Base;
+
+	};
+	template <class T,class ErrorType = ::core::ErrorInfo> class FutureValue : public std::variant<NotAvailable,T,ErrorType>
+	{
+	
+		static constexpr size_t ValidIdx = 1;
+		typedef std::variant<NotAvailable,T,ErrorType> Base;
 		public:
 			FutureValue(){}
 			FutureValue(const T& v):Base(v){}
 			FutureValue(T&& v):Base(std::move(v)){}
 			FutureValue(const ErrorType& err):Base(err){}
 			FutureValue(ErrorType&& err):Base(std::move(err)){}
+			FutureValue(const FutureValue& v):Base(v){}
+			FutureValue(FutureValue&& v):Base(std::move(v)){}
 			/**
 			 * @brief get if has valid value
 			 */
-			bool isValid() const{ return Base::index() == 0;}
+			bool isValid() const{ return Base::index() == ValidIdx;}
+			bool isAvailable() const{ return Base::index() != 0;}
 			// wrapper for std::get.  Same rules as std::Get, so bad_variant_access is thrown if not a valid value
 			typename mpl::TypeTraits<T>::ParameterType value() {
 				return std::get<T>(*this);
@@ -59,6 +67,21 @@ namespace core
 				return *this;
 			}
 			auto& operator=(ErrorType&& v){
+				Base::operator=(std::move(v));
+				return *this;
+			}
+			auto& operator=(const FutureValue& v)
+			{
+				Base::operator=(v);
+				return *this;
+			}
+			auto& operator=( FutureValue& v)
+			{
+				Base::operator=(v);
+				return *this;
+			}
+			auto& operator=(FutureValue&& v)
+			{
 				Base::operator=(std::move(v));
 				return *this;
 			}
@@ -173,27 +196,50 @@ namespace core
 		void setError( const ErrorType& ei )
 		{
 			volatile auto protectMe=FutureData<ResultType,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();
+			core::Lock lck(FutureData_Base::mSC);
 			if ( mState == NOTAVAILABLE)
 			{
 				mValue = ei;
 				mState = INVALID;
 				Subscriptor::triggerCallbacks(mValue);
 			}
-			FutureData_Base::mSC.leave();
 		};
 		void setError( ErrorType&& ei )
 		{
 			volatile auto protectMe=FutureData<ResultType,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();
+			core::Lock lck(FutureData_Base::mSC);
+
 			if ( mState == NOTAVAILABLE)
 			{
 				mValue = std::move(ei);
 				mState = INVALID;
 				Subscriptor::triggerCallbacks(mValue);
 			}
-			FutureData_Base::mSC.leave();
+
 		};
+		void assign(const ValueType& val)
+		{
+			core::Lock lck(FutureData_Base::mSC);
+			mValue = val;
+			if (mValue.isAvailable())
+			{
+				mState = val.isValid()?VALID:INVALID;
+				Subscriptor::triggerCallbacks(mValue);
+			}else
+				mState = NOTAVAILABLE;
+
+		}
+		void assign(ValueType& val)
+		{
+			core::Lock lck(FutureData_Base::mSC);
+			mValue = std::move(val);
+			if (mValue.isAvailable())
+			{
+				mState = val.isValid()?VALID:INVALID;
+				Subscriptor::triggerCallbacks(mValue);
+			}else
+				mState = NOTAVAILABLE;
+		}
 		/**
 		 * @brief Subscribe to future available
 		 * 
@@ -296,6 +342,28 @@ namespace core
 			}			
 			FutureData_Base::mSC.leave();
 		};
+		void assign(const ValueType& val)
+		{
+			core::Lock lck(FutureData_Base::mSC);
+			mValue = val;
+			if (mValue.isAvailable())
+			{
+				mState = val.isValid()?VALID:INVALID;
+				Subscriptor::triggerCallbacks(mValue);
+			}else
+				mState = NOTAVAILABLE;
+		}
+		void assign(ValueType& val)
+		{
+			core::Lock lck(FutureData_Base::mSC);
+			mValue = std::move(val);
+			if (mValue.isAvailable())
+			{
+				mState = val.isValid()?VALID:INVALID;
+				Subscriptor::triggerCallbacks(mValue);
+			}else
+				mState = NOTAVAILABLE;
+		}
 		private:
 			ValueType mValue;
 	};
@@ -350,7 +418,7 @@ namespace core
 		{
 			mData = f.mData;
 			return *this;
-		};
+		};		
 		Future_Base& operator= (  Future_Base&& f )
 		{
 			mData = std::move(f.mData);
@@ -382,9 +450,27 @@ namespace core
 		};
 		Future_Common( const Future_Common& f ):Future_Base( f ){}
 		Future_Common( Future_Common&& f ):Future_Base( std::move(f) ){}
+		Future_Common& operator= ( const Future_Common& f )
+		{
+			Future_Base::operator=(f);
+			return *this;
+		};		
+		Future_Common& operator= (  Future_Common&& f )
+		{
+			Future_Base::operator=(f);
+			return *this;
+		};
 	public:
 		
 		inline  typename FutureData<ResultType,ErrorType>::ReturnType getValue() const{ return ((FutureData<ResultType,ErrorType>*)mData.get())->getValue();}		
+		void assign( const typename FutureData<ResultType,ErrorType>::ValueType& val)
+		{
+			getData().assign(val);
+		}
+		void assign(  typename FutureData<ResultType,ErrorType>::ValueType&& val)
+		{
+			getData().assign(std::move(val));
+		}
 		template <class F> auto subscribeCallback(F&& f) const						
 		{
 			//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
@@ -407,7 +493,16 @@ namespace core
 		Future(){};
 		Future( const Future& f ):Future_Common<ResultType,ErrorType>(f){};
 		Future( Future&& f ):Future_Common<ResultType,ErrorType>(std::move(f)){};
-
+		Future& operator= ( const Future& f )
+		{
+			Future_Common<ResultType,ErrorType>::operator=(f);
+			return *this;
+		};		
+		Future& operator= (  Future&& f )
+		{
+			Future_Common<ResultType,ErrorType>::operator=(f);
+			return *this;
+		};
 		template <class F>
 		void setValue( F&& value )
 		{
@@ -430,12 +525,23 @@ namespace core
 		Future(){};
 		Future(const Future& f):Future_Common<void,ErrorType>(f){};	
 		Future(Future&& f):Future_Common<void,ErrorType>(std::move(f)){};	
+		Future& operator= ( const Future& f )
+		{
+			Future_Common<void,ErrorType>::operator=(f);
+			return *this;
+		};		
+		Future& operator= (  Future&& f )
+		{
+			Future_Common<void,ErrorType>::operator=(f);
+			return *this;
+		};
+		
 		inline void setValue( void ){ ((FutureData<void,ErrorType>*)Future_Base::mData.get())->setValue( ); }		
 		template <class F>
 		void setError( F&& ei )
 		{
 			((FutureData<void,ErrorType>*)Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
-		}
+		}		
 	};
 
 

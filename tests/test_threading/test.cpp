@@ -125,7 +125,7 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
-	text::set_level(text::level::info);
+	text::set_level(text::level::debug);
 	auto lvl = text::get_level();
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
@@ -133,21 +133,19 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	size_t s3 = sizeof(MThreadAttributtes);
 	text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 	
-	int result = 0;
-	int sharedVar = 0;
-	
-	{
-		auto th1 = ThreadRunnable::create();
-		th1->post([th1](RUNNABLE_TASK_PARAMS)
-		{
-			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
-			text::debug("UNO");
-			tasking::Process::wait(2500);
-			text::debug("DOS");
-			tasking::Process::wait(1000);
-			return ::tasking::EGenericProcessResult::KILL;
-		},Runnable::_killTrue,1000);
-	}
+		
+	// {
+	// 	auto th1 = ThreadRunnable::create();
+	// 	th1->post([th1](RUNNABLE_TASK_PARAMS)
+	// 	{
+	// 		//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
+	// 		text::debug("UNO");
+	// 		tasking::Process::wait(2500);
+	// 		text::debug("DOS");
+	// 		tasking::Process::wait(1000);
+	// 		return ::tasking::EGenericProcessResult::KILL;
+	// 	},Runnable::_killTrue,1000);
+	// }
 	// th1->post([](RUNNABLE_TASK_PARAMS)
 	// {
 	// 	tasking::Process::wait(100);
@@ -156,11 +154,59 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	// 	std::cout << "CUATRO" << std::endl;
 	// 	return ::tasking::EGenericProcessResult::CONTINUE;
 	// },true,700);
-	Thread::sleep(120000);
+	// Thread::sleep(120000);
+	// return 0;
+
+	{
+		auto th1 = ThreadRunnable::create();
+		text::debug("Request execution");
+		auto fut = th1->execute<int>([th = th1.get()]{
+			text::debug("Start function execution...");
+			if ( ::tasking::Process::wait(2000) != tasking::Process::ESwitchResult::ESWITCH_OK )
+			{
+				text::error("Task killed!!");
+				Timer t;				
+				auto t0 = t.getMilliseconds();
+				text::debug("La espera siguiente no deberia tener efecto");
+				//::tasking::Process::wait(2000);
+				::tasking::Process::sleep();
+				auto t1 = t.getMilliseconds();
+				if ( t1 != t0 )
+					text::error("Wait shoudn't have been done");
+				else
+					text::info("Wait wasn't done, OK");
+				//now, try to execute "something" in same thread. Shoouldn do anything				
+				//@todo ahora está impidiendo la espera correctamente. Lo que tengo que meditar es si debo impedir el execute como tal, ya que se está haciendo
+				//igual no tiene sentido porque el execute realmente se hace desde cualqueir sitio, no un mthread forzosamente
+				auto fut = th->execute<float>([]{
+					text::error("This execution shouldn''t be done");
+					return 1.5f;
+					});
+				auto fr = ::tasking::waitForFutureMThread(fut);
+				if ( !fr.isValid() && fr.error().error == ::core::Future_Base::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
+					text::info("OK, execution was't done because process is killed");
+				else
+					text::error("Execution should have recieved a kill signal");
+
+			}
+			text::debug("Return result");
+			return 6;},Runnable::_killTrue);
+			
+		text::debug("Start Waiting for result");
+		// auto fr = ::core::waitForFutureThread(fut,2000);
+		// text::debug("Wait done");
+		// if ( !fr.isValid())
+		// 	text::error(fr.error().errorMsg);
+		// else
+		// 	text::debug("Result value = {}",fr.value());
+	}
 	return 0;
+	int result = 0;
+	int sharedVar = 0;
 	auto th1 = ThreadRunnable::create();
 	auto th2 = ThreadRunnable::create(true);
 
+	
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
 		auto& autokill = Runnable::_killTrue;
@@ -200,13 +246,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 				//wr = tasking::Process::wait(10000);
 				wr = tasking::Process::switchProcess(true);
 				wr = tasking::Process::sleep();
-				text::debug("fin espera en p1");
-				
-				//  no me convence nada el tema del kill y demas. Cosas que pasan:
-				//   - aunque tenga el autokill a false, igual convenía enterarme mejor de que se me intenta matar. En realidad lo sé si consulto el state.Lo que
-
-				//  - por otro lado, aunque tenga el autokill, después vuelve a hacerme el kill->tengo que impedirlo
-				 
+				text::debug("fin espera en p1");				 
 			
 			}
 			text::debug("Continuo");
