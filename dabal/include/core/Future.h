@@ -282,6 +282,11 @@ namespace core
 		typedef typename mpl::TypeTraits< ValueType >::ParameterType ReturnType;
 
 		FutureData(){};
+		//overload to inicializce as valid
+		FutureData(int)
+		{
+			FutureData_Base::mState = VALID;
+		};
 		~FutureData(){};
 
 		template <class F> auto subscribeCallback(F&& f)
@@ -493,6 +498,7 @@ namespace core
 		Future(){};
 		Future( const Future& f ):Future_Common<ResultType,ErrorType>(f){};
 		Future( Future&& f ):Future_Common<ResultType,ErrorType>(std::move(f)){};
+
 		Future& operator= ( const Future& f )
 		{
 			Future_Common<ResultType,ErrorType>::operator=(f);

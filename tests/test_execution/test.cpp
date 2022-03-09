@@ -24,15 +24,32 @@ int _testLaunch( tests::BaseTest* test)
 	{
 		auto th1 = ThreadRunnable::create(true);	
 		auto th2 = ThreadRunnable::create(true);	
-		execution::Executor<Runnable> ex(th1);
-
-		auto fut = execution::launch<int>(ex,
-					[]()
+		execution::Executor<Runnable> ex(th1);		
+		ex.setOpts({true,false,false});
+		//----
+		// auto kk = execution::launch(ex,
+		// 	[](const auto& v)
+		// 	{					
+		// 		text::info("Tp Launch waiting");
+		// 		if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+		// 			text::info("TP Launch done {}",v);
+		// 		else
+		// 			text::info("TP Launch killed");
+		// 		return 4;
+		// 	},7
+		// );
+		//---
+		auto fut = execution::next(execution::schedule(ex),
+					[](const auto& v)->int
 					{					
 						text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
 						text::info("Launch waiting");
-						::tasking::Process::wait(5000);
-						text::info("Launch done");
+						if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+						{
+							//throw std::runtime_error("Error1");
+							text::info("Launch done");
+						}else
+							text::info("Launch killed");
 						return 4;
 					}
 				);
@@ -41,7 +58,7 @@ int _testLaunch( tests::BaseTest* test)
 		//::core::waitForFutureThread(fut);	
 		//auto fut_1 = execution::transfer(fut,ex2);
 		fut = execution::transfer(fut,ex2);
-		auto fut2 = execution::next<void>(fut,[](const auto& v)
+		auto fut2 = execution::next(fut,[](const auto& v)
 				{
 					text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
 					if (v.isValid())
@@ -50,91 +67,40 @@ int _testLaunch( tests::BaseTest* test)
 					}else					
 						text::error("Next error: {}",v.error().errorMsg);		
 				}
-				);			
-		::core::waitForFutureThread(fut2);	
-		/*auto fut3 = execution::launch<void>(ex,
-			[]()
-			{					
-				text::info("Launch 2 waiting");
-				::tasking::Process::wait(5000);
-				text::info("Launch 2 done");
-			}
-		);
-		auto fut4 = execution::next<int>(ex,fut3,[](const auto& v)
-				{
-					if (v.isValid())
-					{
-						text::info("Next 2 done");
-					}else					
-						text::error("Next 2 error: {}",v.error().errorMsg);		
-						return 7;
-				}
-				);	
-		auto fut5 = execution::next<void>(ex,fut4,[](const auto& v)
-				{
-					if (v.isValid())
-					{
-						text::info("Next 3 done {}",v.value());		
-					}else					
-						text::error("Next 3 error: {}",v.error().errorMsg);		
-				}
-				);
-				*/
-		//@todo retomar el tema de los hints y seguir con threadpoolexecutor
-		/*auto cont = execution::launch<int>(ex,
-					[](const auto& v)
-					{					
-						if (v.isValid())
-						{
-							text::info("Launch done: {}",v.value());		
-						}else					
-							text::error("Launch error: {}",v.error().errorMsg);		
-						if ( ::tasking::Process::wait(5000) == ::tasking::Process::ESwitchResult::ESWITCH_KILL )
-							text::error("Launch killed!");
-						return 4;
-					},5.6f
-				)			
-				.next<void>( [](const auto& v)
-				{
-					if (v.isValid())
-					{
-						text::info("Next done: {}",v.value());		
-					}else					
-						text::error("Next error: {}",v.error().errorMsg);		
-				}
-				)
-				;
-				*/
-		//::core::waitForFutureThread(fut5);
+				);						
+		::core::waitForFutureThread(fut2);				
 	}
 	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;
 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
 		parallelism::ThreadPool::ExecutionOpts exopts;
 		execution::Executor<parallelism::ThreadPool> ex(myPool);
-		auto fut = execution::launch<int>(ex,
-					[](float v)
-					{					
-						text::info("Tp Launch waiting");
-						::tasking::Process::wait(5000);
-						text::info("TP Launch done: {}",v);
-						return 4;
-					},5.6f
-				);
-		Thread::sleep(10000);
-		auto fut2 = execution::next<void>(fut,[](const auto& v)
+		ex.setOpts({true,false,true});
+		auto fut = execution::launch(ex,
+			[](string v)
+			{					
+				text::info("Tp Launch waiting");
+				if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+					text::info("TP Launch done: {}",v);
+				else
+					text::info("TP Launch killed");
+				return 4;
+			},"pepe"
+		);
+		// text::info("TP Sleep");
+		// Thread::sleep(10000);
+		auto fut2 = execution::next(fut,[](const auto& v)->void
 				{
 					if (v.isValid())
 					{
-						text::info("Next done: {}",v.value());		
+						text::info("TP Next done: {}",v.value());		
 					}else					
-						text::error("Next error: {}",v.error().errorMsg);		
+						text::error("TP Next error: {}",v.error().errorMsg);		
 				}
 				);		
 		::core::waitForFutureThread(fut2);                
 
-	}
-	text::info("TP Sleep");
+	}	
 	Thread::sleep(5000);
 	return 0;
 /*

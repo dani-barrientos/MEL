@@ -9,13 +9,23 @@ namespace execution
     /**
      * @brief Executor specialization using a ThreadPool as execution agent
      */
+     struct ThreadPoolExecutorOpts
+    {
+        bool independentTasks = true; //<! if true, try to make each iteration independent
+        //opcion temporal, espero poder quitarla
+        bool lockOnce = false; //!<if true,Runnable internal scheduler lock is taken before posting loop taksks
+        bool autoKill = true; //!<if true, launched tasks will be autokilled if the Runnable receives a kill signal, else, Runanble won't finish until tasks finished
+    };
     template <> class Executor<ThreadPool>
     {
         public:
-            Executor(std::shared_ptr<ThreadPool> pool):mPool(pool)
-            {
-
-            };           
+            Executor(std::shared_ptr<ThreadPool> pool):mPool(pool){};           
+            Executor(Executor&& ex):mPool(std::move(ex.mPool)),mOpts(ex.mOpts){}
+            Executor(const Executor& ex):mPool(ex.mPool),mOpts(ex.mOpts){}
+            Executor& operator=(const Executor& ex){mPool = ex.mPool;mOpts = ex.mOpts;return *this;}
+            Executor& operator=( Executor&& ex){mPool = std::move(ex.mPool);mOpts = ex.mOpts;return *this;}
+            void setOpts(const ThreadPoolExecutorOpts& opts){ mOpts = opts;}
+            const ThreadPoolExecutorOpts& getOpts(){ return mOpts;}
             //template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment = 1);
             template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet> output) const
             {
@@ -24,7 +34,7 @@ namespace execution
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),output);
+                    th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                 }            
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<ThreadPool,TRet> output) const
@@ -34,19 +44,13 @@ namespace execution
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    th->execute<TRet>(std::forward<F>(f),output);               
+                    th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);               
                 }       
             }
-    //          template <class I, class F>	 ::parallelism::Barrier Executor<ThreadPool>::loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment)
-    // {        
-    //     //@todo tratar de generalizar para que estas opciones se puedan indicar..
-    //     ThreadPool::ExecutionOpts exopts;
-    //     exopts.useCallingThread = false;
-    //     exopts.groupTasks = !hints.independentTasks;
-    //     return ::parallelism::_for(mPool.lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );
-    // }
+
         private:
-            std::weak_ptr<ThreadPool> mPool;        
+            std::weak_ptr<ThreadPool> mPool;      
+            ThreadPoolExecutorOpts mOpts;  
     };    
   
     typedef Executor<ThreadPool> ThreadPoolExecutor; //alias

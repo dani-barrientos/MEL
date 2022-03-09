@@ -1,6 +1,7 @@
 #pragma once
 //#include <execution/Continuation.h>
 #include <execution/CommonDefs.h>
+#include <type_traits>
 /**
  * @brief High level execution utilities
  * @details This namespace contains class, functions..to give a consisten execution interface independet of the underliying execution system
@@ -48,18 +49,30 @@ namespace execution
             Executor<ExecutorAgent> ex;
 		
     };
-    problema, no puedo poner un default para los hints...
-    y si lo resuelvo mediante un algoritmo especial? gracias a la composición, podrái tener algo como: launchHints(hints)->devuelve un Future con esos hints
-    ojo, que ya no me vale el Future, voy a necesitar mi clase especial por encima, para guardar el executor, etc..
-
-    template <class TRet,class F,class ExecutorAgent> ExFuture<ExecutorAgent,TRet> launch( Executor<ExecutorAgent> ex,F&& f,const LaunchHints& hints)
+    template <class ExecutorAgent> ExFuture<ExecutorAgent,void> schedule( Executor<ExecutorAgent> ex)
+    {
+        ExFuture<ExecutorAgent,void> result(ex); 
+        //@todo sustituir por contruccion con valor cuando esté disponiel
+        result.setValue();
+        return result;
+    }
+    /*
+    template <class TRet,class F,class ExecutorAgent> ExFuture<ExecutorAgent,TRet> launch( Executor<ExecutorAgent> ex,F&& f)
     {
         ExFuture<ExecutorAgent,TRet> result(ex);
         ex. template launch<TRet>(std::forward<F>(f),result);
         return result;
-    }
-    template <class TRet,class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,TRet> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
+    }*/
+    template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&()>> launch( Executor<ExecutorAgent> ex,F&& f)
     {
+        typedef std::result_of_t<F&&()> TRet;
+        ExFuture<ExecutorAgent,TRet> result(ex);
+        ex. template launch<TRet>(std::forward<F>(f),result);
+        return result;
+    }
+    template <class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(TArg&&)>> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
+    {
+        typedef std::result_of_t<F&&(TArg&&)> TRet;
         ExFuture<ExecutorAgent,TRet> result(ex);
         ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
         return result;
@@ -68,9 +81,9 @@ namespace execution
      * @brief attach a functor to execute when input fut is complete
      * Given functor will be executed inf the input ExFuture executor. 
      */
-
-    template <class TRet,class TArg,class ExecutorAgent,class F> ExFuture<ExecutorAgent,TRet> next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
-    {        
+    template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)>> next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
+    {                
+        typedef std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)> TRet;
         ExFuture<ExecutorAgent,TRet> result(fut.ex);
         fut.subscribeCallback(
             std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(f),result](const typename core::FutureValue<TArg>& input) 
@@ -82,6 +95,7 @@ namespace execution
         //spdlog::debug("next. Not available");
         return result;
     }
+       
     /**
      * @brief Transfer given ExFuture to a different executor   
      */
@@ -99,11 +113,12 @@ namespace execution
     }
     /**
      * @brief overload meaning same as next, for ease of use
-    
+    NECESITO DEDUCCIÓN DE RETORNO EN NEXT
      */
-    /*ExFuture operator | (const ExFuture& f1,const ExFuture& f2)
+  /*  template <class ExecutorAgent,class TRet1,class TRet2,class F> ExFuture<ExecutorAgent,TRet2> operator | (const ExFuture<ExecutorAgent,TRet1>& f1,F&& f)
     {
-        return next(f1, uhm...  no tiene snetido
-    }*/
+        return next<TRet(f1,std::forward(f);
+    }
+    */
 
 }

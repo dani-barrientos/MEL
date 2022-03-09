@@ -410,7 +410,7 @@ namespace tasking
 			{
 				et(output);
 				return ::tasking::EGenericProcessResult::KILL;
-			}			
+			},std::forward<KF>(killFunction)		
 		);
 		// post(
 		// 		RUNNABLE_CREATETASK
