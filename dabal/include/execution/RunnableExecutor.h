@@ -7,7 +7,7 @@
 namespace execution
 {   
     
-    
+
     /**
      * @brief Concrete options for this type of executor
      */
@@ -129,6 +129,48 @@ namespace execution
               
         return result;               
     }
-    
+    namespace _private
+    {
+        template <class F,class TArg> void _invoke(Executor<Runnable> ex,::parallelism::Barrier& b,TArg&& arg,F&& f)
+        {
+            execution::launch(ex,
+                [f = std::forward<F>(f),b](TArg&& arg) mutable
+                {
+                    f(arg);
+                    b.set();
+                },arg);
+        }
+        template <class TArg,class F,class ...FTypes> void _invoke(Executor<Runnable> ex,::parallelism::Barrier& b,TArg&& arg,F&& f, FTypes&&... fs)
+        {
+            _invoke(ex,b,arg,std::forward<F>(f));
+            _invoke(ex,b,arg,std::forward<FTypes>(fs)...);
+        }
+
+    }
+    template <class TArg,class ...FTypes> ExFuture<Runnable,void> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
+    {
+        ExFuture<Runnable,void> result(fut.ex);
+
+        fut.subscribeCallback(            
+            //std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,functions... ](const typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](const typename core::FutureValue<TArg>& input)  mutable
+            {
+                //::parallelism::Barrier barrier(sizeof...(fs));
+                ::parallelism::Barrier barrier(std::tuple_size_v<decltype(fs)>);
+                 //_private::_invoke(ex,barrier,input,std::forward<FTypes>(fs)...);
+                //_private::_invoke(ex,barrier,input,std::get<FTypes>(fs)...);
+                _private::_invoke(ex,barrier,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                barrier.subscribeCallback(
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+                    {
+                        result.setValue();
+                        return ::core::ECallbackResult::UNSUBSCRIBE; 
+                    }));
+                    
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            }));       
+        
+        return result;
+    }
     typedef Executor<Runnable> RunnableExecutor; //alias
 }

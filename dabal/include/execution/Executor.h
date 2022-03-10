@@ -56,13 +56,13 @@ namespace execution
         result.setValue();
         return result;
     }
-    /*
-    template <class TRet,class F,class ExecutorAgent> ExFuture<ExecutorAgent,TRet> launch( Executor<ExecutorAgent> ex,F&& f)
+    template <class ExecutorAgent,class TArg> ExFuture<ExecutorAgent,TArg> schedule( Executor<ExecutorAgent> ex,TArg&& arg)
     {
-        ExFuture<ExecutorAgent,TRet> result(ex);
-        ex. template launch<TRet>(std::forward<F>(f),result);
+        ExFuture<ExecutorAgent,TArg> result(ex); 
+        //@todo sustituir por contruccion con valor cuando esté disponible
+        result.setValue(std::forward<TArg>(arg));
         return result;
-    }*/
+    }
     template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&()>> launch( Executor<ExecutorAgent> ex,F&& f)
     {
         typedef std::result_of_t<F&&()> TRet;
@@ -98,7 +98,48 @@ namespace execution
     }
        
     /**
-     * @brief Transfer given ExFuture to a different executor   
+     * @brief Transfer given ExFuture to a different executor 
+     * This way, continuations can be chained but executed in diferent executors
+     * @code {.cpp}
+     * 
+     *  Create two different threads
+        auto th1 = ThreadRunnable::create(true);	
+		auto th2 = ThreadRunnable::create(true);
+        //create executor from one of the threads
+        execution::Executor<Runnable> ex(th1);		
+		ex.setOpts({true,false,false});	
+        //launch chain of functions starting in executor ex
+      	auto fut = execution::next(execution::schedule(ex),
+            [](const auto& v)->int
+            {					
+                text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
+                text::info("Launch waiting");
+                if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+                {
+                    //throw std::runtime_error("Error1");
+                    text::info("Launch done");
+                }else
+                    text::info("Launch killed");
+                return 4;
+            }
+        );
+        //create another executor using the other thread..
+		execution::Executor<Runnable> ex2(th2);
+		//..and tranfer current execution chain to new executor
+		fut = execution::transfer(fut,ex2);
+        //..so chaining, continues from this new executor
+		auto fut2 = execution::next(fut,[](const auto& v)
+            {
+                text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
+                if (v.isValid())
+                {
+                    text::info("Next done: {}",v.value());		
+                }else					
+                    text::error("Next error: {}",v.error().errorMsg);		
+            }
+        );						
+		::core::waitForFutureThread(fut2); //wait for result from current thread	
+     * @endcode
      */
     template <class NewExecutorAgent,class OldExecutorAgent,class TRet> ExFuture<NewExecutorAgent,TRet> transfer(ExFuture<OldExecutorAgent,TRet> fut,Executor<NewExecutorAgent> newAgent)
     {
