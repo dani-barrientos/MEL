@@ -145,7 +145,49 @@ namespace execution
             _invoke(ex,b,arg,std::forward<F>(f));
             _invoke(ex,b,arg,std::forward<FTypes>(fs)...);
         }
+        //----- pruebas
+        template <int n,class F,class TArg,class OutputTuple> void _invoke_debug(Executor<Runnable> ex,::parallelism::Barrier& b,OutputTuple* output,TArg&& arg,F&& f)
+        {
+            execution::launch(ex,
+                [f = std::forward<F>(f),b,output](TArg&& arg) mutable
+                {
+                    std::get<n>(*output) = f(arg);
+                    b.set();                    
+                },arg);
+        }
+        template <int n,class TArg,class OutputTuple,class F,class ...FTypes> void _invoke_debug(Executor<Runnable> ex,::parallelism::Barrier& b,OutputTuple* output,TArg&& arg,F&& f, FTypes&&... fs)
+        {
+            _invoke_debug<n>(ex,b,output,arg,std::forward<F>(f));
+            _invoke_debug<n+1>(ex,b,output,arg,std::forward<FTypes>(fs)...);
+        }
 
+    }
+    template <class ReturnTuple,class TArg,class ...FTypes> ExFuture<Runnable,ReturnTuple> bulk_debug(ExFuture<Runnable,TArg> fut, FTypes... functions)
+    {
+        //I will remove ReturnTuple from template when be able to atuoatically deduce from FTypes
+        ExFuture<Runnable,ReturnTuple> result(fut.ex);        
+
+        fut.subscribeCallback(            
+            //std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,functions... ](const typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](const typename core::FutureValue<TArg>& input) mutable
+            {
+                ReturnTuple* res = new ReturnTuple;
+                ::parallelism::Barrier barrier(std::tuple_size_v<decltype(fs)>);
+                 //_private::_invoke(ex,barrier,input,std::forward<FTypes>(fs)...);
+                //_private::_invoke(ex,barrier,input,std::get<FTypes>(fs)...);
+                _private::_invoke_debug<0>(ex,barrier,res,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                barrier.subscribeCallback(
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,res](const ::parallelism::BarrierData& ) mutable
+                    {
+                        result.setValue(std::move(*res));
+                        delete res;
+                        return ::core::ECallbackResult::UNSUBSCRIBE; 
+                    }));
+                    
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            }));       
+        
+        return result;
     }
     template <class TArg,class ...FTypes> ExFuture<Runnable,void> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
     {
@@ -172,5 +214,6 @@ namespace execution
         
         return result;
     }
+    
     typedef Executor<Runnable> RunnableExecutor; //alias
 }

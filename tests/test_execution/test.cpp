@@ -43,7 +43,7 @@ int result = 0;
 			}
 		);
 		
-		auto kk0 = execution::bulk(execution::inmediate(execution::start(ex),"hola"s),[](const auto& v)
+		auto kk0 = execution::bulk_debug<std::tuple<int,string,float>>(execution::inmediate(execution::start(ex),"hola"s),[](const auto& v)
 		{
 			text::info("Runnable Bulk 1");
 			::tasking::Process::wait(2000);
@@ -51,6 +51,7 @@ int result = 0;
 				text::info("Bulk 1 Value = {}",v.value());
 			else
 				text::info("Bulk 1 Error = {}",v.error().errorMsg);
+			return 6;
 		},[](const auto& v)
 		{
 			text::info("Runnable Bulk 2");		
@@ -59,6 +60,7 @@ int result = 0;
 				text::info("Bulk 2 Value = {}",v.value());
 			else
 				text::info("Bulk 2 Error = {}",v.error().errorMsg);
+			return "dani";
 		},[](const auto& v)
 		{
 			text::info("Runnable Bulk 3");		
@@ -67,9 +69,20 @@ int result = 0;
 				text::info("Bulk 3 Value = {}",v.value());
 			else
 				text::info("Bulk 3 Error = {}",v.error().errorMsg);
+			return 8.9f;
 		}
 		);	
-		core::waitForFutureThread(kk0);
+		auto kk0_1 = execution::next(kk0,[](const auto& v)
+		{
+			text::info("After Bulk");
+			if ( v.isValid() )
+			{
+				const auto& val = v.value();
+				text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
+			}else
+				text::info("After bulk err {}",v.error().errorMsg);
+		});
+		core::waitForFutureThread(kk0_1);
 		auto kk2 = execution::loop(kk1,idx0,loopSize,
 			[](int idx,const auto& v)
 			{

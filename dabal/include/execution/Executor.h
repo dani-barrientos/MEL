@@ -79,7 +79,7 @@ namespace execution
         return result;
     }
      /**
-     * @brief Produces an inmediate value     
+     * @brief Produces an inmediate value in the context of the given ExFuture executor
      */
     template <class ExecutorAgent,class TArg,class TRet> ExFuture<ExecutorAgent,TRet> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet&& arg)
     {
@@ -88,11 +88,7 @@ namespace execution
             {
                 return arg;
             }
-        );
-        // ExFuture<ExecutorAgent,TArg> result(ex); 
-        // //@todo sustituir por construccion con valor cuando esté disponible
-        // result.setValue(std::forward<TArg>(arg));
-        // return result;
+        );       
     }
     /**
      * @brief Attach a functor to execute when input fut is complete
