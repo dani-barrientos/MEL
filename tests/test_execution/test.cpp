@@ -42,7 +42,8 @@ int result = 0;
 				return std::make_tuple(6,7);
 			}
 		);
-		auto kk0 = execution::bulk(execution::schedule(ex,"hola"s),[](const auto& v)
+		
+		auto kk0 = execution::bulk(execution::inmediate(execution::start(ex),"hola"s),[](const auto& v)
 		{
 			text::info("Runnable Bulk 1");
 			::tasking::Process::wait(2000);
@@ -101,7 +102,7 @@ int result = 0;
 		text::info("Done!!");
 		}
 		//---
-		auto fut = execution::next(execution::schedule(ex),
+		auto fut = execution::next(execution::start(ex),
 					[](const auto& v)->int
 					{					
 						text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
@@ -148,7 +149,7 @@ int result = 0;
 		@todo por alguna razón si el string siguiente lo paso como const char* (es decir, sin la 's') no me compila,
 		algo relativo al FutureValue. Sin embargo haciendo un launch que devuelve const char* sí
 		*/
-		auto kk0 = execution::bulk(execution::schedule(ex,"hola"s),[](const auto& v)
+		auto kk0 = execution::bulk(execution::inmediate(execution::start(ex),"hola"s),[](const auto& v)
 		{
 			text::info("Bulk 1");
 			::tasking::Process::wait(2000);
@@ -274,7 +275,7 @@ int _testLaunch( tests::BaseTest* test)
 		text::info("Done!!");
 		}
 		//---
-		auto fut = execution::next(execution::schedule(ex),
+		auto fut = execution::next(execution::start(ex),
 					[](const auto& v)->int
 					{					
 						text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));

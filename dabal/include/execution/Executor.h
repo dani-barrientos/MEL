@@ -49,20 +49,21 @@ namespace execution
             Executor<ExecutorAgent> ex;
 		
     };
-    template <class ExecutorAgent> ExFuture<ExecutorAgent,void> schedule( Executor<ExecutorAgent> ex)
+    /**
+     * @brief Start a chain of execution in given executor.     
+     * 
+     * @tparam ExecutorAgent 
+     * @param ex 
+     * @return ExFuture<ExecutorAgent,void> 
+     */
+    template <class ExecutorAgent> ExFuture<ExecutorAgent,void> start( Executor<ExecutorAgent> ex)
     {
         ExFuture<ExecutorAgent,void> result(ex); 
-        //@todo sustituir por contruccion con valor cuando esté disponiel
+        //@todo sustituir por construccion con valor cuando esté disponiel
         result.setValue();
         return result;
     }
-    template <class ExecutorAgent,class TArg> ExFuture<ExecutorAgent,TArg> schedule( Executor<ExecutorAgent> ex,TArg&& arg)
-    {
-        ExFuture<ExecutorAgent,TArg> result(ex); 
-        //@todo sustituir por contruccion con valor cuando esté disponible
-        result.setValue(std::forward<TArg>(arg));
-        return result;
-    }
+   
     template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&()>> launch( Executor<ExecutorAgent> ex,F&& f)
     {
         typedef std::result_of_t<F&&()> TRet;
@@ -77,8 +78,24 @@ namespace execution
         ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
         return result;
     }
+     /**
+     * @brief Produces an inmediate value     
+     */
+    template <class ExecutorAgent,class TArg,class TRet> ExFuture<ExecutorAgent,TRet> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet&& arg)
+    {
+
+        return next(fut,[arg = std::forward<TRet>(arg)](const auto& v)
+            {
+                return arg;
+            }
+        );
+        // ExFuture<ExecutorAgent,TArg> result(ex); 
+        // //@todo sustituir por construccion con valor cuando esté disponible
+        // result.setValue(std::forward<TArg>(arg));
+        // return result;
+    }
     /**
-     * @brief attach a functor to execute when input fut is complete
+     * @brief Attach a functor to execute when input fut is complete
      * Given functor will be executed inf the input ExFuture executor. 
      */
     template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)>> 
