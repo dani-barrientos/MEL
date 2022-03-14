@@ -52,7 +52,7 @@ int result = 0;
 		ex.setOpts({true,false,false});
 		
 		//----		
-		auto r = th1->execute<const int,MyErrorInfo>( []()
+		auto r = th1->execute<int,MyErrorInfo>( []()
 		{
 			return 5;
 		});
