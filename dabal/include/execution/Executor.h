@@ -64,16 +64,16 @@ namespace execution
         return result;
     }
    
-    template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&()>> launch( Executor<ExecutorAgent> ex,F&& f)
+    template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>> launch( Executor<ExecutorAgent> ex,F&& f)
     {
-        typedef std::result_of_t<F&&()> TRet;
+        typedef std::invoke_result_t<F> TRet;
         ExFuture<ExecutorAgent,TRet> result(ex);
         ex. template launch<TRet>(std::forward<F>(f),result);
         return result;
     }
-    template <class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(TArg&&)>> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
+    template <class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg&&>> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
     {
-        typedef std::result_of_t<F&&(TArg&&)> TRet;
+        typedef std::invoke_result_t<F,TArg> TRet;
         ExFuture<ExecutorAgent,TRet> result(ex);
         ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
         return result;
@@ -94,13 +94,13 @@ namespace execution
      * @brief Attach a functor to execute when input fut is complete
      * Given functor will be executed inf the input ExFuture executor. 
      */
-    template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)>> 
+    template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,typename ExFuture<ExecutorAgent,TArg>::ValueType&>> 
         next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
     {                
-        typedef std::result_of_t<F&&(const typename ExFuture<ExecutorAgent,TArg>::ValueType&)> TRet;
+        typedef std::invoke_result_t<F,typename ExFuture<ExecutorAgent,TArg>::ValueType&> TRet;
         ExFuture<ExecutorAgent,TRet> result(fut.ex);
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(f),result](const typename core::FutureValue<TArg>& input) 
+            std::function<::core::ECallbackResult( typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(f),result]( typename core::FutureValue<TArg>& input) 
             {
                 ex. template launch<TRet>(f,input,result);        
                 return ::core::ECallbackResult::UNSUBSCRIBE; 

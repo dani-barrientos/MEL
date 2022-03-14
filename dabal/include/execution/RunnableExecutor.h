@@ -37,8 +37,9 @@ namespace execution
             template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet> output) const
             {
                 if ( !mRunnable.expired())
-                {
-                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                {                                    
+                    //mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::reference_wrapper(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                 }            
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const
@@ -136,7 +137,7 @@ namespace execution
             execution::launch(ex,
                 [f = std::forward<F>(f),b](TArg&& arg) mutable
                 {
-                    f(arg);
+                    f(std::forward<TArg>(arg));
                     b.set();
                 },arg);
         }
@@ -145,7 +146,7 @@ namespace execution
             _invoke(ex,b,arg,std::forward<F>(f));
             _invoke(ex,b,arg,std::forward<FTypes>(fs)...);
         }
-        //----- pruebas
+        /*//----- pruebas
         template <int n,class F,class TArg,class OutputTuple> void _invoke_debug(Executor<Runnable> ex,::parallelism::Barrier& b,OutputTuple* output,TArg&& arg,F&& f)
         {
             execution::launch(ex,
@@ -160,9 +161,9 @@ namespace execution
             _invoke_debug<n>(ex,b,output,arg,std::forward<F>(f));
             _invoke_debug<n+1>(ex,b,output,arg,std::forward<FTypes>(fs)...);
         }
-
+*/
     }
-    template <class ReturnTuple,class TArg,class ...FTypes> ExFuture<Runnable,ReturnTuple> bulk_debug(ExFuture<Runnable,TArg> fut, FTypes... functions)
+   /* template <class ReturnTuple,class TArg,class ...FTypes> ExFuture<Runnable,ReturnTuple> bulk_debug(ExFuture<Runnable,TArg> fut, FTypes... functions)
     {
         //I will remove ReturnTuple from template when be able to atuoatically deduce from FTypes
         ExFuture<Runnable,ReturnTuple> result(fut.ex);        
@@ -189,6 +190,7 @@ namespace execution
         
         return result;
     }
+    */
     template <class TArg,class ...FTypes> ExFuture<Runnable,void> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
     {
         ExFuture<Runnable,void> result(fut.ex);

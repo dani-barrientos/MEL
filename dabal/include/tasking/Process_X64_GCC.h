@@ -23,8 +23,8 @@ namespace tasking
         volatile void* mIniRBX;
         volatile void* mRegisters[4]; //r12.r15
         volatile bool mSwitched;
-        volatile uint16_t mFpcsr;  //fpu status register
-        volatile unsigned int mMxcsr; //mmx control register
+        // volatile uint16_t mFpcsr;  //fpu status register
+        // volatile unsigned int mMxcsr; //mmx control register
         volatile unsigned int mStackSize;
         volatile unsigned int mCapacity;
     };

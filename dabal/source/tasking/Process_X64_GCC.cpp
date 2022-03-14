@@ -27,7 +27,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      #ifdef DABAL_X64_CLANG
      //@todo i can't find any other way to force standard stack prefix.. (this ocurrs since clang 11)
      //casi seguro es lo del red-zone (-mno-red-zone)
-     asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax","rbp","rsp");
+      asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"%rax","%rbp","%rsp");
 //     asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax");
      #else
      asm volatile( "mov %[v],%%rax"::[v] "m" (realThis):"rax");
@@ -39,28 +39,28 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      asm volatile("mov %%r15,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+24) );
      asm volatile("mov %%rsp,(%P[v])(%%rax)"::[v] "i" (mIniSPOFF));
      asm volatile("mov %%rbp,(%P[v])(%%rax)"::[v] "i" (mIniBPOFF));
-     asm volatile("fnstcw (%P[v])(%%rax)"::[v] "i" (mFpcsrOFF));
-     asm volatile("stmxcsr (%P[v])(%%rax)"::[v] "i" (mMxcsrOFF));
+     //@todo retomar esto
+     //asm volatile("fnstcw (%P[v])(%%rax)"::[v] "i" (mFpcsrOFF));
+     //asm volatile("stmxcsr (%P[v])(%%rax)"::[v] "i" (mMxcsrOFF));
      asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF):"cc" );
      asm volatile("jz continueExecuting");
      asm volatile( "movb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF));
      asm volatile( "std\n");
-     asm volatile( "mov (%P[v])(%%rax),%%ecx"::[v] "i" (mStackSizeOFF) );
+     asm volatile( "mov (%P[v])(%%rax),%%ecx"::[v] "i" (mStackSizeOFF):"%ecx" );
      asm volatile( "shr $3,%ecx");
      asm volatile( "sub $8,%rsp" );
      asm volatile("mov %rsp,%rdi\n");
-     asm volatile("mov (%P[v])(%%rax),%%rsi"::[v] "i" (mStackEndOFF) );
+     asm volatile("mov (%P[v])(%%rax),%%rsi"::[v] "i" (mStackEndOFF):"%rsi" );
 
      asm volatile("sub $8,%%rsi":::"cc" );
      asm volatile("rep movsq":::"%rdi","%rsi");
      asm volatile("mov %rdi,%rsp");
      asm volatile("add $8,%rsp");
-     asm volatile( "cld");
-     //@todo pendiente de resovler esto. El tema está en vigilar el alineamiento,
+      //@todo pendiente de resovler esto. El tema está en vigilar el alineamiento,
      /*asm volatile("ldmxcsr (%rsp)\n "
      "fldcw 4(%rsp)\n"
      "add $4,%rsp");*/
-     asm volatile(
+     asm volatile( "cld\n"
                   "pop %r15\n"
                   "pop %r14\n"
                   "pop %r13\n"
@@ -72,7 +72,7 @@ volatile void Process::checkMicrothread( uint64_t msegs )
      _execute( msegs );
 }
 
-volatile void fakeFunction()
+volatile void fakeFunction() 
 {
     asm volatile( "wrapperSwitch:");
     asm volatile( "push %rbp\n"
@@ -112,8 +112,8 @@ volatile void fakeFunction()
     asm volatile("mov (%P[v])(%%r12),%%r13"::[v] "i" (mRegistersOFF+8) );
     asm volatile("mov (%P[v])(%%r12),%%r14"::[v] "i" (mRegistersOFF+16) );
     asm volatile("mov (%P[v])(%%r12),%%r15"::[v] "i" (mRegistersOFF+24) );
-    asm volatile("fldcw (%P[v])(%%r12)"::[v] "i" (mFpcsrOFF) );
-    asm volatile("ldmxcsr (%P[v])(%%r12)"::[v] "i" (mMxcsrOFF) );
+    // asm volatile("fldcw (%P[v])(%%r12)"::[v] "i" (mFpcsrOFF) );
+    // asm volatile("ldmxcsr (%P[v])(%%r12)"::[v] "i" (mMxcsrOFF) );
     asm volatile("mov (%P[v])(%%r12),%%r12"::[v] "i" (mRegistersOFF) );
 
     asm volatile("pop %rbp");
