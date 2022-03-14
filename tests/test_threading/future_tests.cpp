@@ -199,7 +199,7 @@ class MasterThread : public ThreadRunnable
 // Necesito que sea const para subscripciones const, y n oconst las otras
 
 						++nTasks; //take next task into account
-						post( [this,channel,result](uint64_t,Process*)
+						post( [this,channel,result](uint64_t,Process*) mutable
 							{
 								auto wr = ::tasking::waitForFutureMThread(result);
 								if ( wr.isValid())

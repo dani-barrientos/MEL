@@ -19,6 +19,28 @@ using tasking::Process;
 const std::string TestExecution::TEST_NAME = "execution";
 
 //test for development purposes
+struct MyErrorInfo : public ::core::ErrorInfo
+{
+	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
+	{
+		text::debug("MyErrorInfo");
+	}
+	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
+	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
+	MyErrorInfo& operator = (MyErrorInfo&& info)
+	{
+		error = info.error;
+		errorMsg = std::move(info.errorMsg);
+		return *this;
+	}
+	MyErrorInfo& operator = (const MyErrorInfo& info)
+	{
+		error = info.error;
+		errorMsg = info.errorMsg;
+		return *this;
+	}
+};
+
 int _testDebug()
 {
 int result = 0;		
@@ -30,7 +52,17 @@ int result = 0;
 		ex.setOpts({true,false,false});
 		
 		//----		
-		
+		auto r = th1->execute<const int,MyErrorInfo>( []()
+		{
+			return 5;
+		});
+		r.subscribeCallback( std::function< ::core::ECallbackResult (decltype(r)::ValueType&)>([](decltype(r)::ValueType&)
+		{
+
+			return ::core::ECallbackResult::UNSUBSCRIBE;
+		}));
+		r.setError(MyErrorInfo(0,"dani"));
+		core::waitForFutureThread(r);
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;

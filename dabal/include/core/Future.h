@@ -171,7 +171,7 @@ namespace core
         std::conditional<
             std::is_reference<T>::value,
             std::reference_wrapper<typename std::remove_reference<T>::type>,
-            T>::type> ValueType;
+            T>::type,ErrorType> ValueType;
 		
 	/*---
 		typedef FutureValue<ResultType,ErrorType> ValueType;
@@ -328,7 +328,6 @@ namespace core
 		typedef CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&> Subscriptor;
 	public:
 		typedef FutureValue<void,ErrorType> ValueType;
-		typedef typename mpl::TypeTraits< ValueType >::ParameterType ReturnType;
 
 		FutureData(){};
 		//overload to inicializce as valid
@@ -353,10 +352,14 @@ namespace core
 			Lock lck(FutureData_Base::mSC);
 			return Subscriptor::unsubscribeCallback(std::forward<F>(f));
 		}
-		ReturnType getValue() const
+		ValueType& getValue(){ return mValue;}
+        const ValueType& getValue()const{ return mValue;}
+		template <class U>
+		void setValue(U&& value)
 		{
-			return mValue;
+			mValue = std::forward<U>(value);
 		}
+		
 		inline void setValue( void )
 		{
 			volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
@@ -576,7 +579,6 @@ namespace core
 	{
 	public:
 		typedef typename FutureData<void,ErrorType>::ValueType ValueType;
-		typedef typename FutureData<void,ErrorType>::ReturnType ReturnType;
 		Future(){};
 		Future(const Future& f):Future_Common<void,ErrorType>(f){};	
 		Future(Future&& f):Future_Common<void,ErrorType>(std::move(f)){};	

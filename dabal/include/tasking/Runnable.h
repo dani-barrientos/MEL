@@ -293,9 +293,9 @@ namespace tasking
 		* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		*/
 		template <class TRet,class ErrorType = core::ErrorInfo,class F,class KF = const std::function<bool()>&> 
-			const Future<TRet,ErrorType> execute( F&& function,KF&& killFunction=_killFalse);
+			Future<TRet,ErrorType> execute( F&& function,KF&& killFunction=_killFalse);
 		template <class TRet,class ErrorType = core::ErrorInfo,class F,class KF = const std::function<bool()>&> 
-			const Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>,KF&& killFunction=_killFalse);
+			Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>,KF&& killFunction=_killFalse);
 
 		
 				
@@ -390,7 +390,7 @@ namespace tasking
 	}
 	
 	template <class TRet,class ErrorType, class F,class KF> 
-	const Future<TRet,ErrorType> Runnable::execute( F&& function,KF&& killFunction)
+	Future<TRet,ErrorType> Runnable::execute( F&& function,KF&& killFunction)
 	{
 		Future<TRet,ErrorType> future;
 		return execute(std::forward<F>(function),future,std::forward<KF>(killFunction));		
@@ -402,7 +402,7 @@ namespace tasking
 	 * @return same future as out
 	 */
 	template <class TRet,class ErrorType , class F,class KF> 
-	const Future<TRet,ErrorType> Runnable::execute( F&& f,Future<TRet,ErrorType> output,KF&& killFunction)
+	Future<TRet,ErrorType> Runnable::execute( F&& f,Future<TRet,ErrorType> output,KF&& killFunction)
 	{
 		//always post the task, despite being in same thread. This is the most consistent way of doing it
 

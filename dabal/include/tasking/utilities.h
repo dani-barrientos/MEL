@@ -23,13 +23,13 @@ namespace tasking
      * @param f future to wait for
      * @param msecs maximum time to wait.
      */
-    template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureMThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
+    template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureMThread(  core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
     {
         using ::tasking::Event_mthread;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            typename core::Future<T,ErrorType>::ValueType wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
+            typename core::Future<T,ErrorType>::ValueType wait( core::Future<T,ErrorType>& f,unsigned int msecs)
             {
                 Event_mthread::EWaitCode eventresult;
                 int evId;
@@ -38,7 +38,7 @@ namespace tasking
                 {
                 //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
                     evId = f.subscribeCallback(
-                    std::function<::core::ECallbackResult( const ::core::FutureValue<T,ErrorType>&)>([this](const ::core::FutureValue<T,ErrorType>& ) 
+                    std::function<::core::ECallbackResult( ::core::FutureValue<T,ErrorType>&)>([this](::core::FutureValue<T,ErrorType>& ) 
                     {
                         mEvent.set();
                      //  spdlog::debug("Event was set for Thread {}");

@@ -233,13 +233,13 @@ namespace core
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureThread( core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            typename core::Future<T,ErrorType>::ValueType wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
+            typename core::Future<T,ErrorType>::ValueType wait( core::Future<T,ErrorType>& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
