@@ -51,10 +51,10 @@ int result = 0;
 		execution::Executor<Runnable> ex(th1);		
 		ex.setOpts({true,false,false});
 		//----		
-		/*{
+		{
 			int a = 1;
 			text::info("a value at start = {}",a);
-			auto r = th1->execute<int&,MyErrorInfo>( [&a]() mutable
+			auto r = th1->execute<int&,MyErrorInfo>( [&a]() -> int& 
 			{
 				text::info("Asigno a");
 				tasking::Process::wait(1000);
@@ -73,7 +73,7 @@ int result = 0;
 			{
 				text::info("a value after execution = {}",a);
 				text::info("Fut value = {}",r.getValue().value());
-				r.getValue().value() = 5;
+				r.getValue().value() = 8;
 				text::info("a value after assignment = {}",a);
 				text::info("Fut value = {}",r.getValue().value());
 			}else
@@ -81,17 +81,18 @@ int result = 0;
 				text::error("Error = {}",r.getValue().error().errorMsg);
 			}
 		
-		}*/
+		}
 		
 	int a;
 	Future<int&> f;
+	f.setValue(a);
 	f.subscribeCallback( std::function< ::core::ECallbackResult (decltype(f)::ValueType&)>([](decltype(f)::ValueType&)
 			{
 
 				return ::core::ECallbackResult::UNSUBSCRIBE;
 			}));
-	//core::waitForFutureThread(f);	
-	tasking::waitForFutureMThread(f);		
+	core::waitForFutureThread(f);	
+		
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;

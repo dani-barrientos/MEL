@@ -440,7 +440,9 @@ namespace tasking
 						output.setValue();
 					}
 					else
+					{
 						output.setValue(f());
+					}
 				}
 				//check chances of Exception
 				catch( std::exception& e )
