@@ -111,6 +111,7 @@
             }
         },
         {
+
             "name": "GCC Linux Base (Release)",
             "description": "Common things for Clang release build in Linux",
             "hidden": true,
@@ -146,32 +147,32 @@
         },
         {
             "name": "Mac Debug Base",
-            "hidden":true,
+            "hidden": true,
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "DABAL_OS":"DABAL_MACOSX",
+                "DABAL_OS": "DABAL_MACOSX",
                 "DABAL_ARQ": "DABAL_X64_CLANG",
-                "USE_SPDLOG":true
+                "USE_SPDLOG": true
             }
         },
         {
             "name": "Mac Release Base",
-            "hidden":true,
+            "hidden": true,
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "DABAL_OS":"DABAL_MACOSX",
-                 "DABAL_ARQ": "DABAL_X64_CLANG",
-                "USE_SPDLOG":true
+                "DABAL_OS": "DABAL_MACOSX",
+                "DABAL_ARQ": "DABAL_X64_CLANG",
+                "USE_SPDLOG": true
             }
         }
     ],
-    "testPresets": [        
+    "testPresets": [
         {
             "name": "AllTests",
             "hidden": true,
@@ -196,13 +197,12 @@
                 }
             },
             "execution": {
-                "stopOnFailure": true                
+                "stopOnFailure": true
             },
             "output": {
-                "verbosity":"verbose",
+                "verbosity": "verbose",
                 "outputOnFailure": true
             }
         }
     ]
-    
 }

@@ -29,7 +29,8 @@ namespace tasking
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            typename core::Future<T,ErrorType>::ValueType wait( core::Future<T,ErrorType>& f,unsigned int msecs)
+            using futT = core::Future<T,ErrorType>;
+            typename core::Future<T,ErrorType>::ValueType wait( futT& f,unsigned int msecs)
             {
                 Event_mthread::EWaitCode eventresult;
                 int evId;
@@ -38,7 +39,7 @@ namespace tasking
                 {
                 //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
                     evId = f.subscribeCallback(
-                    std::function<::core::ECallbackResult( ::core::FutureValue<T,ErrorType>&)>([this](::core::FutureValue<T,ErrorType>& ) 
+                    std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
                     {
                         mEvent.set();
                      //  spdlog::debug("Event was set for Thread {}");

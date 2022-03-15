@@ -430,7 +430,7 @@ namespace tasking
 		// }
 		
 		post(
-			[output = std::move(output),f = std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
+			[output,f = std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
 			{
 				try
 				{

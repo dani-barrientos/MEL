@@ -44,6 +44,14 @@ namespace core
 		{
 			using type = typename std::reference_wrapper<T>::type&;
 		};
+		template <class T> struct creturn_type
+		{
+			using type = const T&;
+		};
+		template <class T> struct creturn_type<std::reference_wrapper<T>>
+		{
+			using type = const typename std::reference_wrapper<T>::type&;
+		};
 	}
 	template <class T,class ErrorType = ::core::ErrorInfo> class FutureValue : public std::variant<_private::NotAvailable,T,ErrorType>
 	{
@@ -68,7 +76,7 @@ namespace core
 			{
 				return std::get<T>(*this);
 			}
-			const typename _private::return_type<T>::type value() const
+			typename _private::creturn_type<T>::type value() const
 			{
 				return std::get<T>(*this);
 			}
@@ -163,7 +171,12 @@ namespace core
 	};
 	template <typename T,typename ErrorType>
 	class FutureData : public FutureData_Base,
-					private CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<T,ErrorType>&>,
+					private CallbackSubscriptor<::core::CSMultithreadPolicy,
+					FutureValue<typename 
+						std::conditional<
+							std::is_reference<T>::value,
+							std::reference_wrapper<typename std::remove_reference<T>::type>,
+							T>::type,ErrorType>&>,
 					public std::enable_shared_from_this<FutureData<T,ErrorType>>
 	{		
 	public:
@@ -192,10 +205,21 @@ namespace core
 		}
 		ValueType& getValue(){ return mValue;}
         const ValueType& getValue()const{ return mValue;}
+		//@todo I should improve this function to avoid code bloat.
 		template <class U>
 		void setValue(U&& value)
 		{
-			mValue = std::forward<U>(value);
+			volatile auto protectMe= FutureData<T,ErrorType>::shared_from_this();
+			FutureData_Base::mSC.enter();	
+			if ( mState == NOTAVAILABLE)
+			{
+				mValue = std::forward<U>(value);
+				FutureData_Base::mState = VALID;
+				FutureData_Base::mSC.leave();
+				Subscriptor::triggerCallbacks(mValue);
+			}else
+				FutureData_Base::mSC.leave();
+			
 		}
 	/*
 		FutureData( const ResultType& value ):
@@ -304,7 +328,7 @@ namespace core
 			{
 				f(mValue);
 			}
-			return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn be neccesary if mstate already avaialbe but for consistency
+			return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency
 		}
 		template <class F> auto unsubscribeCallback(F&& f)
 		{
@@ -519,8 +543,8 @@ namespace core
 		};
 	public:
 		
-		inline  typename FutureData<T,ErrorType>::ValueType getValue() const{ return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
-		inline  const typename FutureData<T,ErrorType>::ValueType getValue() { return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
+		inline  const typename FutureData<T,ErrorType>::ValueType getValue() const{ return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
+		inline  typename FutureData<T,ErrorType>::ValueType getValue() { return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
 		void assign( const typename FutureData<T,ErrorType>::ValueType& val)
 		{
 			getData().assign(val);

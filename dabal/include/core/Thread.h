@@ -239,18 +239,19 @@ namespace core
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            typename core::Future<T,ErrorType>::ValueType wait( core::Future<T,ErrorType>& f,unsigned int msecs)
+			using futT = core::Future<T,ErrorType>;
+            typename core::Future<T,ErrorType>::ValueType wait( futT& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
 				int evId = f.subscribeCallback(
-					std::function<::core::ECallbackResult( const FutureValue<T,ErrorType>&)>([this](const FutureValue<T,ErrorType>& ) 
+					std::function<::core::ECallbackResult( const typename futT::ValueType&)>([this](const typename futT::ValueType& ) 
 					{
 						mEvent.set();
 					//   spdlog::debug("Event was set for Thread {}",threadid);
 						return ::core::ECallbackResult::UNSUBSCRIBE; 
-					})
-				);
+					}));
+				
                 eventresult = mEvent.wait(msecs); 
 				f.unsubscribeCallback(evId);
             //  spdlog::debug("Wait was done in Thread {}",threadid);

@@ -50,19 +50,48 @@ int result = 0;
 		//auto th2 = ThreadRunnable::create(true);	
 		execution::Executor<Runnable> ex(th1);		
 		ex.setOpts({true,false,false});
-		
 		//----		
-		auto r = th1->execute<int,MyErrorInfo>( []()
-		{
-			return 5;
-		});
-		r.subscribeCallback( std::function< ::core::ECallbackResult (decltype(r)::ValueType&)>([](decltype(r)::ValueType&)
-		{
+		/*{
+			int a = 1;
+			text::info("a value at start = {}",a);
+			auto r = th1->execute<int&,MyErrorInfo>( [&a]() mutable
+			{
+				text::info("Asigno a");
+				tasking::Process::wait(1000);
+				a = 5;
+				//throw std::runtime_error("chuiquimol");
+				return a;
+			});
+			r.subscribeCallback( std::function< ::core::ECallbackResult (decltype(r)::ValueType&)>([](decltype(r)::ValueType&)
+			{
 
-			return ::core::ECallbackResult::UNSUBSCRIBE;
-		}));
-		r.setError(MyErrorInfo(0,"dani"));
-		core::waitForFutureThread(r);
+				return ::core::ECallbackResult::UNSUBSCRIBE;
+			}));
+			//r.setError(MyErrorInfo(0,"dani"));
+			core::waitForFutureThread(r);
+			if ( r.getValue().isValid())
+			{
+				text::info("a value after execution = {}",a);
+				text::info("Fut value = {}",r.getValue().value());
+				r.getValue().value() = 5;
+				text::info("a value after assignment = {}",a);
+				text::info("Fut value = {}",r.getValue().value());
+			}else
+			{
+				text::error("Error = {}",r.getValue().error().errorMsg);
+			}
+		
+		}*/
+		
+	int a;
+	Future<int&> f;
+	f.subscribeCallback( std::function< ::core::ECallbackResult (decltype(f)::ValueType&)>([](decltype(f)::ValueType&)
+			{
+
+				return ::core::ECallbackResult::UNSUBSCRIBE;
+			}));
+	//core::waitForFutureThread(f);	
+	tasking::waitForFutureMThread(f);		
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;
@@ -136,14 +165,14 @@ int result = 0;
 	// },vec);
 	//execution::next(execution::inmediate(execution::start(ex),std::move(vec)),
 	int val = 5;
-	Future<int&> fut;
+	Future<int> fut;
 	//tengo un problema, no sé cómo hacer que sea una referencia lo de dentro
 //hay un problema muy gordo, el variatn no puede tener refen
 
 	//fut.setValue(std::reference_wrapper(val));
 	fut.setValue(val);
 	text::info("Orig Value = {}",fut.getValue().value());
-	fut.getValue().value() = 6;
+	fut.getValue().value() = 6; 
 	text::info("Value = {}",fut.getValue().value());
 	text::info("Old Value = {}",val);
 	
