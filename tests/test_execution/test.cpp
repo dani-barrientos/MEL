@@ -40,16 +40,66 @@ struct MyErrorInfo : public ::core::ErrorInfo
 		return *this;
 	}
 };
-
+struct MiPepe
+{
+	int val;
+	MiPepe()
+	{
+		val = 1;
+		text::info("Pepe constructor");
+	}
+	MiPepe(const MiPepe& ob)
+	{
+		val = ob.val;
+		text::info("Pepe copy constructor");
+	}
+	MiPepe(MiPepe&& ob)
+	{
+		val = ob.val;
+		text::info("Pepe move constructor");
+	}
+	~MiPepe()
+	{
+		text::info("Pepe destructor");
+	}
+	MiPepe& operator=(const MiPepe& ob)
+	{
+		val = ob.val;
+		text::info("Pepe copy operator=");
+		return *this;
+	}
+	MiPepe& operator=(MiPepe&& ob)
+	{
+		val = ob.val;
+		text::info("Pepe copy operator=");
+		return *this;
+	}
+};
+//funcion para pruebas a lo cerdo
 int _testDebug()
 {
-int result = 0;		
+int result = 0;	
+	
 	{
 		
 		auto th1 = ThreadRunnable::create(true);	
 		//auto th2 = ThreadRunnable::create(true);	
 		execution::Executor<Runnable> ex(th1);		
 		ex.setOpts({true,false,false});
+		{
+			MiPepe p;
+			Future<MiPepe> fut;//(p);
+			fut.setValue(p);
+			fut.getValue().value().val = 10; uy que raro, aqui me hace copia de Pepe, debe ser lo devuelvo por value
+			text::info("{}",fut.getValue().value().val);
+			text::info("{}",p.val);
+			/*auto kk = execution::launch(ex,[](auto& v) -> vector<int>&
+			{		
+				v[1] = 4;
+				return v; 
+			},vec);*/
+		}
+		/*
 		//----		
 		{
 			int a = 1;
@@ -82,21 +132,12 @@ int result = 0;
 			}
 		
 		}
-		
-	int a;
-	Future<int&> f;
-	f.setValue(a);
-	f.subscribeCallback( std::function< ::core::ECallbackResult (decltype(f)::ValueType&)>([](decltype(f)::ValueType&)
-			{
-
-				return ::core::ECallbackResult::UNSUBSCRIBE;
-			}));
-	core::waitForFutureThread(f);	
+*/
 		
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;
-		
+		/*
 		// th1->post([th1](RUNNABLE_TASK_PARAMS)
 		// {
 		// 	//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
@@ -107,7 +148,7 @@ int result = 0;
 		// 	return ::tasking::EGenericProcessResult::KILL;
 		// },Runnable::_killTrue,1000);
 		// core::Thread::sleep(600000);
-		/*//problema gordo. si una funcion no devuelve nada en el bulk...
+		//problema gordo. si una funcion no devuelve nada en el bulk...
 		//igual el bulk simplemente tiene que devolver lo mismo que a la entrada... como en el ekjemplo de la prpuesta p2403
 		auto kk0 = execution::bulk_debug<std::tuple<int,string,float>>(execution::inmediate(execution::start(ex),"hola"s),[](const auto& v)
 		{
@@ -144,20 +185,33 @@ int result = 0;
 	auto kk0 = execution::launch(ex,[]()
 	{
 	});
-	auto kk = execution::launch(ex,[](auto& v)
+	auto kk = execution::launch(ex,[](auto& v) -> vector<int>&
 	{		
 		v[1] = 4;
+		return v; 
 	},vec);
-	auto kk2 = execution::launch(ex,[](const auto& v)
+	auto kk2 = execution::next(kk,[](auto& v)
+	{
+		if ( v.isValid())
+		{
+			v.value()[1] = 9;
+			//text::info("{}",v.value());
+		}else
+		{
+			text::error(v.error().errorMsg);
+		}
+	});
+	auto kk3 = execution::launch(ex,[](const auto& v)
 	{
 		//v = 4;	
 		text::info("Valor: {}",v);
 	},6);
 	
-	//core::waitForFutureThread(kk);
-	Thread::sleep(2000);
+	core::waitForFutureThread(kk2);
+	//Thread::sleep(200000);
 	text::info("Val = {}",vec[1]);
 	
+//ahora hacer un ejempko con el next. probar a devolver un vector por referencia al next
 	// execution::launch(ex,
 	// [](auto& v)
 	// {
@@ -398,143 +452,143 @@ int result = 0;
 int _testLaunch( tests::BaseTest* test)
 {
 	 int result = 0;		
-	// {
-	// 	auto th1 = ThreadRunnable::create(true);	
-	// 	auto th2 = ThreadRunnable::create(true);	
-	// 	execution::Executor<Runnable> ex(th1);		
-	// 	ex.setOpts({true,false,false});
+	{
+		auto th1 = ThreadRunnable::create(true);	
+		auto th2 = ThreadRunnable::create(true);	
+		execution::Executor<Runnable> ex(th1);		
+		ex.setOpts({true,false,false});
 		
-	// 	//----		
-	// 	{
-	// 	const int idx0 = 0;
-	// 	const int loopSize = 10;
-	// 	auto kk1 = execution::launch(ex,
-	// 		[]()
-	// 		{		
-	// 			text::info("Launch kk");			
-	// 			::tasking::Process::wait(5000);					
-	// 			throw std::runtime_error("Error1");
-	// 			return "pepe";
-	// 		}
-	// 	);
-	// 	auto kk2 = execution::loop(kk1,idx0,loopSize,
-	// 		[](int idx,const auto& v)
-	// 		{
-	// 			::tasking::Process::wait(1000);
-	// 			if ( v.isValid() )
-	// 				text::info("It {}. Value = {}",idx,v.value());				
-	// 			else
-	// 				text::info("It {}. Error = {}",idx,v.error().errorMsg);				
+		//----		
+		{
+		const int idx0 = 0;
+		const int loopSize = 10;
+		auto kk1 = execution::launch(ex,
+			[]()
+			{		
+				text::info("Launch kk");			
+				::tasking::Process::wait(5000);					
+				throw std::runtime_error("Error1");
+				return "pepe";
+			}
+		);
+		auto kk2 = execution::loop(kk1,idx0,loopSize,
+			[](int idx,const auto& v)
+			{
+				::tasking::Process::wait(1000);
+				if ( v.isValid() )
+					text::info("It {}. Value = {}",idx,v.value());				
+				else
+					text::info("It {}. Error = {}",idx,v.error().errorMsg);				
 
-	// 		}
-	// 	);
-	// 	auto kk3 = execution::next(kk2,[](const auto& v)->int
-	// 	{								
-	// 		text::info("Launch waiting");
-	// 		if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
-	// 		{
-	// 			//throw std::runtime_error("Error1");
-	// 			text::info("Launch done");
-	// 		}else
-	// 			text::info("Launch killed");
-	// 		return 4;
-	// 	}
-	// 	);
-	// 	::core::waitForFutureThread(kk3);
-	// 	text::info("Done!!");
-	// 	}
-	// 	//---
-	// 	auto fut = execution::next(execution::start(ex),
-	// 				[](const auto& v)->int
-	// 				{					
-	// 					text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
-	// 					text::info("Launch waiting");
-	// 					if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
-	// 					{
-	// 						//throw std::runtime_error("Error1");
-	// 						text::info("Launch done");
-	// 					}else
-	// 						text::info("Launch killed");
-	// 					return 4;
-	// 				}
-	// 			);
-	// 	//Thread::sleep(10000);
-	// 	execution::Executor<Runnable> ex2(th2);
-	// 	//::core::waitForFutureThread(fut);	
-	// 	//auto fut_1 = execution::transfer(fut,ex2);
-	// 	fut = execution::transfer(fut,ex2);
-	// 	auto fut2 = execution::next(fut,[](const auto& v)
-	// 			{
-	// 				text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
-	// 				if (v.isValid())
-	// 				{
-	// 					text::info("Next done: {}",v.value());		
-	// 				}else					
-	// 					text::error("Next error: {}",v.error().errorMsg);		
-	// 			}
-	// 			);						
-	// 	::core::waitForFutureThread(fut2);				
-	// }
-	// {		
-	// 	parallelism::ThreadPool::ThreadPoolOpts opts;
-	// 	auto myPool = make_shared<parallelism::ThreadPool>(opts);
-	// 	parallelism::ThreadPool::ExecutionOpts exopts;
-	// 	execution::Executor<parallelism::ThreadPool> ex(myPool);
-	// 	ex.setOpts({true,true});
-	// 	{
-	// 	const int idx0 = 0;
-	// 	const int loopSize = 10;		
-	// 	auto kk1 = execution::launch(ex,
-	// 		[]()
-	// 		{		
-	// 			text::info("Launch TP kk");			
-	// 			::tasking::Process::wait(5000);					
-	// 			//throw std::runtime_error("Error1");
-	// 			return "pepe";
-	// 		}
-	// 	);
-	// 	// auto kk = execution::loop(kk1/*execution::schedule(ex)*/,idx0,loopSize,
-	// 	// 	[](int idx,const auto& v)
-	// 	// 	{
-	// 	// 		::tasking::Process::wait(1000);
-	// 	// 		if ( v.isValid())
-	// 	// 		{
-	// 	// 			text::info("It {}. Value = {}",idx,v.value());				
-	// 	// 		}else
-	// 	// 			text::error("It {} .Err = {}",idx,v.error().errorMsg);				
+			}
+		);
+		auto kk3 = execution::next(kk2,[](const auto& v)->int
+		{								
+			text::info("Launch waiting");
+			if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+			{
+				//throw std::runtime_error("Error1");
+				text::info("Launch done");
+			}else
+				text::info("Launch killed");
+			return 4;
+		}
+		);
+		::core::waitForFutureThread(kk3);
+		text::info("Done!!");
+		}
+		//---
+		auto fut = execution::next(execution::start(ex),
+					[](const auto& v)->int
+					{					
+						text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
+						text::info("Launch waiting");
+						if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+						{
+							//throw std::runtime_error("Error1");
+							text::info("Launch done");
+						}else
+							text::info("Launch killed");
+						return 4;
+					}
+				);
+		//Thread::sleep(10000);
+		execution::Executor<Runnable> ex2(th2);
+		//::core::waitForFutureThread(fut);	
+		//auto fut_1 = execution::transfer(fut,ex2);
+		fut = execution::transfer(fut,ex2);
+		auto fut2 = execution::next(fut,[](const auto& v)
+				{
+					text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
+					if (v.isValid())
+					{
+						text::info("Next done: {}",v.value());		
+					}else					
+						text::error("Next error: {}",v.error().errorMsg);		
+				}
+				);						
+		::core::waitForFutureThread(fut2);				
+	}
+	{		
+		parallelism::ThreadPool::ThreadPoolOpts opts;
+		auto myPool = make_shared<parallelism::ThreadPool>(opts);
+		parallelism::ThreadPool::ExecutionOpts exopts;
+		execution::Executor<parallelism::ThreadPool> ex(myPool);
+		ex.setOpts({true,true});
+		{
+		const int idx0 = 0;
+		const int loopSize = 10;		
+		auto kk1 = execution::launch(ex,
+			[]()
+			{		
+				text::info("Launch TP kk");			
+				::tasking::Process::wait(5000);					
+				//throw std::runtime_error("Error1");
+				return "pepe";
+			}
+		);
+		// auto kk = execution::loop(kk1/*execution::schedule(ex)*/,idx0,loopSize,
+		// 	[](int idx,const auto& v)
+		// 	{
+		// 		::tasking::Process::wait(1000);
+		// 		if ( v.isValid())
+		// 		{
+		// 			text::info("It {}. Value = {}",idx,v.value());				
+		// 		}else
+		// 			text::error("It {} .Err = {}",idx,v.error().errorMsg);				
 				
-	// 	// 	}
-	// 	// );
-	// 	// text::info("voy a esperar");
-	// 	// ::core::waitForFutureThread(kk);
-	// 	text::info("terminó");
-	// 	}
-	// 	auto fut = execution::launch(ex,
-	// 		[](string v)
-	// 		{					
-	// 			text::info("Tp Launch waiting");
-	// 			if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
-	// 				text::info("TP Launch done: {}",v);
-	// 			else
-	// 				text::info("TP Launch killed");
-	// 			return 4;
-	// 		},"pepe"
-	// 	);
-	// 	// text::info("TP Sleep");
-	// 	// Thread::sleep(10000);
-	// 	auto fut2 = execution::next(fut,[](const auto& v)->void
-	// 			{
-	// 				if (v.isValid())
-	// 				{
-	// 					text::info("TP Next done: {}",v.value());		
-	// 				}else					
-	// 					text::error("TP Next error: {}",v.error().errorMsg);		
-	// 			}
-	// 			);		
-	// 	::core::waitForFutureThread(fut2);                
+		// 	}
+		// );
+		// text::info("voy a esperar");
+		// ::core::waitForFutureThread(kk);
+		text::info("terminó");
+		}
+		auto fut = execution::launch(ex,
+			[](string v)
+			{					
+				text::info("Tp Launch waiting");
+				if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+					text::info("TP Launch done: {}",v);
+				else
+					text::info("TP Launch killed");
+				return 4;
+			},"pepe"
+		);
+		// text::info("TP Sleep");
+		// Thread::sleep(10000);
+		auto fut2 = execution::next(fut,[](const auto& v)->void
+				{
+					if (v.isValid())
+					{
+						text::info("TP Next done: {}",v.value());		
+					}else					
+						text::error("TP Next error: {}",v.error().errorMsg);		
+				}
+				);		
+		::core::waitForFutureThread(fut2);                
 
-	// }	
-	// Thread::sleep(5000);
+	}	
+	Thread::sleep(5000);
 	return 0;
 /*
 auto th2 = ThreadRunnable::create(true);	

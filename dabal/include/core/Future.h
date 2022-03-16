@@ -574,6 +574,10 @@ namespace core
 		Future(){};
 		Future( const Future& f ):Future_Common<T,ErrorType>(f){};
 		Future( Future&& f ):Future_Common<T,ErrorType>(std::move(f)){};
+		Future(const T& val)
+		{
+			Future_Base::mData = std::make_shared<FutureData<T,ErrorType>>(val);
+		}
 
 		Future& operator= ( const Future& f )
 		{
@@ -594,6 +598,42 @@ namespace core
 		void setError( F&& ei )
 		{
 			((FutureData<T,ErrorType>*)Future_Common<T,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
+		}
+	};
+	template <typename T,typename ErrorType>
+	class Future<T&,ErrorType> : public Future_Common<T&,ErrorType>
+	{
+	public:
+		typedef typename FutureData<T&,ErrorType>::ValueType ValueType;
+		Future(){};
+		Future( const Future& f ):Future_Common<T&,ErrorType>(f){};
+		Future( Future&& f ):Future_Common<T&,ErrorType>(std::move(f)){};
+		/*
+		este a veces tiene preferencia sobre los anteriores, asi que no vale
+		template <class U> Future(U&& val)
+		{
+			Future_Base::mData = std::make_shared<FutureData<T,ErrorType>>(std::forward<U>(val));
+		}*/
+
+		Future& operator= ( const Future& f )
+		{
+			Future_Common<T,ErrorType>::operator=(f);
+			return *this;
+		};		
+		Future& operator= (  Future&& f )
+		{
+			Future_Common<T,ErrorType>::operator=(f);
+			return *this;
+		};
+		template <class F>
+		void setValue( F&& value )
+		{
+		    ((FutureData<T&,ErrorType>*)Future_Common<T&,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
+		}	
+		template <class F>
+		void setError( F&& ei )
+		{
+			((FutureData<T&,ErrorType>*)Future_Common<T&,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
 		}
 	};
 

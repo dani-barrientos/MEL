@@ -97,10 +97,11 @@ namespace execution
     template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,typename ExFuture<ExecutorAgent,TArg>::ValueType&>> 
         next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
     {                
-        typedef std::invoke_result_t<F,typename ExFuture<ExecutorAgent,TArg>::ValueType&> TRet;
+        typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
+        typedef std::invoke_result_t<F,ValueType&> TRet;
         ExFuture<ExecutorAgent,TRet> result(fut.ex);
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(f),result]( typename core::FutureValue<TArg>& input) 
+            std::function<::core::ECallbackResult( ValueType&)>([ex = fut.ex,f = std::forward<F>(f),result](  ValueType& input) 
             {
                 ex. template launch<TRet>(f,input,result);        
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
