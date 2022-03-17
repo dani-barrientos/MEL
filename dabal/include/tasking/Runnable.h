@@ -29,7 +29,6 @@ using mpl::asPtr;
 
 #include <core/Future.h>
 using core::Future;
-using core::Future_Base;
 #include <functional>
 #include <cassert>
 #include <forward_list>

@@ -183,7 +183,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 					return 1.5f;
 					});
 				auto fr = ::tasking::waitForFutureMThread(fut);
-				if ( !fr.isValid() && fr.error().error == ::core::Future_Base::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
+				if ( !fr.isValid() && fr.error().error == ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
 					text::info("OK, execution was't done because process is killed");
 				else
 					text::error("Execution should have recieved a kill signal");

@@ -37,9 +37,13 @@ namespace execution
             template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet> output) const
             {
                 if ( !mRunnable.expired())
-                {                                    
-                    //mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
-                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::reference_wrapper(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                {         
+                    //Creo que esto n otiene sentido. Si se necesita una referencia, se usa el ref                                               
+                    /*if constexpr( std::is_lvalue_reference<TArg>::value)
+                        mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::reference_wrapper(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    else*/
+                        mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+//esto no puede estar bien. Habrá que bindear según el tipo                                        
                 }            
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const
@@ -132,19 +136,19 @@ namespace execution
     }
     namespace _private
     {
-        template <class F,class TArg> void _invoke(Executor<Runnable> ex,::parallelism::Barrier& b,TArg&& arg,F&& f)
+        template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,F&& f)
         {
-            execution::launch(ex,
-                [f = std::forward<F>(f),b](TArg&& arg) mutable
-                {
-                    f(std::forward<TArg>(arg));
+            execution::launch(fut.ex,
+                [f = std::forward<F>(f),b](ExFuture<Runnable,TArg> fut) mutable
+                {                    
+                    f(fut.getValue());
                     b.set();
-                },arg);
+                },fut);
         }
-        template <class TArg,class F,class ...FTypes> void _invoke(Executor<Runnable> ex,::parallelism::Barrier& b,TArg&& arg,F&& f, FTypes&&... fs)
-        {
-            _invoke(ex,b,arg,std::forward<F>(f));
-            _invoke(ex,b,arg,std::forward<FTypes>(fs)...);
+        template <class TArg,class F,class ...FTypes> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,F&& f, FTypes&&... fs)
+        {            
+            _invoke(fut,b,std::forward<F>(f));
+            _invoke(fut,b,std::forward<FTypes>(fs)...);
         }
         /*//----- pruebas
         template <int n,class F,class TArg,class OutputTuple> void _invoke_debug(Executor<Runnable> ex,::parallelism::Barrier& b,OutputTuple* output,TArg&& arg,F&& f)
@@ -191,23 +195,27 @@ namespace execution
         return result;
     }
     */
-    template <class TArg,class ...FTypes> ExFuture<Runnable,void> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
+    /**
+     * @brief execute given functions possibly parallel (it's up to the executor to be able to do id)
+     * */
+
+    template <class TArg,class ...FTypes> ExFuture<Runnable,TArg> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
     {
-        ExFuture<Runnable,void> result(fut.ex);
+        ExFuture<Runnable,TArg> result(fut.ex);
 
         fut.subscribeCallback(            
-            //std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,functions... ](const typename core::FutureValue<TArg>& input)  mutable
-            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](const typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( typename core::FutureValue<TArg>&)>([fut,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](typename core::FutureValue<TArg>& input)  mutable
             {
                 //::parallelism::Barrier barrier(sizeof...(fs));
                 ::parallelism::Barrier barrier(std::tuple_size_v<decltype(fs)>);
                  //_private::_invoke(ex,barrier,input,std::forward<FTypes>(fs)...);
                 //_private::_invoke(ex,barrier,input,std::get<FTypes>(fs)...);
-                _private::_invoke(ex,barrier,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                _private::_invoke(fut,barrier,std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
-                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([input,result](const ::parallelism::BarrierData& ) mutable
                     {
-                        result.setValue();
+                        //result.setValue();
+                        result.assign(input);
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                     

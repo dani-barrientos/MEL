@@ -21,7 +21,14 @@ namespace core
 		int		error;  //there was error. Error code. Very simple for now. 
 		std::string errorMsg;
 	};
-	
+	/**
+	* @brief Generic result error codes for future waiting
+	*/
+	enum EWaitError{
+		FUTURE_RECEIVED_KILL_SIGNAL = -1, //!<Wait for Future was interrupted because waiting Process was killed
+		FUTURE_WAIT_TIMEOUT = -2, //!<time out expired while waiting for Future
+		FUTURE_UNKNOWN_ERROR = -3//!<Unknow error while waiting for Future
+	};
 	namespace _private
 	{
 		struct NotAvailable
@@ -145,313 +152,347 @@ namespace core
 
 	enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
 	///@cond HIDDEN_SYMBOLS
-	/**
-	* internal data for Future
-	*/
-	class FutureData_Base 
+	namespace _private
 	{
-	public:								
-		FutureData_Base():mState(NOTAVAILABLE)
-		{}
-
-		virtual ~FutureData_Base() //no me gusta nada que sea virtual. Intentarlo sin ello
-		{}
-		inline bool getValid() const
-		{
-			return mState == VALID;
-		}
-		inline EFutureState getState() const
-		{
-			return mState;
-		}
-	protected:
-		mutable CriticalSection	mSC; 
-		EFutureState		mState;
-
-	};
-	template <typename T,typename ErrorType>
-	class FutureData : public FutureData_Base,
-					private CallbackSubscriptor<::core::CSMultithreadPolicy,
-					FutureValue<typename 
-						std::conditional<
-							std::is_reference<T>::value,
-							std::reference_wrapper<typename std::remove_reference<T>::type>,
-							T>::type,ErrorType>&>,
-					public std::enable_shared_from_this<FutureData<T,ErrorType>>
-	{		
-	public:
-		typedef FutureValue<typename 
-        std::conditional<
-            std::is_reference<T>::value,
-            std::reference_wrapper<typename std::remove_reference<T>::type>,
-            T>::type,ErrorType> ValueType;
-		
-	/*---
-		typedef FutureValue<ResultType,ErrorType> ValueType;
-		//typedef typename mpl::TypeTraits< ValueType >::ParameterType ReturnType;
-		typedef ValueType& ReturnType;*/
-		typedef CallbackSubscriptor<::core::CSMultithreadPolicy, ValueType&> Subscriptor;
 		/**
-		* default constructor
+		* internal data for Future
 		*/
-		FutureData(){};
-		~FutureData(){};
-		/**
-		* constructor from value. It becomes valid. For casting purposes. 
-		*/
-		template <class U> FutureData( U&& value):mValue(std::forward<U>(value))
+		class FutureData_Base 
 		{
-			FutureData_Base::mState = VALID;
-		}
-		ValueType& getValue(){ return mValue;}
-        const ValueType& getValue()const{ return mValue;}
-		//@todo I should improve this function to avoid code bloat.
-		template <class U>
-		void setValue(U&& value)
-		{
-			volatile auto protectMe= FutureData<T,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();	
-			if ( mState == NOTAVAILABLE)
+		public:								
+			FutureData_Base():mState(NOTAVAILABLE)
+			{}
+
+			virtual ~FutureData_Base() //no me gusta nada que sea virtual. Intentarlo sin ello
+			{}
+			inline bool getValid() const
 			{
-				mValue = std::forward<U>(value);
-				FutureData_Base::mState = VALID;
-				FutureData_Base::mSC.leave();
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				FutureData_Base::mSC.leave();
-			
-		}
-	/*
-		FutureData( const ResultType& value ):
-			mValue(value){
-			FutureData_Base::mState = VALID;
-		}
-		FutureData( ResultType value ):
-			mValue(value){
-			FutureData_Base::mState = VALID;
-		}
-		FutureData( ResultType&& value ):
-			mValue(std::move(value)){
-			FutureData_Base::mState = VALID;
-		}
-		ReturnType getValue()
-		{
-			return mValue;
-		}
-		const ReturnType getValue() const
-		{
-			return mValue;
-		}
-		void setValue( const ResultType& value ){
-			volatile auto protectMe= FutureData<ResultType,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();	
-			if ( mState == NOTAVAILABLE)
-			{
-				mValue = value;
-				FutureData_Base::mState = VALID;
-				FutureData_Base::mSC.leave();
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				FutureData_Base::mSC.leave();
-		}
-		void setValue( ResultType&& value ){
-			volatile auto protectMe= FutureData<ResultType,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();	
-			if ( mState == NOTAVAILABLE)
-			{
-				mValue = std::move(value);
-				FutureData_Base::mState = VALID;
-				FutureData_Base::mSC.leave();
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				FutureData_Base::mSC.leave();
-		}	*/	
-		void setError( const ErrorType& ei )
-		{
-			volatile auto protectMe=FutureData<T,ErrorType>::shared_from_this();
-			core::Lock lck(FutureData_Base::mSC);
-			if ( mState == NOTAVAILABLE)
-			{
-				mValue = ei;
-				mState = INVALID;
-				Subscriptor::triggerCallbacks(mValue);
+				return mState == VALID;
 			}
-		};
-		void setError( ErrorType&& ei )
-		{
-			volatile auto protectMe=FutureData<T,ErrorType>::shared_from_this();
-			core::Lock lck(FutureData_Base::mSC);
-
-			if ( mState == NOTAVAILABLE)
+			inline EFutureState getState() const
 			{
-				mValue = std::move(ei);
-				mState = INVALID;
-				Subscriptor::triggerCallbacks(mValue);
+				return mState;
 			}
+		protected:
+			mutable CriticalSection	mSC; 
+			EFutureState		mState;
 
 		};
-		void assign(const ValueType& val)
-		{
-			core::Lock lck(FutureData_Base::mSC);
-			mValue = val;
-			if (mValue.isAvailable())
-			{
-				mState = val.isValid()?VALID:INVALID;
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				mState = NOTAVAILABLE;
-
-		}
-		void assign(ValueType& val)
-		{
-			core::Lock lck(FutureData_Base::mSC);
-			mValue = std::move(val);
-			if (mValue.isAvailable())
-			{
-				mState = val.isValid()?VALID:INVALID;
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				mState = NOTAVAILABLE;
-		}
-		/**
-		 * @brief Subscribe to future available
-		 * 
-		 * @tparam F functor with signature 
-		 * @param f 
-		 * @return auto 
-		 * @warning callback receiver shoudn't wait or do context switch and MUST NOT block
-		 */
-		template <class F> auto subscribeCallback(F&& f)
-		{
-			Lock lck(FutureData_Base::mSC);
-			if ( mState != NOTAVAILABLE)
-			{
-				f(mValue);
-			}
-			return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency
-		}
-		template <class F> auto unsubscribeCallback(F&& f)
-		{
-			Lock lck(FutureData_Base::mSC);
-			return Subscriptor::unsubscribeCallback( std::forward<F>(f));
-		}
-
-	private:
-		ValueType mValue;
-	
-	};
-
-	//specialization for void type. It's intented for functions returning void but working in a different thread
-	//so user need to know when it finish
-	//TODO no estoy un pijo convencido...
-	template <typename ErrorType>
-	class FutureData<void,ErrorType> : public FutureData_Base,
-		private CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&>,
-		public std::enable_shared_from_this<FutureData<void,ErrorType>>
-	{
-		typedef CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&> Subscriptor;
-	public:
-		typedef FutureValue<void,ErrorType> ValueType;
-
-		FutureData(){};
-		//overload to inicializce as valid
-		FutureData(int)
-		{
-			FutureData_Base::mState = VALID;
-		};
-		~FutureData(){};
-
-		template <class F> auto subscribeCallback(F&& f)
-		{
-			bool trigger = false;
-			Lock lck(FutureData_Base::mSC);
-			if ( mState != NOTAVAILABLE)
-			{
-				f(mValue);
-			}				
-			return Subscriptor::subscribeCallback(std::forward<F>(f));
-		}
-		template <class F> auto unsubscribeCallback(F&& f)
-		{
-			Lock lck(FutureData_Base::mSC);
-			return Subscriptor::unsubscribeCallback(std::forward<F>(f));
-		}
-		ValueType& getValue(){ return mValue;}
-        const ValueType& getValue()const{ return mValue;}
-		template <class U>
-		void setValue(U&& value)
-		{
-			mValue = std::forward<U>(value);
-		}
-		
-		inline void setValue( void )
-		{
-			volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();	
-			if ( mState == NOTAVAILABLE)
+		template <typename T,typename ErrorType>
+		class FutureData : public FutureData_Base,
+						private CallbackSubscriptor<::core::CSMultithreadPolicy,
+						FutureValue<typename 
+							std::conditional<
+								std::is_lvalue_reference<T>::value,
+								std::reference_wrapper<typename std::remove_reference<T>::type>,
+								T>::type,ErrorType>&>,
+						public std::enable_shared_from_this<FutureData<T,ErrorType>>
+		{		
+		public:
+			typedef FutureValue<typename 
+			std::conditional<
+				std::is_lvalue_reference<T>::value,
+				std::reference_wrapper<typename std::remove_reference<T>::type>,
+				T>::type,ErrorType> ValueType;
+			typedef CallbackSubscriptor<::core::CSMultithreadPolicy, ValueType&> Subscriptor;
+			/**
+			* default constructor
+			*/
+			FutureData(){};
+			~FutureData(){};
+			/**
+			* constructor from value. It becomes valid. For casting purposes. 
+			*/
+			template <class U> FutureData( U&& value):mValue(std::forward<U>(value))
 			{
 				FutureData_Base::mState = VALID;
-				FutureData_Base::mSC.leave();
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				FutureData_Base::mSC.leave();
-		}
-		/**
-		* set error info. TAKES OWNSERHIP
-		*/
-		void setError( const ErrorType& ei )
-		{
-			volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();
-			if ( mState == NOTAVAILABLE)
+			}
+			ValueType& getValue(){ return mValue;}
+			const ValueType& getValue()const{ return mValue;}
+			//@todo I should improve this function to avoid code bloat.
+			template <class U>
+			void setValue(U&& value)
 			{
-				mValue = ei;
-				mState = INVALID;
-				Subscriptor::triggerCallbacks(mValue);
-			}			
-			FutureData_Base::mSC.leave();
-		};
-		void setError( ErrorType&& ei )
-		{
-			volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
-			FutureData_Base::mSC.enter();
-			if ( mState == NOTAVAILABLE)
+				volatile auto protectMe= FutureData<T,ErrorType>::shared_from_this();
+				FutureData_Base::mSC.enter();	
+				if ( mState == NOTAVAILABLE)
+				{
+					mValue = std::forward<U>(value);
+					FutureData_Base::mState = VALID;
+					FutureData_Base::mSC.leave();
+					Subscriptor::triggerCallbacks(mValue);
+				}else
+					FutureData_Base::mSC.leave();
+				
+			}
+			void setError( const ErrorType& ei )
 			{
-				mValue = std::move(ei);
-				mState = INVALID;
-				Subscriptor::triggerCallbacks(mValue);
-			}			
-			FutureData_Base::mSC.leave();
-		};
-		void assign(const ValueType& val)
-		{
-			core::Lock lck(FutureData_Base::mSC);
-			mValue = val;
-			if (mValue.isAvailable())
+				volatile auto protectMe=FutureData<T,ErrorType>::shared_from_this();
+				core::Lock lck(FutureData_Base::mSC);
+				if ( mState == NOTAVAILABLE)
+				{
+					mValue = ei;
+					mState = INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}
+			};
+			void setError( ErrorType&& ei )
 			{
-				mState = val.isValid()?VALID:INVALID;
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				mState = NOTAVAILABLE;
-		}
-		void assign(ValueType& val)
-		{
-			core::Lock lck(FutureData_Base::mSC);
-			mValue = std::move(val);
-			if (mValue.isAvailable())
+				volatile auto protectMe=FutureData<T,ErrorType>::shared_from_this();
+				core::Lock lck(FutureData_Base::mSC);
+
+				if ( mState == NOTAVAILABLE)
+				{
+					mValue = std::move(ei);
+					mState = INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}
+
+			};
+			void assign(const ValueType& val)
 			{
-				mState = val.isValid()?VALID:INVALID;
-				Subscriptor::triggerCallbacks(mValue);
-			}else
-				mState = NOTAVAILABLE;
-		}
+				core::Lock lck(FutureData_Base::mSC);
+				mValue = val;
+				if (mValue.isAvailable())
+				{
+					mState = val.isValid()?VALID:INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}else
+					mState = NOTAVAILABLE;
+
+			}
+			void assign(ValueType& val)
+			{
+				core::Lock lck(FutureData_Base::mSC);
+				mValue = std::move(val);
+				if (mValue.isAvailable())
+				{
+					mState = val.isValid()?VALID:INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}else
+					mState = NOTAVAILABLE;
+			}
+			/**
+			 * @brief Subscribe to future available
+			 * 
+			 * @tparam F functor with signature 
+			 * @param f 
+			 * @return auto 
+			 * @warning callback receiver shoudn't wait or do context switch and MUST NOT block
+			 */
+			template <class F> auto subscribeCallback(F&& f)
+			{
+				Lock lck(FutureData_Base::mSC);
+				if ( mState != NOTAVAILABLE)
+				{
+					f(mValue);
+				}
+				return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency
+			}
+			template <class F> auto unsubscribeCallback(F&& f)
+			{
+				Lock lck(FutureData_Base::mSC);
+				return Subscriptor::unsubscribeCallback( std::forward<F>(f));
+			}
+
 		private:
 			ValueType mValue;
-	};
+		
+		};
 
-	
-	
-	///@endcond
+		//specialization for void type. It's intented for functions returning void but working in a different thread
+		//so user need to know when it finish
+		template <typename ErrorType>
+		class FutureData<void,ErrorType> : public FutureData_Base,
+			private CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&>,
+			public std::enable_shared_from_this<FutureData<void,ErrorType>>
+		{
+			typedef CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&> Subscriptor;
+		public:
+			typedef FutureValue<void,ErrorType> ValueType;
+
+			FutureData(){};
+			
+			//overload to inicializce as valid
+			FutureData(int)
+			{
+				FutureData_Base::mState = VALID;
+			};
+			~FutureData(){};
+
+			template <class F> auto subscribeCallback(F&& f)
+			{
+				bool trigger = false;
+				Lock lck(FutureData_Base::mSC);
+				if ( mState != NOTAVAILABLE)
+				{
+					f(mValue);
+				}				
+				return Subscriptor::subscribeCallback(std::forward<F>(f));
+			}
+			template <class F> auto unsubscribeCallback(F&& f)
+			{
+				Lock lck(FutureData_Base::mSC);
+				return Subscriptor::unsubscribeCallback(std::forward<F>(f));
+			}
+			ValueType& getValue(){ return mValue;}
+			const ValueType& getValue()const{ return mValue;}
+			inline void setValue( void )
+			{
+				volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
+				FutureData_Base::mSC.enter();	
+				if ( mState == NOTAVAILABLE)
+				{
+					FutureData_Base::mState = VALID;
+					FutureData_Base::mSC.leave();
+					Subscriptor::triggerCallbacks(mValue);
+				}else
+					FutureData_Base::mSC.leave();
+			}
+			/**
+			* set error info. TAKES OWNSERHIP
+			*/
+			void setError( const ErrorType& ei )
+			{
+				volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
+				FutureData_Base::mSC.enter();
+				if ( mState == NOTAVAILABLE)
+				{
+					mValue = ei;
+					mState = INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}			
+				FutureData_Base::mSC.leave();
+			};
+			void setError( ErrorType&& ei )
+			{
+				volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
+				FutureData_Base::mSC.enter();
+				if ( mState == NOTAVAILABLE)
+				{
+					mValue = std::move(ei);
+					mState = INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}			
+				FutureData_Base::mSC.leave();
+			};
+			void assign(const ValueType& val)
+			{
+				core::Lock lck(FutureData_Base::mSC);
+				mValue = val;
+				if (mValue.isAvailable())
+				{
+					mState = val.isValid()?VALID:INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}else
+					mState = NOTAVAILABLE;
+			}
+			void assign(ValueType& val)
+			{
+				core::Lock lck(FutureData_Base::mSC);
+				mValue = std::move(val);
+				if (mValue.isAvailable())
+				{
+					mState = val.isValid()?VALID:INVALID;
+					Subscriptor::triggerCallbacks(mValue);
+				}else
+					mState = NOTAVAILABLE;
+			}
+			private:
+				ValueType mValue;
+		};
+		/**
+		* no templated common data.
+		*/
+		class Future_Base
+		{
+		protected:
+			std::shared_ptr<FutureData_Base> mData;
+			Future_Base():mData(nullptr){};
+
+		public:
+			
+			Future_Base( const Future_Base& f )
+			{
+				mData = f.mData; 
+			};
+			Future_Base( Future_Base&& f )
+			{
+				mData = std::move(f.mData); 
+			};
+		
+			Future_Base& operator= ( const Future_Base& f )
+			{
+				mData = f.mData;
+				return *this;
+			};		
+			Future_Base& operator= (  Future_Base&& f )
+			{
+				mData = std::move(f.mData);
+				return *this;
+			};
+			/**
+			* return if data is valid
+			*/
+			inline bool getValid() const
+			{
+				return mData->getValid();
+			}
+			inline EFutureState getState() const
+			{
+				return mData->getState();
+			}
+			//Check if given future points to same data
+			inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
+					
+		};
+		template <typename T,typename ErrorType>
+		class Future_Common : public Future_Base
+		{
+		protected:
+			Future_Common()
+			{
+				mData = std::make_shared<FutureData<T,ErrorType>>();
+			};
+			Future_Common( const Future_Common& f ):Future_Base( f ){}
+			Future_Common( Future_Common&& f ):Future_Base( std::move(f) ){}
+			Future_Common& operator= ( const Future_Common& f )
+			{
+				Future_Base::operator=(f);
+				return *this;
+			};		
+			Future_Common& operator= (  Future_Common&& f )
+			{
+				Future_Base::operator=(f);
+				return *this;
+			};
+		public:
+			
+			inline  const typename FutureData<T,ErrorType>::ValueType& getValue() const{ return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
+			inline  typename FutureData<T,ErrorType>::ValueType& getValue() { return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
+			void assign( const typename FutureData<T,ErrorType>::ValueType& val)
+			{
+				getData().assign(val);
+			}
+			void assign(  typename FutureData<T,ErrorType>::ValueType&& val)
+			{
+				getData().assign(std::move(val));
+			}
+			template <class F> auto subscribeCallback(F&& f) const						
+			{
+				//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
+				return const_cast<Future_Common<T,ErrorType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
+			}
+			template <class F> auto unsubscribeCallback(F&& f) const
+			{
+				return const_cast<Future_Common<T,ErrorType>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
+			}
+		private:
+			inline const FutureData<T,ErrorType>& getData() const{ return *(FutureData<T,ErrorType>*)mData; }
+			inline FutureData<T,ErrorType>& getData(){ return *(FutureData<T,ErrorType>*)mData.get(); }
+		};
+		///@endcond
+	}
 	/**
 	* @class Future
 	*  Represents a value retreived by (possibly) another thread. This value maybe is not present at the moment
@@ -465,203 +506,112 @@ namespace core
 	* Adem�s, no est� pensado para ser usado por varios hilos a la vez (de nuevo, no creo que tenga sentido)
 	*/
 	///@cond HIDDEN_SYMBOLS
-	/**
-	* no templated common data.
-	*/
-	class Future_Base
-	{
-	protected:
-		std::shared_ptr<FutureData_Base> mData;
-		Future_Base():mData(nullptr){};
-
-	public:
-		/**
-		* @brief Generic result error codes for future waiting
-		*/
-		enum EWaitError{
-			FUTURE_RECEIVED_KILL_SIGNAL = -1, //!<Wait for Future was interrupted because waiting Process was killed
-			FUTURE_WAIT_TIMEOUT = -2, //!<time out expired while waiting for Future
-			FUTURE_UNKNOWN_ERROR = -3//!<Unknow error while waiting for Future
-		};
-		Future_Base( const Future_Base& f )
-		{
-			mData = f.mData; 
-		};
-		Future_Base( Future_Base&& f )
-		{
-			mData = std::move(f.mData); 
-		};
-
-		virtual ~Future_Base() //no me gusta un pijo que sea virtual, pero necesario si se quieren manejar los futures sin necesidad de saber el tipo, lo cual es muy importante
-		{
-		}
-		Future_Base& operator= ( const Future_Base& f )
-		{
-			mData = f.mData;
-			return *this;
-		};		
-		Future_Base& operator= (  Future_Base&& f )
-		{
-			mData = std::move(f.mData);
-			return *this;
-		};
-		/**
-		* return if data is valid
-		*/
-		inline bool getValid() const
-		{
-			return mData->getValid();
-		}
-		inline EFutureState getState() const
-		{
-			return mData->getState();
-		}
-		//Check if given future points to same data
-		inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
-				
-	};
+	
 	///@endcond
-	template <typename T,typename ErrorType>
-	class Future_Common : public Future_Base
-	{
-	protected:
-		Future_Common()
-		{
-			mData = std::make_shared<FutureData<T,ErrorType>>();
-		};
-		Future_Common( const Future_Common& f ):Future_Base( f ){}
-		Future_Common( Future_Common&& f ):Future_Base( std::move(f) ){}
-		Future_Common& operator= ( const Future_Common& f )
-		{
-			Future_Base::operator=(f);
-			return *this;
-		};		
-		Future_Common& operator= (  Future_Common&& f )
-		{
-			Future_Base::operator=(f);
-			return *this;
-		};
-	public:
-		
-		inline  const typename FutureData<T,ErrorType>::ValueType getValue() const{ return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
-		inline  typename FutureData<T,ErrorType>::ValueType getValue() { return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
-		void assign( const typename FutureData<T,ErrorType>::ValueType& val)
-		{
-			getData().assign(val);
-		}
-		void assign(  typename FutureData<T,ErrorType>::ValueType&& val)
-		{
-			getData().assign(std::move(val));
-		}
-		template <class F> auto subscribeCallback(F&& f) const						
-		{
-			//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
-			return const_cast<Future_Common<T,ErrorType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
-		}
-		template <class F> auto unsubscribeCallback(F&& f) const
-		{
-			return const_cast<Future_Common<T,ErrorType>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
-		}
-	private:
-		inline const FutureData<T,ErrorType>& getData() const{ return *(FutureData<T,ErrorType>*)mData; }
-		inline FutureData<T,ErrorType>& getData(){ return *(FutureData<T,ErrorType>*)mData.get(); }
-	};
+	
 	template <typename T,typename ErrorType = ::core::ErrorInfo>
-	class Future : public Future_Common<T,ErrorType>
+	class Future : public _private::Future_Common<T,ErrorType>
 	{
 	public:
-		typedef typename FutureData<T,ErrorType>::ValueType ValueType;
+		typedef typename _private::FutureData<T,ErrorType>::ValueType ValueType;
 		Future(){};
-		Future( const Future& f ):Future_Common<T,ErrorType>(f){};
-		Future( Future&& f ):Future_Common<T,ErrorType>(std::move(f)){};
+		Future( const Future& f ):_private::Future_Common<T,ErrorType>(f){};
+		Future( Future&& f ):_private::Future_Common<T,ErrorType>(std::move(f)){};
 		Future(const T& val)
 		{
-			Future_Base::mData = std::make_shared<FutureData<T,ErrorType>>(val);
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<T,ErrorType>>(val);
 		}
-
+		Future(T&& val)
+		{
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<T,ErrorType>>(std::move(val));
+		}
 		Future& operator= ( const Future& f )
 		{
-			Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T,ErrorType>::operator=(f);
 			return *this;
 		};		
 		Future& operator= (  Future&& f )
 		{
-			Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T,ErrorType>::operator=(f);
 			return *this;
 		};
 		template <class F>
 		void setValue( F&& value )
 		{
-		    ((FutureData<T,ErrorType>*)Future_Common<T,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
+		    ((_private::FutureData<T,ErrorType>*)_private::Future_Common<T,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
 		}	
 		template <class F>
 		void setError( F&& ei )
 		{
-			((FutureData<T,ErrorType>*)Future_Common<T,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
+			((_private::FutureData<T,ErrorType>*)_private::Future_Common<T,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
 		}
 	};
 	template <typename T,typename ErrorType>
-	class Future<T&,ErrorType> : public Future_Common<T&,ErrorType>
+	class Future<T&,ErrorType> : public _private::Future_Common<T&,ErrorType>
 	{
 	public:
-		typedef typename FutureData<T&,ErrorType>::ValueType ValueType;
+		typedef typename _private::FutureData<T&,ErrorType>::ValueType ValueType;
 		Future(){};
-		Future( const Future& f ):Future_Common<T&,ErrorType>(f){};
-		Future( Future&& f ):Future_Common<T&,ErrorType>(std::move(f)){};
-		/*
-		este a veces tiene preferencia sobre los anteriores, asi que no vale
-		template <class U> Future(U&& val)
+		Future( const Future& f ):_private::Future_Common<T&,ErrorType>(f){};
+		Future( Future&& f ):_private::Future_Common<T&,ErrorType>(std::move(f)){};
+		Future(T& val)
 		{
-			Future_Base::mData = std::make_shared<FutureData<T,ErrorType>>(std::forward<U>(val));
-		}*/
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<T&,ErrorType>>(val);
+		}
+
 
 		Future& operator= ( const Future& f )
 		{
-			Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T,ErrorType>::operator=(f);
 			return *this;
 		};		
 		Future& operator= (  Future&& f )
 		{
-			Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T,ErrorType>::operator=(f);
 			return *this;
 		};
 		template <class F>
 		void setValue( F&& value )
 		{
-		    ((FutureData<T&,ErrorType>*)Future_Common<T&,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
+		    ((_private::FutureData<T&,ErrorType>*)_private::Future_Common<T&,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
 		}	
 		template <class F>
 		void setError( F&& ei )
 		{
-			((FutureData<T&,ErrorType>*)Future_Common<T&,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
+			((_private::FutureData<T&,ErrorType>*)_private::Future_Common<T&,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
 		}
 	};
 
 	//specialization for void
 	template <typename ErrorType>
-	class Future<void,ErrorType> : public Future_Common<void,ErrorType>
+	class Future<void,ErrorType> : public _private::Future_Common<void,ErrorType>
 	{
 	public:
-		typedef typename FutureData<void,ErrorType>::ValueType ValueType;
+		typedef typename _private::FutureData<void,ErrorType>::ValueType ValueType;
 		Future(){};
-		Future(const Future& f):Future_Common<void,ErrorType>(f){};	
-		Future(Future&& f):Future_Common<void,ErrorType>(std::move(f)){};	
+		//fake initializacion to indicate we want to initialize as valid
+		Future(int a)
+		{
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<void,ErrorType>>(a);
+		};
+		Future(const Future& f):_private::Future_Common<void,ErrorType>(f){};	
+		Future(Future&& f):_private::Future_Common<void,ErrorType>(std::move(f)){};	
 		Future& operator= ( const Future& f )
 		{
-			Future_Common<void,ErrorType>::operator=(f);
+			_private::Future_Common<void,ErrorType>::operator=(f);
 			return *this;
 		};		
 		Future& operator= (  Future&& f )
 		{
-			Future_Common<void,ErrorType>::operator=(f);
+			_private::Future_Common<void,ErrorType>::operator=(f);
 			return *this;
 		};
 		
-		inline void setValue( void ){ ((FutureData<void,ErrorType>*)Future_Base::mData.get())->setValue( ); }		
+		inline void setValue( void ){ ((_private::FutureData<void,ErrorType>*)_private::Future_Base::mData.get())->setValue( ); }		
 		template <class F>
 		void setError( F&& ei )
 		{
-			((FutureData<void,ErrorType>*)Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
+			((_private::FutureData<void,ErrorType>*)_private::Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
 		}		
 	};
 

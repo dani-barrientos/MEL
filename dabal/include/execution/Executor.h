@@ -33,6 +33,9 @@ namespace execution
             ExFuture(const ExFuture& ob):Future<ResultType,ErrorType>(ob),ex(ob.ex){}
             ExFuture(ExFuture&& ob):Future<ResultType,ErrorType>(std::move(ob)),ex(std::move(ob.ex)){}
             ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
+            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType,ErrorType>(val),ex(aEx){}
+            ExFuture(Executor<ExecutorAgent> aEx,ResultType&& val):Future<ResultType,ErrorType>(std::move(val)),ex(aEx){}
+		
             ExFuture& operator= ( const ExFuture& f )
             {
                 Future<ResultType,ErrorType>::operator=( f );
@@ -42,6 +45,55 @@ namespace execution
             ExFuture& operator= ( ExFuture&& f )
             {
                 Future<ResultType,ErrorType>::operator=( std::move(f));
+                ex = std::move(f.ex);
+                return *this;
+            };
+            Executor<ExecutorAgent> ex;
+		
+    };
+    //for reference type
+    template <typename ExecutorAgent,typename ResultType,typename ErrorType>
+	class ExFuture<ExecutorAgent,ResultType&,ErrorType> : public Future<ResultType&,ErrorType>
+    {
+        public:
+            ExFuture(const ExFuture& ob):Future<ResultType&,ErrorType>(ob),ex(ob.ex){}
+            ExFuture(ExFuture&& ob):Future<ResultType&,ErrorType>(std::move(ob)),ex(std::move(ob.ex)){}
+            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
+            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType&,ErrorType>(val),ex(aEx){}
+		
+            ExFuture& operator= ( const ExFuture& f )
+            {
+                Future<ResultType&,ErrorType>::operator=( f );
+                ex = f.ex;
+                return *this;
+            };
+            ExFuture& operator= ( ExFuture&& f )
+            {
+                Future<ResultType&,ErrorType>::operator=( std::move(f));
+                ex = std::move(f.ex);
+                return *this;
+            };
+            Executor<ExecutorAgent> ex;
+		
+    };
+    template <typename ExecutorAgent,typename ErrorType>
+	class ExFuture<ExecutorAgent,void,ErrorType> : public Future<void,ErrorType>
+    {
+        public:
+            ExFuture(const ExFuture& ob):Future<void,ErrorType>(ob),ex(ob.ex){}
+            ExFuture(ExFuture&& ob):Future<void,ErrorType>(std::move(ob)),ex(std::move(ob.ex)){}
+            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
+            ExFuture(Executor<ExecutorAgent> aEx,int dummy):Future<void,ErrorType>(dummy),ex(aEx)
+            {}            
+            ExFuture& operator= ( const ExFuture& f )
+            {
+                Future<void,ErrorType>::operator=( f );
+                ex = f.ex;
+                return *this;
+            };
+            ExFuture& operator= ( ExFuture&& f )
+            {
+                Future<void,ErrorType>::operator=( std::move(f));
                 ex = std::move(f.ex);
                 return *this;
             };
@@ -58,9 +110,7 @@ namespace execution
      */
     template <class ExecutorAgent> ExFuture<ExecutorAgent,void> start( Executor<ExecutorAgent> ex)
     {
-        ExFuture<ExecutorAgent,void> result(ex); 
-        //@todo sustituir por construccion con valor cuando esté disponiel
-        result.setValue();
+        ExFuture<ExecutorAgent,void> result(ex,0);  //using an int to fool and construct it already as valid
         return result;
     }
    
@@ -71,7 +121,7 @@ namespace execution
         ex. template launch<TRet>(std::forward<F>(f),result);
         return result;
     }
-    template <class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg&&>> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
+    template <class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg>> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
     {
         typedef std::invoke_result_t<F,TArg> TRet;
         ExFuture<ExecutorAgent,TRet> result(ex);
@@ -79,16 +129,29 @@ namespace execution
         return result;
     }
      /**
-     * @brief Produces an inmediate value in the context of the given ExFuture executor
+     * @brief Produces an inmediate value in the context of the given ExFuture executor as a response to input fut completion
+     * If input fut has error, the this error is forwarded to inmediate result
      */
-    template <class ExecutorAgent,class TArg,class TRet> ExFuture<ExecutorAgent,TRet> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet&& arg)
+    template <class ExecutorAgent,class TArg,class TRet> ExFuture<ExecutorAgent,TRet> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet arg)
     {
-
-        return next(fut,[arg = std::forward<TRet>(arg)](const auto& v)
+        typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
+        ExFuture<ExecutorAgent,TRet> result(fut.ex);
+        fut.subscribeCallback(
+            std::function<::core::ECallbackResult( ValueType&)>([ex = fut.ex,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
+            {
+                if ( input.isValid() )
+                    result.setValue(std::forward<TRet>(arg));
+                else
+                    result.setError(input.error());
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            })
+        );
+        return result;
+        /*return next(fut,[arg = std::forward<TRet>(arg)](const auto& v)
             {
                 return arg;
             }
-        );       
+        );*/       
     }
     /**
      * @brief Attach a functor to execute when input fut is complete
@@ -101,13 +164,18 @@ namespace execution
         typedef std::invoke_result_t<F,ValueType&> TRet;
         ExFuture<ExecutorAgent,TRet> result(fut.ex);
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( ValueType&)>([ex = fut.ex,f = std::forward<F>(f),result](  ValueType& input) 
+            std::function<::core::ECallbackResult( ValueType&)>([fut,f = std::forward<F>(f),result](  ValueType& input) 
             {
-                ex. template launch<TRet>(f,input,result);        
+                //ex. template launch<TRet>(f,std::ref(input),result); 
+                //need to bind de fut to not get lost and input pointing to unknown place
+                fut.ex. template launch<TRet>([f](ExFuture<ExecutorAgent,TArg> arg)
+                {
+                    //text::info("tiki = {}",arg.getValue().value().val);
+                    return f(arg.getValue());
+                },fut,result);      
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
             })
         );
-        //spdlog::debug("next. Not available");
         return result;
     }
        

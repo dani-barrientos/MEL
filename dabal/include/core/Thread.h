@@ -233,14 +233,14 @@ namespace core
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureThread( core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType& waitForFutureThread( core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
 			using futT = core::Future<T,ErrorType>;
-            typename core::Future<T,ErrorType>::ValueType wait( futT& f,unsigned int msecs)
+            typename core::Future<T,ErrorType>::ValueType& wait( futT& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
@@ -258,17 +258,13 @@ namespace core
                 switch( eventresult )
                 {               
                 case ::core::Event::EVENT_WAIT_TIMEOUT:
-					return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
+					f.setError(ErrorType(::core::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
                     break;
                 case ::core::Event::EVENT_WAIT_ERROR:
-
-					return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error"));
+					f.setError(ErrorType(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error"));
 					break;
-				default:
-					return f.getValue();
-					break;
-                }			
-        
+                }			        
+				return f.getValue();
             }
             private:
             	::core::Event mEvent;

@@ -23,14 +23,14 @@ namespace tasking
      * @param f future to wait for
      * @param msecs maximum time to wait.
      */
-    template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureMThread(  core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
+    template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType& waitForFutureMThread(  core::Future<T,ErrorType>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
     {
         using ::tasking::Event_mthread;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
             using futT = core::Future<T,ErrorType>;
-            typename core::Future<T,ErrorType>::ValueType wait( futT& f,unsigned int msecs)
+            typename core::Future<T,ErrorType>::ValueType& wait( futT& f,unsigned int msecs)
             {
                 Event_mthread::EWaitCode eventresult;
                 int evId;
@@ -51,18 +51,16 @@ namespace tasking
                 switch( eventresult )
                 {
                 case Event_mthread::EVENTMT_WAIT_KILL:
-                    //event was triggered because a kill signal
-                    return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received"));
-                    //result =  ::core::FutureData_Base::EWaitResult::FUTURE_RECEIVED_KILL_SIGNAL;
+                    //event was triggered because a kill signal                    
+                    f.setError(ErrorType(::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received"));
+                    //return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received"));
                     break;
                 case Event_mthread::EVENTMT_WAIT_TIMEOUT:
-                    //result = ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_TIMEOUT;
-                    return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
-                    break;
-                default:
-                    return f.getValue();
+                    f.setError(ErrorType(::core::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
+                    //return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
                     break;
                 }			        
+                return f.getValue();
             }
             private:
             ::tasking::Event_mthread mEvent;
