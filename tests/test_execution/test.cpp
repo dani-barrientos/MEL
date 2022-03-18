@@ -47,46 +47,56 @@ struct MyErrorInfo : public ::core::ErrorInfo
 struct TestClass
 {
 	int val;
-	
-	TestClass()
+	tests::BaseTest* test;
+	tests::BaseTest::LogLevel logLevel;
+	TestClass(tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info):val(1),test(aTest),logLevel(ll)
 	{
-		val = 1;
-		text::info("Pepe constructor");
+//		text::info("TestClass constructor");
+		test->addTextToBuffer("TestClass constructor\n",logLevel);
 	}
-	explicit TestClass(int aVal)
+	explicit TestClass(int aVal,tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info):val(aVal),test(aTest),logLevel(ll)
 	{
-		val = aVal;
-		text::info("Pepe constructor");
+		test->addTextToBuffer("TestClass constructor\n",logLevel);
 	}
 	TestClass(const TestClass& ob)
 	{
 		val = ob.val;
-		text::info("Pepe copy constructor");
+		test = ob.test;
+		logLevel = ob.logLevel;
+		test->addTextToBuffer("TestClass copy constructor\n",logLevel);
 	}
 	TestClass(TestClass&& ob)
 	{
 		val = ob.val;
-		text::info("Pepe move constructor");
+		test = ob.test;
+//		ob.test = nullptr; lo necesito en destructor
+		logLevel = ob.logLevel;		
+		test->addTextToBuffer("TestClass move constructor\n",logLevel);
 	}
 	~TestClass()
 	{
-		text::info("Pepe destructor");
+		test->addTextToBuffer("TestClass destructor\n",logLevel);
 	}
 	TestClass& operator=(const TestClass& ob)
 	{
 		val = ob.val;
-		text::info("Pepe copy operator=");
+		test = ob.test;
+		logLevel = ob.logLevel;
+		test->addTextToBuffer("TestClass copy operator=\n",logLevel);
 		return *this;
 	}
 	TestClass& operator=(TestClass&& ob)
 	{
 		val = ob.val;
-		text::info("Pepe copy operator=");
+		test = ob.test;
+//		ob.test = nullptr; lo necesito en destructor
+		logLevel = ob.logLevel;
+		test->addTextToBuffer("TestClass move operator=\n",logLevel);
 		return *this;
 	}
 };
 //funcion para pruebas a lo cerdo
-int _testDebug()
+int _testDebug(tests::BaseTest* test)
 {
 	int result = 0;	
 	auto th1 = ThreadRunnable::create(true);	
@@ -100,7 +110,7 @@ int _testDebug()
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	{
-		TestClass p;
+		TestClass p(test);
 		p.val = 2;
 		Future<TestClass&> fut(p);
 		//fut.setValue(p);
@@ -153,7 +163,6 @@ int _testDebug()
 	
 	
 	
-//ahora hacer un ejempko con el next. probar a devolver un vector por referencia al next
 	// execution::launch(ex,
 	// [](auto& v)
 	// {
@@ -177,19 +186,25 @@ int _testDebug()
 
 	
 	{
-		TestClass pp(8);
+		test->clearTextBuffer();
+		TestClass pp(8,test);
+		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+		pp.logLevel = ll;
 		core::Event event;
-		th1->fireAndForget([exr,&pp,&event]{
+		th1->fireAndForget([exr,&pp,&event,test,ll]{
 			auto kk = execution::launch(exr,[]{
 				return 7;
 				//throw std::runtime_error("un error");
 			});			
 			auto kk0 = execution::inmediate(kk,std::ref(pp));
-			auto kk1 = execution::next(kk0,[](auto& v)
+			auto kk1 = execution::next(kk0,[test,ll](auto& v)
 			{
 				if (v.isValid() )
-				{
-					text::info("Val = {}",v.value().val);
+				{					
+					std::stringstream ss;
+					ss << "Val = "<<v.value().val<<'\n';
+					test->addTextToBuffer(ss.str(),ll); 
+					//text::info("Val = {}",v.value().val);
 					v.value().val = 10;
 				}
 				else
@@ -198,13 +213,23 @@ int _testDebug()
 			
 			const auto& res = tasking::waitForFutureMThread(kk1);		
 			if (res.isValid() )
-				text::info("Val kk0= {}",kk0.getValue().value().val);
+			{
+				//text::info("kk0 Val = {}",kk0.getValue().value().val);
+				std::stringstream ss;
+				ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+			}
 			else
 				text::info("Error = {}",kk0.getValue().error().errorMsg);				
-			text::info("Original Val = {}",pp.val);				
+			std::stringstream ss;
+			ss << "Original Val = "<<pp.val<<'\n';
+			test->addTextToBuffer(ss.str(),ll); 
 			event.set();
 		});
 		event.wait();
+		test->checkOccurrences("constructor",1,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
+		
 	}
 	{
 	
@@ -350,10 +375,96 @@ int _testLaunch( tests::BaseTest* test)
 	{
 		auto th1 = ThreadRunnable::create(true);	
 		auto th2 = ThreadRunnable::create(true);	
-		execution::Executor<Runnable> ex(th1);		
-		ex.setOpts({true,false,false});
+		execution::Executor<Runnable> exr(th1);
+		exr.setOpts({true,false,false});
 		
-		//----		
+		//---- basic checks
+		{												
+			core::Event event;
+			//use a task to make it more complex
+			th1->fireAndForget([exr,&event,test]
+			{
+				constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+				test->clearTextBuffer();
+				constexpr int initVal = 8;		
+				const auto& res1 = tasking::waitForFutureMThread(
+					execution::next(
+						execution::inmediate(execution::start(exr),TestClass(initVal,test,ll))
+					,[test,ll](auto& v)
+					{
+						if (v.isValid() )
+						{					
+							std::stringstream ss;
+							ss << "Val = "<<v.value().val<<'\n';
+							test->addTextToBuffer(ss.str(),ll); 
+							//text::info("Val = {}",v.value().val);
+							v.value().val = 10;
+						}
+						else
+							text::info("Error = {}",v.error().errorMsg);					
+					})
+				);			
+								
+				if (res1.isValid() )
+				{
+					// std::stringstream ss;
+					// ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+					// test->addTextToBuffer(ss.str(),ll); 
+				}
+				else
+					text::info("Error = {}",res1.error().errorMsg);				
+					
+				std::stringstream ss;
+				ss << "Original Val = "<<initVal<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+				test->checkOccurrences("TestClass constructor",1,tests::BaseTest::LogLevel::Info);
+
+				
+				test->checkOccurrences("TestClass copy",0,tests::BaseTest::LogLevel::Info);
+				
+				//now using reference
+				test->clearTextBuffer();
+				TestClass pp(8,test,ll);
+				pp.logLevel = ll;
+				auto kk = execution::launch(exr,[]{
+					return 7;
+					//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
+				});			
+				auto kk0 = execution::inmediate(kk,std::ref(pp));
+				auto kk1 = execution::next(kk0,[test,ll](auto& v)
+				{
+					if (v.isValid() )
+					{					
+						std::stringstream ss;
+						ss << "Val = "<<v.value().val<<'\n';
+						test->addTextToBuffer(ss.str(),ll); 
+						//text::info("Val = {}",v.value().val);
+						v.value().val = 10;
+					}
+					else
+						text::info("Error = {}",v.error().errorMsg);					
+				});			
+				
+				const auto& res2 = tasking::waitForFutureMThread(kk1);		
+				if (res2.isValid() )
+				{
+					//text::info("kk0 Val = {}",kk0.getValue().value().val);
+					std::stringstream ss;
+					ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+					test->addTextToBuffer(ss.str(),ll); 
+				}
+				else
+					text::info("Error = {}",kk0.getValue().error().errorMsg);				
+				ss.str(""s);
+				ss << "Original Val = "<<pp.val<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+				event.set();
+				test->checkOccurrences("constructor",1,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
+			});
+			event.wait();
+			
+		}
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;
@@ -783,7 +894,7 @@ int TestExecution::onExecuteTest()
 			switch(n)
 			{
 				case 1000:
-					_testDebug();
+					_testDebug(this);
 					break;
 				case 0:
 					result = _testLaunch(this);

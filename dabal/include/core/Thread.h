@@ -38,8 +38,7 @@ namespace core
 	 * be inherited, but will require additional programming to handle things safely.
 	 * 
 	 */
-	class DABAL_API Thread/*: 
-					public CallbackSubscriptor<::core::CSNoMultithreadPolicy,Thread*>*/
+	class DABAL_API Thread
 	{
 
 #ifdef _WINDOWS
@@ -233,7 +232,7 @@ namespace core
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType& waitForFutureThread( core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType& waitForFutureThread( core::Future<T,ErrorType> f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         struct _Receiver
