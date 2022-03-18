@@ -40,40 +40,45 @@ struct MyErrorInfo : public ::core::ErrorInfo
 		return *this;
 	}
 };
-struct MiPepe
+/*
+ * class for testing copies, moves, etc..
+ * 
+ */
+struct TestClass
 {
 	int val;
-	MiPepe()
+	
+	TestClass()
 	{
 		val = 1;
 		text::info("Pepe constructor");
 	}
-	explicit MiPepe(int aVal)
+	explicit TestClass(int aVal)
 	{
 		val = aVal;
 		text::info("Pepe constructor");
 	}
-	MiPepe(const MiPepe& ob)
+	TestClass(const TestClass& ob)
 	{
 		val = ob.val;
 		text::info("Pepe copy constructor");
 	}
-	MiPepe(MiPepe&& ob)
+	TestClass(TestClass&& ob)
 	{
 		val = ob.val;
 		text::info("Pepe move constructor");
 	}
-	~MiPepe()
+	~TestClass()
 	{
 		text::info("Pepe destructor");
 	}
-	MiPepe& operator=(const MiPepe& ob)
+	TestClass& operator=(const TestClass& ob)
 	{
 		val = ob.val;
 		text::info("Pepe copy operator=");
 		return *this;
 	}
-	MiPepe& operator=(MiPepe&& ob)
+	TestClass& operator=(TestClass&& ob)
 	{
 		val = ob.val;
 		text::info("Pepe copy operator=");
@@ -86,12 +91,18 @@ int _testDebug()
 	int result = 0;	
 	auto th1 = ThreadRunnable::create(true);	
 	//auto th2 = ThreadRunnable::create(true);	
-	execution::Executor<Runnable> ex(th1);		
-	ex.setOpts({true,false,false});
+	execution::Executor<Runnable> exr(th1);		
+	exr.setOpts({true,false,false});
+	//now executor for threadpool
+	parallelism::ThreadPool::ThreadPoolOpts opts;
+	auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,true});   
 	{
-		MiPepe p;
+		TestClass p;
 		p.val = 2;
-		Future<MiPepe&> fut(p);
+		Future<TestClass&> fut(p);
 		//fut.setValue(p);
 		//fut.getValue().value().val = 10;
 		text::info("{}",fut.getValue().value().val);
@@ -102,53 +113,23 @@ int _testDebug()
 			return v; 
 		},vec);*/
 	}
-/*
-	//----		
-	{
-		int a = 1;
-		text::info("a value at start = {}",a);
-		auto r = th1->execute<int&,MyErrorInfo>( [&a]() -> int& 
-		{
-			text::info("Asigno a");
-			tasking::Process::wait(1000);
-			a = 5;
-			//throw std::runtime_error("chuiquimol");
-			return a;
-		});
-		r.subscribeCallback( std::function< ::core::ECallbackResult (decltype(r)::ValueType&)>([](decltype(r)::ValueType&)
-		{
-
-			return ::core::ECallbackResult::UNSUBSCRIBE;
-		}));
-		//r.setError(MyErrorInfo(0,"dani"));
-		core::waitForFutureThread(r);
-		if ( r.getValue().isValid())
-		{
-			text::info("a value after execution = {}",a);
-			text::info("Fut value = {}",r.getValue().value());
-			r.getValue().value() = 8;
-			text::info("a value after assignment = {}",a);
-			text::info("Fut value = {}",r.getValue().value());
-		}else
-		{
-			text::error("Error = {}",r.getValue().error().errorMsg);
-		}
-	
-	}
-*/
-
 	{
 		vector<int> vec = {1,2,3};
 		// auto kk0 = execution::launch(ex,[]()
 		// {
 		// });
-		//realmente no tengo nada claro que al pasar vec deba ser por referencia..	
-		auto kk = execution::launch(ex,[](vector<int>& v) -> vector<int>&
+		auto kk = execution::next(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v) -> vector<int>&
 		{		
-			v[1] = 4;
-			return v; 
-		//},vec);
-		},std::ref(vec));
+			v.value()[1] = 4;
+			return v.value();
+
+		});
+		//ESTO TAMBIEn
+		// auto kk = execution::launch(ex,[](vector<int>& v) -> vector<int>&
+		// {		
+		// 	//v[1] = 4;
+		// 	return v; 
+		// },std::ref(vec));
 		auto kk2 = execution::next(kk,[](auto& v)
 		{
 			tasking::Process::wait(1000);
@@ -162,13 +143,7 @@ int _testDebug()
 				text::error(v.error().errorMsg);
 			}
 		});
-		/*
-		auto kk3 = execution::launch(ex,[](const auto& v)
-		{
-			//v = 4;	
-			text::info("Valor: {}",v);
-		},6);*/
-		
+				
 		core::waitForFutureThread(kk2);
 		//Thread::sleep(200000);
 		text::info("Val = {}",vec[1]);
@@ -202,10 +177,10 @@ int _testDebug()
 
 	
 	{
-		MiPepe pp(8);
+		TestClass pp(8);
 		core::Event event;
-		th1->fireAndForget([ex,&pp,&event]{
-			auto kk = execution::launch(ex,[]{
+		th1->fireAndForget([exr,&pp,&event]{
+			auto kk = execution::launch(exr,[]{
 				return 7;
 				//throw std::runtime_error("un error");
 			});			
@@ -233,50 +208,56 @@ int _testDebug()
 	}
 	{
 	
-	//auto kk_0 = execution::inmediate(execution::start(ex),"hola"s);
-	vector<float> vec = {1.0f,20.0f,36.5f};
-	auto kk0 = execution::bulk(execution::inmediate(execution::start(ex),std::ref(),[](auto& v)
+		vector<float> vec = {1.0f,20.0f,36.5f};
+		
+		auto kk0 = execution::next(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v) -> vector<float>&
 		{
-			text::info("Runnable Bulk 1");
+			auto& val = v.value();
+			val[1] = 1000.7;
+			//return std::ref(val);
+			return val;
+		}
+		);
+		//auto kk1 = execution::bulk(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v)
+		auto kk1 = execution::bulk(kk0,[](auto& v)
+		{
 			auto idx = v.index();
 			//::tasking::Process::switchProcess(true);
 			if ( v.isValid() )	
-				text::info("Bulk 1 Value = {}",v.value()[0]);
+				text::info("Runnable Bulk 1 Value = {}",v.value()[0]);
 			else
-				text::info("Bulk 1 Error = {}",v.error().errorMsg);
+				text::info("Runnable Bulk 1 Error = {}",v.error().errorMsg);
 			++v.value()[0];
 		},[](auto& v)
 		{
-			text::info("Runnable Bulk 2");					
 			if ( v.isValid() )	
-				text::info("Bulk 2 Value = {}",v.value()[1]);
+				text::info("Runnable Bulk 2 Value = {}",v.value()[1]);
 			else
-				text::info("Bulk 2 Error = {}",v.error().errorMsg);
+				text::info("Runnable Bulk 2 Error = {}",v.error().errorMsg);
 			++v.value()[1];
 		},
 		[](auto& v)
 		{
-			text::info("Runnable Bulk 3");					
 			if ( v.isValid() )	
-				text::info("Bulk 3 Value = {}",v.value()[2]);
+				text::info("Runnable Bulk 3 Value = {}",v.value()[2]);
 			else
-				text::info("Bulk 3 Error = {}",v.error().errorMsg);
+				text::info("Runnable Bulk 3 Error = {}",v.error().errorMsg);
 			++v.value()[2];
 		}
 		);	
-		core::waitForFutureThread(kk0);
-		auto kk0_1 = execution::next(kk0,[](auto& v)
-		{
-			text::info("After Bulk");			
-			if ( v.isValid() )
-			{
-				text::info("Value = {}",v.value()[1]);
-				v.value()[1] = 9.7f;
-				//text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
-			}else
-				text::info("After bulk err {}",v.error().errorMsg);
-		});
-		core::waitForFutureThread(kk0_1);
+		core::waitForFutureThread(kk1);
+		// auto kk1_1 = execution::next(kk1,[](auto& v)
+		// {
+		// 	text::info("After Bulk");			
+		// 	if ( v.isValid() )
+		// 	{
+		// 		text::info("Value = {}",v.value()[1]);
+		// 		v.value()[1] = 9.7f;
+		// 		//text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
+		// 	}else
+		// 		text::info("After bulk err {}",v.error().errorMsg);
+		// });
+		// core::waitForFutureThread(kk1_1);
 		text::info("After wait");
 		// auto kk2 = execution::loop(kk1,idx0,loopSize,
 		// 	[](int idx,const auto& v)
@@ -305,7 +286,59 @@ int _testDebug()
 		// );
 		// ::core::waitForFutureThread(kk3);
 		text::info("Done!!");
-	}		            
+	}		
+	{				   	
+		vector<float> vec = {1.0f,20.0f,36.5f};
+		//PROBAR ESTO Y LUEGO USAR EL kk0 EN EL BULK
+		auto kk0 = execution::next(execution::inmediate(execution::start(extp),std::ref(vec)),[](auto& v) -> vector<float>&
+		{
+			v.value()[1] = 1000.7;
+			return v.value();
+		}
+		);
+		//auto kk1 = execution::bulk(execution::inmediate(execution::start(extp),std::ref(vec)),[](auto& v)
+		auto kk1 = execution::bulk(kk0,[](auto& v)
+		{
+			auto idx = v.index();
+			if ( v.isValid() )	
+				text::info("ThreadPoolExecutor Bulk 1 Value = {}",v.value()[0]);
+			else
+				text::info("ThreadPoolExecutor Bulk 1 Error = {}",v.error().errorMsg);
+			++v.value()[0];
+		},[](auto& v)
+		{
+			if ( v.isValid() )	
+				text::info("ThreadPoolExecutor Bulk 2 Value = {}",v.value()[1]);
+			else
+				text::info("ThreadPoolExecutor Bulk 2 Error = {}",v.error().errorMsg);
+			++v.value()[1];
+		},
+		[](auto& v)
+		{
+			if ( v.isValid() )	
+				text::info("ThreadPoolExecutor Bulk 3 Value = {}",v.value()[2]);
+			else
+				text::info("ThreadPoolExecutor Bulk 3 Error = {}",v.error().errorMsg);
+			++v.value()[2];
+		}
+		);	
+		core::waitForFutureThread(kk1);
+		
+	/*	auto kk0_1 = execution::next(kk0,[](auto& v)
+		{
+			text::info("After Bulk");			
+			if ( v.isValid() )
+			{
+				text::info("Value = {}",v.value()[1]);
+				v.value()[1] = 9.7f;
+				//text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
+			}else
+				text::info("After bulk err {}",v.error().errorMsg);
+		});
+		core::waitForFutureThread(kk0_1);
+		*/
+		text::info("After wait");
+	}      
 
 	Thread::sleep(5000);
 	return 0;
@@ -376,10 +409,10 @@ int _testLaunch( tests::BaseTest* test)
 		// 			}
 		// 		);
 		// //Thread::sleep(10000);
-		// execution::Executor<Runnable> ex2(th2);
+		// execution::Executor<Runnable> extp(th2);
 		// //::core::waitForFutureThread(fut);	
-		// //auto fut_1 = execution::transfer(fut,ex2);
-		// fut = execution::transfer(fut,ex2);
+		// //auto fut_1 = execution::transfer(fut,extp);
+		// fut = execution::transfer(fut,extp);
 		// auto fut2 = execution::next(fut,[](const auto& v)
 		// 		{
 		// 			text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
@@ -519,8 +552,8 @@ auto th2 = ThreadRunnable::create(true);
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			parallelism::ThreadPool::ExecutionOpts exopts;
-			execution::Executor<parallelism::ThreadPool> ex2(myPool);
-			auto r2 = ex2.launch<int>(  
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
+			auto r2 = extp.launch<int>(  
 				[](const auto& v)
 				{					
 					if ( v.isValid() )
@@ -695,12 +728,12 @@ int _testFor(tests::BaseTest* test)
 	// 	{
 	// 		parallelism::ThreadPool::ThreadPoolOpts opts;
 	// 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
-	// 		execution::Executor<parallelism::ThreadPool> ex2(myPool);
+	// 		execution::Executor<parallelism::ThreadPool> extp(myPool);
 	// 		execution::ThreadPoolExecutorOpts exopts;
 	// 		exopts.independentTasks = false;
-	// 		ex2.setOpts(exopts);
+	// 		extp.setOpts(exopts);
 	// 		const int idx0 = 0;
-	// 		auto barrier = execution::loop(ex2,idx0,loopSize,gTestFunc);
+	// 		auto barrier = execution::loop(extp,idx0,loopSize,gTestFunc);
 	// 		::core::waitForBarrierThread(barrier);
 	// 	},loopSize
 	// );
@@ -711,11 +744,11 @@ int _testFor(tests::BaseTest* test)
 		{
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
-			execution::Executor<parallelism::ThreadPool> ex2(myPool);
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			execution::LoopHints lhints;
 			lhints.independentTasks = true;
 			const int idx0 = 0;
-			auto barrier = ex2.loop(idx0,loopSize,
+			auto barrier = extp.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				text::debug("iteracion {}",idx);

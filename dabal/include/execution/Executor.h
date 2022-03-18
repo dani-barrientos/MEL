@@ -142,7 +142,7 @@ namespace execution
                 if ( input.isValid() )
                     result.setValue(std::forward<TRet>(arg));
                 else
-                    result.setError(input.error());
+                    result.setError(input.error());                    
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
             })
         );
@@ -164,13 +164,11 @@ namespace execution
         typedef std::invoke_result_t<F,ValueType&> TRet;
         ExFuture<ExecutorAgent,TRet> result(fut.ex);
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( ValueType&)>([fut,f = std::forward<F>(f),result](  ValueType& input) 
+            std::function<::core::ECallbackResult( ValueType&)>([fut,f = std::forward<F>(f),result](  ValueType& input) mutable
             {
-                //ex. template launch<TRet>(f,std::ref(input),result); 
-                //need to bind de fut to not get lost and input pointing to unknown place
-                fut.ex. template launch<TRet>([f](ExFuture<ExecutorAgent,TArg> arg)
+                //need to bind de fut to not get lost and input pointing to unknown place                
+                fut.ex. template launch<TRet>([f=std::forward<F>(f),input](ExFuture<ExecutorAgent,TArg> arg)->TRet
                 {
-                    //text::info("tiki = {}",arg.getValue().value().val);
                     return f(arg.getValue());
                 },fut,result);      
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
@@ -227,7 +225,7 @@ namespace execution
     {
         ExFuture<NewExecutorAgent,TRet> result(newAgent);
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( const typename core::FutureValue<TRet>&)>([result](const typename core::FutureValue<TRet>& input) mutable
+            std::function<::core::ECallbackResult( const typename core::FutureValue<TRet>&)>([result](typename core::FutureValue<TRet>& input) mutable
             {
                 result.assign(input);
                 return ::core::ECallbackResult::UNSUBSCRIBE; 

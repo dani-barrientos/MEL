@@ -38,12 +38,7 @@ namespace execution
             {
                 if ( !mRunnable.expired())
                 {         
-                    //Creo que esto n otiene sentido. Si se necesita una referencia, se usa el ref                                               
-                    /*if constexpr( std::is_lvalue_reference<TArg>::value)
-                        mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::reference_wrapper(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
-                    else*/
-                        mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
-//esto no puede estar bien. Habrá que bindear según el tipo                                        
+                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                 }            
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const
@@ -202,19 +197,15 @@ namespace execution
     template <class TArg,class ...FTypes> ExFuture<Runnable,TArg> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
     {
         ExFuture<Runnable,TArg> result(fut.ex);
-
+        typedef typename ExFuture<Runnable,TArg>::ValueType  ValueType;
         fut.subscribeCallback(            
-            std::function<::core::ECallbackResult( typename core::FutureValue<TArg>&)>([fut,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( ValueType&)>([fut,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
             {
-                //::parallelism::Barrier barrier(sizeof...(fs));
                 ::parallelism::Barrier barrier(std::tuple_size_v<decltype(fs)>);
-                 //_private::_invoke(ex,barrier,input,std::forward<FTypes>(fs)...);
-                //_private::_invoke(ex,barrier,input,std::get<FTypes>(fs)...);
                 _private::_invoke(fut,barrier,std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
                     std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([input,result](const ::parallelism::BarrierData& ) mutable
                     {
-                        //result.setValue();
                         result.assign(input);
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));

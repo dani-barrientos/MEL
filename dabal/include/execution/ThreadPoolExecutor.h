@@ -74,23 +74,24 @@ namespace execution
         
         return result;
     };
-	template <class TArg,class ... FTypes> ExFuture<ThreadPool,void> bulk(ExFuture<ThreadPool,TArg> fut, FTypes ... functions)
+	template <class TArg,class ... FTypes> ExFuture<ThreadPool,TArg>  bulk(ExFuture<ThreadPool,TArg> fut, FTypes ... functions)
     {
-        ExFuture<ThreadPool,void> result(fut.ex);
-        //tengo que pasar esto a la lambda std::forward<FTypes>(functions)...
+        ExFuture<ThreadPool,TArg> result(fut.ex);
+        typedef typename ExFuture<ThreadPool,TArg>::ValueType  ValueType;
         fut.subscribeCallback(            
-            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,result,functions = std::make_tuple(std::forward<FTypes>(functions)...) ](const typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( ValueType&)>([fut,result,fs = std::make_tuple(std::forward<FTypes>(functions)...) ](ValueType& input)  mutable
             {                
                 ThreadPool::ExecutionOpts exopts;
                 exopts.useCallingThread = false;
-                exopts.groupTasks = !ex.getOpts().independentTasks;
+                exopts.groupTasks = !fut.ex.getOpts().independentTasks;
                                 
                 //auto barrier = ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(functions)...);
-                auto barrier = ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(std::get<FTypes>(functions))...);
+                auto barrier = fut.ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
-                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+                    //bind fut to avoid destroying it
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([fut,input,result](const ::parallelism::BarrierData& ) mutable
                     {
-                        result.setValue();
+                        result.assign(input);
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                     

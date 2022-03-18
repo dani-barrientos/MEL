@@ -261,7 +261,7 @@ namespace core
 					mState = NOTAVAILABLE;
 
 			}
-			void assign(ValueType& val)
+			void assign(ValueType&& val)
 			{
 				core::Lock lck(FutureData_Base::mSC);
 				mValue = std::move(val);
@@ -387,7 +387,7 @@ namespace core
 				}else
 					mState = NOTAVAILABLE;
 			}
-			void assign(ValueType& val)
+			void assign(ValueType&& val)
 			{
 				core::Lock lck(FutureData_Base::mSC);
 				mValue = std::move(val);
@@ -478,6 +478,7 @@ namespace core
 			{
 				getData().assign(std::move(val));
 			}
+			
 			template <class F> auto subscribeCallback(F&& f) const						
 			{
 				//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
