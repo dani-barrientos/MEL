@@ -23,6 +23,15 @@ namespace tasking
      * @param f future to wait for
      * @param msecs maximum time to wait.
      */
+/*    eto de devolver la referencia no es correcto, ya que el future puede morir (y de hecho me pasa cuando encadeno llamadas)
+    ADEMÁS ES MUY GRAVE QUE estoy modificndo aquí el propio future!!!
+
+    POSIBILIDADES:
+     - VERSION TEMPLATICA: si la sobrecarga es rvaluereference, devolver un valuetype nuevo per ohecho el move
+     - si es una referencia puiedo devolver como ahora->pero no puedo modificar el future. 
+    En cualquier caso no se puede hacer asi porque lo de modifica rel propio future es INCORRECTO
+    VOY A TENER QUE DEJARLO COMO ANTIGUAMENTE
+    */
     template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType& waitForFutureMThread(  core::Future<T,ErrorType> f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
     {
         using ::tasking::Event_mthread;

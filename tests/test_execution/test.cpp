@@ -46,24 +46,25 @@ struct MyErrorInfo : public ::core::ErrorInfo
  */
 struct TestClass
 {
-	int val;
+	float val;
 	tests::BaseTest* test;
 	tests::BaseTest::LogLevel logLevel;
-	TestClass(tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info):val(1),test(aTest),logLevel(ll)
+	bool addToBuffer;
+	TestClass(tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(1),test(aTest),logLevel(ll),addToBuffer(atb)
 	{
-//		text::info("TestClass constructor");
-		test->addTextToBuffer("TestClass constructor\n",logLevel);
+		_printTxt("TestClass constructor\n");
 	}
-	explicit TestClass(int aVal,tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info):val(aVal),test(aTest),logLevel(ll)
+	explicit TestClass(float aVal,tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(aVal),test(aTest),logLevel(ll),addToBuffer(atb)
 	{
-		test->addTextToBuffer("TestClass constructor\n",logLevel);
+		_printTxt("TestClass constructor\n");
 	}
 	TestClass(const TestClass& ob)
 	{
 		val = ob.val;
 		test = ob.test;
 		logLevel = ob.logLevel;
-		test->addTextToBuffer("TestClass copy constructor\n",logLevel);
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass copy constructor\n");
 	}
 	TestClass(TestClass&& ob)
 	{
@@ -71,18 +72,20 @@ struct TestClass
 		test = ob.test;
 //		ob.test = nullptr; lo necesito en destructor
 		logLevel = ob.logLevel;		
-		test->addTextToBuffer("TestClass move constructor\n",logLevel);
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass move constructor\n");
 	}
 	~TestClass()
 	{
-		test->addTextToBuffer("TestClass destructor\n",logLevel);
+		_printTxt("TestClass destructor\n");
 	}
 	TestClass& operator=(const TestClass& ob)
 	{
 		val = ob.val;
 		test = ob.test;
 		logLevel = ob.logLevel;
-		test->addTextToBuffer("TestClass copy operator=\n",logLevel);
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass copy operator=\n");
 		return *this;
 	}
 	TestClass& operator=(TestClass&& ob)
@@ -91,8 +94,37 @@ struct TestClass
 		test = ob.test;
 //		ob.test = nullptr; lo necesito en destructor
 		logLevel = ob.logLevel;
-		test->addTextToBuffer("TestClass move operator=\n",logLevel);
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass move operator=\n");
 		return *this;
+	}
+	private:
+	void _printTxt(const string& str)
+	{
+		if (addToBuffer )
+			test->addTextToBuffer(str,logLevel);
+		else
+		{
+			switch (logLevel)
+			{
+				case tests::BaseTest::LogLevel::Debug:
+					text::debug(str);
+					break;
+				case tests::BaseTest::LogLevel::Info:
+					text::info(str);
+					break;
+				case tests::BaseTest::LogLevel::Warn:
+					text::warn(str);
+					break;
+				case tests::BaseTest::LogLevel::Error:
+					text::error(str);
+					break;
+				case tests::BaseTest::LogLevel::Critical:
+					text::critical(str);
+					break;
+				default:break;
+			}
+		}
 	}
 };
 //funcion para pruebas a lo cerdo
@@ -140,21 +172,21 @@ int _testDebug(tests::BaseTest* test)
 		// 	//v[1] = 4;
 		// 	return v; 
 		// },std::ref(vec));
-		auto kk2 = execution::next(kk,[](auto& v)
-		{
-			tasking::Process::wait(1000);
-			if ( v.isValid())
-			{
-				text::info("{}",v.value()[1]);
-				v.value()[1] = 9;
-				//text::info("{}",v.value());
-			}else
-			{
-				text::error(v.error().errorMsg);
-			}
-		});
+		// auto kk2 = execution::next(kk,[](auto& v)
+		// {
+		// 	tasking::Process::wait(1000);
+		// 	if ( v.isValid())
+		// 	{
+		// 		text::info("{}",v.value()[1]);
+		// 		v.value()[1] = 9;
+		// 		//text::info("{}",v.value());
+		// 	}else
+		// 	{
+		// 		text::error(v.error().errorMsg);
+		// 	}
+		// });
 				
-		core::waitForFutureThread(kk2);
+		//core::waitForFutureThread(kk2);
 		//Thread::sleep(200000);
 		text::info("Val = {}",vec[1]);
 		
@@ -186,49 +218,49 @@ int _testDebug(tests::BaseTest* test)
 
 	
 	{
-		test->clearTextBuffer();
-		TestClass pp(8,test);
-		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
-		pp.logLevel = ll;
-		core::Event event;
-		th1->fireAndForget([exr,&pp,&event,test,ll]{
-			auto kk = execution::launch(exr,[]{
-				return 7;
-				//throw std::runtime_error("un error");
-			});			
-			auto kk0 = execution::inmediate(kk,std::ref(pp));
-			auto kk1 = execution::next(kk0,[test,ll](auto& v)
-			{
-				if (v.isValid() )
-				{					
-					std::stringstream ss;
-					ss << "Val = "<<v.value().val<<'\n';
-					test->addTextToBuffer(ss.str(),ll); 
-					//text::info("Val = {}",v.value().val);
-					v.value().val = 10;
-				}
-				else
-					text::info("Error = {}",v.error().errorMsg);					
-			});			
+		// test->clearTextBuffer();
+		// TestClass pp(8,test);
+		// constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+		// pp.logLevel = ll;
+		// core::Event event;
+		// th1->fireAndForget([exr,&pp,&event,test,ll]{
+		// 	auto kk = execution::launch(exr,[]{
+		// 		return 7;
+		// 		//throw std::runtime_error("un error");
+		// 	});			
+		// 	auto kk0 = execution::inmediate(kk,std::ref(pp));
+		// 	auto kk1 = execution::next(kk0,[test,ll](auto& v)
+		// 	{
+		// 		if (v.isValid() )
+		// 		{					
+		// 			std::stringstream ss;
+		// 			ss << "Val = "<<v.value().val<<'\n';
+		// 			test->addTextToBuffer(ss.str(),ll); 
+		// 			//text::info("Val = {}",v.value().val);
+		// 			v.value().val = 10;
+		// 		}
+		// 		else
+		// 			text::info("Error = {}",v.error().errorMsg);					
+		// 	});			
 			
-			const auto& res = tasking::waitForFutureMThread(kk1);		
-			if (res.isValid() )
-			{
-				//text::info("kk0 Val = {}",kk0.getValue().value().val);
-				std::stringstream ss;
-				ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
-				test->addTextToBuffer(ss.str(),ll); 
-			}
-			else
-				text::info("Error = {}",kk0.getValue().error().errorMsg);				
-			std::stringstream ss;
-			ss << "Original Val = "<<pp.val<<'\n';
-			test->addTextToBuffer(ss.str(),ll); 
-			event.set();
-		});
-		event.wait();
-		test->checkOccurrences("constructor",1,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
+		// 	const auto& res = tasking::waitForFutureMThread(kk1);		
+		// 	if (res.isValid() )
+		// 	{
+		// 		//text::info("kk0 Val = {}",kk0.getValue().value().val);
+		// 		std::stringstream ss;
+		// 		ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+		// 		test->addTextToBuffer(ss.str(),ll); 
+		// 	}
+		// 	else
+		// 		text::info("Error = {}",kk0.getValue().error().errorMsg);				
+		// 	std::stringstream ss;
+		// 	ss << "Original Val = "<<pp.val<<'\n';
+		// 	test->addTextToBuffer(ss.str(),ll); 
+		// 	event.set();
+		// });
+		// event.wait();
+		// test->checkOccurrences("constructor",1,tests::BaseTest::LogLevel::Info);
+		// test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
 		
 	}
 	{
@@ -324,7 +356,7 @@ int _testDebug(tests::BaseTest* test)
 		//auto kk1 = execution::bulk(execution::inmediate(execution::start(extp),std::ref(vec)),[](auto& v)
 		auto kk1 = execution::bulk(kk0,[](auto& v)
 		{
-			auto idx = v.index();
+			//auto idx = v.index();
 			if ( v.isValid() )	
 				text::info("ThreadPoolExecutor Bulk 1 Value = {}",v.value()[0]);
 			else
@@ -368,29 +400,383 @@ int _testDebug(tests::BaseTest* test)
 	Thread::sleep(5000);
 	return 0;
 }
-//basic test for launching task in executio agents
+template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
+{
+	core::Event event;
+	TestClass pp(8,test);
+	vector<TestClass> vec;
+	//use a task to make it more complex
+	th->fireAndForget([ex,&event,test,&pp,&vec]
+	{
+		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+		text::info("Simple functor chaining");
+		test->clearTextBuffer();
+		constexpr int initVal = 8;		
+		{
+		//need move result to res1 because input future is temporary
+		auto res1 = tasking::waitForFutureMThread(
+			execution::next(
+			execution::bulk(
+				execution::inmediate(execution::start(ex),TestClass(initVal,test,ll))
+			,
+			//bulk
+			[](auto& v)
+			{
+				text::info("Bulk 1");
+				v.value().val = 11;  //race condition
+			},
+			[](auto& v)
+			{
+				text::info("Bulk 2");
+				v.value().val = 12; //race condition
+			}),
+			[test,ll](auto& v) -> TestClass&
+			{
+				if (v.isValid() )
+				{					
+					std::stringstream ss;
+					ss << "Val = "<<v.value().val<<'\n';
+					test->addTextToBuffer(ss.str(),ll); 
+					//text::info("Val = {}",v.value().val);
+					v.value().val = 10;
+				}
+				else
+					text::info("Error = {}",v.error().errorMsg);					
+				return v.value();
+			})
+		);			
+
+		bool iv = res1.isValid();
+		if (res1.isValid() )
+		{
+				std::stringstream ss;
+			// ss << "Finish Val = "<<res1.value().val<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+		}
+		else
+			text::info("Error = {}",res1.error().errorMsg);				
+		}
+		std::stringstream ss;
+		ss << "Original Val = "<<initVal<<'\n';
+		test->addTextToBuffer(ss.str(),ll); 
+		test->checkOccurrences("TestClass constructor",1,tests::BaseTest::LogLevel::Info);		
+		test->checkOccurrences("TestClass copy",0,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
+		//now using reference
+		test->clearTextBuffer();
+		pp.logLevel = ll;
+		text::info("Simple functor chaining using reference. No copies should be done");
+		auto kk = execution::launch(ex,[]{
+			return 7;
+			//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
+		});			
+		auto kk0 = execution::inmediate(kk,std::ref(pp));
+		auto kk1 = execution::next(kk0,[test,ll](auto& v)
+		{
+			if (v.isValid() )
+			{					
+				std::stringstream ss;
+				ss << "Val = "<<v.value().val<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+				//text::info("Val = {}",v.value().val);
+				v.value().val = 10;
+			}
+			else
+				text::info("Error = {}",v.error().errorMsg);					
+		});			
+		//can get reference to result because input Future is not temporary
+		const auto& res2 = tasking::waitForFutureMThread(kk1);		
+		if (res2.isValid() )
+		{
+			//text::info("kk0 Val = {}",kk0.getValue().value().val);
+			std::stringstream ss;
+			ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+			test->addTextToBuffer(ss.str(),ll); 
+		}
+		else
+			text::info("Error = {}",kk0.getValue().error().errorMsg);				
+		ss.str(""s);
+		ss << "Original Val = "<<pp.val<<'\n';
+		test->addTextToBuffer(ss.str(),ll); 
+		
+		test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
+		//now a little more complex test //TODO: meter al final un throw o algo así
+		text::info("A little more complex functor chaining using reference and parallel loops");
+		test->clearTextBuffer();
+		#define LOOP_SIZE 100
+		#define INITIAL_VALUE 2
+		auto kk2 = 
+		execution::next(
+		execution::loop(
+		execution::bulk(execution::next(
+		execution::next(
+		execution::inmediate(execution::start(ex),std::ref(vec)),[test,ll](auto& v)->vector<TestClass>&
+		{				
+			//fill de vector with a simple case for the result to be predecible
+			//I don't want out to log the initial constructions, oncly constructons and after this function
+			auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+			v.value().resize(LOOP_SIZE,t);	
+			for(auto& elem:v.value())
+			{
+				elem.logLevel = ll;
+				elem.addToBuffer = true;
+			}
+			return v.value();
+		}
+		),
+		//second next
+		[](auto& v)->vector<TestClass>&
+		{
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;						
+			}
+			else
+				text::info("Error = {}",v.error().errorMsg);	
+			return v.value();	
+		}),
+		//bulk
+		[](auto& v)			
+		{					
+			//multiply by 2 the first half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t endIdx = vec.size()/2;	
+				for(size_t i = 0; i < endIdx;++i )
+				{
+					vec[i].val = vec[i].val*2.f;	
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);					
+		},
+		[](auto& v)			
+		{
+			//multiply by 3 the second half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t startIdx = vec.size()/2;
+				for(size_t i = startIdx; i < vec.size();++i )
+				{
+					vec[i].val = vec[i].val*3.f;
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);										
+		}),
+		//loop
+		0,LOOP_SIZE,
+		[](int idx,auto& v)
+		{
+			if ( v.isValid())
+			{
+				v.value()[idx].val+=5.f;
+			}
+		},1
+		),
+		//next
+		[](auto& v)->vector<TestClass>&
+		{					
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;		
+			}	
+			return v.value();				
+		});
+			//- generar un error luego
+		const auto& res3 = tasking::waitForFutureMThread(kk2);		
+		
+		test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",0,tests::BaseTest::LogLevel::Info);
+		ss.str(""s); //empty stream
+		ss<<"Valor vector: ";
+		for(const auto& v:vec)
+			ss << v.val<<' ';
+		ss << '\n';
+		test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::None); 
+		if (!res3.isValid() )
+			text::info("Error = {}",res3.error().errorMsg);
+		else
+		{
+			//compare result with original vector. Must be the same
+			const auto& v = res3.value();
+			if ( &v != &vec )
+				test->setFailed("Both vectors must be the same ");
+		}
+		
+		
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+		
+		text::info("Same process as the previous without using reference");
+		ss.str(""s); //empty stream
+		test->clearTextBuffer();
+		auto res4 = 
+		tasking::waitForFutureMThread(
+		execution::next(
+		execution::loop(
+		execution::bulk(execution::next(
+		execution::next(
+		execution::start(ex),[test,ll](const auto& v)->vector<TestClass>
+		{				
+			//fill de vector with a simple case for the result to be predecible
+			//I don't want out to log the initial constructions, oncly constructons and after this function
+			auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+			vector<TestClass> result(LOOP_SIZE,t);					
+			for(auto& elem:result)
+			{
+				elem.logLevel = ll;
+				elem.addToBuffer = true;
+			}
+			return result;
+		}
+		),
+		//second next
+		[](auto& v)->vector<TestClass>&
+		{
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;						
+			}
+			else
+				text::info("Error = {}",v.error().errorMsg);	
+			return v.value();	
+		}),
+		//bulk
+		[](auto& v)			
+		{					
+			//multiply by 2 the first half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t endIdx = vec.size()/2;	
+				for(size_t i = 0; i < endIdx;++i )
+				{
+					vec[i].val = vec[i].val*2.f;	
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);					
+		},
+		[](auto& v)			
+		{
+			//multiply by 3 the second half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t startIdx = vec.size()/2;
+				for(size_t i = startIdx; i < vec.size();++i )
+				{
+					vec[i].val = vec[i].val*3.f;
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);										
+		}),
+		//loop
+		0,LOOP_SIZE,
+		[](int idx,auto& v)
+		{
+			if ( v.isValid())
+			{
+				v.value()[idx].val+=5.f;
+			}
+		},1
+		),
+		//next
+		[](auto& v)->vector<TestClass>  //need to return a copy becasue original vector is temporary
+		{					
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;		
+			}	
+			return v.value();				
+		}));
+		
+//@todo	deberían se 100 por el tamañao del vector->vale, es por la copia del res4->tengo que arreglar eso (lo dle waitforfuture)
+		test->checkOccurrences("constructor",LOOP_SIZE,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",LOOP_SIZE,tests::BaseTest::LogLevel::Info);
+		
+		if (!res4.isValid() )
+			text::info("Error = {}",res4.error().errorMsg);
+		else
+		{
+			ss.str(""s); //empty stream
+			ss<<"Valor vector: ";
+			for(const auto& v:res4.value())
+				ss << v.val<<' ';
+			ss << '\n';
+			test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info); 
+		}
+						
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+						
+		event.set();				
+	});
+	event.wait();
+
+}
+//basic test for launching task in execution agents
 int _testLaunch( tests::BaseTest* test)
 {
-	 int result = 0;		
+	int result = 0;		
 	{
-		auto th1 = ThreadRunnable::create(true);	
-		auto th2 = ThreadRunnable::create(true);	
-		execution::Executor<Runnable> exr(th1);
-		exr.setOpts({true,false,false});
+		{
+			auto th1 = ThreadRunnable::create(true);			
+			execution::Executor<Runnable> exr(th1);
+			exr.setOpts({true,false,false});
+			//_basicTests(exr,th1.get(),test);
+		}
+		{
+			auto th1 = ThreadRunnable::create(true);						
+			parallelism::ThreadPool::ThreadPoolOpts opts;
+			auto myPool = make_shared<parallelism::ThreadPool>(opts);
+			parallelism::ThreadPool::ExecutionOpts exopts;
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
+			extp.setOpts({true,true});
+			_basicTests(extp,th1.get(),test);
+		}
 		
-		//---- basic checks
+	/*	//---- basic checks
 		{												
 			core::Event event;
+			TestClass pp(8,test);
+			vector<TestClass> vec;
 			//use a task to make it more complex
-			th1->fireAndForget([exr,&event,test]
+			th1->fireAndForget([exr,&event,test,&pp,&vec]
 			{
 				constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+				text::info("Simple functor chaining");
 				test->clearTextBuffer();
 				constexpr int initVal = 8;		
-				const auto& res1 = tasking::waitForFutureMThread(
+				{
+				//need move result to res1 because input future is temporary
+				auto res1 = tasking::waitForFutureMThread(
 					execution::next(
+					execution::bulk(
 						execution::inmediate(execution::start(exr),TestClass(initVal,test,ll))
-					,[test,ll](auto& v)
+					,
+					//bulk
+					[](auto& v)
+					{
+						text::info("Bulk 1");
+						v.value().val = 11;  //race condition
+					},
+					[](auto& v)
+					{
+						text::info("Bulk 2");
+						v.value().val = 12; //race condition
+					}),
+					[test,ll](auto& v) -> TestClass&
 					{
 						if (v.isValid() )
 						{					
@@ -402,30 +788,30 @@ int _testLaunch( tests::BaseTest* test)
 						}
 						else
 							text::info("Error = {}",v.error().errorMsg);					
+						return v.value();
 					})
 				);			
-								
+
+				bool iv = res1.isValid();
 				if (res1.isValid() )
 				{
-					// std::stringstream ss;
-					// ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
-					// test->addTextToBuffer(ss.str(),ll); 
+					 std::stringstream ss;
+					// ss << "Finish Val = "<<res1.value().val<<'\n';
+					 test->addTextToBuffer(ss.str(),ll); 
 				}
 				else
 					text::info("Error = {}",res1.error().errorMsg);				
-					
+				}
 				std::stringstream ss;
 				ss << "Original Val = "<<initVal<<'\n';
 				test->addTextToBuffer(ss.str(),ll); 
-				test->checkOccurrences("TestClass constructor",1,tests::BaseTest::LogLevel::Info);
-
-				
-				test->checkOccurrences("TestClass copy",0,tests::BaseTest::LogLevel::Info);
-				
+				test->checkOccurrences("TestClass constructor",1,tests::BaseTest::LogLevel::Info);		
+				test->checkOccurrences("TestClass copy",0,tests::BaseTest::LogLevel::Info);							
+				test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
 				//now using reference
 				test->clearTextBuffer();
-				TestClass pp(8,test,ll);
 				pp.logLevel = ll;
+				text::info("Simple functor chaining using reference. No copies should be done");
 				auto kk = execution::launch(exr,[]{
 					return 7;
 					//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
@@ -444,7 +830,7 @@ int _testLaunch( tests::BaseTest* test)
 					else
 						text::info("Error = {}",v.error().errorMsg);					
 				});			
-				
+				//can get reference to result because input Future is not temporary
 				const auto& res2 = tasking::waitForFutureMThread(kk1);		
 				if (res2.isValid() )
 				{
@@ -458,13 +844,233 @@ int _testLaunch( tests::BaseTest* test)
 				ss.str(""s);
 				ss << "Original Val = "<<pp.val<<'\n';
 				test->addTextToBuffer(ss.str(),ll); 
-				event.set();
-				test->checkOccurrences("constructor",1,tests::BaseTest::LogLevel::Info);
+				
+				test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
 				test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
+				//now a little more complex test //TODO: meter al final un throw o algo así
+				text::info("A little more complex functor chaining using reference and parallel loops");
+				test->clearTextBuffer();
+				#define LOOP_SIZE 100
+				#define INITIAL_VALUE 2
+				auto kk2 = 
+				execution::next(
+				execution::loop(
+				execution::bulk(execution::next(
+				execution::next(
+				execution::inmediate(execution::start(exr),std::ref(vec)),[test,ll](auto& v)->vector<TestClass>&
+				{				
+					//fill de vector with a simple case for the result to be predecible
+					//I don't want out to log the initial constructions, oncly constructons and after this function
+					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+					v.value().resize(LOOP_SIZE,t);	
+					for(auto& elem:v.value())
+					{
+						elem.logLevel = ll;
+						elem.addToBuffer = true;
+					}
+					return v.value();
+				}
+				),
+				//second next
+				[](auto& v)->vector<TestClass>&
+				{
+					if (v.isValid() )
+					{					
+						for(auto& elem:v.value())
+							++elem.val;						
+					}
+					else
+						text::info("Error = {}",v.error().errorMsg);	
+					return v.value();	
+				}),
+				//bulk
+				[](auto& v)			
+				{					
+					//multiply by 2 the first half
+					if (v.isValid() )
+					{					
+						auto& vec = v.value();
+						size_t endIdx = vec.size()/2;	
+						for(size_t i = 0; i < endIdx;++i )
+						{
+							vec[i].val = vec[i].val*2.f;	
+						}
+					}
+					else
+						text::info("Bulk Error = {}",v.error().errorMsg);					
+				},
+				[](auto& v)			
+				{
+					//multiply by 3 the second half
+					if (v.isValid() )
+					{					
+						auto& vec = v.value();
+						size_t startIdx = vec.size()/2;
+						for(size_t i = startIdx; i < vec.size();++i )
+						{
+							vec[i].val = vec[i].val*3.f;
+						}
+					}
+					else
+						text::info("Bulk Error = {}",v.error().errorMsg);										
+				}),
+				//loop
+				0,LOOP_SIZE,
+				[](int idx,auto& v)
+				{
+					if ( v.isValid())
+					{
+						v.value()[idx].val+=5.f;
+					}
+				},1
+				),
+				//next
+				[](auto& v)->vector<TestClass>&
+				{					
+					if (v.isValid() )
+					{					
+						for(auto& elem:v.value())
+							++elem.val;		
+					}	
+					return v.value();				
+				});
+				 //- generar un error luego
+				const auto& res3 = tasking::waitForFutureMThread(kk2);		
+				
+				test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences("copy",0,tests::BaseTest::LogLevel::Info);
+				ss.str(""s); //empty stream
+				ss<<"Valor vector: ";
+				for(const auto& v:vec)
+					ss << v.val<<' ';
+				ss << '\n';
+				test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::None); 
+				if (!res3.isValid() )
+					text::info("Error = {}",res3.error().errorMsg);
+				else
+				{
+					//compare result with original vector. Must be the same
+					const auto& v = res3.value();
+					if ( &v != &vec )
+						test->setFailed("Both vectors must be the same ");
+				}
+				
+				
+				test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+				
+				text::info("Same process as the previous without using reference");
+				ss.str(""s); //empty stream
+				test->clearTextBuffer();
+				auto res4 = 
+				tasking::waitForFutureMThread(
+				execution::next(
+				execution::loop(
+				execution::bulk(execution::next(
+				execution::next(
+				execution::start(exr),[test,ll](const auto& v)->vector<TestClass>
+				{				
+					//fill de vector with a simple case for the result to be predecible
+					//I don't want out to log the initial constructions, oncly constructons and after this function
+					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+					vector<TestClass> result(LOOP_SIZE,t);					
+					for(auto& elem:result)
+					{
+						elem.logLevel = ll;
+						elem.addToBuffer = true;
+					}
+					return result;
+				}
+				),
+				//second next
+				[](auto& v)->vector<TestClass>&
+				{
+					if (v.isValid() )
+					{					
+						for(auto& elem:v.value())
+							++elem.val;						
+					}
+					else
+						text::info("Error = {}",v.error().errorMsg);	
+					return v.value();	
+				}),
+				//bulk
+				[](auto& v)			
+				{					
+					//multiply by 2 the first half
+					if (v.isValid() )
+					{					
+						auto& vec = v.value();
+						size_t endIdx = vec.size()/2;	
+						for(size_t i = 0; i < endIdx;++i )
+						{
+							vec[i].val = vec[i].val*2.f;	
+						}
+					}
+					else
+						text::info("Bulk Error = {}",v.error().errorMsg);					
+				},
+				[](auto& v)			
+				{
+					//multiply by 3 the second half
+					if (v.isValid() )
+					{					
+						auto& vec = v.value();
+						size_t startIdx = vec.size()/2;
+						for(size_t i = startIdx; i < vec.size();++i )
+						{
+							vec[i].val = vec[i].val*3.f;
+						}
+					}
+					else
+						text::info("Bulk Error = {}",v.error().errorMsg);										
+				}),
+				//loop
+				0,LOOP_SIZE,
+				[](int idx,auto& v)
+				{
+					if ( v.isValid())
+					{
+						v.value()[idx].val+=5.f;
+					}
+				},1
+				),
+				//next
+				[](auto& v)->vector<TestClass>  //need to return a copy becasue original vector is temporary
+				{					
+					if (v.isValid() )
+					{					
+						for(auto& elem:v.value())
+							++elem.val;		
+					}	
+					return v.value();				
+				}));
+				
+		//@todo	deberían se 100 por el tamañao del vector->vale, es por la copia del res4->tengo que arreglar eso (lo dle waitforfuture)
+				test->checkOccurrences("constructor",LOOP_SIZE,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences("copy",LOOP_SIZE,tests::BaseTest::LogLevel::Info);
+				
+				if (!res4.isValid() )
+					text::info("Error = {}",res4.error().errorMsg);
+				else
+				{
+					ss.str(""s); //empty stream
+					ss<<"Valor vector: ";
+					for(const auto& v:res4.value())
+						ss << v.val<<' ';
+					ss << '\n';
+					test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info); 
+				}
+								
+				test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+								
+				event.set();				
 			});
 			event.wait();
 			
-		}
+		}*/
 		{
 		const int idx0 = 0;
 		const int loopSize = 10;
@@ -742,6 +1348,7 @@ auto gTestFunc=[](int idx)
 		::tasking::Process::switchProcess(true);
 		text::debug("iteracion post {}",idx);
 	};
+// loop test to measure performance
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;

@@ -158,19 +158,19 @@ namespace execution
      * Given functor will be executed inf the input ExFuture executor. 
      */
     template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,typename ExFuture<ExecutorAgent,TArg>::ValueType&>> 
-        next(ExFuture<ExecutorAgent,TArg> fut, F&& f)
+        next(ExFuture<ExecutorAgent,TArg> source, F&& f)
     {                
         typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
         typedef std::invoke_result_t<F,ValueType&> TRet;
-        ExFuture<ExecutorAgent,TRet> result(fut.ex);
-        fut.subscribeCallback(
-            std::function<::core::ECallbackResult( ValueType&)>([fut,f = std::forward<F>(f),result](  ValueType& input) mutable
+        ExFuture<ExecutorAgent,TRet> result(source.ex);
+        source.subscribeCallback(
+            //need to bind de source future to not get lost and input pointing to unknown place                
+            std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
             {
-                //need to bind de fut to not get lost and input pointing to unknown place                
-                fut.ex. template launch<TRet>([f=std::forward<F>(f),input](ExFuture<ExecutorAgent,TArg> arg)->TRet
+                source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg> arg)->TRet
                 {
                     return f(arg.getValue());
-                },fut,result);      
+                },source,result);   
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
             })
         );

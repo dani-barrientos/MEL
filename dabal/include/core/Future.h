@@ -124,9 +124,13 @@ namespace core
 			}
 	};
 	//specialization for void 
-	template <class ErrorType> class FutureValue<void,ErrorType> : public std::optional<ErrorType>
+	struct VoidType
 	{
-		typedef std::optional<ErrorType> Base;
+	};
+	template <class ErrorType> class FutureValue<void,ErrorType> : public std::variant<_private::NotAvailable,VoidType,ErrorType>
+	{
+		static constexpr size_t ValidIdx = 1;
+		typedef std::variant<_private::NotAvailable,VoidType,ErrorType> Base;
 		public:
 			FutureValue(){}
 			FutureValue(const ErrorType& err):Base(err){}
@@ -134,11 +138,16 @@ namespace core
 			/**
 			 * @brief get if has valid value
 			 */
-			bool isValid() const{ return !Base::has_value();}
+			bool isValid() const{ return Base::index() == ValidIdx;}
+			/**
+			 * @brief get if either the value or eror have been set			 
+			 */
+			bool isAvailable() const{ return Base::index() != 0;}
+			void setValid(){ Base::operator=(VoidType());}
 			// wrapper for optional::value().  Same rules as std::Get, so bad_optional_access is thrown if not a valid value			
 			const ErrorType& error() const
 			{
-				return Base::value();
+				return std::get<ErrorType>(*this);
 			}			
 			auto& operator=(const ErrorType& v){
 				Base::operator=(v);
@@ -149,6 +158,34 @@ namespace core
 				return *this;
 			}
 	};
+
+	// template <class ErrorType> class FutureValue<void,ErrorType> : public std::optional<ErrorType>
+	// {
+	// 	typedef std::optional<ErrorType> Base;
+	// 	public:
+	// 		FutureValue(){}
+	// 		FutureValue(const ErrorType& err):Base(err){}
+	// 		FutureValue(ErrorType&& err):Base(std::move(err)){}
+	// 		/**
+	// 		 * @brief get if has valid value
+	// 		 */
+	// 		bool isValid() const{ return !Base::has_value();}
+	// 		problema, tengo que tener el Noavailabe->tengo que usar variant
+	// 		bool isAvailable() const{ return Base::index() != 0;}
+	// 		// wrapper for optional::value().  Same rules as std::Get, so bad_optional_access is thrown if not a valid value			
+	// 		const ErrorType& error() const
+	// 		{
+	// 			return Base::value();
+	// 		}			
+	// 		auto& operator=(const ErrorType& v){
+	// 			Base::operator=(v);
+	// 			return *this;
+	// 		}
+	// 		auto& operator=(ErrorType&& v){
+	// 			Base::operator=(std::move(v));
+	// 			return *this;
+	// 		}
+	// };
 
 	enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
 	///@cond HIDDEN_SYMBOLS
@@ -277,17 +314,23 @@ namespace core
 			 * 
 			 * @tparam F functor with signature 
 			 * @param f 
-			 * @return auto 
+			 * @return ubscription id. -1 if not subscribed, which can occur when function is executed directly if future is valid and
+			 * returns an unsubsscription
 			 * @warning callback receiver shoudn't wait or do context switch and MUST NOT block
+			 * 
 			 */
-			template <class F> auto subscribeCallback(F&& f)
+			template <class F> int subscribeCallback(F&& f)
 			{
 				Lock lck(FutureData_Base::mSC);
+				bool continueSubscription = true;
+				int result = -1;
 				if ( mState != NOTAVAILABLE)
 				{
-					f(mValue);
+					continueSubscription = (f(mValue) != ::core::ECallbackResult::UNSUBSCRIBE );
 				}
-				return Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency
+				if ( continueSubscription)
+					result = Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency				
+				return result;
 			}
 			template <class F> auto unsubscribeCallback(F&& f)
 			{
@@ -316,19 +359,23 @@ namespace core
 			//overload to inicializce as valid
 			FutureData(int)
 			{
+				mValue.setValid();
 				FutureData_Base::mState = VALID;
 			};
 			~FutureData(){};
 
 			template <class F> auto subscribeCallback(F&& f)
-			{
-				bool trigger = false;
+			{				
 				Lock lck(FutureData_Base::mSC);
+				bool continueSubscription = true;
+				int result = -1;
 				if ( mState != NOTAVAILABLE)
 				{
-					f(mValue);
-				}				
-				return Subscriptor::subscribeCallback(std::forward<F>(f));
+					continueSubscription = (f(mValue) != ::core::ECallbackResult::UNSUBSCRIBE );
+				}
+				if ( continueSubscription)
+					result = Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency				
+				return result;
 			}
 			template <class F> auto unsubscribeCallback(F&& f)
 			{
@@ -343,6 +390,7 @@ namespace core
 				FutureData_Base::mSC.enter();	
 				if ( mState == NOTAVAILABLE)
 				{
+					mValue.setValid();
 					FutureData_Base::mState = VALID;
 					FutureData_Base::mSC.leave();
 					Subscriptor::triggerCallbacks(mValue);

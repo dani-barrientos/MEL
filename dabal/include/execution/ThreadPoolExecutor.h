@@ -53,22 +53,24 @@ namespace execution
             std::weak_ptr<ThreadPool> mPool;      
             ThreadPoolExecutorOpts mOpts;  
     };    
-    template <class TArg, class I, class F>	 ExFuture<ThreadPool,void> loop(ExFuture<ThreadPool,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
+    template <class TArg, class I, class F>	 ExFuture<ThreadPool,TArg> loop(ExFuture<ThreadPool,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
     {        
-        ExFuture<ThreadPool,void> result(fut.ex);
+        ExFuture<ThreadPool,TArg> result(fut.ex);
+        typedef typename ExFuture<ThreadPool,TArg>::ValueType  ValueType;
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(functor),result,begin,end,increment](const typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( ValueType&)>([fut,f = std::forward<F>(functor),result,begin,end,increment](ValueType& input)  mutable
             {
                 ThreadPool::ExecutionOpts exopts;
                 exopts.useCallingThread = false;
-                exopts.groupTasks = !ex.getOpts().independentTasks;
-                auto barrier = ::parallelism::_for(ex.getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::bind(std::forward<F>(f),std::placeholders::_1,input),increment );
+                exopts.groupTasks = !fut.ex.getOpts().independentTasks;
+                auto barrier = ::parallelism::_for(fut.ex.getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::bind(std::forward<F>(f),std::placeholders::_1,std::ref(input)),increment );
                 barrier.subscribeCallback(
-                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,fut](const ::parallelism::BarrierData& ) mutable
                     {
-                        result.setValue();
+                         result.assign(std::move(fut.getValue()));
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
+                    
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
             }));       
         
@@ -86,12 +88,20 @@ namespace execution
                 exopts.groupTasks = !fut.ex.getOpts().independentTasks;
                                 
                 //auto barrier = ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(functions)...);
+//tengo un problema importante aquí pasando el input, que internamente el execute ahce copia
+
+                //auto barrier = fut.ex.getPool().lock()->execute(exopts,std::ref(input),std::forward<FTypes>(std::get<FTypes>(fs))...);
+                creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
+                cómo crear tatnas lambdas como functiones?
+                igual tengo que crea ralguna clase que capture el input por referencia y tenga un operator
+                el ThreadPool, tal y como está, no puede resolverlo
                 auto barrier = fut.ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
                     //bind fut to avoid destroying it
-                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([fut,input,result](const ::parallelism::BarrierData& ) mutable
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([fut,result](const ::parallelism::BarrierData& ) mutable
                     {
-                        result.assign(input);
+                        // @todo tengo que meditar muy bien esto
+                        result.assign(std::move(fut.getValue()));
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                     

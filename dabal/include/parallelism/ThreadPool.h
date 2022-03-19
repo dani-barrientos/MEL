@@ -88,13 +88,15 @@ namespace parallelism
 		/**
 		* execute generic case.
 		* @param[in] opts execution options
+		* @note because this function doesn't wait for completion, input argument need to be bound and so copied
+		* to be able to provide it to the function when this is executed.
 		*/
 		template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, TArg&& arg,F&& func,FTypes ... functions)
 		{
+
+		//@todo	tengo que resolver aqui el tema de no bindear el arg..
 			if (mNThreads != 0)
 			{
-				// mLastIndex = _chooseIndex(opts);
-				// mPool[mLastIndex]->post(
 				selectThread(opts)->post(
 					std::function<tasking::EGenericProcessResult (uint64_t, Process*)>([func, output,arg](uint64_t, Process*) mutable
 				{
@@ -106,7 +108,7 @@ namespace parallelism
 			}
 			else // no threads in pool, use calling thread
 			{
-				func(arg);
+				func(std::forward<TArg>(arg));
 				output.set();
 
 			}

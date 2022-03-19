@@ -52,33 +52,42 @@ namespace execution
             std::weak_ptr<Runnable> mRunnable; 
             RunnableExecutorOpts    mOpts;            
     };        
-        
-    template <class TArg, class I, class F>	 ExFuture<Runnable,void> loop(ExFuture<Runnable,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
+    /**
+     * @brief Concurrent loop
+     * Excutes given number of iterations of given functor as independent tasks (up to executor is able to do )
+     * 
+     * @param fut 
+     * @param begin 
+     * @param end 
+     * @param functor 
+     * @param increment 
+     * @return en new Future whose value is moved from input future
+     */
+    template <class TArg, class I, class F>	 ExFuture<Runnable,TArg> loop(ExFuture<Runnable,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
     {        
-
-//@TODODEBO METER EL LOOP COMO MIEMBRO DEL EXECUTOR Y HACERLO COO ALGORIMO. Y ASÍ QUE DEVUELVA UNA BARRERA
-
-        ExFuture<Runnable,void> result(fut.ex);
+//@TODODEBO METER EL LOOP COMO MIEMBRO DEL EXECUTOR Y HACERLO COMO ALGORIMO. Y ASÍ QUE DEVUELVA UNA BARRERA
+        ExFuture<Runnable,TArg> result(fut.ex);
+        typedef typename ExFuture<Runnable,TArg>::ValueType  ValueType;
         fut.subscribeCallback(
-            std::function<::core::ECallbackResult( const typename core::FutureValue<TArg>&)>([ex = fut.ex,f = std::forward<F>(functor),result,begin,end,increment](const typename core::FutureValue<TArg>& input)  mutable
+            std::function<::core::ECallbackResult( ValueType&)>([fut,f = std::forward<F>(functor),result,begin,end,increment](ValueType& input)  mutable
             {
                 typedef typename std::decay<I>::type DecayedIt;
                 constexpr bool isArithIterator = ::mpl::TypeTraits<DecayedIt>::isArith;
-                if ( ex.getRunnable().expired())
+                if ( fut.ex.getRunnable().expired())
                 {
                     result.setError(core::ErrorInfo(0,"Runnable has been destroyed"));
                     return ::core::ECallbackResult::UNSUBSCRIBE; 
                 }
-                bool mustLock = ex.getOpts().lockOnce;
-                bool autoKill = ex.getOpts().autoKill;
-                bool independentTasks = ex.getOpts().independentTasks;
+                bool mustLock = fut.ex.getOpts().lockOnce;
+                bool autoKill = fut.ex.getOpts().autoKill;
+                bool independentTasks = fut.ex.getOpts().independentTasks;
                 int length;
                 if constexpr (isArithIterator)
                     length = (end-begin);
                 else
                     length = std::distance(begin, end);
                 int nElements = independentTasks?(length+increment-1)/increment:1; //round-up        
-                auto ptr = ex.getRunnable().lock();        
+                auto ptr = fut.ex.getRunnable().lock();        
                 if ( mustLock )
                     ptr->getScheduler().getLock().enter();
                 try
@@ -111,9 +120,10 @@ namespace execution
                         ptr->getScheduler().getLock().leave();
 
                     barrier.subscribeCallback(
-                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result](const ::parallelism::BarrierData& ) mutable
+                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,fut](const ::parallelism::BarrierData& ) mutable
                         {
-                            result.setValue();
+                            //@TODO CREO NO PUEDO USAR EL INPUT BINDEADO, HARía COPia
+                            result.assign(std::move(fut.getValue()));
                             return ::core::ECallbackResult::UNSUBSCRIBE; 
                         }));
 
@@ -121,7 +131,7 @@ namespace execution
                 {
                     if ( mustLock )
                         ptr->getScheduler().getLock().leave();
-                    result.setValue();
+                    result.setError(::core::ErrorInfo(0,"RunnableExecutor::loop. Unknown error"));
                 }
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
             })
@@ -192,8 +202,8 @@ namespace execution
     */
     /**
      * @brief execute given functions possibly parallel (it's up to the executor to be able to do id)
+     * @return en new Future whose value is moved from input future
      * */
-
     template <class TArg,class ...FTypes> ExFuture<Runnable,TArg> bulk(ExFuture<Runnable,TArg> fut, FTypes... functions)
     {
         ExFuture<Runnable,TArg> result(fut.ex);
@@ -204,9 +214,10 @@ namespace execution
                 ::parallelism::Barrier barrier(std::tuple_size_v<decltype(fs)>);
                 _private::_invoke(fut,barrier,std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
-                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([input,result](const ::parallelism::BarrierData& ) mutable
+                    std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([fut,result](const ::parallelism::BarrierData& ) mutable
                     {
-                        result.assign(input);
+                        // @todo tengo que meditar muy bien esto
+                        result.assign(std::move(fut.getValue()));
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                     
