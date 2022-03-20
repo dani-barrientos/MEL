@@ -232,14 +232,15 @@ namespace core
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType& waitForFutureThread( core::Future<T,ErrorType> f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+
+	template<class T,class ErrorType = ::core::ErrorInfo> ::core::WaitResult<T,ErrorType> waitForFutureThread(  const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
 			using futT = core::Future<T,ErrorType>;
-            typename core::Future<T,ErrorType>::ValueType& wait( futT& f,unsigned int msecs)
+            ::core::EWaitError wait( const futT& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
@@ -257,19 +258,20 @@ namespace core
                 switch( eventresult )
                 {               
                 case ::core::Event::EVENT_WAIT_TIMEOUT:
-					f.setError(ErrorType(::core::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
+					return ::core::EWaitError::FUTURE_WAIT_OK;
                     break;
                 case ::core::Event::EVENT_WAIT_ERROR:
-					f.setError(ErrorType(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error"));
+					return ::core::EWaitError::FUTURE_UNKNOWN_ERROR;
 					break;
+				default:
+                    return ::core::EWaitError::FUTURE_WAIT_OK; //silent warning
                 }			        
-				return f.getValue();
             }
             private:
             	::core::Event mEvent;
         };
         auto receiver = std::make_unique<_Receiver>();
-        return receiver->wait(f,msecs);	
+		return ::core::WaitResult<T,ErrorType>(receiver->wait(f,msecs),f);	
     }	
 	DABAL_API ::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 }

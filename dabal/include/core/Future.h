@@ -24,7 +24,11 @@ namespace core
 	/**
 	* @brief Generic result error codes for future waiting
 	*/
+// no me gusta: ni nombre, deberái ser EWaitReuslt, ni qye aparezca eso de FUTURE
+// no megusta que esté aqui, ¿dodne lo meto?
+// no sé cómo encajar el unknownerror
 	enum EWaitError{
+		FUTURE_WAIT_OK = 0,
 		FUTURE_RECEIVED_KILL_SIGNAL = -1, //!<Wait for Future was interrupted because waiting Process was killed
 		FUTURE_WAIT_TIMEOUT = -2, //!<time out expired while waiting for Future
 		FUTURE_UNKNOWN_ERROR = -3//!<Unknow error while waiting for Future
@@ -59,6 +63,7 @@ namespace core
 		{
 			using type = const typename std::reference_wrapper<T>::type&;
 		};
+		
 	}
 	template <class T,class ErrorType = ::core::ErrorInfo> class FutureValue : public std::variant<_private::NotAvailable,T,ErrorType>
 	{
@@ -66,6 +71,9 @@ namespace core
 		static constexpr size_t ValidIdx = 1;
 		typedef std::variant<_private::NotAvailable,T,ErrorType> Base;
 		public:
+			typedef typename _private::return_type<T>::type ReturnType;
+			typedef typename _private::creturn_type<T>::type CReturnType;
+
 			FutureValue(){}
 			FutureValue(const T& v):Base(v){}
 			FutureValue(T&& v):Base(std::move(v)){}
@@ -79,11 +87,11 @@ namespace core
 			bool isValid() const{ return Base::index() == ValidIdx;}
 			bool isAvailable() const{ return Base::index() != 0;}
 			// wrapper for std::get.  Same rules as std::Get, so bad_variant_access is thrown if not a valid value
-			typename _private::return_type<T>::type value()
+			ReturnType value()
 			{
 				return std::get<T>(*this);
 			}
-			typename _private::creturn_type<T>::type value() const
+			CReturnType value() const
 			{
 				return std::get<T>(*this);
 			}
@@ -132,6 +140,8 @@ namespace core
 		static constexpr size_t ValidIdx = 1;
 		typedef std::variant<_private::NotAvailable,VoidType,ErrorType> Base;
 		public:
+			typedef void ReturnType;
+			typedef void CReturnType;
 			FutureValue(){}
 			FutureValue(const ErrorType& err):Base(err){}
 			FutureValue(ErrorType&& err):Base(std::move(err)){}
@@ -663,6 +673,47 @@ namespace core
 			((_private::FutureData<void,ErrorType>*)_private::Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
 		}		
 	};
+	/** @brief wrapper for future value after wait
+	* @todo it shouldn't be in this file, but trying to find it a better place
+	**/
+	template <class T,class E> class WaitResult
+	{        
+		public:
+			WaitResult(const ::core::EWaitError wc,const core::Future<T,E>& f):mWaitResult(wc),mFut(f){}
+			bool isValid () const
+			{
+				return (mWaitResult == ::core::EWaitError::FUTURE_WAIT_OK)?mFut.getValue().isValid():false;
+			}
+			typename core::Future<T,E>::ValueType::CReturnType value() const{ return mFut.getValue().value();}
+			typename core::Future<T,E>::ValueType::CReturnType value(){ return mFut.getValue().value();}
+			const E& error() const{ 
+				switch (mWaitResult)
+				{               
+				case ::core::EWaitError::FUTURE_WAIT_OK: //uhm... no cuadra...
+					return mFut.getValue().error();
+					break;
+				case ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
+					mEI.reset(new E(mWaitResult,"Kill signal received"));
+					return *mEI;
+					break;
+				case ::core::EWaitError::FUTURE_WAIT_TIMEOUT:
+					mEI.reset(new E(mWaitResult,"Time out exceeded"));
+					return *mEI;
+					break;
+				case ::core::EWaitError::FUTURE_UNKNOWN_ERROR:
+					mEI.reset(new E(mWaitResult,"Unknown error"));
+					return *mEI;
+					break;
+				default:return mFut.getValue().error(); //silent warning
+				}                
+			}
+			//! @brief access internal just if needed to do excepctional things
+			const core::Future<T,E>& getFuture() const{ return mFut;}
+			core::Future<T,E>& getFuture(){ return mFut;}
+		private:
+			::core::EWaitError mWaitResult;
+			core::Future<T,E> mFut;
+			mutable std::unique_ptr<E> mEI; //error info when needed
 
-
+	};
 }

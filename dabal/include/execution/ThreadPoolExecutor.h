@@ -91,10 +91,10 @@ namespace execution
 //tengo un problema importante aquí pasando el input, que internamente el execute ahce copia
 
                 //auto barrier = fut.ex.getPool().lock()->execute(exopts,std::ref(input),std::forward<FTypes>(std::get<FTypes>(fs))...);
-                creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
+               /* creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
                 cómo crear tatnas lambdas como functiones?
                 igual tengo que crea ralguna clase que capture el input por referencia y tenga un operator
-                el ThreadPool, tal y como está, no puede resolverlo
+                el ThreadPool, tal y como está, no puede resolverlo*/
                 auto barrier = fut.ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
                     //bind fut to avoid destroying it

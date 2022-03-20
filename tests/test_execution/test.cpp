@@ -590,7 +590,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			return v.value();				
 		});
 			//- generar un error luego
-		const auto& res3 = tasking::waitForFutureMThread(kk2);		
+		auto res3 = tasking::waitForFutureMThread(kk2);		
 		
 		test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("copy",0,tests::BaseTest::LogLevel::Info);
@@ -605,7 +605,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		else
 		{
 			//compare result with original vector. Must be the same
-			const auto& v = res3.value();
+			const auto& v = res3.value(); 
 			if ( &v != &vec )
 				test->setFailed("Both vectors must be the same ");
 		}
@@ -734,7 +734,7 @@ int _testLaunch( tests::BaseTest* test)
 			auto th1 = ThreadRunnable::create(true);			
 			execution::Executor<Runnable> exr(th1);
 			exr.setOpts({true,false,false});
-			//_basicTests(exr,th1.get(),test);
+			_basicTests(exr,th1.get(),test);
 		}
 		{
 			auto th1 = ThreadRunnable::create(true);						
@@ -743,7 +743,7 @@ int _testLaunch( tests::BaseTest* test)
 			parallelism::ThreadPool::ExecutionOpts exopts;
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
-			_basicTests(extp,th1.get(),test);
+			//_basicTests(extp,th1.get(),test);
 		}
 		
 	/*	//---- basic checks
