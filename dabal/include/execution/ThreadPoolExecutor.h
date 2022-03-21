@@ -27,7 +27,8 @@ namespace execution
             const ThreadPoolExecutorOpts& getOpts(){ return mOpts;}
             std::weak_ptr<ThreadPool>& getPool(){ return mPool;}
             const std::weak_ptr<ThreadPool>& getPool() const{ return mPool;}
-            //template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor,const LoopHints& hints, int increment = 1);
+            ///@{ 
+            //! brief mandatory interface from Executor
             template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet> output) const
             {
                 if ( !mPool.expired())
@@ -48,12 +49,39 @@ namespace execution
                     th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);               
                 }       
             }
-
+            template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
+            template <class TArg,class ...FTypes> ::parallelism::Barrier bulk(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions);
+            ///@}
         private:
             std::weak_ptr<ThreadPool> mPool;      
             ThreadPoolExecutorOpts mOpts;  
     };    
-    template <class TArg, class I, class F>	 ExFuture<ThreadPool,TArg> loop(ExFuture<ThreadPool,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
+    template <class I, class F>	 ::parallelism::Barrier Executor<ThreadPool>::loop(I&& begin, I&& end, F&& functor, int increment)
+    {
+        ThreadPool::ExecutionOpts exopts;
+        exopts.useCallingThread = false;
+        exopts.groupTasks = !getOpts().independentTasks;
+        return ::parallelism::_for(getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );   
+    }
+    template <class TArg,class ... FTypes> ::parallelism::Barrier Executor<ThreadPool>::bulk(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions)
+    {            
+        ThreadPool::ExecutionOpts exopts;
+        exopts.useCallingThread = false;
+        exopts.groupTasks = !getOpts().independentTasks;
+                        
+        //auto barrier = ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(functions)...);
+//tengo un problema importante aquí pasando el fut.getValue(), que internamente el execute ahce copia
+
+        //auto barrier = fut.ex.getPool().lock()->execute(exopts,std::ref(input),std::forward<FTypes>(std::get<FTypes>(fs))...);
+        /*creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
+        cómo crear tatnas lambdas como functiones?
+        igual tengo que crea ralguna clase que capture el input por referencia y tenga un operator
+        el ThreadPool, tal y como está, no puede resolverlo*/
+        return getPool().lock()->execute(exopts,fut.getValue(),std::forward<FTypes>(functions)...);
+
+    }
+//                                     
+    /*template <class TArg, class I, class F>	 ExFuture<ThreadPool,TArg> loop(ExFuture<ThreadPool,TArg> fut,I&& begin, I&& end, F&& functor, int increment = 1)
     {        
         ExFuture<ThreadPool,TArg> result(fut.ex);
         typedef typename ExFuture<ThreadPool,TArg>::ValueType  ValueType;
@@ -76,7 +104,8 @@ namespace execution
         
         return result;
     };
-	template <class TArg,class ... FTypes> ExFuture<ThreadPool,TArg>  bulk(ExFuture<ThreadPool,TArg> fut, FTypes ... functions)
+    */
+	/*template <class TArg,class ... FTypes> ExFuture<ThreadPool,TArg>  bulk(ExFuture<ThreadPool,TArg> fut, FTypes ... functions)
     {
         ExFuture<ThreadPool,TArg> result(fut.ex);
         typedef typename ExFuture<ThreadPool,TArg>::ValueType  ValueType;
@@ -91,11 +120,12 @@ namespace execution
 //tengo un problema importante aquí pasando el input, que internamente el execute ahce copia
 
                 //auto barrier = fut.ex.getPool().lock()->execute(exopts,std::ref(input),std::forward<FTypes>(std::get<FTypes>(fs))...);
-               /* creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
+                creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
                 cómo crear tatnas lambdas como functiones?
                 igual tengo que crea ralguna clase que capture el input por referencia y tenga un operator
-                el ThreadPool, tal y como está, no puede resolverlo*/
+                el ThreadPool, tal y como está, no puede resolverlo
                 auto barrier = fut.ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(std::get<FTypes>(fs))...);
+//                auto barrier = fut.ex.getPool().lock()->execute(exopts,mpl::createRef(input),std::forward<FTypes>(std::get<FTypes>(fs))...);
                 barrier.subscribeCallback(
                     //bind fut to avoid destroying it
                     std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([fut,result](const ::parallelism::BarrierData& ) mutable
@@ -110,6 +140,7 @@ namespace execution
         
         return result;
     }
+    */
    
   
     typedef Executor<ThreadPool> ThreadPoolExecutor; //alias

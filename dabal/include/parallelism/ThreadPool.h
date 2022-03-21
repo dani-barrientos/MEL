@@ -91,7 +91,7 @@ namespace parallelism
 		* @note because this function doesn't wait for completion, input argument need to be bound and so copied
 		* to be able to provide it to the function when this is executed.
 		*/
-		template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, TArg&& arg,F&& func,FTypes ... functions)
+		template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, TArg&& arg,F&& func,FTypes&&... functions)
 		{
 
 		//@todo	tengo que resolver aqui el tema de no bindear el arg..
@@ -126,7 +126,7 @@ namespace parallelism
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func,output,arg](uint64_t, Process*) mutable
+                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
                    {
                        func(arg);
                        output.set();

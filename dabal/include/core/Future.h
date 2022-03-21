@@ -381,6 +381,8 @@ namespace core
 				int result = -1;
 				if ( mState != NOTAVAILABLE)
 				{
+					//in reality, this shouldn't be necessary and all callbacks should be unsubscribed always, because the Future only can trigger it
+					//once
 					continueSubscription = (f(mValue) != ::core::ECallbackResult::UNSUBSCRIBE );
 				}
 				if ( continueSubscription)
@@ -536,7 +538,16 @@ namespace core
 			{
 				getData().assign(std::move(val));
 			}
-			
+			/**
+			 * @brief Subscribe callback to be executed when future is ready (valid or error)
+			 * @warning Usually callback is executed in the context of the thread doing setValue, but if Future is already ready
+			 * callback will be executed in the context of the thread doing subscription. In general, for this and more reasons, callbacks responses 
+			 * should be done buy launchin a task, so decoupliing totally the diferent tasks
+			 * 
+			 * @tparam F 
+			 * @param f 
+			 * @return auto 
+			 */
 			template <class F> auto subscribeCallback(F&& f) const						
 			{
 				//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
@@ -685,7 +696,7 @@ namespace core
 				return (mWaitResult == ::core::EWaitError::FUTURE_WAIT_OK)?mFut.getValue().isValid():false;
 			}
 			typename core::Future<T,E>::ValueType::CReturnType value() const{ return mFut.getValue().value();}
-			typename core::Future<T,E>::ValueType::CReturnType value(){ return mFut.getValue().value();}
+			typename core::Future<T,E>::ValueType::ReturnType value(){ return mFut.getValue().value();}
 			const E& error() const{ 
 				switch (mWaitResult)
 				{               

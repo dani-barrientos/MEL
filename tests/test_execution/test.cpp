@@ -142,54 +142,60 @@ int _testDebug(tests::BaseTest* test)
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	{
-		TestClass p(test);
-		p.val = 2;
-		Future<TestClass&> fut(p);
-		//fut.setValue(p);
-		//fut.getValue().value().val = 10;
-		text::info("{}",fut.getValue().value().val);
-		text::info("{}",p.val);
-		/*auto kk = execution::launch(ex,[](auto& v) -> vector<int>&
-		{		
-			v[1] = 4;
-			return v; 
-		},vec);*/
+		vector<int> vec{1,2,3};
+		// auto fut = execution::launch(exr,[](auto& v) //-> vector<int>
+		// {		
+		// 	v[1] = 4;
+		// 	return v; 
+		// },std::ref(vec)); //qué jodí ahora???
+		// auto kk = core::waitForFutureThread(fut);
+		//auto& vec2 = kk.value();
+		text::info("DEBUG");
 	}
 	{
-		vector<int> vec = {1,2,3};
-		// auto kk0 = execution::launch(ex,[]()
-		// {
-		// });
-		auto kk = execution::next(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v) -> vector<int>&
-		{		
-			v.value()[1] = 4;
-			return v.value();
-
-		});
-		//ESTO TAMBIEn
-		// auto kk = execution::launch(ex,[](vector<int>& v) -> vector<int>&
-		// {		
-		// 	//v[1] = 4;
-		// 	return v; 
-		// },std::ref(vec));
-		// auto kk2 = execution::next(kk,[](auto& v)
-		// {
-		// 	tasking::Process::wait(1000);
-		// 	if ( v.isValid())
-		// 	{
-		// 		text::info("{}",v.value()[1]);
-		// 		v.value()[1] = 9;
-		// 		//text::info("{}",v.value());
-		// 	}else
-		// 	{
-		// 		text::error(v.error().errorMsg);
-		// 	}
-		// });
-				
-		//core::waitForFutureThread(kk2);
-		//Thread::sleep(200000);
-		text::info("Val = {}",vec[1]);
+		text::info("DEBUG");
+		auto th1 = ThreadRunnable::create(true);	
+		execution::Executor<Runnable> exr2(th1);
+		auto p = TestClass(10,test) ;
+		// auto fut = 	execution::inmediate(
+		// 	execution::transfer(
+		// 	execution::start(exr),exr2),p
+		// );
 		
+		 
+		//auto fut = execution::start(exr) | execution::inmediate(p);		
+		// auto fut2 = execution::loop(fut,0,10,[](int idx,auto& v)
+		// {
+		// 	v.value().val = 7;
+		// });
+		auto fut = execution::start(exr) | execution::transfer(extp) | execution::inmediate(std::ref(p))  
+		 | execution::next([](auto& v)->TestClass&
+		 {
+			 v.value().val = 11;
+			return v.value();
+		 }) | execution::loop(0,10,[](int idx,auto& v)
+		{
+			v.value().val = 7;
+		}) | execution::bulk(
+			[](auto& v)
+			{
+				text::info("Bulk 1");
+				v.value().val = 8;
+			},
+			[](auto& v)
+			{
+				text::info("Bulk 2");
+				v.value().val = 9;
+			}
+		);
+		auto kk = core::waitForFutureThread(fut);
+				
+		text::info("Val = {}",kk.value().val);
+		text::info("Original Val = {}",p.val);
+		kk.value().val = 12;
+		text::info("(again) Val = {}",kk.value().val);
+		text::info("Original (again) Val = {}",p.val);
+		text::info("DEBUG");
 	}
 
 	
@@ -413,9 +419,12 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
 		{
+		auto th2 = ThreadRunnable::create();
+		execution::Executor<Runnable> ex2(th2);
 		//need move result to res1 because input future is temporary
 		auto res1 = tasking::waitForFutureMThread(
 			execution::next(
+			execution::transfer(
 			execution::bulk(
 				execution::inmediate(execution::start(ex),TestClass(initVal,test,ll))
 			,
@@ -430,6 +439,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				text::info("Bulk 2");
 				v.value().val = 12; //race condition
 			}),
+			ex2),
 			[test,ll](auto& v) -> TestClass&
 			{
 				if (v.isValid() )
@@ -460,6 +470,8 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		ss << "Original Val = "<<initVal<<'\n';
 		test->addTextToBuffer(ss.str(),ll); 
 		test->checkOccurrences("TestClass constructor",1,tests::BaseTest::LogLevel::Info);		
+
+	//aquí para threadpool me da copias innecesarias
 		test->checkOccurrences("TestClass copy",0,tests::BaseTest::LogLevel::Info);							
 		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
 		//now using reference
@@ -691,7 +703,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		},1
 		),
 		//next
-		[](auto& v)->vector<TestClass>  //need to return a copy becasue original vector is temporary
+		[](auto& v)->vector<TestClass>  //need to return a copy because original vector is temporary
 		{					
 			if (v.isValid() )
 			{					
@@ -734,7 +746,7 @@ int _testLaunch( tests::BaseTest* test)
 			auto th1 = ThreadRunnable::create(true);			
 			execution::Executor<Runnable> exr(th1);
 			exr.setOpts({true,false,false});
-			_basicTests(exr,th1.get(),test);
+			//_basicTests(exr,th1.get(),test);
 		}
 		{
 			auto th1 = ThreadRunnable::create(true);						
@@ -743,7 +755,7 @@ int _testLaunch( tests::BaseTest* test)
 			parallelism::ThreadPool::ExecutionOpts exopts;
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
-			//_basicTests(extp,th1.get(),test);
+		//	_basicTests(extp,th1.get(),test);
 		}
 		
 	/*	//---- basic checks
