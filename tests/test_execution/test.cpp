@@ -15,6 +15,8 @@ using tasking::Process;
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <vector>
+using std::vector;
 
 const std::string TestExecution::TEST_NAME = "execution";
 
