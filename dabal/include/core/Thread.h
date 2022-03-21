@@ -245,12 +245,13 @@ namespace core
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
 				int evId = f.subscribeCallback(
-					std::function<::core::ECallbackResult( const typename futT::ValueType&)>([this](const typename futT::ValueType& ) 
+					std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
 					{
 						mEvent.set();
 					//   spdlog::debug("Event was set for Thread {}",threadid);
 						return ::core::ECallbackResult::UNSUBSCRIBE; 
 					}));
+					
 				
                 eventresult = mEvent.wait(msecs); 
 				f.unsubscribeCallback(evId);
