@@ -142,18 +142,25 @@ int _testDebug(tests::BaseTest* test)
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	{
+		text::info("DEBUG");
 		vector<int> vec{1,2,3};
-		// auto fut = execution::launch(exr,[](auto& v) //-> vector<int>
-		// {		
-		// 	v[1] = 4;
-		// 	return v; 
-		// },std::ref(vec)); //qué jodí ahora???
-		// auto kk = core::waitForFutureThread(fut);
-		//auto& vec2 = kk.value();
+		text::info("Initial v[1] = {}",vec[1]);
+		auto fut = execution::launch(extp,[](vector<int>& v) -> vector<int>&
+		{		
+			v[1] = 4;
+			return v; 
+		},std::ref(vec));
+		//},vec); //esto funciona
+		auto kk = core::waitForFutureThread(fut);
+		text::info("End v[1] = {}",vec[1]);
+		text::info("End result[1] = {}",kk.value()[1]);
+		kk.value()[1] = 10;
+		text::info("new change v[1] = {}",vec[1]);
+		text::info("new change result[1] = {}",kk.value()[1]);
+		
 		text::info("DEBUG");
 	}
-	{
-		text::info("DEBUG");
+	{		
 		auto th1 = ThreadRunnable::create(true);	
 		execution::Executor<Runnable> exr2(th1);
 		auto p = TestClass(10,test) ;
@@ -161,14 +168,12 @@ int _testDebug(tests::BaseTest* test)
 		// 	execution::transfer(
 		// 	execution::start(exr),exr2),p
 		// );
-		
-		 
-		//auto fut = execution::start(exr) | execution::inmediate(p);		
-		// auto fut2 = execution::loop(fut,0,10,[](int idx,auto& v)
-		// {
-		// 	v.value().val = 7;
-		// });
-		auto fut = execution::start(exr) | execution::transfer(extp) | execution::inmediate(std::ref(p))  
+		text::info("DEBUG");
+		core::waitForFutureThread(execution::inmediate(execution::start(exr),p)); //@todo esto funciona
+		text::info("DEBUG");
+		core::waitForFutureThread(execution::start(exr) | execution::inmediate(p));
+		text::info("DEBUG");
+		auto fut = execution::start(exr) | /*execution::transfer(extp) | */execution::inmediate(std::ref(p))  
 		 | execution::next([](auto& v)->TestClass&
 		 {
 			 v.value().val = 11;
@@ -419,6 +424,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
 		{
+			
 		auto th2 = ThreadRunnable::create();
 		execution::Executor<Runnable> ex2(th2);
 		//need move result to res1 because input future is temporary
@@ -477,7 +483,43 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		//now using reference
 		test->clearTextBuffer();
 		pp.logLevel = ll;
-		text::info("Simple functor chaining using reference. No copies should be done");
+		text::info("Simple functor chaining using reference.  No copies should be done. Using operator | mechanism from now");
+		/*
+			TODO meter el launch en los tests
+vector<int> vec{1,2,3};
+		text::info("Initial v[1] = {}",vec[1]);
+		auto fut = execution::launch(extp,[](vector<int>& v) -> vector<int>&
+		{		
+			v[1] = 4;
+			return v; 
+		},std::ref(vec));
+		//},vec); //esto funciona
+		auto kk = core::waitForFutureThread(fut);
+		text::info("End v[1] = {}",vec[1]);
+		text::info("End result[1] = {}",kk.value()[1]);
+		kk.value()[1] = 10;
+		text::info("new change v[1] = {}",vec[1]);
+		text::info("new change result[1] = {}",kk.value()[1]);
+		*/
+		execution::launch(ex,[](TestClass& tc) -> TestClass&
+		{
+			tc.val = 7;
+			return tc;
+			//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
+		},TestClass(0,test)) | execution::next([test,ll](auto& v)
+		{
+			if (v.isValid() )
+			{					
+				std::stringstream ss;
+				ss << "Val = "<<v.value().val<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+				//text::info("Val = {}",v.value().val);
+				v.value().val = 10;
+			}
+			else
+				text::info("Error = {}",v.error().errorMsg);					
+		});	
+//---
 		auto kk = execution::launch(ex,[]{
 			return 7;
 			//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");

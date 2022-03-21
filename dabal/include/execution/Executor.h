@@ -100,8 +100,10 @@ namespace execution
     {
         template <class TRet> struct ApplyInmediate
         {
-            ApplyInmediate(TRet&& a):arg(std::forward<TRet>(a)){}
-            ApplyInmediate(const TRet& a):arg(a){}
+             template <class T>
+             ApplyInmediate(T&& a):arg(std::forward<T>(a)){}
+            // ApplyInmediate(TRet&& a):arg(std::move(a)){}
+            // ApplyInmediate(const TRet& a):arg(a){}
             TRet arg;
             template <class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TRet> operator()(ExFuture<ExecutorAgent,TArg> fut)
             {

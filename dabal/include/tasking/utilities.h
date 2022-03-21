@@ -101,7 +101,7 @@ namespace tasking
                 {
                 //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
                     evId = f.subscribeCallback(
-                    std::function<::core::ECallbackResult( const typename futT::ValueType&)>([this](const typename futT::ValueType& ) 
+                    std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
                     {
                         mEvent.set();
                      //  spdlog::debug("Event was set for Thread {}");
