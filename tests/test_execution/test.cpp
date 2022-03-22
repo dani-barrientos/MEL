@@ -144,21 +144,32 @@ int _testDebug(tests::BaseTest* test)
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	{
+		int a = 6;
+		Future<int&> f1;
+		f1.setValue(a);
+		//f1.setValue(10); mismo problema que el del launch, pero es normal.
 		text::info("DEBUG");
 		vector<int> vec{1,2,3};
 		text::info("Initial v[1] = {}",vec[1]);
-		auto fut = execution::launch(extp,[](vector<int>& v) -> vector<int>&
+
+/*	ya sé cual es el problema. que con el launch a pelo, en este caso bindea con una referencai
+	pero en algún momento hace copia->yo creo que el bind con ref no funciona
+	al usar el inmediate como esa ref se gestiona con un future de por medio y tal... no lo entiendo bien, pero bueno
+	segun la doc, el bind siempre copia o mueve, así que no bindea por referencia
+lo que ocurrirá es que entonces el contenido no es referencia pero el launch si,entonces no cuadra al asgianr al future
+*/
+		auto fut = execution::launch(exr,[](vector<int> v)// -> vector<int>&
 		{		
 			v[1] = 4;
-			return v; 
+			//return v; 
 		},std::ref(vec));
-		//},vec); //esto funciona
+		//},vec); 
 		auto kk = core::waitForFutureThread(fut);
-		text::info("End v[1] = {}",vec[1]);
-		text::info("End result[1] = {}",kk.value()[1]);
-		kk.value()[1] = 10;
-		text::info("new change v[1] = {}",vec[1]);
-		text::info("new change result[1] = {}",kk.value()[1]);
+		// text::info("End v[1] = {}",vec[1]);
+		// text::info("End result[1] = {}",kk.value()[1]);
+		// kk.value()[1] = 10;
+		// text::info("new change v[1] = {}",vec[1]);
+		// text::info("new change result[1] = {}",kk.value()[1]);
 		
 		text::info("DEBUG");
 	}
@@ -171,9 +182,19 @@ int _testDebug(tests::BaseTest* test)
 		// 	execution::start(exr),exr2),p
 		// );
 		text::info("DEBUG");
-		core::waitForFutureThread(execution::inmediate(execution::start(exr),p)); //@todo esto funciona
+		const TestClass p2 = TestClass(10,test);
+		core::waitForFutureThread(execution::inmediate(execution::start(exr),p2));
 		text::info("DEBUG");
-		core::waitForFutureThread(execution::start(exr) | execution::inmediate(p));
+		auto lamb = [&p,test,exr]()
+		{
+			// execution::launch(exr,[](TestClass& tc) -> TestClass&
+			// {
+			// 	tc.val = 7;
+			// 	return tc;
+			// 	//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
+			// },p);
+		};
+		
 		text::info("DEBUG");
 		auto fut = execution::start(exr) | /*execution::transfer(extp) | */execution::inmediate(std::ref(p))  
 		 | execution::next([](auto& v)->TestClass&
@@ -419,7 +440,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	TestClass pp(8,test);
 	vector<TestClass> vec;
 	//use a task to make it more complex
-	th->fireAndForget([ex,&event,test,&pp,&vec]
+	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
 	{
 		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
 		text::info("Simple functor chaining");
@@ -485,7 +506,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		//now using reference
 		test->clearTextBuffer();
 		pp.logLevel = ll;
-		text::info("Simple functor chaining using reference.  No copies should be done. Using operator | mechanism from now");
+		text::info("Simple functor chaining using reference.  Using operator | mechanism from now");
 		/*
 			TODO meter el launch en los tests
 vector<int> vec{1,2,3};
@@ -503,12 +524,13 @@ vector<int> vec{1,2,3};
 		text::info("new change v[1] = {}",vec[1]);
 		text::info("new change result[1] = {}",kk.value()[1]);
 		*/
+		auto res2 = tasking::waitForFutureMThread(
 		execution::launch(ex,[](TestClass& tc) -> TestClass&
 		{
 			tc.val = 7;
 			return tc;
-			//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
-		},TestClass(0,test)) | execution::next([test,ll](auto& v)
+			//throw std::runtime_error("chiquilin");
+		},std::ref(pp)) | execution::next([test,ll](auto& v) -> TestClass&
 		{
 			if (v.isValid() )
 			{					
@@ -517,40 +539,22 @@ vector<int> vec{1,2,3};
 				test->addTextToBuffer(ss.str(),ll); 
 				//text::info("Val = {}",v.value().val);
 				v.value().val = 10;
+				return v.value();
 			}
 			else
-				text::info("Error = {}",v.error().errorMsg);					
-		});	
-//---
-		auto kk = execution::launch(ex,[]{
-			return 7;
-			//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
-		});			
-		auto kk0 = execution::inmediate(kk,std::ref(pp));
-		auto kk1 = execution::next(kk0,[test,ll](auto& v)
-		{
-			if (v.isValid() )
-			{					
-				std::stringstream ss;
-				ss << "Val = "<<v.value().val<<'\n';
-				test->addTextToBuffer(ss.str(),ll); 
-				//text::info("Val = {}",v.value().val);
-				v.value().val = 10;
+			{
+				throw std::runtime_error( v.error().errorMsg );
 			}
-			else
-				text::info("Error = {}",v.error().errorMsg);					
-		});			
-		//can get reference to result because input Future is not temporary
-		const auto& res2 = tasking::waitForFutureMThread(kk1);		
+		}));	
 		if (res2.isValid() )
 		{
 			//text::info("kk0 Val = {}",kk0.getValue().value().val);
 			std::stringstream ss;
-			ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+			ss << "Result Val = "<<res2.value().val<<'\n';
 			test->addTextToBuffer(ss.str(),ll); 
 		}
 		else
-			text::info("Error = {}",kk0.getValue().error().errorMsg);				
+			text::info("Error = {}",res2.error().errorMsg);				
 		ss.str(""s);
 		ss << "Original Val = "<<pp.val<<'\n';
 		test->addTextToBuffer(ss.str(),ll); 
@@ -564,6 +568,82 @@ vector<int> vec{1,2,3};
 		#define LOOP_SIZE 100
 		#define INITIAL_VALUE 2
 		auto kk2 = 
+			execution::start(ex) | execution::inmediate(std::ref(vec)) |
+			execution::next([test,ll](auto& v)->vector<TestClass>&
+		{				
+			//fill de vector with a simple case for the result to be predecible
+			//I don't want out to log the initial constructions, oncly constructons and after this function
+			auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+			v.value().resize(LOOP_SIZE,t);	
+			for(auto& elem:v.value())
+			{
+				elem.logLevel = ll;
+				elem.addToBuffer = true;
+			}
+			return v.value();
+		}
+		) | execution::next([](auto& v)->vector<TestClass>&
+		{
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;						
+			}
+			else
+				text::info("Error = {}",v.error().errorMsg);	
+			return v.value();	
+		}) | execution::bulk([](auto& v)			
+		{					
+			//multiply by 2 the first half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t endIdx = vec.size()/2;	
+				for(size_t i = 0; i < endIdx;++i )
+				{
+					vec[i].val = vec[i].val*2.f;	
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);					
+		},
+		[](auto& v)			
+		{
+			//multiply by 3 the second half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t startIdx = vec.size()/2;
+				for(size_t i = startIdx; i < vec.size();++i )
+				{
+					vec[i].val = vec[i].val*3.f;
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);										
+		}) | execution::loop(
+			0,LOOP_SIZE,
+			[](int idx,auto& v)
+			{
+				if ( v.isValid())
+				{
+					v.value()[idx].val+=5.f;
+				}
+			},1
+		)  | execution::next(
+			[](auto& v)->vector<TestClass>&
+			{					
+				if (v.isValid() )
+				{					
+					for(auto& elem:v.value())
+						++elem.val;		
+				}	
+				return v.value();				
+			}
+		);
+// seguir revisando resultados. igual tengo que mostrar de otra forma cuando hay error
+// para no sacar todo el buffer??
+		/*
 		execution::next(
 		execution::loop(
 		execution::bulk(execution::next(
@@ -644,7 +724,7 @@ vector<int> vec{1,2,3};
 					++elem.val;		
 			}	
 			return v.value();				
-		});
+		});*/
 			//- generar un error luego
 		auto res3 = tasking::waitForFutureMThread(kk2);		
 		
@@ -790,7 +870,7 @@ int _testLaunch( tests::BaseTest* test)
 			auto th1 = ThreadRunnable::create(true);			
 			execution::Executor<Runnable> exr(th1);
 			exr.setOpts({true,false,false});
-			//_basicTests(exr,th1.get(),test);
+			_basicTests(exr,th1.get(),test);
 		}
 		{
 			auto th1 = ThreadRunnable::create(true);						
@@ -799,7 +879,7 @@ int _testLaunch( tests::BaseTest* test)
 			parallelism::ThreadPool::ExecutionOpts exopts;
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
-		//	_basicTests(extp,th1.get(),test);
+			_basicTests(extp,th1.get(),test);
 		}
 		
 	/*	//---- basic checks

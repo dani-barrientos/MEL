@@ -169,34 +169,6 @@ namespace core
 			}
 	};
 
-	// template <class ErrorType> class FutureValue<void,ErrorType> : public std::optional<ErrorType>
-	// {
-	// 	typedef std::optional<ErrorType> Base;
-	// 	public:
-	// 		FutureValue(){}
-	// 		FutureValue(const ErrorType& err):Base(err){}
-	// 		FutureValue(ErrorType&& err):Base(std::move(err)){}
-	// 		/**
-	// 		 * @brief get if has valid value
-	// 		 */
-	// 		bool isValid() const{ return !Base::has_value();}
-	// 		problema, tengo que tener el Noavailabe->tengo que usar variant
-	// 		bool isAvailable() const{ return Base::index() != 0;}
-	// 		// wrapper for optional::value().  Same rules as std::Get, so bad_optional_access is thrown if not a valid value			
-	// 		const ErrorType& error() const
-	// 		{
-	// 			return Base::value();
-	// 		}			
-	// 		auto& operator=(const ErrorType& v){
-	// 			Base::operator=(v);
-	// 			return *this;
-	// 		}
-	// 		auto& operator=(ErrorType&& v){
-	// 			Base::operator=(std::move(v));
-	// 			return *this;
-	// 		}
-	// };
-
 	enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
 	///@cond HIDDEN_SYMBOLS
 	namespace _private

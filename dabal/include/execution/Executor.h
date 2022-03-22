@@ -102,10 +102,8 @@ namespace execution
         {
              template <class T>
              ApplyInmediate(T&& a):arg(std::forward<T>(a)){}
-            // ApplyInmediate(TRet&& a):arg(std::move(a)){}
-            // ApplyInmediate(const TRet& a):arg(a){}
             TRet arg;
-            template <class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TRet> operator()(ExFuture<ExecutorAgent,TArg> fut)
+            template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> fut)
             {
                 return inmediate(fut,std::forward<TRet>(arg));
             }
@@ -159,7 +157,7 @@ namespace execution
         
     }
     template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>> launch( Executor<ExecutorAgent> ex,F&& f)
-    {
+    {        
         typedef std::invoke_result_t<F> TRet;
         ExFuture<ExecutorAgent,TRet> result(ex);
         ex. template launch<TRet>(std::forward<F>(f),result);
@@ -167,7 +165,15 @@ namespace execution
     }
     template <class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg>> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
     {
+        /*
+        @todo I need to mature this idea. It's not so transparent to add reference check
+        but same rules as for "inmediate" should be followed
+        static_assert( not std::is_lvalue_reference<TArg>::value ||
+            std::is_const< typename std::remove_reference<TArg>::type>::value,"execution::launch. Use std::ref() to pass argument as reference");
+            */
+
         typedef std::invoke_result_t<F,TArg> TRet;
+
         ExFuture<ExecutorAgent,TRet> result(ex);
         ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
         return result;
@@ -190,41 +196,36 @@ namespace execution
      * @brief Produces an inmediate value in the context of the given ExFuture executor as a response to input fut completion
      * If input fut has error, the this error is forwarded to inmediate result
      */
-    template <class ExecutorAgent,class TArg,class TRet> ExFuture<ExecutorAgent,TRet> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet&& arg)
+    template <class ExecutorAgent,class TArg,class TRet> 
+        ExFuture<ExecutorAgent,typename std::remove_cv<typename std::remove_reference<TRet>::type>::type> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet&& arg)
     {
+        static_assert( not std::is_lvalue_reference<TRet>::value ||
+                        std::is_const< typename std::remove_reference<TRet>::type>::value,"execution::inmediate. Use std::ref() to pass argument as reference");
+        using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
         typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
-        ExFuture<ExecutorAgent,TRet> result(fut.ex);
+        ExFuture<ExecutorAgent,NewType> result(fut.ex);
         fut.subscribeCallback(
             std::function<::core::ECallbackResult( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
-            {
-                //do a launch to preserve Executor thread because this callback can be raised from calling thread
-                //if future is already available               
-                /*
-    template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet> output) const
-
-source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg> arg)->TRet
-                */
+            {                
+                 
+                 //launch tasks as response for callback for two reasons: manage the case when Future is already available when checked, so callback is trigered
+                 //on calling thread and to decoplue tasks and no staturate execution resoruce and independence tasks
+                 
                 if ( input.isValid() )
-                {
-                    //@todo arreglar esto para que se haga con un launch
-                     /*ex. template launch<TRet>([](TRet&& arg)
+                {                    
+                    using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
+                    fut.ex. template launch<NewType>([]( NewType arg)
                     {
-                        return std::forward<TRet>(arg);
-                    },std::forward<TRet>(arg),result);   */
-                    // fut.ex. template launch<TRet>([](auto arg)
-                    // {
-                    //     //return std::forward<TRet>(arg);
-                    //     return arg;
-                    // },std::forward<TRet>(arg),result);  
-                    result.setValue(std::forward<TRet>(arg));
+                       return arg;
+                    },arg,result);                                                           
                 }
                 else
                 {
-                   /* ex. template launch<TRet>([](ExFuture<ExecutorAgent,TArg> fut)
+                    //set error as task in executor
+                    launch(fut.ex,[result,err = input.error()]( ) mutable
                     {
-                        fut.setError(input.error());
-                    },fut);  */
-                    result.setError(input.error()); //@todo pasar a launch
+                       result.setError(std::move(err));
+                    });
                 }
                 return ::core::ECallbackResult::UNSUBSCRIBE; 
             })
@@ -379,7 +380,6 @@ source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,T
     //@brief version for use with operator |
     template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
     {
-
         return _private::ApplyInmediate<TRet>(std::forward<TRet>(arg));
     }
     //@brief version for use with operator |
