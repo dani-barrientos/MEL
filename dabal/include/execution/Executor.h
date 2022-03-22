@@ -171,7 +171,6 @@ namespace execution
         static_assert( !std::is_lvalue_reference<TArg>::value ||
             std::is_const< typename std::remove_reference<TArg>::type>::value,"execution::launch. Use std::ref() to pass argument as reference");
             */
-
         typedef std::invoke_result_t<F,TArg> TRet;
 
         ExFuture<ExecutorAgent,TRet> result(ex);
@@ -206,18 +205,22 @@ namespace execution
         ExFuture<ExecutorAgent,NewType> result(fut.ex);
         fut.subscribeCallback(
             std::function<::core::ECallbackResult( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
-            {                
-                 
+            {                                 
                  //launch tasks as response for callback for two reasons: manage the case when Future is already available when checked, so callback is trigered
-                 //on calling thread and to decoplue tasks and no staturate execution resoruce and independence tasks
-                 
+                 //on calling thread and to decouple tasks and no staturate execution resoruce and independence tasks
+                 //hasta aquí las copias tienen sentido
                 if ( input.isValid() )
                 {                    
-                    using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
-                    fut.ex. template launch<NewType>([]( NewType arg)
+                    // using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
+                    // fut.ex. template launch<NewType>([]( TRet&& arg) mutable
+                    // {
+                    //    return arg;
+                    // },std::forward<TRet>(arg),result);                                                           
+                    //otra forma
+                    launch(fut.ex,[result,arg = std::forward<TRet>(arg)]() mutable
                     {
-                       return arg;
-                    },arg,result);                                                           
+                        result.setValue(std::forward<TRet>(arg));                        
+                    });
                 }
                 else
                 {
@@ -247,8 +250,6 @@ namespace execution
             //need to bind de source future to not get lost and input pointing to unknown place                
             std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
             {
-                //@todo menuda cacho duda: tiene sentido esto o debería ya directamente ejecutar la tarea?
-                //el problema si lo hago directamente es que ese hilo queda bloqueado hasta que todo termine, y no creo que mole..
                 source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg> arg)->TRet
                 {
                     return f(arg.getValue());

@@ -7,7 +7,6 @@ using tasking::MThreadAttributtes;
 #include <iostream>
 #include <tasking/ProcessScheduler.h>
 #pragma optimize("",off)
-extern "C" void _checkMT(MThreadAttributtes*);
 extern "C" void _checkMicrothread(MThreadAttributtes*,uint64_t msegs,Process* p,void* _executePtr );
 extern "C" void _switchMT(MThreadAttributtes*);
 /*

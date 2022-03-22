@@ -133,29 +133,37 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	size_t s3 = sizeof(MThreadAttributtes);
 	text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 	
-		
-	// {
-	// 	auto th1 = ThreadRunnable::create();
-	// 	th1->post([th1](RUNNABLE_TASK_PARAMS)
-	// 	{
-	// 		//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
-	// 		text::debug("UNO");
-	// 		tasking::Process::wait(2500);
-	// 		text::debug("DOS");
-	// 		tasking::Process::wait(1000);
-	// 		return ::tasking::EGenericProcessResult::KILL;
-	// 	},Runnable::_killTrue,1000);
-	// }
-	// th1->post([](RUNNABLE_TASK_PARAMS)
-	// {
-	// 	tasking::Process::wait(100);
-	// 	std::cout << "TRES" << std::endl;
-	// 	tasking::Process::wait(2200);
-	// 	std::cout << "CUATRO" << std::endl;
-	// 	return ::tasking::EGenericProcessResult::CONTINUE;
-	// },true,700);
-	// Thread::sleep(120000);
-	// return 0;
+//		seguir pruebas para verificar nuevo formato microhilos. Y probar clang
+	{
+
+		auto th1 = ThreadRunnable::create();
+		Future<void> fut;
+		th1->post([fut](RUNNABLE_TASK_PARAMS) mutable
+		{
+			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
+			text::debug("UNO");
+			//tasking::Process::sleep();
+			tasking::Process::wait(2500);
+			text::debug("DOS");
+			tasking::Process::wait(5000);
+			text::debug("TRES");
+			//fut.setValue();
+			//return ::tasking::EGenericProcessResult::KILL;
+			return ::tasking::EGenericProcessResult::CONTINUE;
+		},Runnable::_killTrue,1000);
+		/*th1->post([](RUNNABLE_TASK_PARAMS)
+		{
+			tasking::Process::wait(100);
+			text::debug("CUATRO");
+			tasking::Process::wait(2200);
+			text::debug("CINCO");
+			return ::tasking::EGenericProcessResult::CONTINUE;
+		},Runnable::_killTrue,700);*/
+	//	core::waitForFutureThread(fut);
+		Thread::sleep(10000);		
+		text::info("HECHO");
+	}
+	return 0;
 
 	{
 		auto th1 = ThreadRunnable::create();

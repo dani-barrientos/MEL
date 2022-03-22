@@ -151,27 +151,71 @@ int _testDebug(tests::BaseTest* test)
 		text::info("DEBUG");
 		vector<int> vec{1,2,3};
 		text::info("Initial v[1] = {}",vec[1]);
-
-/*	ya sé cual es el problema. que con el launch a pelo, en este caso bindea con una referencai
-	pero en algún momento hace copia->yo creo que el bind con ref no funciona
-	al usar el inmediate como esa ref se gestiona con un future de por medio y tal... no lo entiendo bien, pero bueno
-	segun la doc, el bind siempre copia o mueve, así que no bindea por referencia
-lo que ocurrirá es que entonces el contenido no es referencia pero el launch si,entonces no cuadra al asgianr al future
-*/
-		auto fut = execution::launch(exr,[](vector<int> v)// -> vector<int>&
-		{		
-			v[1] = 4;
-			//return v; 
-		},std::ref(vec));
-		//},vec); 
-		auto kk = core::waitForFutureThread(fut);
-		// text::info("End v[1] = {}",vec[1]);
-		// text::info("End result[1] = {}",kk.value()[1]);
-		// kk.value()[1] = 10;
-		// text::info("new change v[1] = {}",vec[1]);
-		// text::info("new change result[1] = {}",kk.value()[1]);
-		
-		text::info("DEBUG");
+		{
+			text::info("CON INMEDIATE");
+			constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+			constexpr int initVal = 8;		
+			auto fut= 
+				/*execution::launch(ex,[](TestClass& tc)->TestClass&{
+					return tc;
+				},std::ref(pp)) of course, this way we don't have copies
+				*/
+				execution::start(exr)
+				| execution::inmediate(TestClass(initVal,test,ll)) 	
+			/*| execution::bulk(
+					[](auto& v)
+					{
+	//					lo que veo que ocurre es que se está pasando por copia->¿es normal
+						text::info("Bulk 1");
+						v.value().val = 11;  //race condition
+					},
+					[](auto& v)
+					{
+						text::info("Bulk 2");
+						v.value().val = 12; //race condition
+					})  */
+			//	| execution::transfer(ex2)  //transfer execution to a different executor
+				/*| execution::next([test,ll](auto& v) -> TestClass&
+				{
+					if (v.isValid() )
+					{					
+						std::stringstream ss;
+						ss << "Val = "<<v.value().val<<'\n';
+						test->addTextToBuffer(ss.str(),ll); 
+						//text::info("Val = {}",v.value().val);
+						v.value().val = 10;
+					}
+					else
+						text::info("Error = {}",v.error().errorMsg);					
+					return v.value();
+				})**/;
+				//);
+			Thread::sleep(2000);
+			//demostrado la vuelta de esta funcion no genera copias (como era de esperar)
+			auto res1 = core::waitForFutureThread(fut);
+			//compruebo con next las copias
+			text::info("CON NEXT");
+			auto fut2= 
+				/*execution::launch(ex,[](TestClass& tc)->TestClass&{
+					return tc;
+				},std::ref(pp)) of course, this way we don't have copies
+				*/
+				execution::start(exr)
+				| execution::next([test,ll](const auto& v) 
+				{
+					return TestClass(initVal,test,ll);
+				});
+			Thread::sleep(2000);
+			auto res2 = core::waitForFutureThread(fut2);
+			text::info("CON LAUNCh");
+			auto fut3= 
+				execution::launch(exr,[test,initVal]()->TestClass{
+					return TestClass(initVal,test,ll);;
+				});
+			Thread::sleep(2000);
+			auto res3 = core::waitForFutureThread(fut3);
+			text::info("TERMINO");
+		}
 	}
 	{		
 		auto th1 = ThreadRunnable::create(true);	
@@ -459,7 +503,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			*/
 			execution::start(ex)
 			| execution::inmediate(TestClass(initVal,test,ll)) 	
-			| execution::bulk(
+		/*| execution::bulk(
 				[](auto& v)
 				{
 //					lo que veo que ocurre es que se está pasando por copia->¿es normal
@@ -470,7 +514,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				{
 					text::info("Bulk 2");
 					v.value().val = 12; //race condition
-				})  
+				})  */
 		//	| execution::transfer(ex2)  //transfer execution to a different executor
 			/*| execution::next([test,ll](auto& v) -> TestClass&
 			{
@@ -487,7 +531,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				return v.value();
 			})**/;
 			//);
+		tasking::Process::wait(10000);
+		//demostrado la vuelta de esta funcion no genera copias (como era de esperar)
 		auto res1 = tasking::waitForFutureMThread(fut);
+		
 		bool iv = res1.isValid();
 		if (res1.isValid() )
 		{

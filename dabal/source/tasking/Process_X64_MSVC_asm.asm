@@ -32,7 +32,7 @@
     EXTERN resizeStack:PROC
     ;EXTERN Process_execute:PROC
 
-;void _checkMicrothread(MThreadAttributtes*,uint64_t msegs);
+;void _checkMicrothread(MThreadAttributtes*,uint64_t msegs,void* executePtr);
 _checkMicrothread PROC
 
     mov rax,rcx; //save rcx because it will be modified later
@@ -101,13 +101,12 @@ _checkMicrothread PROC
     continueExecuting_1:
     mov rcx,rax
     sub rsp,32 ;space for arguments, as defined by calling convention in MSVC
-    mov r15,0
+    xor r15,r15
     ;check alignment
     test rsp,0fh
     jz callfunction
     mov r15,8
-    sub rsp,8 ;//no entiendo por qué tengo esto. la cuestion es que debo guardar el offset que sume..
-    
+    sub rsp,8 ;     //align
 callfunction:
     mov rcx,r8
     call r9
@@ -193,49 +192,5 @@ callfunction:
     ldmxcsr DWORD PTR [r12+Attributes.RegMXCSR]; 
     mov r12,[r12+Attributes.Reg12] 
     ret
-_switchMT ENDP
-
- ; _checkMT  PROC
- 
-;   ;save registers 
-; ;  tengo que encontrar forma de no tener que redefinir el struct    
-;     mov rax,rcx; //save rcx because it will be modified later
-;     mov [rcx+Attributes.RegBX],rbx;
-;     mov [rcx+Attributes.Reg12],r12;
-;     mov [rcx+Attributes.Reg13],r13;
-;     mov [rcx+Attributes.Reg14],r14;
-;     mov [rcx+Attributes.Reg15],r15;
-;     mov [rcx+Attributes.IniRSP],rsp;
-    
-;  ;@todo   creo que esto es un problema porque al llamarme aquí cambia el bp, así que creo que tendré que llamar con un jmp o similar
-;     ;mov [rcx+Attributes.RegBP],rbp; 
-;     mov [rcx+Attributes.RegBP],rsp ; COMO PARECE QUE EL RBP NO LO USA, VOY A USAR EL SP
-;     cmp BYTE PTR [rcx+Attributes.Switched],0
-;     je continueExecuting
-;     mov[rcx+Attributes.Switched],BYTE PTR 0
-;     std 
-;     mov ecx,[rax+Attributes.StackSize]
-;     shr ecx,3
-;     sub rsp,8
-;     mov rdi,rsp
-;     mov rsi,[rax+Attributes.StackEnd]
-;     sub rsi,8
-;     rep movsq
-;     mov rsp,rdi
-;     add rsp,8
-;     cld
-;     pop r15
-;     pop r14
-;     pop r13
-;     pop r12
-;     pop rdi
-;     pop rsi
-;     pop rbx
-;     pop rbp
-   
-;     continueExecuting:
- 
-;     ret 
-; _checkMT  ENDP
-
+_switchMT ENDP 
    END
