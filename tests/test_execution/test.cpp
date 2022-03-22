@@ -451,7 +451,63 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		auto th2 = ThreadRunnable::create();
 		execution::Executor<Runnable> ex2(th2);
 		//need move result to res1 because input future is temporary
-		auto res1 = tasking::waitForFutureMThread(
+		//auto res1 = tasking::waitForFutureMThread(
+		auto fut= 
+			/*execution::launch(ex,[](TestClass& tc)->TestClass&{
+				return tc;
+			},std::ref(pp)) of course, this way we don't have copies
+			*/
+			execution::start(ex)
+			| execution::inmediate(TestClass(initVal,test,ll)) 	
+			| execution::bulk(
+				[](auto& v)
+				{
+//					lo que veo que ocurre es que se está pasando por copia->¿es normal
+					text::info("Bulk 1");
+					v.value().val = 11;  //race condition
+				},
+				[](auto& v)
+				{
+					text::info("Bulk 2");
+					v.value().val = 12; //race condition
+				})  
+		//	| execution::transfer(ex2)  //transfer execution to a different executor
+			/*| execution::next([test,ll](auto& v) -> TestClass&
+			{
+				if (v.isValid() )
+				{					
+					std::stringstream ss;
+					ss << "Val = "<<v.value().val<<'\n';
+					test->addTextToBuffer(ss.str(),ll); 
+					//text::info("Val = {}",v.value().val);
+					v.value().val = 10;
+				}
+				else
+					text::info("Error = {}",v.error().errorMsg);					
+				return v.value();
+			})**/;
+			//);
+		auto res1 = tasking::waitForFutureMThread(fut);
+		bool iv = res1.isValid();
+		if (res1.isValid() )
+		{
+				std::stringstream ss;
+			// ss << "Finish Val = "<<res1.value().val<<'\n';
+				test->addTextToBuffer(ss.str(),ll); 
+		}
+		else
+			text::info("Error = {}",res1.error().errorMsg);				
+		}
+		std::stringstream ss;
+		ss << "Original Val = "<<initVal<<'\n';
+		test->addTextToBuffer(ss.str(),ll); 
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
+		//@todo aquí para threadpool me da copias innecesarias (VERIFICAR)
+		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+
+			/*
+			base form to do the same
 			execution::next(
 			execution::transfer(
 			execution::bulk(
@@ -468,7 +524,9 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				text::info("Bulk 2");
 				v.value().val = 12; //race condition
 			}),
-			ex2),
+			//transfer
+			ex2), 
+			//next
 			[test,ll](auto& v) -> TestClass&
 			{
 				if (v.isValid() )
@@ -483,26 +541,9 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 					text::info("Error = {}",v.error().errorMsg);					
 				return v.value();
 			})
-		);			
+		);	
+		*/				
 
-		bool iv = res1.isValid();
-		if (res1.isValid() )
-		{
-				std::stringstream ss;
-			// ss << "Finish Val = "<<res1.value().val<<'\n';
-				test->addTextToBuffer(ss.str(),ll); 
-		}
-		else
-			text::info("Error = {}",res1.error().errorMsg);				
-		}
-		std::stringstream ss;
-		ss << "Original Val = "<<initVal<<'\n';
-		test->addTextToBuffer(ss.str(),ll); 
-		test->checkOccurrences("TestClass constructor",1,tests::BaseTest::LogLevel::Info);		
-
-	//aquí para threadpool me da copias innecesarias
-		test->checkOccurrences("TestClass copy",0,tests::BaseTest::LogLevel::Info);							
-		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
 		//now using reference
 		test->clearTextBuffer();
 		pp.logLevel = ll;
@@ -559,9 +600,9 @@ vector<int> vec{1,2,3};
 		ss << "Original Val = "<<pp.val<<'\n';
 		test->addTextToBuffer(ss.str(),ll); 
 		
-		test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"));
+		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("Val = 10",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 		//now a little more complex test //TODO: meter al final un throw o algo así
 		text::info("A little more complex functor chaining using reference and parallel loops");
 		test->clearTextBuffer();
@@ -641,8 +682,6 @@ vector<int> vec{1,2,3};
 				return v.value();				
 			}
 		);
-// seguir revisando resultados. igual tengo que mostrar de otra forma cuando hay error
-// para no sacar todo el buffer??
 		/*
 		execution::next(
 		execution::loop(
@@ -728,8 +767,8 @@ vector<int> vec{1,2,3};
 			//- generar un error luego
 		auto res3 = tasking::waitForFutureMThread(kk2);		
 		
-		test->checkOccurrences("constructor",0,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("copy",0,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		ss.str(""s); //empty stream
 		ss<<"Valor vector: ";
 		for(const auto& v:vec)
@@ -747,8 +786,8 @@ vector<int> vec{1,2,3};
 		}
 		
 		
-		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		
 		text::info("Same process as the previous without using reference");
 		ss.str(""s); //empty stream
@@ -838,8 +877,8 @@ vector<int> vec{1,2,3};
 		}));
 		
 //@todo	deberían se 100 por el tamañao del vector->vale, es por la copia del res4->tengo que arreglar eso (lo dle waitforfuture)
-		test->checkOccurrences("constructor",LOOP_SIZE,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("copy",LOOP_SIZE,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("constructor",LOOP_SIZE,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",LOOP_SIZE,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		
 		if (!res4.isValid() )
 			text::info("Error = {}",res4.error().errorMsg);
@@ -853,8 +892,8 @@ vector<int> vec{1,2,3};
 			test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info); 
 		}
 						
-		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 						
 		event.set();				
 	});

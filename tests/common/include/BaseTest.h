@@ -44,7 +44,7 @@ namespace tests
              * @param userRegEx str will be treated as a regular expression
              * @return true if ok             
              */
-            bool checkOccurrences(string str,size_t n,LogLevel ll = LogLevel::None,bool useRegEx = false);
+            bool checkOccurrences(string str,size_t n,const char* fileName,int lineNumber,LogLevel ll = LogLevel::None ,bool useRegEx = false);
             
             /**
              * @brief Add value to add to dashboard

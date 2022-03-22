@@ -83,13 +83,13 @@ size_t BaseTest::findTextInBuffer(string str,bool useRegEx )
     }
     return result;
 }
-bool BaseTest::checkOccurrences(string str,size_t n,LogLevel ll,bool useRegEx)
+bool BaseTest::checkOccurrences(string str,size_t n,const char* fileName,int lineNumber,LogLevel ll, bool useRegEx)
 {
     size_t found;
     if ( (found = findTextInBuffer(str,useRegEx)) != n)
     {
         std::stringstream ss;
-        ss<<":text \""<<str<< "\" has been found "<<found <<" times, expected was "<<n; 
+        ss<<":text \""<<str<< "\" has been found "<<found <<" times, expected was "<<n <<" . File = "<<fileName<<':'<<lineNumber; 
         setFailed(ss.str());
         switch (ll)
         {

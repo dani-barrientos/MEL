@@ -8,19 +8,19 @@
  */
 namespace execution
 {        
-    //template <typename ExecutorAgent,typename ResultType,typename ErrorType = ::core::ErrorInfo> class ExFuture; predeclaration
+    template <typename ExecutorAgent,typename ResultType,typename ErrorType = ::core::ErrorInfo> class ExFuture;// predeclaration
     template <class ExecutorAgent> class Executor    
     {
         //mandatory interface to imlement in specializations
-        //template <class TRet,class F> void launch( F&& f,ExFuture<ExecutorAgent,TRet> output) const
-        //template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ExecutorAgent,TRet> output) const;
+        template <class TRet,class F> void launch( F&& f,ExFuture<ExecutorAgent,TRet> output) const;
+        template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ExecutorAgent,TRet> output) const;
         template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
     };
     /**
      * @brief Extension of core::Future to apply to executors
      *      
      */
-    template <typename ExecutorAgent,typename ResultType,typename ErrorType = ::core::ErrorInfo>
+    template <typename ExecutorAgent,typename ResultType,typename ErrorType>
 	class ExFuture : public Future<ResultType,ErrorType>
     {
         public:
@@ -168,7 +168,7 @@ namespace execution
         /*
         @todo I need to mature this idea. It's not so transparent to add reference check
         but same rules as for "inmediate" should be followed
-        static_assert( not std::is_lvalue_reference<TArg>::value ||
+        static_assert( !std::is_lvalue_reference<TArg>::value ||
             std::is_const< typename std::remove_reference<TArg>::type>::value,"execution::launch. Use std::ref() to pass argument as reference");
             */
 
@@ -199,7 +199,7 @@ namespace execution
     template <class ExecutorAgent,class TArg,class TRet> 
         ExFuture<ExecutorAgent,typename std::remove_cv<typename std::remove_reference<TRet>::type>::type> inmediate( ExFuture<ExecutorAgent,TArg> fut,TRet&& arg)
     {
-        static_assert( not std::is_lvalue_reference<TRet>::value ||
+        static_assert( !std::is_lvalue_reference<TRet>::value ||
                         std::is_const< typename std::remove_reference<TRet>::type>::value,"execution::inmediate. Use std::ref() to pass argument as reference");
         using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
         typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
