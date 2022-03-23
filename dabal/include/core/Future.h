@@ -478,7 +478,7 @@ namespace core
 			inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
 					
 		};
-		template <typename T,typename ErrorType>
+		template <typename T,typename ET>
 		class Future_Common : public Future_Base
 		{
 		protected:
@@ -499,7 +499,7 @@ namespace core
 				return *this;
 			};
 		public:
-			
+			typedef ET  ErrorType;			
 			inline  const typename FutureData<T,ErrorType>::ValueType& getValue() const{ return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
 			inline  typename FutureData<T,ErrorType>::ValueType& getValue() { return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
 			void assign( const typename FutureData<T,ErrorType>::ValueType& val)

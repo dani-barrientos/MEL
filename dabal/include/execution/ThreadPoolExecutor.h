@@ -63,6 +63,35 @@ namespace execution
         exopts.groupTasks = !getOpts().independentTasks;
         return ::parallelism::_for(getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );   
     }
+    namespace _private
+    {
+        template <class T> class ValueWrapper
+        {
+            typedef typename execution::ExFuture<ThreadPool,T> FutType;
+            public:
+                ValueWrapper(const FutType& fut):mFut(fut){}
+                ValueWrapper(FutType&& fut):mFut(std::move(fut)){}
+                ValueWrapper(ValueWrapper&& vw):mFut(std::move(vw.mFut)){}
+                ValueWrapper(const ValueWrapper& vw):mFut(vw.mFut){}
+                bool isValid() const{ return mFut.getValue().isValid();}
+                bool isAvailable() const{ return mFut.getValue().isVailable();}
+                // wrapper for std::get.  Same rules as std::Get, so bad_variant_access is thrown if not a valid value
+                typename FutType::ValueType::ReturnType value()
+                {
+                    return mFut.getValue().value();
+                }
+                typename FutType::ValueType::CReturnType value() const
+                {
+                    return mFut.getValue().value();
+                }
+                const typename FutType::ErrorType& error() const
+                {
+                    return mFut.getValue().error();
+                }
+            private:
+            FutType mFut;
+        };
+    }
     template <class TArg,class ... FTypes> ::parallelism::Barrier Executor<ThreadPool>::bulk(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions)
     {            
         ThreadPool::ExecutionOpts exopts;
@@ -78,9 +107,12 @@ namespace execution
         el ThreadPool, tal y como está, no puede resolverlo
 quien llama a esta funcion ya captura el future, por lo que podrái usar referencia ??
 */
-        return getPool().lock()->execute(exopts,fut.getValue(),std::forward<FTypes>(functions)...);
-    
-//        return getPool().lock()->execute(exopts,std::ref(fut.getValue()),std::forward<FTypes>(functions)...);
+        //return getPool().lock()->execute(exopts,fut.getValue(),std::forward<FTypes>(functions)...);
+        auto vw = _private::ValueWrapper<TArg>(fut);
+        return getPool().lock()->execute(exopts,vw,std::forward<FTypes>(functions)...);
+        //I have some issues with reference management and this next method i doesn't work. I think is because the auto& in parameter
+        //return getPool().lock()->execute(exopts,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
+
 
     }
 //                                     

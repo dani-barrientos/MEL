@@ -486,7 +486,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	//use a task to make it more complex
 	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
 	{
-		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
+		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
 		text::info("Simple functor chaining. using operator | from now");
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
@@ -548,7 +548,6 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			text::info("Error = {}",res1.error().errorMsg);				
 		}		
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
-		//@todo aquí para threadpool me da copias innecesarias (VERIFICAR)
 		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 
@@ -863,6 +862,7 @@ int _testLaunch( tests::BaseTest* test)
 			auto th1 = ThreadRunnable::create(true);			
 			execution::Executor<Runnable> exr(th1);
 			exr.setOpts({true,false,false});
+			text::info(" BasicTests with RunnableExecutor");
 			_basicTests(exr,th1.get(),test);
 		}
 		{
@@ -872,7 +872,8 @@ int _testLaunch( tests::BaseTest* test)
 			parallelism::ThreadPool::ExecutionOpts exopts;
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
-		//	_basicTests(extp,th1.get(),test);
+			text::info(" BasicTests with ThreadPoolExecutor");
+			_basicTests(extp,th1.get(),test);
 		}
 	}
 		
