@@ -36,18 +36,18 @@ static volatile void _checkMicrothread(MThreadAttributtes*,uint64_t msegs,Proces
      //@todo retomar esto
      //asm volatile("fnstcw (%P[v])(%%rax)"::[v] "i" (mFpcsrOFF));
      //asm volatile("stmxcsr (%P[v])(%%rax)"::[v] "i" (mMxcsrOFF));
-     asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF):"cc" );
+     asm volatile("cmpb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF));
      asm volatile("jz continueExecuting");
      asm volatile( "movb $0,(%P[v])(%%rax)"::[v] "i" (mSwitchedOFF));
      asm volatile( "std\n");
-     asm volatile( "mov (%P[v])(%%rax),%%ecx"::[v] "i" (mStackSizeOFF):"%ecx" );
+     asm volatile( "mov (%P[v])(%%rax),%%ecx"::[v] "i" (mStackSizeOFF));
      asm volatile( "shr $3,%ecx");
      asm volatile( "sub $8,%rsp" );
      asm volatile("mov %rsp,%rdi\n");
-     asm volatile("mov (%P[v])(%%rax),%%rsi"::[v] "i" (mStackEndOFF):"%rsi" );
+     asm volatile("mov (%P[v])(%%rax),%%rsi"::[v] "i" (mStackEndOFF) );
 
-     asm volatile("sub $8,%%rsi":::"cc" );
-     asm volatile("rep movsq":::"%rdi","%rsi");
+     asm volatile("sub $8,%rsi");
+     asm volatile("rep movsq");
      asm volatile("mov %rdi,%rsp");
      asm volatile("add $8,%rsp");
       //@todo pendiente de resovler esto. El tema está en vigilar el alineamiento,
@@ -66,7 +66,7 @@ static volatile void _checkMicrothread(MThreadAttributtes*,uint64_t msegs,Proces
     // _execute( msegs );
     asm volatile("mov %rax,%rdi");
     //check alignment
-    asm volatile("push %r15"); //is going to be modifiede
+    asm volatile("push %r15"); //is going to be modified
     asm volatile ("xor %r15,%r15");
     asm volatile("test $0xf,%rsp");
     asm volatile("jz callexecute");
@@ -95,8 +95,7 @@ static volatile void _switchMT(MThreadAttributtes*)
      "push %r14\n"
      "push %r15\n"                    
     );
-    //@todo pendiente de resovler esto. El tema está en vigilar el alineamiento,
-    //vigilarlo al llamar a resizeesto creo que ya no valestack
+    //@todo pendiente de resovler esto.    
     // asm volatile("sub $8,%rsp"); //space for fpcsr and mxcsr
     // asm volatile("stmxcsr (%rsp)\n" 
     // "fnstcw 4(%rsp)");
@@ -114,7 +113,7 @@ static volatile void _switchMT(MThreadAttributtes*)
     asm volatile("mov $8,%r15");
     asm volatile("sub $8,%rsp") ;
     asm volatile("callresize:");
-    asm volatile( "call resizeStack":::"memory");
+    asm volatile( "call resizeStack");
     asm volatile("add %r15,%rsp");
     asm volatile("mov %r13,%rcx");
     asm volatile("mov %r14,%rsi");
@@ -122,8 +121,8 @@ static volatile void _switchMT(MThreadAttributtes*)
     asm volatile("std\n"
                 "shr $3,%rcx");
     asm volatile("mov (%P[v])(%%r12),%%rdi"::[v] "i" (mStackEndOFF) );
-    asm volatile("sub $8,%%rdi":::"cc");
-    asm volatile("rep movsq":::"%rdi","%rsi" );
+    asm volatile("sub $8,%rdi");
+    asm volatile("rep movsq");
     asm volatile("cld");
 
     asm volatile("mov (%P[v])(%%r12),%%rsp"::[v] "i" (mIniSPOFF));

@@ -122,31 +122,33 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 	if ( elapsed > TIME_MARGIN)
 		text::warn("Margin time overcome {}. Info: {}",elapsed,text);
 }
-
-static int _testMicroThreadingMonoThread(tests::BaseTest* test)
+//test for debuggin stuff
+static int _testsDebug(tests::BaseTest* test)
 {
 	text::set_level(text::level::debug);
-	auto lvl = text::get_level();
-	using namespace std::string_literals;
-	size_t s1 = sizeof(Process);
-	size_t s2 = sizeof(GenericProcess);
-	size_t s3 = sizeof(MThreadAttributtes);
-	text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
-	
-//		seguir pruebas para verificar nuevo formato microhilos. Y probar clang
 	{
 
 		auto th1 = ThreadRunnable::create();
 		Future<void> fut;
-		th1->post([fut](RUNNABLE_TASK_PARAMS) mutable
+		int cont = 0;;
+		th1->post([fut,&cont](RUNNABLE_TASK_PARAMS) mutable
 		{
 			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
-			text::debug("UNO");
-			//tasking::Process::sleep();
-			tasking::Process::wait(2500);
-			text::debug("DOS");
-			tasking::Process::wait(5000);
-			text::debug("TRES");
+			if ( cont == 1 )
+			{
+				text::debug("UNO");
+				//tasking::Process::sleep();
+				tasking::Process::wait(2500);
+				text::debug("DOS");
+				tasking::Process::wait(5000);
+				text::debug("TRES");
+				cont = 0;
+			}else
+			{
+				++cont;
+				text::debug("normal");
+			}
+
 			//fut.setValue();
 			//return ::tasking::EGenericProcessResult::KILL;
 			return ::tasking::EGenericProcessResult::CONTINUE;
@@ -160,10 +162,20 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 			return ::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::_killTrue,700);*/
 	//	core::waitForFutureThread(fut);
-		Thread::sleep(10000);		
+		Thread::sleep(11000);		
 		text::info("HECHO");
 	}
 	return 0;
+}
+static int _testMicroThreadingMonoThread(tests::BaseTest* test)
+{
+	text::set_level(text::level::info);
+	auto lvl = text::get_level();
+	using namespace std::string_literals;
+	size_t s1 = sizeof(Process);
+	size_t s2 = sizeof(GenericProcess);
+	size_t s3 = sizeof(MThreadAttributtes);
+	text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 
 	{
 		auto th1 = ThreadRunnable::create();
@@ -549,6 +561,9 @@ int TestThreading::onExecuteTest()
 					break;
 				case 4:
 					result = _testExceptions(this);
+					break;
+				case 1000:
+					result = _testsDebug(this);
 					break;
 				default:;					
 			}

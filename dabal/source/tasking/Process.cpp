@@ -146,7 +146,7 @@ void resizeStack(   MThreadAttributtes* process,  unsigned int newSize )
 
 Process::ESwitchResult Process::wait( unsigned int msegs )
 {
-	return _postWait(msegs,_preWait());
+	return _postWait(msegs,_preWait());	
 //	return _wait( msegs, NULL );
 }
 Process::ESwitchResult Process::switchProcess( bool v )
@@ -199,8 +199,11 @@ Process::ESwitchResult Process::_postWait(uint64_t msegs,mpl::Tuple<TYPELIST(boo
 	auto p = input.get<1>();
 	unsigned int currentPeriod = p->getPeriod();
 	p->setPeriod( msegs );
-	if (!input.get<0>()) {//!no multithread safe!!
+	if (!input.get<0>())//!no multithread safe!!
+	{
 		result = switchProcess(false);
+		if ( result == ESwitchResult::ESWITCH_KILL)
+			p->mSwitched = false;
 	}
 	else {
 		result = ESwitchResult::ESWITCH_OK;
@@ -238,17 +241,22 @@ mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()
 }
 Process::ESwitchResult Process::_postSleep(mpl::Tuple<TYPELIST(int,Process*,unsigned int)> input) 
 {
+	auto p = input.get<1>();
 	if ( input.get<0>() == 2 ) //it hasn't any sense, but just in case this condition could be reached
 	{
 		return ESwitchResult::ESWITCH_ERROR;
 	}else if ( input.get<0>() == 3 )
 	{
+		//@todo creo que este caso no l oestoy manejando
+		p->mSwitched = false;
 		return ESwitchResult::ESWITCH_KILL;
 	}
 	ESwitchResult result;
-	auto p = input.get<1>();
-	if (!input.get<0>()) {//!no multithread safe!!
+	if (!input.get<0>())//!no multithread safe!!
+	{
 		result = switchProcess(false);
+		if ( result == ESwitchResult::ESWITCH_KILL)
+			p->mSwitched = false;
 	}
 	else
 	{
