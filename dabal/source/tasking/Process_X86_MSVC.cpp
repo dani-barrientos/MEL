@@ -114,12 +114,9 @@ void _declspec( naked ) switchHelper( MThreadAttributtes* mt )
 
 void Process::_switchProcess( ) OPTIMIZE_FLAGS
 {
-
 	auto p = ProcessScheduler::getCurrentProcess().get();
     MThreadAttributtes* mt = p;
-	switchHelper( mt );
-
-	
+	switchHelper( mt );	
 }
 #pragma optimize("",on)
 #endif

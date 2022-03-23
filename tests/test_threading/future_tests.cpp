@@ -205,6 +205,7 @@ class MasterThread : public ThreadRunnable
 								if ( wr.isValid())
 								{
 									auto val = channel.getValue().value() + mValueToAdd;
+									
 									if ( val != wr.value())
 										text::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
 								}

@@ -100,8 +100,9 @@ _checkMicrothread PROC
 
     continueExecuting_1:
     mov rcx,rax
-    sub rsp,32 ;space for arguments, as defined by calling convention in MSVC
+    push r15
     xor r15,r15
+    sub rsp,32 ;space for arguments, as defined by calling convention in MSVC
     ;check alignment
     test rsp,0fh
     jz callfunction
@@ -113,6 +114,7 @@ callfunction:
     ;call Process_execute
     add rsp,32
     add rsp,r15
+    pop r15
     ret 
 _checkMicrothread ENDP
 

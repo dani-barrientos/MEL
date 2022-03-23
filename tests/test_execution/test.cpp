@@ -201,7 +201,7 @@ int _testDebug(tests::BaseTest* test)
 				},std::ref(pp)) of course, this way we don't have copies
 				*/
 				execution::start(exr)
-				| execution::next([test,ll](const auto& v) 
+				| execution::next([test,ll,initVal](const auto& v) 
 				{
 					return TestClass(initVal,test,ll);
 				});
@@ -209,7 +209,7 @@ int _testDebug(tests::BaseTest* test)
 			auto res2 = core::waitForFutureThread(fut2);
 			text::info("CON LAUNCh");
 			auto fut3= 
-				execution::launch(exr,[test,initVal]()->TestClass{
+				execution::launch(exr,[test,initVal,ll]()->TestClass{
 					return TestClass(initVal,test,ll);;
 				});
 			Thread::sleep(2000);
