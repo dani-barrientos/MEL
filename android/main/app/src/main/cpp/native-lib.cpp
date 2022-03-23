@@ -73,5 +73,6 @@ Java_com_dabal_main_MainActivity_allTestsJNI(
     //need to change logger to be shown in logcat
     spdlog::set_default_logger(android_logger);
 #endif
-    allTests();
+    const char* arg[] = {"","-t","a"};
+    int result = testsMain(3,arg);
 }

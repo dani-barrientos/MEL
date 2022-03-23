@@ -46,6 +46,7 @@ void ThreadRunnable::_execute()
             {
                 mState = THREAD_FINISHING_DONE;
             }
+			getScheduler().killProcesses( false );
 			resume(); //just in case is paused
 			_signalWakeup();
 			break;

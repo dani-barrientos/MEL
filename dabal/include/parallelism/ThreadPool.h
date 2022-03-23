@@ -59,20 +59,20 @@ namespace parallelism
 			SchedulingPolicy schedPolicy = SchedulingPolicy::SP_ROUNDROBIN;
 			size_t threadIndex = 0; //set thread index to use when schedPolicy is SP_EXPLICIT
 		};
-		template <class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,/*bool updateWorkers, */FTypes ... functions)
+		template <class TArg,class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,TArg&& arg,FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
 			// if (updateWorkers)
 			// 	barrier.addWorkers(nTasks); //update workers using barrier
 			//_execute(opts, barrier, std::forward<FTypes>(functions)...);
-			_execute(opts, barrier, std::forward<FTypes>(functions)...);
+			_execute(opts, barrier, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 		}
-		template <class ... FTypes> Barrier execute(const ExecutionOpts& opts, FTypes ... functions)
+		template <class TArg,class ... FTypes> Barrier execute(const ExecutionOpts& opts, TArg&& arg,FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
 			Barrier result(nTasks);
 		//	std::tuple<FTypes...> args{ std::forward<FTypes>(functions)... };			
-			_execute(opts,result,std::forward<FTypes>(functions)...);		
+			_execute(opts,result,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
 			return result;
 		}
 		/**
@@ -88,17 +88,19 @@ namespace parallelism
 		/**
 		* execute generic case.
 		* @param[in] opts execution options
+		* @note because this function doesn't wait for completion, input argument need to be bound and so copied
+		* to be able to provide it to the function when this is executed.
 		*/
-		template <class F,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, F&& func,FTypes ... functions)
+		template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, TArg&& arg,F&& func,FTypes&&... functions)
 		{
+
+		//@todo	tengo que resolver aqui el tema de no bindear el arg..
 			if (mNThreads != 0)
 			{
-				// mLastIndex = _chooseIndex(opts);
-				// mPool[mLastIndex]->post(
 				selectThread(opts)->post(
-					std::function<tasking::EGenericProcessResult (uint64_t, Process*)>([func, output](uint64_t, Process*) mutable
+					std::function<tasking::EGenericProcessResult (uint64_t, Process*)>([func, output,arg](uint64_t, Process*) mutable
 				{
-					func();
+					func(arg);
 					output.set();
 					return tasking::EGenericProcessResult::KILL;
 				})
@@ -106,27 +108,27 @@ namespace parallelism
 			}
 			else // no threads in pool, use calling thread
 			{
-				func();
+				func(std::forward<TArg>(arg));
 				output.set();
 
 			}
-			_execute(opts, output, std::forward<FTypes>(functions)...);
+			_execute(opts, output, arg,std::forward<FTypes>(functions)...);
 		}
 		//base case
-		template <class F> void _execute(const ExecutionOpts& opts,  Barrier& output, F&& func)
+		template <class F,class TArg> void _execute(const ExecutionOpts& opts,  Barrier& output,TArg&& arg, F&& func)
 		{
 			if ( opts.useCallingThread || mNThreads == 0 )
 			{
-                func();
+                func(arg);
                 output.set();
 			}
 			else
 			{
 				mLastIndex = _chooseIndex(opts);
 				mPool[mLastIndex]->post(
-                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func,output](uint64_t, Process*) mutable
+                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
                    {
-                       func();
+                       func(arg);
                        output.set();
                        return tasking::EGenericProcessResult::KILL;
                    })

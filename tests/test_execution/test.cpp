@@ -15,124 +15,1000 @@ using tasking::Process;
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <vector>
+using std::vector;
 
 const std::string TestExecution::TEST_NAME = "execution";
-//b aseictest for launching task in executio agents
-int _testLaunch( tests::BaseTest* test)
-{
-	int result = 0;
-	auto th2 = ThreadRunnable::create(true);	
 
-	th2->fireAndForget(
-		[]()
+//test for development purposes
+struct MyErrorInfo : public ::core::ErrorInfo
+{
+	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
+	{
+		text::debug("MyErrorInfo");
+	}
+	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
+	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
+	MyErrorInfo& operator = (MyErrorInfo&& info)
+	{
+		error = info.error;
+		errorMsg = std::move(info.errorMsg);
+		return *this;
+	}
+	MyErrorInfo& operator = (const MyErrorInfo& info)
+	{
+		error = info.error;
+		errorMsg = info.errorMsg;
+		return *this;
+	}
+};
+/*
+ * class for testing copies, moves, etc..
+ * 
+ */
+struct TestClass
+{
+	float val;
+	tests::BaseTest* test;
+	tests::BaseTest::LogLevel logLevel;
+	bool addToBuffer;
+	TestClass(tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(1),test(aTest),logLevel(ll),addToBuffer(atb)
+	{
+		_printTxt("TestClass constructor\n");
+	}
+	explicit TestClass(float aVal,tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(aVal),test(aTest),logLevel(ll),addToBuffer(atb)
+	{
+		_printTxt("TestClass constructor\n");
+	}
+	TestClass(const TestClass& ob)
+	{
+		val = ob.val;
+		test = ob.test;
+		logLevel = ob.logLevel;
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass copy constructor\n");
+	}
+	TestClass(TestClass&& ob)
+	{
+		val = ob.val;
+		test = ob.test;
+//		ob.test = nullptr; lo necesito en destructor
+		logLevel = ob.logLevel;		
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass move constructor\n");
+	}
+	~TestClass()
+	{
+		_printTxt("TestClass destructor\n");
+	}
+	TestClass& operator=(const TestClass& ob)
+	{
+		val = ob.val;
+		test = ob.test;
+		logLevel = ob.logLevel;
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass copy operator=\n");
+		return *this;
+	}
+	TestClass& operator=(TestClass&& ob)
+	{
+		val = ob.val;
+		test = ob.test;
+//		ob.test = nullptr; lo necesito en destructor
+		logLevel = ob.logLevel;
+		addToBuffer = ob.addToBuffer;
+		_printTxt("TestClass move operator=\n");
+		return *this;
+	}
+	private:
+	void _printTxt(const string& str)
+	{
+		if (addToBuffer )
+			test->addTextToBuffer(str,logLevel);
+		else
 		{
-			auto th1 = ThreadRunnable::create(false);			
-			//---- tests executors						
-			text::info("Launching first task block in a single thread (Executor<Runnable>)");
-			
-			execution::Executor<Runnable> ex(th1);
-			auto cont = ex.launch<int>(  
-				[](const auto& v) //int this case,no argument given, so v is void
-				{							
-					if ( v.isValid() )
-						//spdlog::debug("Value = {}",v.value());
-						text::debug("Value");
-					else
-						text::error("Error = {}",v.error().errorMsg);
-		
-					::tasking::Process::wait(4000);
-					// throw std::runtime_error("Error mierdoso");
-					
-					return 5;
-				}
-			).next<void>([](const auto& v)
+			switch (logLevel)
 			{
-				
-				if ( v.isValid() )
+				case tests::BaseTest::LogLevel::Debug:
+					text::debug(str);
+					break;
+				case tests::BaseTest::LogLevel::Info:
+					text::info(str);
+					break;
+				case tests::BaseTest::LogLevel::Warn:
+					text::warn(str);
+					break;
+				case tests::BaseTest::LogLevel::Error:
+					text::error(str);
+					break;
+				case tests::BaseTest::LogLevel::Critical:
+					text::critical(str);
+					break;
+				default:break;
+			}
+		}
+	}
+};
+//funcion para pruebas a lo cerdo
+int _testDebug(tests::BaseTest* test)
+{
+	int result = 0;	
+	auto th1 = ThreadRunnable::create(true);	
+	//auto th2 = ThreadRunnable::create(true);	
+	execution::Executor<Runnable> exr(th1);		
+	exr.setOpts({true,false,false});
+	//now executor for threadpool
+	parallelism::ThreadPool::ThreadPoolOpts opts;
+	auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,true});   
+	{
+		int a = 6;
+		Future<int&> f1;
+		f1.setValue(a);
+		//f1.setValue(10); mismo problema que el del launch, pero es normal.
+		text::info("DEBUG");
+		vector<int> vec{1,2,3};
+		text::info("Initial v[1] = {}",vec[1]);
+		{
+			text::info("CON INMEDIATE");
+			constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+			constexpr int initVal = 8;		
+			auto fut= 
+				/*execution::launch(ex,[](TestClass& tc)->TestClass&{
+					return tc;
+				},std::ref(pp)) of course, this way we don't have copies
+				*/
+				execution::start(exr)
+				| execution::inmediate(TestClass(initVal,test,ll)) 	
+			/*| execution::bulk(
+					[](auto& v)
+					{
+	//					lo que veo que ocurre es que se está pasando por copia->¿es normal
+						text::info("Bulk 1");
+						v.value().val = 11;  //race condition
+					},
+					[](auto& v)
+					{
+						text::info("Bulk 2");
+						v.value().val = 12; //race condition
+					})  */
+			//	| execution::transfer(ex2)  //transfer execution to a different executor
+				/*| execution::next([test,ll](auto& v) -> TestClass&
 				{
-					text::debug("Value = {}",v.value());
+					if (v.isValid() )
+					{					
+						std::stringstream ss;
+						ss << "Val = "<<v.value().val<<'\n';
+						test->addTextToBuffer(ss.str(),ll); 
+						//text::info("Val = {}",v.value().val);
+						v.value().val = 10;
+					}
+					else
+						text::info("Error = {}",v.error().errorMsg);					
+					return v.value();
+				})**/;
+				//);
+			Thread::sleep(2000);
+			//demostrado la vuelta de esta funcion no genera copias (como era de esperar)
+			auto res1 = core::waitForFutureThread(fut);
+			//compruebo con next las copias
+			text::info("CON NEXT");
+			auto fut2= 
+				/*execution::launch(ex,[](TestClass& tc)->TestClass&{
+					return tc;
+				},std::ref(pp)) of course, this way we don't have copies
+				*/
+				execution::start(exr)
+				| execution::next([test,ll,initVal](const auto& v) 
+				{
+					return TestClass(initVal,test,ll);
+				});
+			Thread::sleep(2000);
+			auto res2 = core::waitForFutureThread(fut2);
+			text::info("CON LAUNCh");
+			auto fut3= 
+				execution::launch(exr,[test,initVal,ll]()->TestClass{
+					return TestClass(initVal,test,ll);;
+				});
+			Thread::sleep(2000);
+			auto res3 = core::waitForFutureThread(fut3);
+			text::info("TERMINO");
+		}
+	}
+	{		
+		auto th1 = ThreadRunnable::create(true);	
+		execution::Executor<Runnable> exr2(th1);
+		auto p = TestClass(10,test) ;
+		// auto fut = 	execution::inmediate(
+		// 	execution::transfer(
+		// 	execution::start(exr),exr2),p
+		// );
+		text::info("DEBUG");
+		const TestClass p2 = TestClass(10,test);
+		core::waitForFutureThread(execution::inmediate(execution::start(exr),p2));
+		text::info("DEBUG");
+		auto lamb = [&p,test,exr]()
+		{
+			// execution::launch(exr,[](TestClass& tc) -> TestClass&
+			// {
+			// 	tc.val = 7;
+			// 	return tc;
+			// 	//throw std::r//tasking::waitForFutureMThread(tt);untime_error("un error");
+			// },p);
+		};
+		
+		text::info("DEBUG");
+		auto fut = execution::start(exr) | /*execution::transfer(extp) | */execution::inmediate(std::ref(p))  
+		 | execution::next([](auto& v)->TestClass&
+		 {
+			 v.value().val = 11;
+			return v.value();
+		 }) | execution::loop(0,10,[](int idx,auto& v)
+		{
+			v.value().val = 7;
+		}) | execution::bulk(
+			[](auto& v)
+			{
+				text::info("Bulk 1");
+				v.value().val = 8;
+			},
+			[](auto& v)
+			{
+				text::info("Bulk 2");
+				v.value().val = 9;
+			}
+		);
+		auto kk = core::waitForFutureThread(fut);
+				
+		text::info("Val = {}",kk.value().val);
+		text::info("Original Val = {}",p.val);
+		kk.value().val = 12;
+		text::info("(again) Val = {}",kk.value().val);
+		text::info("Original (again) Val = {}",p.val);
+		text::info("DEBUG");
+	}
+
+	
+	
+	
+	// execution::launch(ex,
+	// [](auto& v)
+	// {
+	// 	//vector<int> r = {5,6,7};
+	// 	return 7;
+	// },vec);
+	//execution::next(execution::inmediate(execution::start(ex),std::move(vec)),
+	string val = "dani";
+	Future<string> fut;
+	//tengo un problema, no sé cómo hacer que sea una referencia lo de dentro
+//hay un problema muy gordo, el variatn no puede tener refen
+
+	//fut.setValue(std::reference_wrapper(val));
+	fut.setValue(val);
+	auto fv = fut.getValue();
+	text::info("Orig Value = {}",fut.getValue().value());
+	text::info("Orig Value = {}",fv.value());
+	fut.getValue().value() = "pepe"; 
+	text::info("Value = {}",fut.getValue().value());
+	text::info("Old Value = {}",val);
+
+	
+	{
+		// test->clearTextBuffer();
+		// TestClass pp(8,test);
+		// constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+		// pp.logLevel = ll;
+		// core::Event event;
+		// th1->fireAndForget([exr,&pp,&event,test,ll]{
+		// 	auto kk = execution::launch(exr,[]{
+		// 		return 7;
+		// 		//throw std::runtime_error("un error");
+		// 	});			
+		// 	auto kk0 = execution::inmediate(kk,std::ref(pp));
+		// 	auto kk1 = execution::next(kk0,[test,ll](auto& v)
+		// 	{
+		// 		if (v.isValid() )
+		// 		{					
+		// 			std::stringstream ss;
+		// 			ss << "Val = "<<v.value().val<<'\n';
+		// 			test->addTextToBuffer(ss.str(),ll); 
+		// 			//text::info("Val = {}",v.value().val);
+		// 			v.value().val = 10;
+		// 		}
+		// 		else
+		// 			text::info("Error = {}",v.error().errorMsg);					
+		// 	});			
+			
+		// 	const auto& res = tasking::waitForFutureMThread(kk1);		
+		// 	if (res.isValid() )
+		// 	{
+		// 		//text::info("kk0 Val = {}",kk0.getValue().value().val);
+		// 		std::stringstream ss;
+		// 		ss << "kk0 Val = "<<kk0.getValue().value().val<<'\n';
+		// 		test->addTextToBuffer(ss.str(),ll); 
+		// 	}
+		// 	else
+		// 		text::info("Error = {}",kk0.getValue().error().errorMsg);				
+		// 	std::stringstream ss;
+		// 	ss << "Original Val = "<<pp.val<<'\n';
+		// 	test->addTextToBuffer(ss.str(),ll); 
+		// 	event.set();
+		// });
+		// event.wait();
+		// test->checkOccurrences("constructor",1,tests::BaseTest::LogLevel::Info);
+		// test->checkOccurrences("Val = 10",2,tests::BaseTest::LogLevel::Info);
+		
+	}
+	{
+	
+		vector<float> vec = {1.0f,20.0f,36.5f};
+		
+		auto kk0 = execution::next(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v) -> vector<float>&
+		{
+			auto& val = v.value();
+			val[1] = 1000.7;
+			//return std::ref(val);
+			return val;
+		}
+		);
+		//auto kk1 = execution::bulk(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v)
+		auto kk1 = execution::bulk(kk0,[](auto& v)
+		{
+			auto idx = v.index();
+			//::tasking::Process::switchProcess(true);
+			if ( v.isValid() )	
+				text::info("Runnable Bulk 1 Value = {}",v.value()[0]);
+			else
+				text::info("Runnable Bulk 1 Error = {}",v.error().errorMsg);
+			++v.value()[0];
+		},[](auto& v)
+		{
+			if ( v.isValid() )	
+				text::info("Runnable Bulk 2 Value = {}",v.value()[1]);
+			else
+				text::info("Runnable Bulk 2 Error = {}",v.error().errorMsg);
+			++v.value()[1];
+		},
+		[](auto& v)
+		{
+			if ( v.isValid() )	
+				text::info("Runnable Bulk 3 Value = {}",v.value()[2]);
+			else
+				text::info("Runnable Bulk 3 Error = {}",v.error().errorMsg);
+			++v.value()[2];
+		}
+		);	
+		core::waitForFutureThread(kk1);
+		// auto kk1_1 = execution::next(kk1,[](auto& v)
+		// {
+		// 	text::info("After Bulk");			
+		// 	if ( v.isValid() )
+		// 	{
+		// 		text::info("Value = {}",v.value()[1]);
+		// 		v.value()[1] = 9.7f;
+		// 		//text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
+		// 	}else
+		// 		text::info("After bulk err {}",v.error().errorMsg);
+		// });
+		// core::waitForFutureThread(kk1_1);
+		text::info("After wait");
+		// auto kk2 = execution::loop(kk1,idx0,loopSize,
+		// 	[](int idx,const auto& v)
+		// 	{
+		// 		::tasking::Process::wait(1000);
+		// 		if ( v.isValid() )
+		// 		{
+		// 			const auto& val = v.value();
+		// 			text::info("It {}. Value = {}",idx,std::get<0>(val));				
+		// 		}
+		// 		else
+		// 			text::info("It {}. Error = {}",idx,v.error().errorMsg);											
+		// 	}
+		// );
+		// auto kk3 = execution::next(kk2,[](const auto& v)->int
+		// {								
+		// 	text::info("Launch waiting");
+		// 	if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+		// 	{
+		// 		//throw std::runtime_error("Error1");
+		// 		text::info("Launch done");
+		// 	}else
+		// 		text::info("Launch killed");
+		// 	return 4;
+		// }
+		// );
+		// ::core::waitForFutureThread(kk3);
+		text::info("Done!!");
+	}		
+	{				   	
+		vector<float> vec = {1.0f,20.0f,36.5f};
+		//PROBAR ESTO Y LUEGO USAR EL kk0 EN EL BULK
+		auto kk0 = execution::next(execution::inmediate(execution::start(extp),std::ref(vec)),[](auto& v) -> vector<float>&
+		{
+			v.value()[1] = 1000.7;
+			return v.value();
+		}
+		);
+		//auto kk1 = execution::bulk(execution::inmediate(execution::start(extp),std::ref(vec)),[](auto& v)
+		auto kk1 = execution::bulk(kk0,[](auto& v)
+		{
+			//auto idx = v.index();
+			if ( v.isValid() )	
+				text::info("ThreadPoolExecutor Bulk 1 Value = {}",v.value()[0]);
+			else
+				text::info("ThreadPoolExecutor Bulk 1 Error = {}",v.error().errorMsg);
+			++v.value()[0];
+		},[](auto& v)
+		{
+			if ( v.isValid() )	
+				text::info("ThreadPoolExecutor Bulk 2 Value = {}",v.value()[1]);
+			else
+				text::info("ThreadPoolExecutor Bulk 2 Error = {}",v.error().errorMsg);
+			++v.value()[1];
+		},
+		[](auto& v)
+		{
+			if ( v.isValid() )	
+				text::info("ThreadPoolExecutor Bulk 3 Value = {}",v.value()[2]);
+			else
+				text::info("ThreadPoolExecutor Bulk 3 Error = {}",v.error().errorMsg);
+			++v.value()[2];
+		}
+		);	
+		core::waitForFutureThread(kk1);
+		
+	/*	auto kk0_1 = execution::next(kk0,[](auto& v)
+		{
+			text::info("After Bulk");			
+			if ( v.isValid() )
+			{
+				text::info("Value = {}",v.value()[1]);
+				v.value()[1] = 9.7f;
+				//text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
+			}else
+				text::info("After bulk err {}",v.error().errorMsg);
+		});
+		core::waitForFutureThread(kk0_1);
+		*/
+		text::info("After wait");
+	}      
+
+	Thread::sleep(5000);
+	return 0;
+}
+template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
+{
+	core::Event event;
+	TestClass pp(8,test);
+	vector<TestClass> vec;
+	//use a task to make it more complex
+	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
+	{
+		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
+		text::info("Simple functor chaining. using operator | from now");
+		test->clearTextBuffer();
+		constexpr int initVal = 8;		
+		{
+			
+		auto th2 = ThreadRunnable::create();
+		execution::Executor<Runnable> ex2(th2);		
+		auto res1 = tasking::waitForFutureMThread(
+/*					execution::launch(ex,[](TestClass& tc)->TestClass&{
+				return tc;
+			},std::ref(pp)) of course, this way we don't have copies
+			*/
+			execution::start(ex)
+			| execution::inmediate(TestClass(initVal,test,ll)) 	
+		|	 execution::bulk(
+				[](auto& v)
+				{
+					text::debug("Bulk 1");
+					
+					auto prevVal = v.value().val;
+					v.value().val = 1;  //race condition
+					tasking::Process::wait(1000);
+					v.value().val = prevVal + 5;
+				},
+				[](auto& v)
+				{
+					text::debug("Bulk 2");
+					tasking::Process::wait(300);
+					v.value().val = 12; //Bulk 1 should be the last to execute its assignment 
+				})  
+		//	| execution::transfer(ex2)  //transfer execution to a different executor
+			| execution::next([test,ll](auto& v) -> TestClass&
+			{
+				if (v.isValid())
+				{										
+					//text::info("Val = {}",v.value().val);
+					v.value().val+= 3;
+				}
+				else
+					text::info("Error = {}",v.error().errorMsg);					
+				return v.value();
+				})
+			);		
+		
+		bool iv = res1.isValid();
+		if (res1.isValid() )
+		{
+			int finalVal = res1.value().val;
+			int expectedVal = initVal + 5+3;
+			text::debug("Finish Val = {}",finalVal);
+			if (finalVal != expectedVal)
+			{
+				std::stringstream ss;
+				ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
+				test->setFailed(ss.str());
+			}
+		}
+		else
+			text::info("Error = {}",res1.error().errorMsg);				
+		}		
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
+		//@todo aquí para threadpool me da copias innecesarias (VERIFICAR)
+		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+
+			/*
+			base form to do the same
+			execution::next(
+			execution::transfer(
+			execution::bulk(
+				execution::inmediate(execution::start(ex),TestClass(initVal,test,ll))
+			,
+			//bulk
+			[](auto& v)
+			{
+				text::info("Bulk 1");
+				v.value().val = 11;  //race condition
+			},
+			[](auto& v)
+			{
+				text::info("Bulk 2");
+				v.value().val = 12; //race condition
+			}),
+			//transfer
+			ex2), 
+			//next
+			[test,ll](auto& v) -> TestClass&
+			{
+				if (v.isValid() )
+				{					
+					std::stringstream ss;
+					ss << "Val = "<<v.value().val<<'\n';
+					test->addTextToBuffer(ss.str(),ll); 
+					//text::info("Val = {}",v.value().val);
+					v.value().val = 10;
+				}
+				else
+					text::info("Error = {}",v.error().errorMsg);					
+				return v.value();
+			})
+		);	
+		*/				
+
+		//now using reference
+		test->clearTextBuffer();
+		pp.logLevel = ll;
+		text::info("Simple functor chaining using reference");
+	
+		auto res2 = tasking::waitForFutureMThread(
+			execution::launch(ex,[](TestClass& tc) -> TestClass&
+			{
+				tc.val = 7;
+				return tc;
+				//throw std::runtime_error("chiquilin");
+			},std::ref(pp)) 
+			| execution::next([test,ll](auto& v) -> TestClass&
+			{
+				if (v.isValid() )
+				{					
+					v.value().val += 10;
+					return v.value();
 				}
 				else
 				{
-					text::error("Error = {}",v.error().errorMsg);
-					throw std::runtime_error("Otro error");
+					throw std::runtime_error( v.error().errorMsg );
 				}
-			}).next<void>(
-				[](const auto& v)
+			}));
+		if (res2.isValid() )
+		{
+			int finalVal = res2.value().val;
+			int expectedVal = 17;
+			text::debug("Finish Val = {}",finalVal);
+			if (finalVal != expectedVal)
+			{
+				std::stringstream ss;
+				ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
+				test->setFailed(ss.str());
+			}
+			if ( finalVal != pp.val)
+			{
+				std::stringstream ss;
+				ss << " final value is diferent than original value. ";
+				test->setFailed(ss.str());
+			}
+		}
+		else
+			text::info("Error = {}",res2.error().errorMsg);				
+		
+		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+		//now a little more complex test //TODO: meter al final un throw o algo así
+		text::info("A little more complex functor chaining using reference and parallel loops");
+		test->clearTextBuffer();
+		
+		#define LOOP_SIZE 100
+		#define INITIAL_VALUE 2
+		auto res3 = tasking::waitForFutureMThread(
+			execution::start(ex) 
+			| execution::inmediate(std::ref(vec)) 
+			| execution::next([test,ll](auto& v)->vector<TestClass>&
+				{				
+					//fill de vector with a simple case for the result to be predecible
+					//I don't want out to log the initial constructions, oncly constructons and after this function
+					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+					v.value().resize(LOOP_SIZE,t);	
+					for(auto& elem:v.value())
+					{
+						elem.logLevel = ll;
+						elem.addToBuffer = true;
+					}
+					return v.value();
+				}
+				)
+				| execution::next([](auto& v)->vector<TestClass>&
 				{
-					if ( v.isValid() )
-					{						
-						text::debug("Value");
+					if (v.isValid() )
+					{					
+						for(auto& elem:v.value())
+							++elem.val;						
 					}
 					else
-					{						
-						text::error("Error = {}",v.error().errorMsg);
-					}	
-					throw std::runtime_error("Otro error");
-				}
-			);
-			auto r = cont.getResult();			
-			text::debug("Waiting for first task block...");			
-			th1->resume();
-			auto wr = tasking::waitForFutureMThread(r);
-
-			if ( wr.isValid() )
-				text::debug("First tasks completed successfully");
+						text::info("Error = {}",v.error().errorMsg);	
+					return v.value();	
+				})
+				| execution::bulk([](auto& v)
+				{					
+					//multiply by 2 the first half
+					if (v.isValid() )
+					{					
+						auto& vec = v.value();
+						size_t endIdx = vec.size()/2;	
+						for(size_t i = 0; i < endIdx;++i )
+						{
+							vec[i].val = vec[i].val*2.f;	
+						}
+					}
+					else
+						text::info("Bulk Error = {}",v.error().errorMsg);					
+				},
+				[](auto& v)			
+				{
+					//multiply by 3 the second half
+					if (v.isValid() )
+					{					
+						auto& vec = v.value();
+						size_t startIdx = vec.size()/2;
+						for(size_t i = startIdx; i < vec.size();++i )
+						{
+							vec[i].val = vec[i].val*3.f;
+						}
+					}
+					else
+						text::info("Bulk Error = {}",v.error().errorMsg);										
+				}) 
+				| execution::loop(
+					0,LOOP_SIZE,
+					[](int idx,auto& v)
+					{
+						if ( v.isValid())
+						{
+							v.value()[idx].val+=5.f;
+						}
+					},1
+				)
+				| execution::next(
+					[](auto& v)->vector<TestClass>&
+					{					
+						if (v.isValid() )
+						{					
+							for(auto& elem:v.value())
+								++elem.val;		
+						}	
+						return v.value();				
+					}
+		));
+			
+		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		stringstream ss;
+		ss<<"Valor vector: ";
+		for(const auto& v:vec)
+			ss << v.val<<' ';
+		ss << '\n';
+		test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::None); 
+		if (!res3.isValid() )
+			text::info("Error = {}",res3.error().errorMsg);
+		else
+		{
+			//compare result with original vector. Must be the same
+			const auto& v = res3.value(); 
+			if ( &v != &vec )
+				test->setFailed("Both vectors must be the same ");
+		}
+	
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		
+		text::info("Same process as the previous without using reference");
+		ss.str(""s); //empty stream
+		test->clearTextBuffer();
+		auto res4 = 
+		tasking::waitForFutureMThread(
+		execution::next(
+		execution::loop(
+		execution::bulk(execution::next(
+		execution::next(
+		execution::start(ex),[test,ll](const auto& v)->vector<TestClass>
+		{				
+			//fill de vector with a simple case for the result to be predecible
+			//I don't want out to log the initial constructions, oncly constructons and after this function
+			auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+			vector<TestClass> result(LOOP_SIZE,t);					
+			for(auto& elem:result)
+			{
+				elem.logLevel = ll;
+				elem.addToBuffer = true;
+			}
+			return result;
+		}
+		),
+		//second next
+		[](auto& v)->vector<TestClass>&
+		{
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;						
+			}
 			else
-				text::debug("First tasks completed with error {}",wr.error().errorMsg); 
+				text::info("Error = {}",v.error().errorMsg);	
+			return v.value();	
+		}),
+		//bulk
+		[](auto& v)			
+		{					
+			//multiply by 2 the first half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t endIdx = vec.size()/2;	
+				for(size_t i = 0; i < endIdx;++i )
+				{
+					vec[i].val = vec[i].val*2.f;	
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);					
+		},
+		[](auto& v)			
+		{
+			//multiply by 3 the second half
+			if (v.isValid() )
+			{					
+				auto& vec = v.value();
+				size_t startIdx = vec.size()/2;
+				for(size_t i = startIdx; i < vec.size();++i )
+				{
+					vec[i].val = vec[i].val*3.f;
+				}
+			}
+			else
+				text::info("Bulk Error = {}",v.error().errorMsg);										
+		}),
+		//loop
+		0,LOOP_SIZE,
+		[](int idx,auto& v)
+		{
+			if ( v.isValid())
+			{
+				v.value()[idx].val+=5.f;
+			}
+		},1
+		),
+		//next
+		[](auto& v)->vector<TestClass>  //need to return a copy because original vector is temporary
+		{					
+			if (v.isValid() )
+			{					
+				for(auto& elem:v.value())
+					++elem.val;		
+			}	
+			return v.value();				
+		}));
+		
+		test->checkOccurrences("constructor",LOOP_SIZE,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",LOOP_SIZE,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		
+		if (!res4.isValid() )
+			text::info("Error = {}",res4.error().errorMsg);
+		else
+		{
+			ss.str(""s); //empty stream
+			ss<<"Valor vector: ";
+			for(const auto& v:res4.value())
+				ss << v.val<<' ';
+			ss << '\n';
+			test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Debug); 
+		}
+						
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+				
+		event.set();				
+	});
+	event.wait();
 
-			text::info("Launching second task block in a thread pool (Executor<ThreadPool>)");
-
+}
+//basic test for launching task in execution agents
+int _testLaunch( tests::BaseTest* test)
+{
+	int result = 0;		
+	{
+		{
+			auto th1 = ThreadRunnable::create(true);			
+			execution::Executor<Runnable> exr(th1);
+			exr.setOpts({true,false,false});
+			_basicTests(exr,th1.get(),test);
+		}
+		{
+			auto th1 = ThreadRunnable::create(true);						
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			parallelism::ThreadPool::ExecutionOpts exopts;
-			execution::Executor<parallelism::ThreadPool> ex2(myPool);
-			auto r2 = ex2.launch<int>(  
-				[](const auto& v)
-				{					
-					if ( v.isValid() )
-						text::debug("Value = {}",v.value());
-					else
-						text::error("Error = {}",v.error().errorMsg);
-					::tasking::Process::wait(2000);
-					throw std::runtime_error("Error mierdoso"); //pruebas lanzamiento excepciones
-					return 5;
-				},9.6f
-			).next<string>([](const core::FutureValue<int,::core::ErrorInfo>& v) //can use auto, but for documentation purposes
-			{
-				if ( v.isValid() )
-				{					
-					text::debug("Value = {}",v.value());
-					return "pepe";	
-				}
-				else
-				{
-					text::error("Error = {}",v.error().errorMsg);
-					throw std::runtime_error("Error final");
-				}
-			}).next<int>([](const auto& v)
-			{			
-				if ( v.isValid() )
-					text::debug("Value = {}",v.value());
-				else
-					text::error("Error = {}",v.error().errorMsg);
-				return 1;
-			}).getResult();
-			
-			text::debug("Waiting for second task block...");			
-		
-			auto wr2 = tasking::waitForFutureMThread(r2);
-			if ( wr2.isValid() )
-				text::debug("Second task block completed successfully");
-			else
-				text::debug("Second task block completed with error {}",wr2.error().errorMsg);  
-			
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
+			extp.setOpts({true,true});
+		//	_basicTests(extp,th1.get(),test);
 		}
-	);				
-Thread::sleep(10000);
-/*	th2->finish();
-	th2->join();
-*/	
+	}
+		
+	/*
+		{
+		const int idx0 = 0;
+		const int loopSize = 10;
+		auto kk1 = execution::launch(ex,
+			[]()
+			{		
+				text::info("Launch kk");			
+				::tasking::Process::wait(5000);					
+				throw std::runtime_error("Error1");
+				return "pepe";
+			}
+		);
+		auto kk2 = execution::loop(kk1,idx0,loopSize,
+			[](int idx,const auto& v)
+			{
+				::tasking::Process::wait(1000);
+				if ( v.isValid() )
+					text::info("It {}. Value = {}",idx,v.value());				
+				else
+					text::info("It {}. Error = {}",idx,v.error().errorMsg);				
+
+			}
+		);
+		auto kk3 = execution::next(kk2,[](const auto& v)->int
+		{								
+			text::info("Launch waiting");
+			if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+			{
+				//throw std::runtime_error("Error1");
+				text::info("Launch done");
+			}else
+				text::info("Launch killed");
+			return 4;
+		}
+		);
+		::core::waitForFutureThread(kk3);
+		text::info("Done!!");
+		
+		}
+		//---
+		// auto fut = execution::next(execution::start(ex),
+		// 			[](const auto& v)->int
+		// 			{					
+		// 				text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
+		// 				text::info("Launch waiting");
+		// 				if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+		// 				{
+		// 					//throw std::runtime_error("Error1");
+		// 					text::info("Launch done");
+		// 				}else
+		// 					text::info("Launch killed");
+		// 				return 4;
+		// 			}
+		// 		);
+		// //Thread::sleep(10000);
+		// execution::Executor<Runnable> extp(th2);
+		// //::core::waitForFutureThread(fut);	
+		// //auto fut_1 = execution::transfer(fut,extp);
+		// fut = execution::transfer(fut,extp);
+		// auto fut2 = execution::next(fut,[](const auto& v)
+		// 		{
+		// 			text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
+		// 			if (v.isValid())
+		// 			{
+		// 				text::info("Next done: {}",v.value());		
+		// 			}else					
+		// 				text::error("Next error: {}",v.error().errorMsg);		
+		// 		}
+		// 		);						
+		// ::core::waitForFutureThread(fut2);				
+	}*/
+	/*
+	{		
+		parallelism::ThreadPool::ThreadPoolOpts opts;
+		auto myPool = make_shared<parallelism::ThreadPool>(opts);
+		parallelism::ThreadPool::ExecutionOpts exopts;
+		execution::Executor<parallelism::ThreadPool> ex(myPool);
+		ex.setOpts({true,true});
+		{
+		const int idx0 = 0;
+		const int loopSize = 10;		
+		// auto kk1 = execution::launch(ex,
+		// 	[]()
+		// 	{		
+		// 		text::info("Launch TP kk");			
+		// 		::tasking::Process::wait(5000);					
+		// 		//throw std::runtime_error("Error1");
+		// 		return "pepe";
+		// 	}
+		// );
+		// auto kk = execution::loop(kk1,idx0,loopSize,
+		// 	[](int idx,const auto& v)
+		// 	{
+		// 		::tasking::Process::wait(1000);
+		// 		if ( v.isValid())
+		// 		{
+		// 			text::info("It {}. Value = {}",idx,v.value());				
+		// 		}else
+		// 			text::error("It {} .Err = {}",idx,v.error().errorMsg);				
+				
+		// 	}
+		// );
+		// text::info("voy a esperar");
+		// ::core::waitForFutureThread(kk);
+		text::info("terminó");
+		}
+		//auto fut = execution::launch(ex,
+		// 	[](string v)
+		// 	{					
+		// 		text::info("Tp Launch waiting");
+		// 		if ( ::tasking::Process::wait(5000) != tasking::Process::ESwitchResult::ESWITCH_KILL )
+		// 			text::info("TP Launch done: {}",v);
+		// 		else
+		// 			text::info("TP Launch killed");
+		// 		return 4;
+		// 	},"pepe"
+		// );
+		// text::info("TP Sleep");
+		// Thread::sleep(10000);
+		// auto fut2 = execution::next(fut,[](const auto& v)->void
+		// 		{
+		// 			if (v.isValid())
+		// 			{
+		// 				text::info("TP Next done: {}",v.value());		
+		// 			}else					
+		// 				text::error("TP Next error: {}",v.error().errorMsg);		
+		// 		}
+		// 		);		
+		// ::core::waitForFutureThread(fut2);                
+
+	}	
+	*/
 	return result;
 }
 #ifdef NDEBUG
@@ -161,16 +1037,17 @@ template <class F> void _measureTest(string txt,F f, size_t loopSize)
 	tests::BaseTest::addMeasurement(txt+" time:",mean);
 	text::info("Finished. Time: {}",mean);
 }
-auto gTestFunc=[](int idx)
+auto gTestFunc=[](int idx,const auto&)
 	{
 		text::debug("iteracion pre {}",idx);
 		::tasking::Process::switchProcess(true);
 		text::debug("iteracion post {}",idx);
 	};
+// loop test to measure performance
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
-	text::set_level(text::level::info);
+	// text::set_level(text::level::info);
 	
     int loopSize = DEFAULT_LOOPSIZE;
     //check for loopsize options, if given
@@ -185,13 +1062,13 @@ int _testFor(tests::BaseTest* test)
 		{	
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);			
-			execution::RunnableExecutorLoopHints lhints;
-			lhints.independentTasks = true;
-			lhints.lockOnce = true;
+			execution::RunnableExecutorOpts opts;
+			opts.independentTasks = true;
+			opts.lockOnce = true;
+			ex.setOpts(opts);
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
-			::core::waitForBarrierThread(barrier);
-			text::debug("hecho");
+			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			//text::debug("hecho");
 			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
 				th1->getScheduler().resetPool();
 			#endif
@@ -203,13 +1080,15 @@ int _testFor(tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorLoopHints lhints;
-			lhints.independentTasks = true;
-			lhints.lockOnce = false;
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			exopts.lockOnce = false;
+			ex.setOpts(exopts);
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
-			);
-			::core::waitForBarrierThread(barrier);
+			// auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
+			// );
+			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			
 		},loopSize
 	);
 
@@ -218,13 +1097,14 @@ int _testFor(tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorLoopHints lhints;
-			lhints.independentTasks = true;
-			lhints.lockOnce = true;
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			exopts.lockOnce = true;
 			int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
+//			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
+			auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
 			th1->resume();
-			::core::waitForBarrierThread(barrier);
+			core::waitForFutureThread(r);
 			th1->suspend();
 		},loopSize
 	);
@@ -233,13 +1113,14 @@ int _testFor(tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorLoopHints lhints;
-			lhints.independentTasks = true;
-			lhints.lockOnce = false;
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			exopts.lockOnce = false;
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
+			//auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
+			auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
 			th1->resume();
-			::core::waitForBarrierThread(barrier);
+			core::waitForFutureThread(r);
 			th1->suspend();
 		},loopSize
 	);
@@ -248,12 +1129,11 @@ int _testFor(tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
 			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorLoopHints lhints;
-			lhints.independentTasks = false;
-			lhints.lockOnce = true;
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = false;
+			exopts.lockOnce = true;
 			const int idx0 = 0;
-			auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1);
-			::core::waitForBarrierThread(barrier);
+			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 		},loopSize
 	);
 	//parallelism::ThreadPool::ThreadPoolOpts opts;
@@ -263,12 +1143,12 @@ int _testFor(tests::BaseTest* test)
 		{
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
-			execution::Executor<parallelism::ThreadPool> ex2(myPool);
-			execution::LoopHints lhints;
-			lhints.independentTasks = false;
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
+			execution::ThreadPoolExecutorOpts exopts;
+			exopts.independentTasks = false;
+			extp.setOpts(exopts);
 			const int idx0 = 0;
-			auto barrier = ex2.loop(idx0,loopSize,gTestFunc,lhints);
-			::core::waitForBarrierThread(barrier);
+			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
 		},loopSize
 	);
 	/*
@@ -278,11 +1158,11 @@ int _testFor(tests::BaseTest* test)
 		{
 			parallelism::ThreadPool::ThreadPoolOpts opts;
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
-			execution::Executor<parallelism::ThreadPool> ex2(myPool);
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			execution::LoopHints lhints;
 			lhints.independentTasks = true;
 			const int idx0 = 0;
-			auto barrier = ex2.loop(idx0,loopSize,
+			auto barrier = extp.loop(idx0,loopSize,
 			[](int idx)
 			{	
 				text::debug("iteracion {}",idx);
@@ -316,6 +1196,9 @@ int TestExecution::onExecuteTest()
 			auto n = std::stol(opt.value());
 			switch(n)
 			{
+				case 1000:
+					_testDebug(this);
+					break;
 				case 0:
 					result = _testLaunch(this);
 					break;

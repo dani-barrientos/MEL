@@ -38,8 +38,7 @@ namespace core
 	 * be inherited, but will require additional programming to handle things safely.
 	 * 
 	 */
-	class DABAL_API Thread/*: 
-					public CallbackSubscriptor<::core::CSNoMultithreadPolicy,Thread*>*/
+	class DABAL_API Thread
 	{
 
 #ifdef _WINDOWS
@@ -233,47 +232,47 @@ namespace core
 	* waiting for a Future from a Thread
 	* @see tasking::waitForFutureMThread
 	*/
-	template<class T,class ErrorType = ::core::ErrorInfo> typename core::Future<T,ErrorType>::ValueType waitForFutureThread( const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+
+	template<class T,class ErrorType = ::core::ErrorInfo> ::core::WaitResult<T,ErrorType> waitForFutureThread(  const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-            typename core::Future<T,ErrorType>::ValueType wait(const core::Future<T,ErrorType>& f,unsigned int msecs)
+			using futT = core::Future<T,ErrorType>;
+            ::core::EWaitError wait( const futT& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
             // spdlog::debug("Waiting for event in Thread {}",threadid);
 				int evId = f.subscribeCallback(
-					std::function<::core::ECallbackResult( const FutureValue<T,ErrorType>&)>([this](const FutureValue<T,ErrorType>& ) 
+					std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
 					{
 						mEvent.set();
 					//   spdlog::debug("Event was set for Thread {}",threadid);
 						return ::core::ECallbackResult::UNSUBSCRIBE; 
-					})
-				);
+					}));
+					
+				
                 eventresult = mEvent.wait(msecs); 
 				f.unsubscribeCallback(evId);
             //  spdlog::debug("Wait was done in Thread {}",threadid);
                 switch( eventresult )
                 {               
                 case ::core::Event::EVENT_WAIT_TIMEOUT:
-					return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded"));
+					return ::core::EWaitError::FUTURE_WAIT_OK;
                     break;
                 case ::core::Event::EVENT_WAIT_ERROR:
-
-					return typename core::Future<T,ErrorType>::ValueType(ErrorType(::core::Future_Base::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error"));
+					return ::core::EWaitError::FUTURE_UNKNOWN_ERROR;
 					break;
 				default:
-					return f.getValue();
-					break;
-                }			
-        
+                    return ::core::EWaitError::FUTURE_WAIT_OK; //silent warning
+                }			        
             }
             private:
             	::core::Event mEvent;
         };
         auto receiver = std::make_unique<_Receiver>();
-        return receiver->wait(f,msecs);	
+		return ::core::WaitResult<T,ErrorType>(receiver->wait(f,msecs),f);	
     }	
 	DABAL_API ::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 }

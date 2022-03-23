@@ -29,11 +29,11 @@ using mpl::asPtr;
 
 #include <core/Future.h>
 using core::Future;
-using core::Future_Base;
 #include <functional>
 #include <cassert>
 #include <forward_list>
 #include <mutex>
+#include <type_traits>
 
 #define RUNNABLE_TASK_ALIGNMENT 8
 
@@ -129,7 +129,7 @@ namespace tasking
 		};
 	}
 	///@cond HIDDEN_SYMBOLS
-	template <class TRet,class ErrorType, class F> struct ExecuteTask; //predeclaration
+	//template <class TRet,class ErrorType, class F> struct ExecuteTask; //predeclaration
 	///@endcond
 	/**
 	* @class Runnable
@@ -250,6 +250,7 @@ namespace tasking
 		virtual void finish() = 0;
 		virtual bool finished() = 0;
 
+		//helper functions to use as the "killFunctor" parameter in post(),fireAndForget(), and execute()
 		static std::function<bool()> _killTrue;
 		static std::function<bool()> _killFalse;
 		/**
@@ -259,6 +260,7 @@ namespace tasking
 		* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
 		* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::core::_private::Allocator for interfaz needed to your custom allocator
 		* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*)
+		* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		* @param[in] period Milliseconds
 		* @param[in] startTime milliseconds to begin task
 		* @return the process created for this task
@@ -273,6 +275,7 @@ namespace tasking
 		/**
 		 * @brief Convenient function to post no periodic task with signature void f()
 		 * @param[in] task_proc functor with signature void f(void)
+		 * @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		 */
 		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F,class KF = const std::function<bool()>&>		
 		std::shared_ptr<Process> fireAndForget(
@@ -281,16 +284,17 @@ namespace tasking
 			KF&& killFunction=_killTrue,
 			bool lockScheduler = true);
 		/**
-		* executes a function in a context of the Runnable.
+		* @brief Executes a function in a context of the Runnable.
 		* If this Runnable is in the same thread than caller then, depending on forcepost parameter, the functor
 		* will be executed directly (so Future<TRet> will be always available at return) or posted (so caller will
 		* need to wait on this Future or whatever other mechanism)
 		* @param[in] function Functor with signature TRet f() that will be executed in this Runnable
+		* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		*/
-		template <class TRet,class ErrorType = core::ErrorInfo,class F> 
-			Future<TRet,ErrorType> execute( F&& function);
-		template <class TRet,class ErrorType = core::ErrorInfo,class F> 
-			Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>);
+		template <class TRet,class ErrorType = core::ErrorInfo,class F,class KF = const std::function<bool()>&> 
+			Future<TRet,ErrorType> execute( F&& function,KF&& killFunction=_killFalse);
+		template <class TRet,class ErrorType = core::ErrorInfo,class F,class KF = const std::function<bool()>&> 
+			Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>,KF&& killFunction=_killFalse);
 
 		
 				
@@ -384,11 +388,11 @@ namespace tasking
 		return mTasks.getTimer();
 	}
 	
-	template <class TRet,class ErrorType, class F> 
-	Future<TRet,ErrorType> Runnable::execute( F&& function)
+	template <class TRet,class ErrorType, class F,class KF> 
+	Future<TRet,ErrorType> Runnable::execute( F&& function,KF&& killFunction)
 	{
 		Future<TRet,ErrorType> future;
-		return execute(std::forward<F>(function),future);		
+		return execute(std::forward<F>(function),future,std::forward<KF>(killFunction));		
 	}
 	/**
 	 * @brief Overload where output Future is given
@@ -396,36 +400,84 @@ namespace tasking
 	 * @param output Future where result must be put
 	 * @return same future as out
 	 */
-	template <class TRet,class ErrorType , class F> 
-	Future<TRet,ErrorType> Runnable::execute( F&& function,Future<TRet,ErrorType> output)
+	template <class TRet,class ErrorType , class F,class KF> 
+	Future<TRet,ErrorType> Runnable::execute( F&& f,Future<TRet,ErrorType> output,KF&& killFunction)
 	{
 		//always post the task, despite being in same thread. This is the most consistent way of doing it
-		post(
-				RUNNABLE_CREATETASK
-				(
-					returnAdaptor<void>
-					(
-						linkFunctor<void, TYPELIST()>(ExecuteTask<TRet, ErrorType, typename ::std::decay<F>::type>(::std::forward<F>(function)), output)
-						, ::tasking::EGenericProcessResult::KILL
-						)
-				),
-				 Runnable::_killFalse  //@todo revisar cómo debería ser
-				, 0
 
-			);		
+	//PRUEBAS
+		// try
+		// {
+		// 	if constexpr (std::is_same<void,TRet>::value)
+		// 	{
+		// 		f();
+		// 		output.setValue();
+		// 	}
+		// 	else
+		// 		output.setValue(f());
+		// }
+		// //check chances of Exception
+		// catch( std::exception& e )
+		// {					
+		// 	output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
+		// }
+		// catch(...)
+		// {
+			
+		// 	output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+
+		// }
+		
+		post(
+			[output,f = std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
+			{
+				try
+				{
+					if constexpr (std::is_same<void,TRet>::value)
+					{
+						f();
+						output.setValue();
+					}
+					else
+					{
+						output.setValue(f());
+					}
+				}
+				//check chances of Exception
+				catch( std::exception& e )
+				{					
+					output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
+				}
+				catch(...)
+				{
+					
+					output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+
+				}
+				return ::tasking::EGenericProcessResult::KILL;
+			},std::forward<KF>(killFunction)		
+		);
+		
+	
 		return output;
 	}
 	
 		
 	///@cond HIDDEN_SYMBOLS
-	//helper class por request task to Runnable
+	/*//helper class por request task to Runnable
 	template <class TRet,class ErrorType, class F> struct ExecuteTask
 	{
 		F mFunction;
 		ExecuteTask(F&&f):mFunction(std::forward<F>(f))
 		{			
 		}
-		void operator()( /*F& function,*/ Future<TRet,ErrorType> f )
+		ExecuteTask(const ExecuteTask& t):mFunction(t.mFunction)
+		{			
+		}
+		ExecuteTask(ExecuteTask&& t):mFunction(std::move(t.mFunction))
+		{			
+		}
+		void operator()(  Future<TRet,ErrorType> f )
 		{
 			try
 			{
@@ -434,26 +486,20 @@ namespace tasking
 			//check chances of Exception
 			catch( std::exception& e )
 			{
-				/*Runnable::ExecuteErrorInfo* ei = new Runnable::ExecuteErrorInfo;
-				ei->error = Runnable::ERRORCODE_EXCEPTION;
-				ei->exc = e.clone();
-				ei->isPointer = false;*/
 				f.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
 			}
 			catch(...)
 			{
-				/*Future_Base::ErrorInfo* ei = new Future_Base::ErrorInfo; 
-				ei->error = Runnable::ERRORCODE_UNKNOWN_EXCEPTION;
-				ei->errorMsg = "Unknown exception";*/
+				
 				f.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
 
 			}
 
 		}
 		bool operator ==( const ExecuteTask& ) const{ return true;} //for compliance
-	};
+	};*/
 	//specialization for void TRet
-	template <class ErrorType,class F> struct ExecuteTask<void,ErrorType,F>
+/*	template <class ErrorType,class F> struct ExecuteTask<void,ErrorType,F>
 	{
 		F mFunction;
 		ExecuteTask(F&&f) :mFunction(std::forward<F>(f))
@@ -477,7 +523,7 @@ namespace tasking
 			}
 		}
 		bool operator ==( const ExecuteTask& )const { return true;} //for compliance
-	};
+	};*/
 	///@endcond
 
 }

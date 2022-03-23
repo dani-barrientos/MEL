@@ -1,13 +1,12 @@
 #pragma once
-#ifdef DABAL_MACOSX
+//same code as in GCC/Clang. just in case a different file is hold to adress possible diferences in compiler
+#include <tasking/Process_X64_GCC.h>
+/*
 namespace tasking
 {
     struct MThreadAttributtes;
 }
 using tasking::MThreadAttributtes;
-#ifdef _MSC_VER
-extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSize ) ;
-#else
 extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 #endif
 
@@ -30,5 +29,6 @@ namespace tasking
     };
 }
 ///@endcond
-#endif
+*/
+
 

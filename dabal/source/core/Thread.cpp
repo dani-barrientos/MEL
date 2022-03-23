@@ -401,7 +401,7 @@ bool Thread::join(unsigned int millis)
 				text::error("Error joining thread. Thread not joinable");	
 				break;
 			case ESRCH:
-				text::error("Error joining thread. Thread {} doesn't exist",mHandle);
+				text::error("Error joining thread. Thread doesn't exist");
 				break;
 		}
 	}else

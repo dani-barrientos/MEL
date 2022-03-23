@@ -11,10 +11,7 @@ android/main/.gradle
 android/main/.idea
 android/main/app/.cxx
 android/main/app/build
-Testing/TAG
-Testing/20220223-1840/Test.xml
-Testing/Temporary/CTestCostData.txt
-Testing/Temporary/LastTest_20220223-1840.log
+Testing
 /DartConfiguration.tcl
 /CTestTestfile.cmake
 cmake_install.cmake
@@ -27,3 +24,10 @@ tests/Makefile
 Testing
 .vs/slnx.sqlite
 .vs/slnx.sqlite-journal
+dabal/include/execution/Continuation_COPY.h
+dabal/include/execution/ThreadPoolExecutor_COPY.h
+tests/Makefile
+Makefile
+dabal/cmake_install.cmake
+cmake_install.cmake
+CMakeCache_COPY.txt
