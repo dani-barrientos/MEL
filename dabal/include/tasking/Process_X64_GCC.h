@@ -5,11 +5,7 @@ namespace tasking
     struct MThreadAttributtes;
 }
 using tasking::MThreadAttributtes;
-#ifdef _MSC_VER
-extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSize ) ;
-#else
 extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
-#endif
 ///@cond HIDDEN_SYMBOLS
 namespace tasking
 {

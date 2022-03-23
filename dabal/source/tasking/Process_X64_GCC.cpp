@@ -1,11 +1,9 @@
-//version para MAC y simulador de IPhone y IPad
-#if defined(DABAL_X64_GCC) ||defined(DABAL_X64_CLANG)
-#include <tasking/Process.h>
 
+#include <tasking/Process.h>
+#include <tasking/ProcessScheduler.h>
 using tasking::Process;
 using tasking::MThreadAttributtes;
 
-#include <tasking/ProcessScheduler.h>
 
 
 #define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)
@@ -25,7 +23,6 @@ __attribute__ ((naked))
 static volatile void _checkMicrothread(MThreadAttributtes*,uint64_t msegs,Process* p,void* _executePtr )
 {
     asm volatile( "mov %rdi,%rax");
-//     asm volatile("sub %0,%%rax"::"i" (sizeof(MThreadAttributtes)));     
      asm volatile("mov %%rbx,(%P[v])(%%rax)"::[v] "i" (mIniRBXOFF) );
      asm volatile("mov %%r12,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF) );
      asm volatile("mov %%r13,(%P[v])(%%rax)"::[v] "i" (mRegistersOFF+8) );
@@ -264,5 +261,4 @@ void Process::_switchProcess( )
 
 }
 */
-#endif
 

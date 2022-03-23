@@ -153,14 +153,14 @@ static int _testsDebug(tests::BaseTest* test)
 			//return ::tasking::EGenericProcessResult::KILL;
 			return ::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::_killTrue,1000);
-		/*th1->post([](RUNNABLE_TASK_PARAMS)
+		th1->post([](RUNNABLE_TASK_PARAMS)
 		{
 			tasking::Process::wait(100);
 			text::debug("CUATRO");
 			tasking::Process::wait(2200);
 			text::debug("CINCO");
 			return ::tasking::EGenericProcessResult::CONTINUE;
-		},Runnable::_killTrue,700);*/
+		},Runnable::_killTrue,700);
 	//	core::waitForFutureThread(fut);
 		Thread::sleep(11000);		
 		text::info("HECHO");
