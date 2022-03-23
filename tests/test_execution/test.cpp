@@ -742,7 +742,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		
+		/*
 		text::info("Same process as the previous without using reference");
 		ss.str(""s); //empty stream
 		test->clearTextBuffer();
@@ -847,7 +847,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-				
+				*/
 		event.set();				
 	});
 	event.wait();
@@ -873,7 +873,7 @@ int _testLaunch( tests::BaseTest* test)
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
 			text::info(" BasicTests with ThreadPoolExecutor");
-			_basicTests(extp,th1.get(),test);
+			//_basicTests(extp,th1.get(),test);
 		}
 	}
 		
