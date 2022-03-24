@@ -411,7 +411,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		// 	})
 		// );	
 					
-/*
+
 		//now using reference
 		test->clearTextBuffer();
 		pp.logLevel = ll;
@@ -424,17 +424,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				return tc;
 				//throw std::runtime_error("chiquilin");
 			},std::ref(pp)) 
-			| execution::next([test,ll](auto& v) -> TestClass&
+			| execution::next([test,ll](TestClass& v) -> TestClass&
 			{
-				if (v.isValid() )
-				{					
-					v.value().val += 10;
-					return v.value();
-				}
-				else
-				{
-					throw std::runtime_error( v.error().errorMsg );
-				}
+				v.val += 10;
+				return v;
 			}));
 		if (res2.isValid() )
 		{
@@ -468,80 +461,57 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		auto res3 = tasking::waitForFutureMThread(
 			execution::start(ex) 
 			| execution::inmediate(std::ref(vec)) 
-			| execution::next([test,ll](auto& v)->vector<TestClass>&
+			| execution::next([test,ll](vector<TestClass>& v)->vector<TestClass>&
 				{				
 					//fill de vector with a simple case for the result to be predecible
 					//I don't want out to log the initial constructions, oncly constructons and after this function
 					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
-					v.value().resize(LOOP_SIZE,t);	
-					for(auto& elem:v.value())
+					v.resize(LOOP_SIZE,t);	
+					for(auto& elem:v)
 					{
 						elem.logLevel = ll;
 						elem.addToBuffer = true;
 					}
-					return v.value();
+					return v;
 				}
 				)
-				| execution::next([](auto& v)->vector<TestClass>&
+				| execution::next([](vector<TestClass>& v)->vector<TestClass>&
 				{
-					if (v.isValid() )
-					{					
-						for(auto& elem:v.value())
-							++elem.val;						
-					}
-					else
-						text::info("Error = {}",v.error().errorMsg);	
-					return v.value();	
+					for(auto& elem:v)
+						++elem.val;						
+					return v;	
 				})
-				| execution::bulk([](auto& v)
+				| execution::bulk([](vector<TestClass>& v)
 				{					
-					//multiply by 2 the first half
-					if (v.isValid() )
-					{					
-						auto& vec = v.value();
-						size_t endIdx = vec.size()/2;	
-						for(size_t i = 0; i < endIdx;++i )
-						{
-							vec[i].val = vec[i].val*2.f;	
-						}
+					//multiply by 2 the first half								
+					size_t endIdx = v.size()/2;	
+					for(size_t i = 0; i < endIdx;++i )
+					{
+						v[i].val = v[i].val*2.f;	
 					}
-					else
-						text::info("Bulk Error = {}",v.error().errorMsg);					
 				},
-				[](auto& v)			
+				[](vector<TestClass>& v)			
 				{
 					//multiply by 3 the second half
-					if (v.isValid() )
-					{					
-						auto& vec = v.value();
-						size_t startIdx = vec.size()/2;
-						for(size_t i = startIdx; i < vec.size();++i )
-						{
-							vec[i].val = vec[i].val*3.f;
-						}
+					size_t startIdx = v.size()/2;
+					for(size_t i = startIdx; i < v.size();++i )
+					{
+						v[i].val = v[i].val*3.f;
 					}
-					else
-						text::info("Bulk Error = {}",v.error().errorMsg);										
 				}) 
 				| execution::loop(
 					0,LOOP_SIZE,
-					[](int idx,auto& v)
+					[](int idx,vector<TestClass>& v)
 					{
-						if ( v.isValid())
-						{
-							v.value()[idx].val+=5.f;
-						}
+						v[idx].val+=5.f;
 					},1
 				)
 				| execution::next(
-					[](auto& v)->vector<TestClass>&
-					{					
-						if (v.isValid() )
-						{					
-							for(auto& elem:v.value())
-								++elem.val;		
-						}	
-						return v.value();				
+					[](vector<TestClass>& v)->vector<TestClass>&
+					{															
+						for(auto& elem:v)
+							++elem.val;		
+						return v;				
 					}
 		));
 			
@@ -569,7 +539,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		text::info("Same process as the previous without using reference");
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
-		auto res4 = tasking::waitForFutureMThread(
+	/*	auto res4 = tasking::waitForFutureMThread(
 			execution::start(ex) 
 			| execution::next([test,ll](const auto& v)
 			{				
@@ -673,8 +643,8 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				test->setFailed("Both vectors NUST NOT be the same ");
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		}
-		*/	
+		}*/
+		
 		event.set();
 	});
 	event.wait();
