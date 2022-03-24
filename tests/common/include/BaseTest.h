@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <sstream>
+#include <core/CriticalSection.h>
 namespace tests
 {
     using std::string;
@@ -61,5 +62,6 @@ namespace tests
         private:
             string mName;
             std::stringstream mTextBuffer;
+            core::CriticalSection mCS;
     };
 }

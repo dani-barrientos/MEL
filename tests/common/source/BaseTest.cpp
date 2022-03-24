@@ -57,7 +57,8 @@ void BaseTest::addTextToBuffer(string str,LogLevel ll)
             break;
         default:break;
     }
-    mTextBuffer << std::move(str);    
+    auto lck = core::Lock(mCS);
+    mTextBuffer << str;//std::move(str);    
 }
 string BaseTest::getBuffer() const
 {
