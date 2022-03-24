@@ -92,11 +92,11 @@ struct _Stack
 	if ( !_stck.compare(end,start) ){ \
 		test->setFailed();/*finish();*/} 
 
-template <size_t n>
+template <size_t nConsumers>
 class MasterThread : public ThreadRunnable
 {
 	public:
-		MasterThread(std::shared_ptr<ThreadRunnable> producer,std::array<std::shared_ptr<ThreadRunnable>,n> consumers,unsigned int maxTime,::tests::BaseTest* test) : 
+		MasterThread(std::shared_ptr<ThreadRunnable> producer,std::array<std::shared_ptr<ThreadRunnable>,nConsumers> consumers,unsigned int maxTime,::tests::BaseTest* test) : 
 			ThreadRunnable(true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime),mTest(test)
 		{
 		}	
@@ -107,7 +107,7 @@ class MasterThread : public ThreadRunnable
 	private:
 		typedef Future<int,MyErrorInfo> FutureType;
 
-		std::array<std::shared_ptr<ThreadRunnable>,n> mConsumers;
+		std::array<std::shared_ptr<ThreadRunnable>,nConsumers> mConsumers;
 		std::shared_ptr<ThreadRunnable> mProducer;
 		int				 mValueToAdd;
 		Barrier			mBarrier;
@@ -133,15 +133,15 @@ class MasterThread : public ThreadRunnable
 			//a common future ("channel") is created so producer will put ther its value and cosumers wait for it
 			FutureType channel;            
 			int nSinglethreads = 0;
-			auto prodIdx = rand()%(n+1);
+			auto prodIdx = rand()%(nConsumers+1);
 			mValueToAdd = rand()%50;  //value to add to input in consumers			
-			text::debug("Producer idx {} de {}. Consumers must add {} to their input",prodIdx,n,mValueToAdd);		
+			text::debug("Producer idx {} de {}. Consumers must add {} to their input",prodIdx,nConsumers,mValueToAdd);		
 			int nTasks = 0;
 
 			//pause consumer. They will be started when al ltask posted
 			for(auto th:mConsumers)
 				th->suspend();
-			for(size_t i = 0; i < n; ++i)
+			for(size_t i = 0; i < nConsumers; ++i)
 			{
 				if ( i == prodIdx)
 				{
@@ -225,7 +225,7 @@ class MasterThread : public ThreadRunnable
 					);
 				}
 			}
-			if ( prodIdx == n)
+			if ( prodIdx == nConsumers)
 			{
 				mProducer->fireAndForget(
 						mpl::linkFunctor<void,TYPELIST()>(
@@ -362,9 +362,9 @@ int test_threading::test_futures( tests::BaseTest* test)
 	
 	auto producer = ThreadRunnable::create(true);
 	
-	text::set_level(text::level::debug);
+	text::set_level(text::level::info);
 
-	constexpr size_t n = 10;
+	constexpr size_t nConsumers = 10;
 	constexpr unsigned int DEFAULT_TESTTIME = 60*1000;
 	unsigned int testTime;
 	//get test time (seconds)
@@ -375,12 +375,12 @@ int test_threading::test_futures( tests::BaseTest* test)
 	}else
 		testTime = DEFAULT_TESTTIME;
 	text::info("Test time {}",testTime);
-	std::array< std::shared_ptr<ThreadRunnable>,n> consumers;
-	for(size_t i=0;i<n;++i)
+	std::array< std::shared_ptr<ThreadRunnable>,nConsumers> consumers;
+	for(size_t i=0;i<nConsumers;++i)
 	{
 		consumers[i] = ThreadRunnable::create(true);
 	}
-	auto master = make_shared<MasterThread<n>>(producer,consumers,testTime,test);
+	auto master = make_shared<MasterThread<nConsumers>>(producer,consumers,testTime,test);
 	ThreadRunnableProxy proxy(master);
 	master->start();	
 		
