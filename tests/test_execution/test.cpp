@@ -136,6 +136,19 @@ struct TestClass
 		}
 	}
 };
+
+using execution::ExFuture;
+using execution::Executor;
+//voy a tener temas con el ErrorInfo
+//la idea es que devuelva un ExFutre con una tupla con el valor de todos
+template <class ExecutorAgent,class ...FTypes,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,void,ErrorType> 
+    on_all(Executor<ExecutorAgent> ex,FTypes...)
+    {                
+        typedef typename ExFuture<ExecutorAgent,void,ErrorType>::ValueType  ValueType;
+        ExFuture<ExecutorAgent,void,ErrorType> result(ex);
+        
+        return result;
+    }
 //funcion para pruebas a lo cerdo
 int _testDebug(tests::BaseTest* test)
 {
@@ -162,17 +175,17 @@ int _testDebug(tests::BaseTest* test)
 			return arg;
 		},std::ref(var))	
 		//execution::start(exr)
-		| execution::next([](int& arg)
+		| execution::next([](int& arg)->int&
 		{
 			arg = 20;
-			throw std::runtime_error("ERR EN NEXT1");
-
-			return arg + 5;
+			//throw std::runtime_error("ERR EN NEXT1");
+			return arg;
 		}) 
 		
 		| execution::next([](int& v)
 		{
 	//		throw std::runtime_error("ERR EN NEXT2");
+			v = 21;
 			return v+5;
 		})
 		| execution::getError([](const auto& err)
@@ -213,7 +226,7 @@ int _testDebug(tests::BaseTest* test)
 		auto res = ::core::waitForFutureThread(f);
 		/*if ( res.isValid())
 		{
-			text::info("RES = {}",res.value());
+			text::info("Rstd::ref(ES = {}",res.value());
 		}else
 			text::info("ERR = {}",res.error().errorMsg);
 			*/
@@ -314,6 +327,7 @@ int _testDebug(tests::BaseTest* test)
 
 template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
 {
+
 	core::Event event;
 	TestClass pp(8,test);
 	vector<TestClass> vec;
@@ -421,6 +435,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			execution::launch(ex,[](TestClass& tc) -> TestClass&
 			{
 				tc.val = 7;
+				tasking::Process::wait(1000);
 				return tc;
 				//throw std::runtime_error("chiquilin");
 			},std::ref(pp)) 
@@ -539,88 +554,71 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		text::info("Same process as the previous without using reference");
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
-	/*	auto res4 = tasking::waitForFutureMThread(
+		auto res4 = tasking::waitForFutureMThread(
 			execution::start(ex) 
-			| execution::next([test,ll](const auto& v)
+			| execution::next([test,ll]
 			{				
 				return vector<TestClass>();
 			})
-				| execution::next([test,ll](auto& v)
+				| execution::next([test,ll](vector<TestClass>& v)
 				{				
 					//fill de vector with a simple case for the result to be predecible
 					//I don't want out to log the initial constructions, oncly constructons and after this function
 					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
-					v.value().resize(LOOP_SIZE,t);	
-					for(auto& elem:v.value())
+					v.resize(LOOP_SIZE,t);	
+					for(auto& elem:v)
 					{
 						elem.logLevel = ll;
 						elem.addToBuffer = true;
 					}
-					return std::move(v.value()); 
+					return std::move(v); 
 				}
 				 )
-				| execution::next([](auto& v)
+				| execution::next([](vector<TestClass>& v)
 				{
-					if (v.isValid() )
-					{	
-						size_t s = v.value().size();
-						for(auto& elem:v.value())
-							++elem.val;						
-					}
-					else
-						text::info("Error = {}",v.error().errorMsg);	
-					return std::move(v.value());	
+				
+					size_t s = v.size();
+					for(auto& elem:v)
+						++elem.val;						
+					return std::move(v);	
 				})
-				| execution::bulk([](auto& v)
+				| execution::bulk([](vector<TestClass>& v)
 				{					
-					//multiply by 2 the first half
-					if (v.isValid() )
-					{					
-						auto& vec = v.value();
-						size_t endIdx = vec.size()/2;	
-						for(size_t i = 0; i < endIdx;++i )
-						{
-							vec[i].val = vec[i].val*2.f;	
-						}
+					//multiply by 2 the first half			
+					size_t endIdx = v.size()/2;	
+					for(size_t i = 0; i < endIdx;++i )
+					{
+						v[i].val = v[i].val*2.f;	
 					}
-					else
-						text::info("Bulk Error = {}",v.error().errorMsg);					
 				},
-				[](auto& v)			
+				[](vector<TestClass>& v)			
 				{
 					//multiply by 3 the second half
-					if (v.isValid() )
-					{					
-						auto& vec = v.value();
-						size_t startIdx = vec.size()/2;
-						for(size_t i = startIdx; i < vec.size();++i )
-						{
-							vec[i].val = vec[i].val*3.f;
-						}
+
+					size_t startIdx = v.size()/2;
+					for(size_t i = startIdx; i < v.size();++i )
+					{
+						v[i].val = v[i].val*3.f;
 					}
-					else
-						text::info("Bulk Error = {}",v.error().errorMsg);										
 				}) 
 				| execution::loop(
 					0,LOOP_SIZE,
-					[](int idx,auto& v)
+					[](int idx,vector<TestClass>& v)
 					{
-						if ( v.isValid())
-						{
-							auto& vec = v.value();
-							vec[idx].val+=5.f;
-						}
+						tasking::Process::wait(100);
+						v[idx].val+=5.f;
+						tasking::Process::wait(5000);
 					},1
 				)
 				| execution::next(
-					[](auto& v)
+					[](vector<TestClass>& v)
 					{					
-						if (v.isValid() )
-						{					
-							for(auto& elem:v.value())
-								++elem.val;		
-						}	
-						return std::move(v.value());				
+						for(auto& elem:v)
+						{
+							++elem.val;		
+							tasking::Process::wait(100);
+						}
+						return std::move(v);				
 					})
 		);
 		
@@ -643,8 +641,68 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				test->setFailed("Both vectors NUST NOT be the same ");
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		}*/
-		
+		}
+		text::info("Calculate mean of a long vector");
+		typedef vector<float> VectorType;
+		auto values = std::make_unique<VectorType>();  //create pointer because this is executed in a microthread, so no local variable can be referenced
+		//first, create random, big vector in another thread
+		//@todo ampliar este ejemplo a un when_all
+		auto res = execution::launch(ex,[](VectorType& v)->VectorType&
+		{
+			//generate random big vector
+			int vecSize = std::rand()%1000'000;
+			v.resize(vecSize);
+			for( size_t i = 0; i < vecSize;++i)
+				v[i] = std::rand()/3.f; //to create a float
+			return v;
+		},std::ref(*values))
+		| execution::bulk(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+			[](VectorType& v)
+			{
+	/*	ostras.... podría querer devolver otra cosa en el bulk!!
+		en este caos me inresesarçia una tupla. la cuestión es como acceder a 
+		eso->¿y si devuelvo siempre una tupla donde cada función aporta su valor???
+*/
+				float mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t endIdx = tam;
+				for(size_t i = 0; i < endIdx;++i)
+					mean += v[i];
+				mean /= tam;
+			},
+			[](VectorType& v)
+			{
+				float mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam;
+				size_t endIdx = tam*2;
+				for(size_t i = 0; i < endIdx;++i)
+					mean += v[i];
+				mean /= tam;
+			},
+			[](VectorType& v)
+			{
+				float mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam*2;
+				size_t endIdx = tam*3;
+				for(size_t i = 0; i < endIdx;++i)
+					mean += v[i];
+				mean /= tam;
+			},
+			[](VectorType& v)
+			{
+				float mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam*3;
+				size_t endIdx = v.size();
+				for(size_t i = 0; i < endIdx;++i)
+					mean += v[i];
+				mean /= tam;
+			}
+		);
+		//ss.str(""s); //empty stream
+		test->clearTextBuffer();
 		event.set();
 	});
 	event.wait();
@@ -671,7 +729,7 @@ int _testLaunch( tests::BaseTest* test)
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
 			text::info("\n\tBasicTests with ThreadPoolExecutor");
-		//	_basicTests(extp,th1.get(),test);
+			_basicTests(extp,th1.get(),test);
 			text::info("\n\tFinished BasicTests with ThreadPoolExecutor");
 		}
 	}

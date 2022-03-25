@@ -29,28 +29,28 @@ namespace execution
             const std::weak_ptr<ThreadPool>& getPool() const{ return mPool;}
             ///@{ 
             //! brief mandatory interface from Executor
-            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet> output) const
+            template <class TRet,class TArg,class F,class ErrorType = ::core::ErrorInfo> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet,ErrorType> output) const
             {
                 if ( !mPool.expired())
                 {
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet,ErrorType>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                 }            
             }
-            template <class TRet,class F> void launch( F&& f,ExFuture<ThreadPool,TRet> output) const
+            template <class TRet,class F,class ErrorType = ::core::ErrorInfo> void launch( F&& f,ExFuture<ThreadPool,TRet,ErrorType> output) const
             {
                   if ( !mPool.expired())
                 {
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);               
+                    th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet,ErrorType>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);               
                 }       
             }
             template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
-            template <class TArg,class ...FTypes> ::parallelism::Barrier bulk(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions);
+            template <class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ::parallelism::Barrier bulk(ExFuture<ThreadPool,TArg,ErrorType> fut, FTypes&&... functions);
             ///@}
         private:
             std::weak_ptr<ThreadPool> mPool;      
@@ -65,9 +65,9 @@ namespace execution
     }
     namespace _private
     {
-        template <class T> class ValueWrapper
+        template <class T,class ErrorType> class ValueWrapper
         {
-            typedef typename execution::ExFuture<ThreadPool,T> FutType;
+            typedef typename execution::ExFuture<ThreadPool,T,ErrorType> FutType;
             public:
                 ValueWrapper(const FutType& fut):mFut(fut){}
                 ValueWrapper(FutType&& fut):mFut(std::move(fut)){}
@@ -88,30 +88,19 @@ namespace execution
                 {
                     return mFut.getValue().error();
                 }
+                operator T& (){ return mFut.getValue().value();}
+                operator const T& () const{ return mFut.getValue().value();}
+
             private:
             FutType mFut;
         };
     }
-    template <class TArg,class ... FTypes> ::parallelism::Barrier Executor<ThreadPool>::bulk(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions)
+    template <class TArg,class ... FTypes,class ErrorType> ::parallelism::Barrier Executor<ThreadPool>::bulk(ExFuture<ThreadPool,TArg,ErrorType> fut, FTypes&&... functions)
     {            
         ThreadPool::ExecutionOpts exopts;
         exopts.useCallingThread = false;
-        exopts.groupTasks = !getOpts().independentTasks;
-                        
-        //auto barrier = ex.getPool().lock()->execute(exopts,input,std::forward<FTypes>(functions)...);
-/*tengo un problema importante aquí pasando el fut.getValue(), que internamente el execute ahce copia 
-        //auto barrier = fut.ex.getPool().lock()->execute(exopts,std::ref(input),std::forward<FTypes>(std::get<FTypes>(fs))...);
-        creo que la solucion sería ejecutar una lambda intermedia por cada funcion. pero al ser parametros variables...
-        cómo crear tatnas lambdas como functiones?
-        igual tengo que crea ralguna clase que capture el input por referencia y tenga un operator
-        el ThreadPool, tal y como está, no puede resolverlo
-quien llama a esta funcion ya captura el future, por lo que podrái usar referencia ??
-*/
-        //return getPool().lock()->execute(exopts,fut.getValue(),std::forward<FTypes>(functions)...);
-        auto vw = _private::ValueWrapper<TArg>(fut);
-        return getPool().lock()->execute(exopts,vw,std::forward<FTypes>(functions)...);
-        //I have some issues with reference management and this next method i doesn't work. I think is because the auto& in parameter
-        //return getPool().lock()->execute(exopts,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
+        exopts.groupTasks = !getOpts().independentTasks;                        
+        return getPool().lock()->execute(exopts,_private::ValueWrapper<TArg,ErrorType>(fut),std::forward<FTypes>(functions)...);    
 
 
     }

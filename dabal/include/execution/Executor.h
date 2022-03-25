@@ -4,7 +4,7 @@
 #include <type_traits>
 /**
  * @brief High level execution utilities
- * @details This namespace contains class, functions..to give a consisten execution interface independet of the underliying execution system
+ * @details This namespace contains class, functions..to give a consistent execution interface independent of the underliying execution system
  */
 namespace execution
 {        
@@ -24,7 +24,7 @@ namespace execution
     };
     /**
      * @brief Extension of core::Future to apply to executors
-     *      
+     * Any executor function will return an ExFuture, allowing this way to chain functions
      */
     template <typename ExecutorAgent,typename ResultType,typename ErrorType>
 	class ExFuture : public Future<ResultType,ErrorType>
@@ -102,7 +102,10 @@ namespace execution
             Executor<ExecutorAgent> ex;
 		
     };
-    
+    /**
+     * @brief Launch given functor in given executor
+     * @return ExFuture with return type of function
+     */
     template <class ErrorType = ::core::ErrorInfo,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>,ErrorType> launch( Executor<ExecutorAgent> ex,F&& f)
     {        
         typedef std::invoke_result_t<F> TRet;
@@ -119,6 +122,10 @@ namespace execution
         }
         return result;
     }
+    /**
+     * @brief Launch given functor in given executor, passing it input parameter
+     * @return ExFuture with return type of function
+     */
     template <class ErrorType = ::core::ErrorInfo,class TArg,class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg>,ErrorType> launch( Executor<ExecutorAgent> ex,F&& f,TArg&& arg)
     {
         /*
@@ -133,7 +140,7 @@ namespace execution
         ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
         return result;
     }
-        /**
+    /**
      * @brief Start a chain of execution in given executor.     
      * 
      * @tparam ExecutorAgent 
@@ -166,13 +173,7 @@ namespace execution
                  //on calling thread and to decouple tasks and no staturate execution resoruce and independence tasks
                  //hasta aquí las copias tienen sentido
                 if ( input.isValid() )
-                {                    
-                    // using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
-                    // fut.ex. template launch<NewType>([]( TRet&& arg) mutable
-                    // {
-                    //    return arg;
-                    // },std::forward<TRet>(arg),result);                                                           
-                    //otra forma
+                {                                    
                     launch(fut.ex,[result,arg = std::forward<TRet>(arg)]() mutable
                     {
                         result.setValue(std::forward<TRet>(arg));                        
@@ -181,7 +182,7 @@ namespace execution
                 else
                 {
                     //set error as task in executor
-                    launch(fut.ex,[result,err = input.error()]( ) mutable
+                    launch(fut.ex,[result,err = std::move(input.error())]( ) mutable
                     {
                        result.setError(std::move(err));
                     });
@@ -196,6 +197,7 @@ namespace execution
      * @brief Attach a functor to execute when input fut is complete
      * Given functor will be executed inf the input ExFuture executor. 
      * input parameter is always pass as reference
+     * @return An ExFuture with type given by functor result.
      */
     template <class F,class TArg,class ExecutorAgent,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg&>,ErrorType> 
         next(ExFuture<ExecutorAgent,TArg,ErrorType> source, F&& f)
@@ -210,15 +212,15 @@ namespace execution
 
                 if ( input.isValid() )
                 {                                       
-                    source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg,ErrorType> arg) mutable
+                    source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg,ErrorType> arg) mutable ->TRet 
                     {                                          
                         return f(arg.getValue().value());                         
-                    },source,result);
+                    },source,result);            
                 }
                 else
                 {
                     //set error as task in executor
-                    launch(source.ex,[result,err = input.error()]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
                     {
                        result.setError(std::move(err));
                     });
@@ -251,7 +253,7 @@ namespace execution
                 else
                 {
                     //set error as task in executor
-                    launch(source.ex,[result,err = input.error()]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
                     {
                        result.setError(std::move(err));
                     });
@@ -323,7 +325,7 @@ namespace execution
     /**
      * @brief parallel (possibly, depending on executor capabilities) loop
      * @note concrete executor must provide a member loop function with neccesary interface
-     * @return ExFuture<ExecutorAgent,TArg> 
+     * @return A ExFuture with same value as input future, whose content IS MOVED
      */
     template <class ExecutorAgent,class TArg, class I, class F,class ErrorType = ::core::ErrorInfo>	 ExFuture<ExecutorAgent,TArg,ErrorType> loop(ExFuture<ExecutorAgent,TArg,ErrorType> source,I&& begin, I&& end, F&& functor, int increment = 1)
     {
@@ -347,14 +349,14 @@ namespace execution
                         barrier.subscribeCallback(
                             std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,source](const ::parallelism::BarrierData& ) mutable
                             {
-                                //result.assign(std::move(source.getValue()));  no puedo hacer el move porque invalido el future original
-                                result.assign(source.getValue());
+                                result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
+                                //result.assign(source.getValue());
                                 return ::core::ECallbackResult::UNSUBSCRIBE; 
                             }));
                     }else
                     {
                         //set error as task in executor
-                        launch(source.ex,[result,err = input.error()]( ) mutable
+                        launch(source.ex,[result,err = std::move(input.error())]( ) mutable
                         {
                             result.setError(std::move(err));
                         });
@@ -401,7 +403,7 @@ namespace execution
                     }else
                     {
                         //set error as task in executor
-                        launch(source.ex,[result,err = input.error()]( ) mutable
+                        launch(source.ex,[result,err = std::move(input.error())]( ) mutable
                         {
                             result.setError(std::move(err));
                         });
@@ -419,6 +421,11 @@ namespace execution
             }));
         return result;
     }
+    /**
+     * @brief Execute given functions in a (possibly, depending con concrete executor) parallel way
+     * 
+     @return A ExFuture with same value as input future, whose content IS MOVED
+     */
     template <class ExecutorAgent,class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,TArg,ErrorType> bulk(ExFuture<ExecutorAgent,TArg,ErrorType> source, FTypes&&... functions)
     {
         ExFuture<ExecutorAgent,TArg,ErrorType> result(source.ex);
@@ -432,14 +439,13 @@ namespace execution
                     barrier.subscribeCallback(
                         std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([source,result](const ::parallelism::BarrierData& ) mutable
                         {                        
-                            //result.assign(std::move(source.getValue())); el move es incorrecto!!! nada garantiza que no quiera el future fuera
-                            result.assign(source.getValue());
+                            result.assign(std::move(source.getValue()));//@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
                             return ::core::ECallbackResult::UNSUBSCRIBE; 
                         }));
                 }else
                 {
                      //set error as task in executor
-                    launch(source.ex,[result,err = input.error()]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
                     {
                        result.setError(std::move(err));
                     });
@@ -450,7 +456,7 @@ namespace execution
         return result;
     }
     /**
-     * @brief capture previous error, if any, and execute the function
+     * @brief Capture previous error, if any, and execute the function
      * this function works similar to next, but receiving an Error as the parameter and must return
      * same type as input future is
      * no error was raised in previous works of the chain, the functions is not executed
@@ -478,6 +484,7 @@ namespace execution
         );
         return result;
     }
+    
     namespace _private
     {
         template <class TRet> struct ApplyInmediate
@@ -551,36 +558,40 @@ namespace execution
     {
         return _private::ApplyInmediate<TRet>(std::forward<TRet>(arg));
     }
-    //@brief version for use with operator |
+    /**
+     * @brief Version for use with operator |     
+     */
     template <class NewExecutionAgent> _private::ApplyTransfer<NewExecutionAgent> transfer(Executor<NewExecutionAgent> newAgent)
     {
         return _private::ApplyTransfer<NewExecutionAgent>(newAgent);
     }
     
-    //@brief version for use with operator |
+    ///@brief version for use with operator |
     template <class F> _private::ApplyNext<F> next(F&& f)
     {
         return _private::ApplyNext<F>(std::forward<F>(f));
     }
+    ///@brief version for use with operator |
     template <class I,class F> _private::ApplyLoop<I,F> loop(I&& begin, I&& end, F&& functor, int increment = 1)
     {
         return _private::ApplyLoop<I,F>(begin,end,std::forward<F>(functor),increment);
     }
+    ///@brief version for use with operator |
     template <class ...FTypes> _private::ApplyBulk<FTypes...> bulk(FTypes&&... functions)
     {
         return _private::ApplyBulk<FTypes...>(std::forward<FTypes>(functions)...);
     }
-     template <class F> _private::ApplyError<F> getError(F&& f)
+    ///@brief version for use with operator |
+    template <class F> _private::ApplyError<F> getError(F&& f)
     {
         return _private::ApplyError<F>(std::forward<F>(f));
     }
     /**
      * @brief overload operator | for chaining
     */
-    template <class ExecutorAgent,class TRet1,class U,class ErrorType = ::core::ErrorInfo> auto operator | (ExFuture<ExecutorAgent,TRet1,ErrorType> input,U&& u)
+    template <class ExecutorAgent,class TRet1,class U,class ErrorType = ::core::ErrorInfo> auto operator | (const ExFuture<ExecutorAgent,TRet1,ErrorType>& input,U&& u)
     {
         return u(input);
-
     }            
 
 }

@@ -160,7 +160,7 @@ namespace execution
             ptr->getScheduler().getLock().leave();
         return barrier;
     }
-    template <class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ::parallelism::Barrier Executor<Runnable>::bulk( ExFuture<Runnable,TArg,ErrorType> fut,FTypes&&... fs)
+    template <class TArg,class ...FTypes,class ErrorType> ::parallelism::Barrier Executor<Runnable>::bulk( ExFuture<Runnable,TArg,ErrorType> fut,FTypes&&... fs)
     {
         ::parallelism::Barrier barrier(sizeof...(fs));
         //_private::_invoke(fut,barrier,std::forward<FTypes>(std::get<FTypes>(fs))...);
