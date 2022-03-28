@@ -57,6 +57,7 @@ struct TestClass
 	tests::BaseTest* test;
 	tests::BaseTest::LogLevel logLevel;
 	bool addToBuffer;
+	TestClass():test(nullptr){}
 	TestClass(tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(1),test(aTest),logLevel(ll),addToBuffer(atb)
 	{
 		_printTxt("TestClass constructor\n");
@@ -136,19 +137,81 @@ struct TestClass
 		}
 	}
 };
-
+/*
 using execution::ExFuture;
 using execution::Executor;
 //voy a tener temas con el ErrorInfo
-//la idea es que devuelva un ExFutre con una tupla con el valor de todos
-template <class ExecutorAgent,class ...FTypes,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,void,ErrorType> 
-    on_all(Executor<ExecutorAgent> ex,FTypes...)
+//hace un
+//la idea es que devuelva un ExFuture con una tupla con el valor de todos
+namespace _private
+{
+
+	template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::parallelism::Barrier& barrier, FType fut)
+	{
+		fut.subscribeCallback(
+            std::function<::core::ECallbackResult( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
+			{
+				std::get<n>(*tup) = std::move(input);
+				barrier.set();
+				return ::core::ECallbackResult::UNSUBSCRIBE; 
+			}));
+	}
+
+	template <int n,class TupleType,class FType,class ...FTypes> void _on_all(TupleType* tup, ::parallelism::Barrier& barrier,FType fut,FTypes... rest)
+	{
+		_on_all<n>(tup,barrier,fut);
+		_on_all<n+1>(tup,barrier,rest...);
+	}
+	template <int n,class ErrorType,class SourceTuple, class TargetTuple> std::optional<ErrorType> _moveValue(SourceTuple& st,TargetTuple& tt)
+	{
+		if constexpr (n != std::tuple_size<SourceTuple>::value)
+		{
+			auto& val = std::get<n>(st);
+			if ( val.isValid() )
+			{
+				std::get<n>(tt) = std::move(val.value());
+				return _moveValue<n+1,ErrorType>(st,tt);
+			}else
+				return std::move(val.error());
+		}
+		return std::nullopt;
+	}
+}
+//solo vale para funciones que devuelve algo..
+//lo que devuelva tiene que ser defaultconstructible
+template <class ExecutorAgent,class ...FTypes,class ErrorType = ::core::ErrorInfo> auto
+    on_all(Executor<ExecutorAgent> ex,FTypes... futs)
     {                
-        typedef typename ExFuture<ExecutorAgent,void,ErrorType>::ValueType  ValueType;
-        ExFuture<ExecutorAgent,void,ErrorType> result(ex);
-        
+		typedef std::tuple<typename FTypes::ValueType::Type...> ReturnType;
+		static_assert(std::is_default_constructible<ReturnType>::value,"All types returned by the input ExFutures must be DefaultConstructible");
+        ExFuture<ExecutorAgent,ReturnType,ErrorType> result(ex);
+		::parallelism::Barrier barrier(sizeof...(futs));
+
+		//ReturnType* tupleRes = new ReturnType;
+		typedef std::tuple<typename FTypes::ValueType...>  _ttype;
+		_ttype* tupleRes = new _ttype;
+
+		barrier.subscribeCallback(
+		std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,tupleRes](const ::parallelism::BarrierData& ) mutable
+		{
+			ReturnType resultVal;			
+			auto r = ::_private::_moveValue<0,ErrorType>(*tupleRes,resultVal);
+			if ( r == std::nullopt)
+			{
+				result.setValue(std::move(resultVal));
+			}else
+			{
+				stringstream ss;
+				ss << "Error in element. " << r.value().errorMsg;
+				result.setError( ErrorType(0,ss.str()));
+			}
+			delete tupleRes;
+			return ::core::ECallbackResult::UNSUBSCRIBE; 
+		}));
+        ::_private::_on_all<0,_ttype>(tupleRes,barrier,futs...);  //la idea es pasar una barrera o lo que sea y devolver resultado al activarse
         return result;
     }
+	*/
 //funcion para pruebas a lo cerdo
 int _testDebug(tests::BaseTest* test)
 {
@@ -163,9 +226,34 @@ int _testDebug(tests::BaseTest* test)
 	parallelism::ThreadPool::ExecutionOpts exopts;
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
-	{
+	{		
+		{	
+			auto idc = std::is_default_constructible<TestClass>::value;
+			auto f1 = 
+			execution::launch(exr,
+			[test](int arg)
+			{
+				//throw std::runtime_error("ERR EN LAUNCH");
+				return TestClass (8,test);
+				//return 1;
+			},7);
+			auto f2 = 
+			execution::launch(exr,
+			[]()
+			{
+				throw std::runtime_error("ERR EN LAUNCH");
+				return "pepe";
+			});
+			auto f3 = execution::on_all(exr,f1,f2);
+			core::waitForFutureThread(f3);
+			if ( f3.getValue().isValid())
+			{				
+				const auto& val = f3.getValue().value();
+				text::info("tras on_all[ {}, {} ]",std::get<0>(val).val,std::get<1>(val));
+			}else
+				text::info("Error {}", f3.getValue().error().errorMsg);
+		}
 		int var = 7;
-		
 		auto f = 
 		execution::launch<test_execution::MyErrorInfo>(exr,
 		[](int& arg)->int&
@@ -188,7 +276,7 @@ int _testDebug(tests::BaseTest* test)
 			v = 21;
 			return v+5;
 		})
-		| execution::getError([](const auto& err)
+		| execution::captureError([](const auto& err)
 		{
 			text::info("Hay error {}", err.errorMsg);
 			return 8;
@@ -218,7 +306,7 @@ int _testDebug(tests::BaseTest* test)
 		{
 			text::info("IT2 {}. ");
 		}) 
-		| execution::getError([](const auto& err)
+		| execution::captureError([](const auto& err)
 		{
 			text::info("HAY ERROR AL FINAL. {}",err.errorMsg);
 		})
@@ -342,7 +430,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			
 		auto th2 = ThreadRunnable::create();
 		execution::Executor<Runnable> ex2(th2);		
-		auto res1 = tasking::waitForFutureMThread(
+		auto res1_1 = 
 			execution::start(ex)
 			| execution::inmediate(TestClass(initVal,test,ll)) 				
 			| execution::bulk(
@@ -366,13 +454,17 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				//text::info("Val = {}",v.value().val);
 				v.val+= 3;
 				return std::move(v); //avoid copy constructor			
-			})
-		);		
-		
-		bool iv = res1.isValid();
+			});
+		//very simple second job
+		auto res1_2 = execution::launch(ex,[]()
+		{
+			return "pepe";
+		});
+		//use on_all to launch two "simultaneus" jobs and wait for both
+		auto res1 = tasking::waitForFutureMThread( execution::on_all(ex,res1_1,res1_2) );
 		if (res1.isValid() )
 		{
-			int finalVal = res1.value().val;
+			int finalVal = std::get<0>(res1.value()).val;
 			int expectedVal = initVal + 5+3;
 			text::debug("Finish Val = {}",finalVal);
 			if (finalVal != expectedVal)
@@ -383,7 +475,9 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			}
 		}
 		else
-			text::info("Error = {}",res1.error().errorMsg);				
+			text::info("Error = {}",res1.error().errorMsg);
+			
+
 		}		
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
 		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							

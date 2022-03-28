@@ -462,7 +462,7 @@ namespace execution
      * no error was raised in previous works of the chain, the functions is not executed
      */    
     template <class F,class TArg,class ExecutorAgent,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,TArg,ErrorType> 
-        getError(ExFuture<ExecutorAgent,TArg,ErrorType> source, F&& f)
+        captureError(ExFuture<ExecutorAgent,TArg,ErrorType> source, F&& f)
     {                
         typedef typename ExFuture<ExecutorAgent,TArg,ErrorType>::ValueType  ValueType;
         ExFuture<ExecutorAgent,TArg,ErrorType> result(source.ex);
@@ -548,10 +548,39 @@ namespace execution
             F mFunc;
             template <class TArg,class ExecutorAgent,class ErrorType = ::core::ErrorInfo> auto operator()(ExFuture<ExecutorAgent,TArg,ErrorType> inputFut)
             {
-                return ::execution::getError(inputFut,std::forward<F>(mFunc));
+                return ::execution::captureError(inputFut,std::forward<F>(mFunc));
             }
         };
-        
+        template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::parallelism::Barrier& barrier, FType fut)
+        {
+            fut.subscribeCallback(
+                std::function<::core::ECallbackResult( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
+                {
+                    std::get<n>(*tup) = std::move(input);
+                    barrier.set();
+                    return ::core::ECallbackResult::UNSUBSCRIBE; 
+                }));
+        }
+
+        template <int n,class TupleType,class FType,class ...FTypes> void _on_all(TupleType* tup, ::parallelism::Barrier& barrier,FType fut,FTypes... rest)
+        {
+            _on_all<n>(tup,barrier,fut);
+            _on_all<n+1>(tup,barrier,rest...);
+        }
+        template <int n,class ErrorType,class SourceTuple, class TargetTuple> std::optional<std::pair<int,ErrorType>> _moveValue(SourceTuple& st,TargetTuple& tt)
+        {
+            if constexpr (n != std::tuple_size<SourceTuple>::value)
+            {
+                auto& val = std::get<n>(st);
+                if ( val.isValid() )
+                {
+                    std::get<n>(tt) = std::move(val.value());
+                    return _moveValue<n+1,ErrorType>(st,tt);
+                }else
+                    return std::make_pair(n,std::move(val.error()));
+            }
+            return std::nullopt;
+        }
     }
     //@brief version for use with operator |
     template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
@@ -582,7 +611,7 @@ namespace execution
         return _private::ApplyBulk<FTypes...>(std::forward<FTypes>(functions)...);
     }
     ///@brief version for use with operator |
-    template <class F> _private::ApplyError<F> getError(F&& f)
+    template <class F> _private::ApplyError<F> captureError(F&& f)
     {
         return _private::ApplyError<F>(std::forward<F>(f));
     }
@@ -592,6 +621,43 @@ namespace execution
     template <class ExecutorAgent,class TRet1,class U,class ErrorType = ::core::ErrorInfo> auto operator | (const ExFuture<ExecutorAgent,TRet1,ErrorType>& input,U&& u)
     {
         return u(input);
-    }            
+    } 
+    /**
+     * @brief return ExFutre which will be executed, in the context of the given executor ex,
+     * when all the given ExFutures are triggered. The resulting ExFuture has a std::tuple with the types if the given ExFutures
+     * in the same order. So, all of them must return a value, void is not allowed
+     * If any of the given input ExFuture has error, the returned one will have the same error indicating  the element who failed
+     *   
+     */
+    template <class ExecutorAgent,class ...FTypes,class ErrorType = ::core::ErrorInfo> auto
+    on_all(Executor<ExecutorAgent> ex,FTypes... futs)
+    {                
+		typedef std::tuple<typename FTypes::ValueType::Type...> ReturnType;
+		static_assert(std::is_default_constructible<ReturnType>::value,"All types returned by the input ExFutures must be DefaultConstructible");
+        ExFuture<ExecutorAgent,ReturnType,ErrorType> result(ex);
+		::parallelism::Barrier barrier(sizeof...(futs));
+		typedef std::tuple<typename FTypes::ValueType...>  _ttype;
+		_ttype* tupleRes = new _ttype;
+
+		barrier.subscribeCallback(
+		std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,tupleRes](const ::parallelism::BarrierData& ) mutable
+		{
+			ReturnType resultVal;			
+			auto r = ::execution::_private::_moveValue<0,ErrorType>(*tupleRes,resultVal);
+			if ( r == std::nullopt)
+			{
+				result.setValue(std::move(resultVal));
+			}else
+			{
+				stringstream ss;
+				ss << "Error in tuple element " << r.value().first<<" with msg: "<<r.value().second.errorMsg;
+				result.setError( ErrorType(0,ss.str()));
+			}
+			delete tupleRes;
+			return ::core::ECallbackResult::UNSUBSCRIBE; 
+		}));
+        ::execution::_private::_on_all<0,_ttype>(tupleRes,barrier,futs...);  //la idea es pasar una barrera o lo que sea y devolver resultado al activarse
+        return result;
+    }           
 
 }

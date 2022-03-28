@@ -71,6 +71,7 @@ namespace core
 		static constexpr size_t ValidIdx = 1;
 		typedef std::variant<_private::NotAvailable,T,ErrorType> Base;
 		public:
+			typedef T Type;
 			typedef typename _private::return_type<T>::type ReturnType;
 			typedef typename _private::creturn_type<T>::type CReturnType;
 
