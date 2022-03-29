@@ -258,14 +258,17 @@ namespace core
             //  spdlog::debug("Wait was done in Thread {}",threadid);
                 switch( eventresult )
                 {               
-                case ::core::Event::EVENT_WAIT_TIMEOUT:
+				case ::core::Event::EVENT_WAIT_OK:
 					return ::core::EWaitError::FUTURE_WAIT_OK;
+					break;
+                case ::core::Event::EVENT_WAIT_TIMEOUT:
+					return ::core::EWaitError::FUTURE_WAIT_TIMEOUT;
                     break;
                 case ::core::Event::EVENT_WAIT_ERROR:
 					return ::core::EWaitError::FUTURE_UNKNOWN_ERROR;
-					break;
+					break;				
 				default:
-                    return ::core::EWaitError::FUTURE_WAIT_OK; //silent warning
+					return ::core::EWaitError::FUTURE_WAIT_OK; //silent warnin
                 }			        
             }
             private:

@@ -342,17 +342,16 @@ class MasterThread : public ThreadRunnable
 			catch(const std::exception& e)
 			{
 				text::debug("Thread {} gets error waiting for input: {}",taskId,e.what());
-			}
-			// catch(...)
-			// {
-			// 	text::debug("Thread {} gets error waiting for input. UNKNOWN");
-			// }
-
-			esto no funciona
+			}			
 			catch(MyErrorInfo& e)  //prueba captura custom exception
 			{
 				text::debug("Thread {} gets error waiting for input: {}",taskId,e.errorMsg);
 			}
+			catch(...)
+			{
+				text::debug("Thread {} gets error waiting for input. UNKNOWN");
+			}
+//			esto no funciona-. En mi ejemplo compiler explorer si, será una boabda
 			
 			/*
 			if ( wr.isValid() )
@@ -401,7 +400,7 @@ int test_threading::test_futures( tests::BaseTest* test)
 	
 	auto producer = ThreadRunnable::create(true);
 	
-	text::set_level(text::level::debug);
+	text::set_level(text::level::info);
 
 	constexpr size_t nConsumers = 10;
 	constexpr unsigned int DEFAULT_TESTTIME = 60*1000;

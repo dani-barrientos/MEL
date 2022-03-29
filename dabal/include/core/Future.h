@@ -155,9 +155,7 @@ int main()
 			FutureValue(){}
 			FutureValue(const T& v):Base(v){}
 			FutureValue(T&& v):Base(std::move(v)){}
-			FutureValue(std::exception_ptr err):Base(err){}
-			template <class ET>
-			FutureValue(ET&& err):Base(std::make_exception_ptr(std::forward<ET>(err))){}
+			FutureValue(std::exception_ptr err):Base(err){}			
 			FutureValue(const FutureValue& v):Base(v){}
 			FutureValue(FutureValue&& v):Base(std::move(v)){}
 			/**
@@ -190,11 +188,7 @@ int main()
 				Base::operator=(v);
 				return *this;
 			}
-			template <class ET>
-			auto& operator=(ET&& v){
-				Base::operator=(std::make_exception_ptr(std::forward<ET>(v)));
-				return *this;
-			}
+			
 			auto& operator=(const FutureValue& v)
 			{
 				Base::operator=(v);
@@ -224,8 +218,6 @@ int main()
 			typedef void CReturnType;
 			FutureValue(){}
 			FutureValue(std::exception_ptr err):Base(err){}
-			template <class ET>
-			FutureValue(ET&& err):Base(std::make_exception_ptr(std::forward<ET>(err))){}
 			/**
 			 * @brief get if has valid value
 			 */
@@ -242,11 +234,6 @@ int main()
 			}			
 			auto& operator=(std::exception_ptr v){
 				Base::operator=(v);
-				return *this;
-			}
-			template<class ET>
-			auto& operator=(ET&& v){
-				Base::operator=(std::make_exception_ptr(std::forward<ET>(v)));
 				return *this;
 			}
 	};
@@ -345,7 +332,7 @@ int main()
 
 				if ( mState == NOTAVAILABLE)
 				{
-					mValue = std::forward<ET>(ei);
+					mValue = std::make_exception_ptr(std::forward<ET>(ei));
 					mState = INVALID;
 					Subscriptor::triggerCallbacks(mValue);
 				}
@@ -486,7 +473,7 @@ int main()
 				FutureData_Base::mSC.enter();
 				if ( mState == NOTAVAILABLE)
 				{
-					mValue = std::forward<ET>(ei);
+					mValue = std::make_exception_ptr(std::forward<ET>(ei));
 					mState = INVALID;
 					Subscriptor::triggerCallbacks(mValue);
 				}			
