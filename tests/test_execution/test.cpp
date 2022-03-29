@@ -137,81 +137,7 @@ struct TestClass
 		}
 	}
 };
-/*
-using execution::ExFuture;
-using execution::Executor;
-//voy a tener temas con el ErrorInfo
-//hace un
-//la idea es que devuelva un ExFuture con una tupla con el valor de todos
-namespace _private
-{
 
-	template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::parallelism::Barrier& barrier, FType fut)
-	{
-		fut.subscribeCallback(
-            std::function<::core::ECallbackResult( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
-			{
-				std::get<n>(*tup) = std::move(input);
-				barrier.set();
-				return ::core::ECallbackResult::UNSUBSCRIBE; 
-			}));
-	}
-
-	template <int n,class TupleType,class FType,class ...FTypes> void _on_all(TupleType* tup, ::parallelism::Barrier& barrier,FType fut,FTypes... rest)
-	{
-		_on_all<n>(tup,barrier,fut);
-		_on_all<n+1>(tup,barrier,rest...);
-	}
-	template <int n,class ErrorType,class SourceTuple, class TargetTuple> std::optional<ErrorType> _moveValue(SourceTuple& st,TargetTuple& tt)
-	{
-		if constexpr (n != std::tuple_size<SourceTuple>::value)
-		{
-			auto& val = std::get<n>(st);
-			if ( val.isValid() )
-			{
-				std::get<n>(tt) = std::move(val.value());
-				return _moveValue<n+1,ErrorType>(st,tt);
-			}else
-				return std::move(val.error());
-		}
-		return std::nullopt;
-	}
-}
-//solo vale para funciones que devuelve algo..
-//lo que devuelva tiene que ser defaultconstructible
-template <class ExecutorAgent,class ...FTypes,class ErrorType = ::core::ErrorInfo> auto
-    on_all(Executor<ExecutorAgent> ex,FTypes... futs)
-    {                
-		typedef std::tuple<typename FTypes::ValueType::Type...> ReturnType;
-		static_assert(std::is_default_constructible<ReturnType>::value,"All types returned by the input ExFutures must be DefaultConstructible");
-        ExFuture<ExecutorAgent,ReturnType,ErrorType> result(ex);
-		::parallelism::Barrier barrier(sizeof...(futs));
-
-		//ReturnType* tupleRes = new ReturnType;
-		typedef std::tuple<typename FTypes::ValueType...>  _ttype;
-		_ttype* tupleRes = new _ttype;
-
-		barrier.subscribeCallback(
-		std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,tupleRes](const ::parallelism::BarrierData& ) mutable
-		{
-			ReturnType resultVal;			
-			auto r = ::_private::_moveValue<0,ErrorType>(*tupleRes,resultVal);
-			if ( r == std::nullopt)
-			{
-				result.setValue(std::move(resultVal));
-			}else
-			{
-				stringstream ss;
-				ss << "Error in element. " << r.value().errorMsg;
-				result.setError( ErrorType(0,ss.str()));
-			}
-			delete tupleRes;
-			return ::core::ECallbackResult::UNSUBSCRIBE; 
-		}));
-        ::_private::_on_all<0,_ttype>(tupleRes,barrier,futs...);  //la idea es pasar una barrera o lo que sea y devolver resultado al activarse
-        return result;
-    }
-	*/
 //funcion para pruebas a lo cerdo
 int _testDebug(tests::BaseTest* test)
 {
@@ -241,7 +167,7 @@ int _testDebug(tests::BaseTest* test)
 			execution::launch(exr,
 			[]()
 			{
-				throw std::runtime_error("ERR EN LAUNCH");
+				//throw std::runtime_error("ERR EN LAUNCH");
 				return "pepe";
 			});
 			auto f3 = execution::on_all(exr,f1,f2);
@@ -254,7 +180,7 @@ int _testDebug(tests::BaseTest* test)
 				text::info("Error {}", f3.getValue().error().errorMsg);
 		}
 		int var = 7;
-		auto f = 
+		auto f_0 = 
 		execution::launch<test_execution::MyErrorInfo>(exr,
 		[](int& arg)->int&
 		{
@@ -262,64 +188,53 @@ int _testDebug(tests::BaseTest* test)
 			arg=9;
 			return arg;
 		},std::ref(var))	
-		//execution::start(exr)
-		| execution::next([](int& arg)->int&
+		//execution::start(exr)´
+		| execution::next([](int& arg)//->int&  //@todo arreglar para que funcione el captureError
 		{
 			arg = 20;
 			//throw std::runtime_error("ERR EN NEXT1");
 			return arg;
 		}) 
-		
-		| execution::next([](int& v)
-		{
-	//		throw std::runtime_error("ERR EN NEXT2");
-			v = 21;
-			return v+5;
-		})
+		| execution::parallel([](int& arg)
+			{
+				throw std::runtime_error("First error");
+				text::info("Bulk 1");
+			}/*,
+			[](int& arg)
+			{
+				//throw std::runtime_error("Second error");
+			}*/
+		)
 		| execution::captureError([](const auto& err)
 		{
 			text::info("Hay error {}", err.errorMsg);
 			return 8;
 		})
-		| execution::bulk(
-			[](int v)
-			{
-				text::info("BULK 1 {}",v);
-				//return v.value()+5;
-			},
-			[](int v)
-			{
-				text::info("BULK 2 {}",v);
-				//return v.value()+5;
-			}
-		)
-		| execution::loop(0,10,[](int idx,int& v)
-		{
-			text::info("IT {}. Value = {}",idx,v);
-		})
-		| execution::next([](int& v)
-		{
-			throw std::runtime_error("ERR EN NEXT3");
-			text::info("V = {}",v);
-		})
-		| execution::loop(0,10,[](int& idx)
-		{
-			text::info("IT2 {}. ");
-		}) 
-		| execution::captureError([](const auto& err)
-		{
-			text::info("HAY ERROR AL FINAL. {}",err.errorMsg);
-		})
 		;
+		auto f = f_0 | execution::transfer(extp) | execution::parallel_convert<std::tuple<TestClass,string>>(
+			[test](int n)
+			{
+				//text::info("BULK 1 {}",v);
+				//return v.value()+5;
+				return TestClass(7,test);
+			},
+			[](int n)
+			{
+				//text::info("BULK 2 {}",v);
+				//return v.value()+5;
+				return "pepe";
+			}
+		);
+
+		
 		auto res = ::core::waitForFutureThread(f);
-		/*if ( res.isValid())
-		{
-			text::info("Rstd::ref(ES = {}",res.value());
-		}else
-			text::info("ERR = {}",res.error().errorMsg);
-			*/
 		if ( !res.isValid())  //void result		
 			text::info("ERR = {}",res.error().errorMsg);
+		else
+		{
+			text::info("Value = [{},{}]",std::get<0>(res.value()).val,std::get<1>(res.value()));
+		}
+
 		text::info("FIN");
 	}
 	
@@ -338,8 +253,8 @@ int _testDebug(tests::BaseTest* test)
 	// 		return val;
 	// 	}
 	// 	);
-	// 	//auto kk1 = execution::bulk(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v)
-	// 	auto kk1 = execution::bulk(kk0,[](auto& v)
+	// 	//auto kk1 = execution::parallel(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v)
+	// 	auto kk1 = execution::parallel(kk0,[](auto& v)
 	// 	{
 	// 		auto idx = v.index();
 	// 		//::tasking::Process::switchProcess(true);
@@ -373,9 +288,9 @@ int _testDebug(tests::BaseTest* test)
 	// 	// 	{
 	// 	// 		text::info("Value = {}",v.value()[1]);
 	// 	// 		v.value()[1] = 9.7f;
-	// 	// 		//text::info("After bulk value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
+	// 	// 		//text::info("After parallel value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
 	// 	// 	}else
-	// 	// 		text::info("After bulk err {}",v.error().errorMsg);
+	// 	// 		text::info("After parallel err {}",v.error().errorMsg);
 	// 	// });
 	// 	// core::waitForFutureThread(kk1_1);
 	// 	text::info("After wait");
@@ -400,10 +315,7 @@ int _testDebug(tests::BaseTest* test)
 	// 	// 		//throw std::runtime_error("Error1");
 	// 	// 		text::info("Launch done");
 	// 	// 	}else
-	// 	// 		text::info("Launch killed");
-	// 	// 	return 4;
-	// 	// }
-	// 	// );
+	// 	// 		text::info("LauncstartIdx
 	// 	// ::core::waitForFutureThread(kk3);
 	// 	text::info("Done!!");
 	// }		
@@ -433,7 +345,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		auto res1_1 = 
 			execution::start(ex)
 			| execution::inmediate(TestClass(initVal,test,ll)) 				
-			| execution::bulk(
+			| execution::parallel(
 				[](TestClass& v)
 				{
 					text::debug("Bulk 1");					
@@ -486,10 +398,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		// 	base form to do the same
 		// 	execution::next(
 		// 	execution::transfer(
-		// 	execution::bulk(
+		// 	execution::parallel(
 		// 		execution::inmediate(execution::start(ex),TestClass(initVal,test,ll))
 		// 	,
-		// 	//bulk
+		// 	//parallel
 		// 	[](auto& v)
 		// 	{
 		// 		text::info("Bulk 1");
@@ -590,7 +502,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						++elem.val;						
 					return v;	
 				})
-				| execution::bulk([](vector<TestClass>& v)
+				| execution::parallel([](vector<TestClass>& v)
 				{					
 					//multiply by 2 the first half								
 					size_t endIdx = v.size()/2;	
@@ -676,7 +588,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						++elem.val;						
 					return std::move(v);	
 				})
-				| execution::bulk([](vector<TestClass>& v)
+				| execution::parallel([](vector<TestClass>& v)
 				{					
 					//multiply by 2 the first half			
 					size_t endIdx = v.size()/2;	
@@ -701,7 +613,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 					{
 						tasking::Process::wait(100);
 						v[idx].val+=5.f;
-						tasking::Process::wait(5000);
+						tasking::Process::wait(2000);
 					},1
 				)
 				| execution::next(
@@ -710,7 +622,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						for(auto& elem:v)
 						{
 							++elem.val;		
-							tasking::Process::wait(100);
+							tasking::Process::wait(10);
 						}
 						return std::move(v);				
 					})
@@ -736,33 +648,32 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		}
+
 		text::info("Calculate mean of a long vector");
 		typedef vector<float> VectorType;
 		auto values = std::make_unique<VectorType>();  //create pointer because this is executed in a microthread, so no local variable can be referenced
 		//first, create random, big vector in another thread
 		//@todo ampliar este ejemplo a un when_all
-		auto res = execution::launch(ex,[](VectorType& v)->VectorType&
+		auto res5 = tasking::waitForFutureMThread(
+		execution::launch(ex,[](VectorType& v)->VectorType&
 		{
 			//generate random big vector
 			int vecSize = std::rand()%1000'000;
 			v.resize(vecSize);
 			for( size_t i = 0; i < vecSize;++i)
-				v[i] = std::rand()/3.f; //to create a float
+				v[i] = (std::rand()%20)/3.f; //to create a float
 			return v;
 		},std::ref(*values))
-		| execution::bulk(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+		| execution::parallel_convert<std::tuple<float,float,float,float>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
 			[](VectorType& v)
 			{
-	/*	ostras.... podría querer devolver otra cosa en el bulk!!
-		en este caos me inresesarçia una tupla. la cuestión es como acceder a 
-		eso->¿y si devuelvo siempre una tupla donde cada función aporta su valor???
-*/
 				float mean = 0.f;
 				size_t tam = v.size()/4;
 				size_t endIdx = tam;
 				for(size_t i = 0; i < endIdx;++i)
 					mean += v[i];
-				mean /= tam;
+				mean /= v.size();
+				return mean;
 			},
 			[](VectorType& v)
 			{
@@ -770,9 +681,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				size_t tam = v.size()/4;
 				size_t startIdx = tam;
 				size_t endIdx = tam*2;
-				for(size_t i = 0; i < endIdx;++i)
+				for(size_t i = startIdx; i < endIdx;++i)
 					mean += v[i];
-				mean /= tam;
+				mean /= v.size();
+				return mean;
 			},
 			[](VectorType& v)
 			{
@@ -780,9 +692,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				size_t tam = v.size()/4;
 				size_t startIdx = tam*2;
 				size_t endIdx = tam*3;
-				for(size_t i = 0; i < endIdx;++i)
+				for(size_t i = startIdx; i < endIdx;++i)
 					mean += v[i];
-				mean /= tam;
+				mean /= v.size();
+				return mean;
 			},
 			[](VectorType& v)
 			{
@@ -790,11 +703,21 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				size_t tam = v.size()/4;
 				size_t startIdx = tam*3;
 				size_t endIdx = v.size();
-				for(size_t i = 0; i < endIdx;++i)
+				for(size_t i = startIdx; i < endIdx;++i)
 					mean += v[i];
-				mean /= tam;
+				mean /= v.size();
+				return mean;
 			}
-		);
+		) | execution::next( [](std::tuple<float,float,float,float>& means)
+		{
+			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
+		}));
+		if ( res5.isValid())
+		{
+			text::info("Mean = {}",res5.value());
+			
+		}else
+			text::info("Error = {}",res5.error().errorMsg);
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
 		event.set();

@@ -21,6 +21,8 @@ namespace execution
         template <class TRet,class F,class ErrorType = ::core::ErrorInfo> void launch( F&& f,ExFuture<ExecutorAgent,TRet,ErrorType> output) const;
         template <class TRet,class TArg,class F,class ErrorType = ::core::ErrorInfo> void launch( F&& f,TArg&& arg,ExFuture<ExecutorAgent,TRet,ErrorType> output) const;
         template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
+        template <class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ::parallelism::Barrier parallel(ExFuture<ExecutorAgent,TArg,ErrorType> fut, FTypes&&... functions);
+        template <class ReturnTuple,class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg,ErrorType> fut,ReturnTuple& result, FTypes&&... functions);
     };
     /**
      * @brief Extension of core::Future to apply to executors
@@ -137,7 +139,17 @@ namespace execution
         typedef std::invoke_result_t<F,TArg> TRet;
 
         ExFuture<ExecutorAgent,TRet,ErrorType> result(ex);
-        ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
+        try
+        {
+            ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
+        }catch( std::exception& e)
+        {
+            result.setError( ErrorType(EErrorCodes::ERROR_EXCEPTION,e.what()) );	
+        }catch(...)
+        {
+            result.setError( ErrorType(EErrorCodes::ERROR_UNKNOWN,"Unknown exception on execution::launch") );	
+        }
+        
         return result;
     }
     /**
@@ -309,7 +321,7 @@ namespace execution
 		::core::waitForFutureThread(fut2); //wait for result from current thread	
      * @endcode
      */
-    template <class NewExecutorAgent,class OldExecutorAgent,class TRet,class ErrorType = ::core::ErrorInfo> ExFuture<NewExecutorAgent,TRet> transfer(ExFuture<OldExecutorAgent,TRet,ErrorType> fut,Executor<NewExecutorAgent> newAgent)
+    template <class NewExecutorAgent,class OldExecutorAgent,class TRet,class ErrorType = ::core::ErrorInfo> ExFuture<NewExecutorAgent,TRet,ErrorType> transfer(ExFuture<OldExecutorAgent,TRet,ErrorType> fut,Executor<NewExecutorAgent> newAgent)
     {
         ExFuture<NewExecutorAgent,TRet,ErrorType> result(newAgent);
         typedef typename ExFuture<OldExecutorAgent,TRet,ErrorType>::ValueType  ValueType;
@@ -426,7 +438,7 @@ namespace execution
      * 
      @return A ExFuture with same value as input future, whose content IS MOVED
      */
-    template <class ExecutorAgent,class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,TArg,ErrorType> bulk(ExFuture<ExecutorAgent,TArg,ErrorType> source, FTypes&&... functions)
+    template <class ExecutorAgent,class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,TArg,ErrorType> parallel(ExFuture<ExecutorAgent,TArg,ErrorType> source, FTypes&&... functions)
     {
         ExFuture<ExecutorAgent,TArg,ErrorType> result(source.ex);
         typedef typename ExFuture<ExecutorAgent,TArg,ErrorType>::ValueType  ValueType;
@@ -435,7 +447,8 @@ namespace execution
             {
                 if ( input.isValid() )
                 {
-                    auto barrier  = source.ex.bulk(source,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                    //@todo aparcado el tema de detectar excepciones hasta bien meditado, que no me gusta
+                    auto barrier  = source.ex.parallel(source,std::forward<FTypes>(std::get<FTypes>(fs))...);
                     barrier.subscribeCallback(
                         std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([source,result](const ::parallelism::BarrierData& ) mutable
                         {                        
@@ -455,6 +468,7 @@ namespace execution
         ));
         return result;
     }
+  
     /**
      * @brief Capture previous error, if any, and execute the function
      * this function works similar to next, but receiving an Error as the parameter and must return
@@ -484,7 +498,78 @@ namespace execution
         );
         return result;
     }
-    
+    /**
+     * @brief Capture previous error, if any, and execute the function
+     * this function works similar to next, but receiving an Error as the parameter and must return
+     * same type as input future is
+     * no error was raised in previous works of the chain, the functions is not executed
+     */    
+/*
+no lo tengo claro. necesito poder hacer cosas sobre el executor, pero no lo tengo en ningún lado.
+mi idea es que tal vez con un algoritmo que lo capture...igual es una idiotez
+igual no tiene mucho sentido y 
+    template <class F,class TArg,class ExecutorAgent,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,TArg,ErrorType> 
+        getExecutor(ExFuture<ExecutorAgent,TArg,ErrorType> source, F&& f)
+    {                
+        typedef typename ExFuture<ExecutorAgent,TArg,ErrorType>::ValueType  ValueType;
+        ExFuture<ExecutorAgent,TArg,ErrorType> result(source.ex);
+        source.subscribeCallback(
+            //need to bind de source future to not get lost and input pointing to unknown place                
+            std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
+            {       
+                if ( !input.isValid() )
+                {                                       
+                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg,ErrorType> arg)
+                    {                                          
+                        return f(arg.getValue().error());                         
+                    },source,result);
+                }else
+                    result.assign(source.getValue());
+                  
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            })
+        );
+        return result;
+    }
+  */  
+    /**
+     * @brief Same as @ref parallel but returning a tuple with the values for each functor
+     * So, these functors must return a value, return void is not alloed
+     */
+    template <class ResultTuple, class ExecutorAgent,class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ExFuture<ExecutorAgent,ResultTuple,ErrorType> parallel_convert(ExFuture<ExecutorAgent,TArg,ErrorType> source, FTypes&&... functions)
+    {
+        //@todo tratar de dedudir la tupla de los resultados de cada funcion
+        static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
+        ExFuture<ExecutorAgent,ResultTuple,ErrorType> result(source.ex);
+        typedef typename ExFuture<ExecutorAgent,TArg,ErrorType>::ValueType  ValueType;
+        source.subscribeCallback(            
+            std::function<::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+            {
+                if ( input.isValid() )
+                {       
+                    ResultTuple* output = new ResultTuple; //para que compile
+                    auto barrier  = source.ex.parallel_convert(source,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                    barrier.subscribeCallback(
+                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,output](const ::parallelism::BarrierData& ) mutable
+                        {      
+                            //@TODO RESOLVER QUE HAYA ERROR EN ALGUNO DE LOS ELEMENTOS
+                            result.setValue(std::move(*output));
+                            delete output;                  
+                            return ::core::ECallbackResult::UNSUBSCRIBE; 
+                        }));
+                }else
+                {
+                     //set error as task in executor
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                    {
+                       result.setError(std::move(err));
+                    });
+                }
+                return ::core::ECallbackResult::UNSUBSCRIBE; 
+            }
+        ));
+        return result;
+    }
     namespace _private
     {
         template <class TRet> struct ApplyInmediate
@@ -538,7 +623,7 @@ namespace execution
             std::tuple<FTypes...> mFuncs;
             template <class TArg,class ExecutorAgent,class ErrorType = ::core::ErrorInfo> auto operator()(ExFuture<ExecutorAgent,TArg,ErrorType> inputFut)
             {
-                return execution::bulk(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                return execution::parallel(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
             }
         };
         template <class F> struct ApplyError
@@ -581,6 +666,16 @@ namespace execution
             }
             return std::nullopt;
         }
+        template <class ReturnTuple, class ...FTypes> struct ApplyParallelConvert
+        {
+            ApplyParallelConvert(FTypes&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
+            ApplyParallelConvert(const FTypes&... fs):mFuncs(fs...){}           
+            std::tuple<FTypes...> mFuncs;
+            template <class TArg,class ExecutorAgent,class ErrorType = ::core::ErrorInfo> auto operator()(ExFuture<ExecutorAgent,TArg,ErrorType> inputFut)
+            {
+                return execution::parallel_convert<ReturnTuple>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+            }
+        };
     }
     //@brief version for use with operator |
     template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
@@ -606,7 +701,7 @@ namespace execution
         return _private::ApplyLoop<I,F>(begin,end,std::forward<F>(functor),increment);
     }
     ///@brief version for use with operator |
-    template <class ...FTypes> _private::ApplyBulk<FTypes...> bulk(FTypes&&... functions)
+    template <class ...FTypes> _private::ApplyBulk<FTypes...> parallel(FTypes&&... functions)
     {
         return _private::ApplyBulk<FTypes...>(std::forward<FTypes>(functions)...);
     }
@@ -614,6 +709,11 @@ namespace execution
     template <class F> _private::ApplyError<F> captureError(F&& f)
     {
         return _private::ApplyError<F>(std::forward<F>(f));
+    }
+    ///@brief version for use with operator |
+    template <class ReturnTuple,class ...FTypes> _private::ApplyParallelConvert<ReturnTuple,FTypes...> parallel_convert(FTypes&&... functions)
+    {
+        return _private::ApplyParallelConvert<ReturnTuple,FTypes...>(std::forward<FTypes>(functions)...);
     }
     /**
      * @brief overload operator | for chaining
