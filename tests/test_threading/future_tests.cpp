@@ -15,14 +15,14 @@ using ::parallelism::Barrier;
 using std::vector;
 
 //Test with custom error
-struct MyErrorInfo : public ::core::ErrorInfo
+struct MyErrorInfo 
 {
-	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
+	MyErrorInfo(int code,string msg):error(code),errorMsg(std::move(msg))
 	{
 		text::debug("MyErrorInfo");
 	}
-	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
-	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
+	MyErrorInfo(MyErrorInfo&& ei):error(ei.error),errorMsg(std::move(ei.errorMsg)){}
+	MyErrorInfo(const MyErrorInfo& ei):error(ei.error),errorMsg(ei.errorMsg){}
 	MyErrorInfo& operator = (MyErrorInfo&& info)
 	{
 		error = info.error;
@@ -35,6 +35,8 @@ struct MyErrorInfo : public ::core::ErrorInfo
 		errorMsg = info.errorMsg;
 		return *this;
 	}
+	int error;
+	string errorMsg;
 };
 
 struct _Stack
@@ -105,7 +107,7 @@ class MasterThread : public ThreadRunnable
 
 		}
 	private:
-		typedef Future<int,MyErrorInfo> FutureType;
+		typedef Future<int> FutureType;
 
 		std::array<std::shared_ptr<ThreadRunnable>,nConsumers> mConsumers;
 		std::shared_ptr<ThreadRunnable> mProducer;
@@ -201,14 +203,13 @@ class MasterThread : public ThreadRunnable
 						++nTasks; //take next task into account
 						post( [this,channel,result](uint64_t,Process*) mutable
 							{
-								auto wr = ::tasking::waitForFutureMThread(result);
-								if ( wr.isValid())
+								try
 								{
-									auto val = channel.getValue().value() + mValueToAdd;
-									
+									auto wr = ::tasking::waitForFutureMThread(result);
+									auto val = channel.getValue().value() + mValueToAdd;									
 									if ( val != wr.value())
 										text::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
-								}
+								}catch(...){}
 							
 								mBarrier.set();	
 								return ::tasking::EGenericProcessResult::KILL;
@@ -296,7 +297,23 @@ class MasterThread : public ThreadRunnable
 			CHECK_STACK_SAVE((uint8_t*)&(arr[0]),(uint8_t*)&(arr[N-1]))
 			//CHECK_STACK_SAVE((uint8_t*)&(arr[N-4]),(uint8_t*)&(arr[0]))
 			Process::wait(waitTime); //random wait
-			auto wr = ::tasking::waitForFutureMThread(input);
+			try
+			{
+				auto wr = ::tasking::waitForFutureMThread(input);
+					output.setValue(wr.value() + mValueToAdd);
+				text::debug("Task {} gets value {}",taskId,input.getValue().value());
+			}catch(std::exception& e)
+			{
+				text::debug("Task {} gets error waiting for input: {}",taskId,e.what());
+				output.setError( std::current_exception());
+				
+			}catch(...)
+			{
+				text::debug("Task {} gets error waiting for input. unknown error",taskId);
+				output.setError( std::current_exception());
+			}
+
+			/*
 			if ( wr.isValid() )
 			{
 				output.setValue(wr.value() + mValueToAdd);
@@ -306,6 +323,8 @@ class MasterThread : public ThreadRunnable
 				text::debug("Task {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
 					output.setError( MyErrorInfo(0,""));
 			}
+			*/
+			
 			mBarrier.set();
 			CHECK_STACK_VERIFY((uint8_t*)&(arr[0]),(uint8_t*)&(arr[N-1]),mTest)
 			//CHECK_STACK_VERIFY((uint8_t*)&(arr[N-4]),(uint8_t*)&(arr[0]),mTest)
@@ -315,14 +334,34 @@ class MasterThread : public ThreadRunnable
 		{
 			unsigned int waitTime = rand()%150;
 			Process::wait(waitTime); //random wait
-			auto wr = ::core::waitForFutureThread(input);
+			try
+			{
+				auto wr = ::core::waitForFutureThread(input);
+				text::debug("Thread {} gets value {}",taskId,wr.value());		
+			}
+			catch(const std::exception& e)
+			{
+				text::debug("Thread {} gets error waiting for input: {}",taskId,e.what());
+			}
+			// catch(...)
+			// {
+			// 	text::debug("Thread {} gets error waiting for input. UNKNOWN");
+			// }
+
+			esto no funciona
+			catch(MyErrorInfo& e)  //prueba captura custom exception
+			{
+				text::debug("Thread {} gets error waiting for input: {}",taskId,e.errorMsg);
+			}
+			
+			/*
 			if ( wr.isValid() )
 			{				
 				text::debug("Thread {} gets value {}",taskId,wr.value());		
 			}else
 			{
 				text::debug("Thread {} gets error waiting for input: {}",taskId,input.getValue().error().errorMsg);
-			}		
+			}*/		
 			mBarrier.set();
 		}
 		void onThreadEnd() override{
@@ -362,7 +401,7 @@ int test_threading::test_futures( tests::BaseTest* test)
 	
 	auto producer = ThreadRunnable::create(true);
 	
-	text::set_level(text::level::info);
+	text::set_level(text::level::debug);
 
 	constexpr size_t nConsumers = 10;
 	constexpr unsigned int DEFAULT_TESTTIME = 60*1000;

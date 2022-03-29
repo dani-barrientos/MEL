@@ -23,15 +23,15 @@ const std::string TestExecution::TEST_NAME = "execution";
 //test for development purposes
 namespace test_execution
 {
-struct MyErrorInfo : public ::core::ErrorInfo
+struct MyErrorInfo 
 {
 	static tests::BaseTest* test;
-	MyErrorInfo(int code,string msg):ErrorInfo(code,std::move(msg))
+	MyErrorInfo(int code,string msg):error(code),errorMsg(std::move(msg))
 	{
 		text::debug("MyErrorInfo");
 	}
-	MyErrorInfo(MyErrorInfo&& ei):ErrorInfo(ei.error,std::move(ei.errorMsg)){}
-	MyErrorInfo(const MyErrorInfo& ei):ErrorInfo(ei.error,ei.errorMsg){}
+	MyErrorInfo(MyErrorInfo&& ei):error(ei.error),errorMsg(std::move(ei.errorMsg)){}
+	MyErrorInfo(const MyErrorInfo& ei):error(ei.error),errorMsg(ei.errorMsg){}
 	MyErrorInfo& operator = (MyErrorInfo&& info)
 	{
 		error = info.error;
@@ -44,7 +44,10 @@ struct MyErrorInfo : public ::core::ErrorInfo
 		errorMsg = info.errorMsg;
 		return *this;
 	}
+	int error;
+	string errorMsg;
 };
+
 tests::BaseTest* MyErrorInfo::test = nullptr;
 }
 /*
@@ -171,20 +174,24 @@ int _testDebug(tests::BaseTest* test)
 				return "pepe";
 			});
 			auto f3 = execution::on_all(exr,f1,f2);
-			core::waitForFutureThread(f3);
-			if ( f3.getValue().isValid())
-			{				
-				const auto& val = f3.getValue().value();
+			try
+			{
+				auto res = core::waitForFutureThread(f3);
+				const auto& val = res.value();
 				text::info("tras on_all[ {}, {} ]",std::get<0>(val).val,std::get<1>(val));
-			}else
-				text::info("Error {}", f3.getValue().error().errorMsg);
+			}
+			catch(std::exception& e)
+			{
+				text::info("Error {}", e.what());
+			}
 		}
 		int var = 7;
 		auto f_0 = 
-		execution::launch<test_execution::MyErrorInfo>(exr,
+		execution::launch(exr,
 		[](int& arg)->int&
 		{
 			//throw std::runtime_error("ERR EN LAUNCH");
+			throw test_execution::MyErrorInfo(0,"ERR EN LAUNCH");
 			arg=9;
 			return arg;
 		},std::ref(var))	
@@ -205,11 +212,21 @@ int _testDebug(tests::BaseTest* test)
 				//throw std::runtime_error("Second error");
 			}*/
 		)
-		| execution::captureError([](const auto& err)
+		| execution::captureError([](std::exception_ptr err)
 		{
-			text::info("Hay error {}", err.errorMsg);
+			try
+			{
+				std::rethrow_exception(err);
+			}catch(std::exception& e)
+			{
+				text::info("captureError unknown {}", e.what());
+			}catch(...)
+			{
+				text::info("captureError unknown");
+			}
 			return 8;
 		})
+		
 		;
 		auto f = f_0 | execution::transfer(extp) | execution::parallel_convert<std::tuple<TestClass,string>>(
 			[test](int n)
@@ -226,13 +243,13 @@ int _testDebug(tests::BaseTest* test)
 			}
 		);
 
-		
-		auto res = ::core::waitForFutureThread(f);
-		if ( !res.isValid())  //void result		
-			text::info("ERR = {}",res.error().errorMsg);
-		else
+		try
 		{
+			auto res = ::core::waitForFutureThread(f);
 			text::info("Value = [{},{}]",std::get<0>(res.value()).val,std::get<1>(res.value()));
+		}catch(std::exception& e)
+		{
+			text::info("ERR = {}",e.what());
 		}
 
 		text::info("FIN");
@@ -373,9 +390,9 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			return "pepe";
 		});
 		//use on_all to launch two "simultaneus" jobs and wait for both
-		auto res1 = tasking::waitForFutureMThread( execution::on_all(ex,res1_1,res1_2) );
-		if (res1.isValid() )
+		try
 		{
+			auto res1 = tasking::waitForFutureMThread( execution::on_all(ex,res1_1,res1_2) );
 			int finalVal = std::get<0>(res1.value()).val;
 			int expectedVal = initVal + 5+3;
 			text::debug("Finish Val = {}",finalVal);
@@ -385,10 +402,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
 				test->setFailed(ss.str());
 			}
+		}catch(std::exception& e)
+		{
+			text::info("Error = {}",e.what());
 		}
-		else
-			text::info("Error = {}",res1.error().errorMsg);
-			
 
 		}		
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
@@ -436,22 +453,21 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->clearTextBuffer();
 		pp.logLevel = ll;
 		text::info("Simple functor chaining using reference");
-	
-		auto res2 = tasking::waitForFutureMThread(
-			execution::launch(ex,[](TestClass& tc) -> TestClass&
-			{
-				tc.val = 7;
-				tasking::Process::wait(1000);
-				return tc;
-				//throw std::runtime_error("chiquilin");
-			},std::ref(pp)) 
-			| execution::next([test,ll](TestClass& v) -> TestClass&
-			{
-				v.val += 10;
-				return v;
-			}));
-		if (res2.isValid() )
+		try
 		{
+			auto res2 = tasking::waitForFutureMThread(
+				execution::launch(ex,[](TestClass& tc) -> TestClass&
+				{
+					tc.val = 7;
+					tasking::Process::wait(1000);
+					return tc;
+					//throw std::runtime_error("chiquilin");
+				},std::ref(pp)) 
+				| execution::next([test,ll](TestClass& v) -> TestClass&
+				{
+					v.val += 10;
+					return v;
+				}));
 			int finalVal = res2.value().val;
 			int expectedVal = 17;
 			text::debug("Finish Val = {}",finalVal);
@@ -467,9 +483,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				ss << " final value is diferent than original value. ";
 				test->setFailed(ss.str());
 			}
+		}catch(std::exception& e)
+		{
+			text::info("Error = {}",e.what());
 		}
-		else
-			text::info("Error = {}",res2.error().errorMsg);				
 		
 		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
@@ -479,80 +496,81 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		
 		#define LOOP_SIZE 100
 		#define INITIAL_VALUE 2
-		auto res3 = tasking::waitForFutureMThread(
-			execution::start(ex) 
-			| execution::inmediate(std::ref(vec)) 
-			| execution::next([test,ll](vector<TestClass>& v)->vector<TestClass>&
-				{				
-					//fill de vector with a simple case for the result to be predecible
-					//I don't want out to log the initial constructions, oncly constructons and after this function
-					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
-					v.resize(LOOP_SIZE,t);	
-					for(auto& elem:v)
-					{
-						elem.logLevel = ll;
-						elem.addToBuffer = true;
-					}
-					return v;
-				}
-				)
-				| execution::next([](vector<TestClass>& v)->vector<TestClass>&
-				{
-					for(auto& elem:v)
-						++elem.val;						
-					return v;	
-				})
-				| execution::parallel([](vector<TestClass>& v)
-				{					
-					//multiply by 2 the first half								
-					size_t endIdx = v.size()/2;	
-					for(size_t i = 0; i < endIdx;++i )
-					{
-						v[i].val = v[i].val*2.f;	
-					}
-				},
-				[](vector<TestClass>& v)			
-				{
-					//multiply by 3 the second half
-					size_t startIdx = v.size()/2;
-					for(size_t i = startIdx; i < v.size();++i )
-					{
-						v[i].val = v[i].val*3.f;
-					}
-				}) 
-				| execution::loop(
-					0,LOOP_SIZE,
-					[](int idx,vector<TestClass>& v)
-					{
-						v[idx].val+=5.f;
-					},1
-				)
-				| execution::next(
-					[](vector<TestClass>& v)->vector<TestClass>&
-					{															
-						for(auto& elem:v)
-							++elem.val;		
-						return v;				
-					}
-		));
-			
-		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		stringstream ss;
-		ss<<"Valor vector: ";
-		for(const auto& v:vec)
-			ss << v.val<<' ';
-		ss << '\n';
-		test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::None); 
-		if (!res3.isValid() )
-			text::info("Error = {}",res3.error().errorMsg);
-		else
+		try
 		{
+			auto res3 = tasking::waitForFutureMThread(
+				execution::start(ex) 
+				| execution::inmediate(std::ref(vec)) 
+				| execution::next([test,ll](vector<TestClass>& v)->vector<TestClass>&
+					{				
+						//fill de vector with a simple case for the result to be predecible
+						//I don't want out to log the initial constructions, oncly constructons and after this function
+						auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+						v.resize(LOOP_SIZE,t);	
+						for(auto& elem:v)
+						{
+							elem.logLevel = ll;
+							elem.addToBuffer = true;
+						}
+						return v;
+					}
+					)
+					| execution::next([](vector<TestClass>& v)->vector<TestClass>&
+					{
+						for(auto& elem:v)
+							++elem.val;						
+						return v;	
+					})
+					| execution::parallel([](vector<TestClass>& v)
+					{					
+						//multiply by 2 the first half								
+						size_t endIdx = v.size()/2;	
+						for(size_t i = 0; i < endIdx;++i )
+						{
+							v[i].val = v[i].val*2.f;	
+						}
+					},
+					[](vector<TestClass>& v)			
+					{
+						//multiply by 3 the second half
+						size_t startIdx = v.size()/2;
+						for(size_t i = startIdx; i < v.size();++i )
+						{
+							v[i].val = v[i].val*3.f;
+						}
+					}) 
+					| execution::loop(
+						0,LOOP_SIZE,
+						[](int idx,vector<TestClass>& v)
+						{
+							v[idx].val+=5.f;
+						},1
+					)
+					| execution::next(
+						[](vector<TestClass>& v)->vector<TestClass>&
+						{															
+							for(auto& elem:v)
+								++elem.val;		
+							return v;				
+						}
+			));
+			stringstream ss;
+			ss<<"Valor vector: ";
+			for(const auto& v:vec)
+				ss << v.val<<' ';
+			ss << '\n';
+			test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::None); 
 			//compare result with original vector. Must be the same
 			const auto& v = res3.value(); 
 			if ( &v != &vec )
 				test->setFailed("Both vectors must be the same ");
+		}catch(std::exception& e)
+		{
+			text::info("Error = {}",e.what());
 		}
+			
+		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 	
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
@@ -560,81 +578,75 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		text::info("Same process as the previous without using reference");
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
-		auto res4 = tasking::waitForFutureMThread(
-			execution::start(ex) 
-			| execution::next([test,ll]
-			{				
-				return vector<TestClass>();
-			})
-				| execution::next([test,ll](vector<TestClass>& v)
+		try
+		{
+			auto res4 = tasking::waitForFutureMThread(
+				execution::start(ex) 
+				| execution::next([test,ll]
 				{				
-					//fill de vector with a simple case for the result to be predecible
-					//I don't want out to log the initial constructions, oncly constructons and after this function
-					auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
-					v.resize(LOOP_SIZE,t);	
-					for(auto& elem:v)
-					{
-						elem.logLevel = ll;
-						elem.addToBuffer = true;
-					}
-					return std::move(v); 
-				}
-				 )
-				| execution::next([](vector<TestClass>& v)
-				{
-				
-					size_t s = v.size();
-					for(auto& elem:v)
-						++elem.val;						
-					return std::move(v);	
+					return vector<TestClass>();
 				})
-				| execution::parallel([](vector<TestClass>& v)
-				{					
-					//multiply by 2 the first half			
-					size_t endIdx = v.size()/2;	
-					for(size_t i = 0; i < endIdx;++i )
-					{
-						v[i].val = v[i].val*2.f;	
-					}
-				},
-				[](vector<TestClass>& v)			
-				{
-					//multiply by 3 the second half
-
-					size_t startIdx = v.size()/2;
-					for(size_t i = startIdx; i < v.size();++i )
-					{
-						v[i].val = v[i].val*3.f;
-					}
-				}) 
-				| execution::loop(
-					0,LOOP_SIZE,
-					[](int idx,vector<TestClass>& v)
-					{
-						tasking::Process::wait(100);
-						v[idx].val+=5.f;
-						tasking::Process::wait(2000);
-					},1
-				)
-				| execution::next(
-					[](vector<TestClass>& v)
-					{					
+					| execution::next([test,ll](vector<TestClass>& v)
+					{				
+						//fill de vector with a simple case for the result to be predecible
+						//I don't want out to log the initial constructions, oncly constructons and after this function
+						auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+						v.resize(LOOP_SIZE,t);	
 						for(auto& elem:v)
 						{
-							++elem.val;		
-							tasking::Process::wait(10);
+							elem.logLevel = ll;
+							elem.addToBuffer = true;
 						}
-						return std::move(v);				
+						return std::move(v); 
+					}
+					)
+					| execution::next([](vector<TestClass>& v)
+					{
+					
+						size_t s = v.size();
+						for(auto& elem:v)
+							++elem.val;						
+						return std::move(v);	
 					})
-		);
-		
-		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		
-		if (!res4.isValid() )
-			text::info("Error = {}",res4.error().errorMsg);
-		else
-		{
+					| execution::parallel([](vector<TestClass>& v)
+					{					
+						//multiply by 2 the first half			
+						size_t endIdx = v.size()/2;	
+						for(size_t i = 0; i < endIdx;++i )
+						{
+							v[i].val = v[i].val*2.f;	
+						}
+					},
+					[](vector<TestClass>& v)			
+					{
+						//multiply by 3 the second half
+
+						size_t startIdx = v.size()/2;
+						for(size_t i = startIdx; i < v.size();++i )
+						{
+							v[i].val = v[i].val*3.f;
+						}
+					}) 
+					| execution::loop(
+						0,LOOP_SIZE,
+						[](int idx,vector<TestClass>& v)
+						{
+							tasking::Process::wait(100);
+							v[idx].val+=5.f;
+							tasking::Process::wait(2000);
+						},1
+					)
+					| execution::next(
+						[](vector<TestClass>& v)
+						{					
+							for(auto& elem:v)
+							{
+								++elem.val;		
+								tasking::Process::wait(10);
+							}
+							return std::move(v);				
+						})
+			);
 			stringstream ss;
 			ss<<"Valor vector: ";
 			for(const auto& v:res4.value())
@@ -647,77 +659,85 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				test->setFailed("Both vectors NUST NOT be the same ");
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		}catch( std::exception& e)
+		{
+			text::info("Error = {}",e.what());
 		}
+		
+		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);				
 
 		text::info("Calculate mean of a long vector");
 		typedef vector<float> VectorType;
 		auto values = std::make_unique<VectorType>();  //create pointer because this is executed in a microthread, so no local variable can be referenced
 		//first, create random, big vector in another thread
 		//@todo ampliar este ejemplo a un when_all
-		auto res5 = tasking::waitForFutureMThread(
-		execution::launch(ex,[](VectorType& v)->VectorType&
+		try
 		{
-			//generate random big vector
-			int vecSize = std::rand()%1000'000;
-			v.resize(vecSize);
-			for( size_t i = 0; i < vecSize;++i)
-				v[i] = (std::rand()%20)/3.f; //to create a float
-			return v;
-		},std::ref(*values))
-		| execution::parallel_convert<std::tuple<float,float,float,float>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
-			[](VectorType& v)
+			auto res5 = tasking::waitForFutureMThread(
+			execution::launch(ex,[](VectorType& v)->VectorType&
 			{
-				float mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t endIdx = tam;
-				for(size_t i = 0; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			},
-			[](VectorType& v)
+				//generate random big vector
+				int vecSize = std::rand()%1000'000;
+				v.resize(vecSize);
+				for( size_t i = 0; i < vecSize;++i)
+					v[i] = (std::rand()%20)/3.f; //to create a float
+				return v;
+			},std::ref(*values))
+			| execution::parallel_convert<std::tuple<float,float,float,float>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+				[](VectorType& v)
+				{
+					float mean = 0.f;
+					size_t tam = v.size()/4;
+					size_t endIdx = tam;
+					for(size_t i = 0; i < endIdx;++i)
+						mean += v[i];
+					mean /= v.size();
+					return mean;
+				},
+				[](VectorType& v)
+				{
+					float mean = 0.f;
+					size_t tam = v.size()/4;
+					size_t startIdx = tam;
+					size_t endIdx = tam*2;
+					for(size_t i = startIdx; i < endIdx;++i)
+						mean += v[i];
+					mean /= v.size();
+					return mean;
+				},
+				[](VectorType& v)
+				{
+					float mean = 0.f;
+					size_t tam = v.size()/4;
+					size_t startIdx = tam*2;
+					size_t endIdx = tam*3;
+					for(size_t i = startIdx; i < endIdx;++i)
+						mean += v[i];
+					mean /= v.size();
+					return mean;
+				},
+				[](VectorType& v)
+				{
+					float mean = 0.f;
+					size_t tam = v.size()/4;
+					size_t startIdx = tam*3;
+					size_t endIdx = v.size();
+					for(size_t i = startIdx; i < endIdx;++i)
+						mean += v[i];
+					mean /= v.size();
+					return mean;
+				}
+			) | execution::next( [](std::tuple<float,float,float,float>& means)
 			{
-				float mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t startIdx = tam;
-				size_t endIdx = tam*2;
-				for(size_t i = startIdx; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			},
-			[](VectorType& v)
-			{
-				float mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t startIdx = tam*2;
-				size_t endIdx = tam*3;
-				for(size_t i = startIdx; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			},
-			[](VectorType& v)
-			{
-				float mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t startIdx = tam*3;
-				size_t endIdx = v.size();
-				for(size_t i = startIdx; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			}
-		) | execution::next( [](std::tuple<float,float,float,float>& means)
-		{
-			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
-		}));
-		if ( res5.isValid())
-		{
+				return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
+			}));
 			text::info("Mean = {}",res5.value());
-			
-		}else
-			text::info("Error = {}",res5.error().errorMsg);
+		}catch(std::exception& e)
+		{
+			text::info("Error = {}",e.what());
+		}
+		
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
 		event.set();

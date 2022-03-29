@@ -129,7 +129,7 @@ namespace tasking
 		};
 	}
 	///@cond HIDDEN_SYMBOLS
-	//template <class TRet,class ErrorType, class F> struct ExecuteTask; //predeclaration
+	//template <class TRet, class F> struct ExecuteTask; //predeclaration
 	///@endcond
 	/**
 	* @class Runnable
@@ -164,8 +164,10 @@ namespace tasking
 		static const unsigned int DEFAULT_MAX_NEW_TASKS = DEFAULT_POOL_SIZE*4;
 		
 		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
+		/*
 		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
 		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception		
+		*/
 	/*	
 	ahora no encaja mucho, ya veré con el tiempo
 	enum class State
@@ -291,10 +293,10 @@ namespace tasking
 		* @param[in] function Functor with signature TRet f() that will be executed in this Runnable
 		* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		*/
-		template <class TRet,class ErrorType = core::ErrorInfo,class F,class KF = const std::function<bool()>&> 
-			Future<TRet,ErrorType> execute( F&& function,KF&& killFunction=_killFalse);
-		template <class TRet,class ErrorType = core::ErrorInfo,class F,class KF = const std::function<bool()>&> 
-			Future<TRet,ErrorType> execute( F&& function,Future<TRet,ErrorType>,KF&& killFunction=_killFalse);
+		template <class TRet,class F,class KF = const std::function<bool()>&> 
+			Future<TRet> execute( F&& function,KF&& killFunction=_killFalse);
+		template <class TRet,class F,class KF = const std::function<bool()>&> 
+			Future<TRet> execute( F&& function,Future<TRet>,KF&& killFunction=_killFalse);
 
 		
 				
@@ -388,10 +390,10 @@ namespace tasking
 		return mTasks.getTimer();
 	}
 	
-	template <class TRet,class ErrorType, class F,class KF> 
-	Future<TRet,ErrorType> Runnable::execute( F&& function,KF&& killFunction)
+	template <class TRet, class F,class KF> 
+	Future<TRet> Runnable::execute( F&& function,KF&& killFunction)
 	{
-		Future<TRet,ErrorType> future;
+		Future<TRet> future;
 		return execute(std::forward<F>(function),future,std::forward<KF>(killFunction));		
 	}
 	/**
@@ -400,8 +402,8 @@ namespace tasking
 	 * @param output Future where result must be put
 	 * @return same future as out
 	 */
-	template <class TRet,class ErrorType , class F,class KF> 
-	Future<TRet,ErrorType> Runnable::execute( F&& f,Future<TRet,ErrorType> output,KF&& killFunction)
+	template <class TRet, class F,class KF> 
+	Future<TRet> Runnable::execute( F&& f,Future<TRet> output,KF&& killFunction)
 	{
 		//always post the task, despite being in same thread. This is the most consistent way of doing it
 
@@ -443,16 +445,16 @@ namespace tasking
 						output.setValue(f());
 					}
 				}
+				/*
 				//check chances of Exception
 				catch( std::exception& e )
 				{					
-					output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
-				}
+					output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );						
+				}*/
 				catch(...)
 				{
-					
-					output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
-
+					//output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+					output.setError( std::current_exception() );	
 				}
 				return ::tasking::EGenericProcessResult::KILL;
 			},std::forward<KF>(killFunction)		

@@ -31,28 +31,27 @@ namespace execution
             Executor& operator=( Executor&& ex){mRunnable = std::move(ex.mRunnable);mOpts = ex.mOpts;return *this;}
             void setOpts(const RunnableExecutorOpts& opts){ mOpts = opts;}
             const RunnableExecutorOpts& getOpts(){ return mOpts;}
-            // //@todo poder indicar el ErrorType            
             inline const std::weak_ptr<Runnable>& getRunnable()const { return mRunnable;}
             inline std::weak_ptr<Runnable>& getRunnable() { return mRunnable;}
             ///@{ 
             //! brief mandatory interface from Executor
-            template <class TRet,class TArg,class F,class ErrorType = ::core::ErrorInfo> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet,ErrorType> output) const
+            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet> output) const
             {
                 if ( !mRunnable.expired())
                 {         
-                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet,ErrorType>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                 }            
             }
-            template <class TRet,class F,class ErrorType = ::core::ErrorInfo> void launch( F&& f,ExFuture<Runnable,TRet,ErrorType> output) const
+            template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const
             {
                 if ( !mRunnable.expired())
                 {
-                    mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet,ErrorType>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                 }            
             }
             template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
-            template <class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ::parallelism::Barrier parallel(ExFuture<Runnable,TArg,ErrorType> fut, FTypes&&... functions);
-            template <class ReturnTuple,class TArg,class ...FTypes,class ErrorType = ::core::ErrorInfo> ::parallelism::Barrier parallel_convert(ExFuture<Runnable,TArg,ErrorType> fut,ReturnTuple& result, FTypes&&... functions);
+            template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<Runnable,TArg> fut, FTypes&&... functions);
+            template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<Runnable,TArg> fut,ReturnTuple& result, FTypes&&... functions);
             ///@}
         private:
             std::weak_ptr<Runnable> mRunnable; 
@@ -60,52 +59,52 @@ namespace execution
     };  
     namespace _private
     {
-        template <class F,class TArg,class ErrorType = ::core::ErrorInfo> void _invoke(ExFuture<Runnable,TArg,ErrorType> fut,::parallelism::Barrier& b,F&& f)
+        template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,F&& f)
         {
             //@todo no voy a ahcer la gestion de excepciones por ahora que tengo que meditar si realmente debo hacerlo asi
             execution::launch(fut.ex,
-                [f = std::forward<F>(f),b](ExFuture<Runnable,TArg,ErrorType> fut) mutable
+                [f = std::forward<F>(f),b](ExFuture<Runnable,TArg> fut) mutable
                 {                                        
                     f(fut.getValue().value());
                     b.set();
                 },fut);
         }
          //void overload
-        template <class F,class ErrorType = ::core::ErrorInfo> void _invoke(ExFuture<Runnable,void,ErrorType> fut,::parallelism::Barrier& b,F&& f)
+        template <class F> void _invoke(ExFuture<Runnable,void> fut,::parallelism::Barrier& b,F&& f)
         {
             execution::launch(fut.ex,
-                [f = std::forward<F>(f),b](ExFuture<Runnable,void,ErrorType> fut) mutable
+                [f = std::forward<F>(f),b](ExFuture<Runnable,void> fut) mutable
                 {                    
                     f();
                     b.set();
                 },fut);
         }
-        template <class TArg,class F,class ...FTypes,class ErrorType = ::core::ErrorInfo> void _invoke(ExFuture<Runnable,TArg,ErrorType> fut,::parallelism::Barrier& b,F&& f, FTypes&&... fs)
+        template <class TArg,class F,class ...FTypes> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,F&& f, FTypes&&... fs)
         {            
             _invoke(fut,b,std::forward<F>(f));
             _invoke(fut,b,std::forward<FTypes>(fs)...);
         }
-        template <int n,class ResultTuple, class F,class TArg,class ErrorType = ::core::ErrorInfo> void _invoke_with_result(ExFuture<Runnable,TArg,ErrorType> fut,::parallelism::Barrier& b,ResultTuple& output,F&& f)
+        template <int n,class ResultTuple, class F,class TArg> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,ResultTuple& output,F&& f)
         {
             execution::launch(fut.ex,
-                [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg,ErrorType> fut) mutable
+                [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg> fut) mutable
                 {                                        
                     std::get<n>(output) = f(fut.getValue().value());
                     b.set();
                 },fut);
         }
          //void overload
-        template <int n,class ResultTuple,class F,class ErrorType = ::core::ErrorInfo> void _invoke_with_result(ExFuture<Runnable,void,ErrorType> fut,::parallelism::Barrier& b,ResultTuple& output, F&& f)
+        template <int n,class ResultTuple,class F> void _invoke_with_result(ExFuture<Runnable,void> fut,::parallelism::Barrier& b,ResultTuple& output, F&& f)
         {
             execution::launch(fut.ex,
-                [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void,ErrorType> fut) mutable
+                [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void> fut) mutable
                 {                    
                     std::get<n>(output) = f();
                     b.set();
                 },fut);
         }
         
-        template <int n,class ResultTuple,class TArg,class F,class ...FTypes,class ErrorType = ::core::ErrorInfo> void _invoke_with_result(ExFuture<Runnable,TArg,ErrorType> fut,::parallelism::Barrier& b,ResultTuple& output,F&& f, FTypes&&... fs)
+        template <int n,class ResultTuple,class TArg,class F,class ...FTypes> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,ResultTuple& output,F&& f, FTypes&&... fs)
         {            
             _invoke_with_result<n>(fut,b,output,std::forward<F>(f));
             _invoke_with_result<n+1>(fut,b,output,std::forward<FTypes>(fs)...);
@@ -171,13 +170,13 @@ namespace execution
             ptr->getScheduler().getLock().leave();
         return barrier;
     }
-    template <class TArg,class ...FTypes,class ErrorType> ::parallelism::Barrier Executor<Runnable>::parallel( ExFuture<Runnable,TArg,ErrorType> fut,FTypes&&... functions)
+    template <class TArg,class ...FTypes> ::parallelism::Barrier Executor<Runnable>::parallel( ExFuture<Runnable,TArg> fut,FTypes&&... functions)
     {
         ::parallelism::Barrier barrier(sizeof...(functions));
         _private::_invoke(fut,barrier,functions...);
         return barrier;        
     }    
-    template <class ReturnTuple,class TArg,class ...FTypes,class ErrorType> ::parallelism::Barrier Executor<Runnable>::parallel_convert(ExFuture<Runnable,TArg,ErrorType> fut,ReturnTuple& result, FTypes&&... functions)
+    template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier Executor<Runnable>::parallel_convert(ExFuture<Runnable,TArg> fut,ReturnTuple& result, FTypes&&... functions)
     {
         ::parallelism::Barrier barrier(sizeof...(functions));
         _private::_invoke_with_result<0>(fut,barrier,result,functions...);

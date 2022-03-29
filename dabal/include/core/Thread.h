@@ -233,13 +233,13 @@ namespace core
 	* @see tasking::waitForFutureMThread
 	*/
 
-	template<class T,class ErrorType = ::core::ErrorInfo> ::core::WaitResult<T,ErrorType> waitForFutureThread(  const core::Future<T,ErrorType>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
+	template<class T> ::core::WaitResult<T> waitForFutureThread(  const core::Future<T>& f,unsigned int msecs = ::core::Event::EVENT_WAIT_INFINITE)
     {
         using ::core::Event;
         struct _Receiver
         {		
             _Receiver():mEvent(false,false){}
-			using futT = core::Future<T,ErrorType>;
+			using futT = core::Future<T>;
             ::core::EWaitError wait( const futT& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
@@ -272,7 +272,29 @@ namespace core
             	::core::Event mEvent;
         };
         auto receiver = std::make_unique<_Receiver>();
-		return ::core::WaitResult<T,ErrorType>(receiver->wait(f,msecs),f);	
+		 ::core::EWaitError waitRes = receiver->wait(f,msecs);
+        switch (waitRes)
+        {
+        case ::core::EWaitError::FUTURE_WAIT_OK:
+            if ( f.getValue().isValid())
+                return ::core::WaitResult(f);
+            else
+                std::rethrow_exception(f.getValue().error());
+            break;
+        case ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
+            throw core::WaitException(::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received");
+            break;
+        case ::core::EWaitError::FUTURE_WAIT_TIMEOUT:
+            throw core::WaitException(::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Time out exceeded");
+            break;
+        case ::core::EWaitError::FUTURE_UNKNOWN_ERROR:
+            throw core::WaitException(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
+            break;
+        default:
+            throw core::WaitException(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
+            break;
+        }
+		//return ::core::WaitResult<T>(receiver->wait(f,msecs),f);	
     }	
 	DABAL_API ::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 }

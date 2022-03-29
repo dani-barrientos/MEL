@@ -9,18 +9,95 @@
 #include <core/CallbackSubscriptor.h>
 #include <variant>
 #include <optional>
+#include <exception>
 namespace core
 {
 	using core::CriticalSection;
 	using mpl::TypeTraits;
+/*
+usar exception para el errorinfo
+igual me convenía usar typeerasure para no manejar puntero directamente??
+pros/cons uso de exception: 
+ - interfaz consistente y poder meter directamente la exceción que se genere->duda...
+ - me quitaría la personalizacion del errortype
+ DUDA GORDA!!!LAS EXCEPCIONES NORMALMENTE SE CAPTURAN COMO & -> ¿CÓMO GUARDO EL PUNTERO? PORQUE ENCIMA NO PODRÁ HACERSE COPIA POR HERENCIA
+->CREO QUE ESTO VA A ESTAR RELACIONADO CON EL STD::CURRENT_EXCEPTION Y EL EXCEPTION_PTR->SEGÚN LA DOC, EL PUNTERO PERMANECE MIENTRAS SE HAGAS REFERENCIA A ÉL
+Na, pero el rollo es que no es un tipo concreto, no es un exception ni nada de eso..
+lo que puedo hacer es relanzarla después y capturar el tipo concreto. Eso significa que podría poner un try/catch al acceder 
+a un future, en vez de hacer un isValid (que podrái tenerlo igual). tal así sea más natural, algo como:
+	Future<...> f = "executa algo"
+	waitfor(f);
+	try
+	{
+		f.getValue() ...
+	}catch()
+	{
 
+	}
+
+#include <exception>
+#include <stdexcept>
+#include <optional>
+#include <iostream>
+
+int f1()
+{
+    throw std::runtime_error("Error runtime");
+    //throw std::bad_alloc();
+    //throw "dani";
+}
+void f(std::optional<std::exception_ptr>& output)
+{
+    try
+    {
+        f1();
+    }
+    catch(std::exception& e)
+    {
+        std::cout << "catch exception\n";
+        output = std::current_exception();
+    }
+    catch(...)
+    {
+        std::cout << "catch ...\n";
+        output = std::current_exception();
+    }
+}
+int main()
+{    
+    try
+    {
+        std::optional<std::exception_ptr> opt;
+        {
+            f(opt);
+        }
+        if ( opt != nullptr )
+        {
+            std::rethrow_exception(opt.value());
+        }
+    }
+    catch(std::runtime_error& e)
+    {
+        std::cout << "Excepcion (runtime_error) capturada al final: "<<e.what();
+    }
+    catch(std::exception& e)
+    {
+        std::cout << "Excepcion (exception) capturada al final: "<<e.what();
+    }catch(...)
+    {
+        std::cout << "Excepcion (unknown) capturada al final";
+    }
+    return 0;
+}*/
+
+/*
 	struct ErrorInfo
 	{
 		ErrorInfo(int aErr,std::string aMsg):error(aErr),errorMsg(std::move(aMsg)){}
 		//@remarks negative error code is reserved for internal errors
 		int		error;  //there was error. Error code. Very simple for now. 
 		std::string errorMsg;
-	};
+	};*/
 	/**
 	* @brief Generic result error codes for future waiting
 	*/
@@ -65,11 +142,11 @@ namespace core
 		};
 		
 	}
-	template <class T,class ErrorType = ::core::ErrorInfo> class FutureValue : public std::variant<_private::NotAvailable,T,ErrorType>
+	template <class T> class FutureValue : public std::variant<_private::NotAvailable,T,std::exception_ptr>
 	{
 	
 		static constexpr size_t ValidIdx = 1;
-		typedef std::variant<_private::NotAvailable,T,ErrorType> Base;
+		typedef std::variant<_private::NotAvailable,T,std::exception_ptr> Base;
 		public:
 			typedef T Type;
 			typedef typename _private::return_type<T>::type ReturnType;
@@ -78,8 +155,9 @@ namespace core
 			FutureValue(){}
 			FutureValue(const T& v):Base(v){}
 			FutureValue(T&& v):Base(std::move(v)){}
-			FutureValue(const ErrorType& err):Base(err){}
-			FutureValue(ErrorType&& err):Base(std::move(err)){}
+			FutureValue(std::exception_ptr err):Base(err){}
+			template <class ET>
+			FutureValue(ET&& err):Base(std::make_exception_ptr(std::forward<ET>(err))){}
 			FutureValue(const FutureValue& v):Base(v){}
 			FutureValue(FutureValue&& v):Base(std::move(v)){}
 			/**
@@ -96,9 +174,9 @@ namespace core
 			{
 				return std::get<T>(*this);
 			}
-			const ErrorType& error() const
+			std::exception_ptr error() const
 			{
-				return std::get<ErrorType>(*this);
+				return std::get<std::exception_ptr>(*this);
 			}
 			auto& operator=(const T& v){
 				Base::operator=(v);
@@ -108,12 +186,13 @@ namespace core
 				Base::operator=(std::move(v));
 				return *this;
 			}
-			auto& operator=(const ErrorType& v){
+			auto& operator=(std::exception_ptr v){
 				Base::operator=(v);
 				return *this;
 			}
-			auto& operator=(ErrorType&& v){
-				Base::operator=(std::move(v));
+			template <class ET>
+			auto& operator=(ET&& v){
+				Base::operator=(std::make_exception_ptr(std::forward<ET>(v)));
 				return *this;
 			}
 			auto& operator=(const FutureValue& v)
@@ -136,16 +215,17 @@ namespace core
 	struct VoidType
 	{
 	};
-	template <class ErrorType> class FutureValue<void,ErrorType> : public std::variant<_private::NotAvailable,VoidType,ErrorType>
+	template <> class FutureValue<void> : public std::variant<_private::NotAvailable,VoidType,std::exception_ptr>
 	{
 		static constexpr size_t ValidIdx = 1;
-		typedef std::variant<_private::NotAvailable,VoidType,ErrorType> Base;
+		typedef std::variant<_private::NotAvailable,VoidType,std::exception_ptr> Base;
 		public:
 			typedef void ReturnType;
 			typedef void CReturnType;
 			FutureValue(){}
-			FutureValue(const ErrorType& err):Base(err){}
-			FutureValue(ErrorType&& err):Base(std::move(err)){}
+			FutureValue(std::exception_ptr err):Base(err){}
+			template <class ET>
+			FutureValue(ET&& err):Base(std::make_exception_ptr(std::forward<ET>(err))){}
 			/**
 			 * @brief get if has valid value
 			 */
@@ -156,16 +236,17 @@ namespace core
 			bool isAvailable() const{ return Base::index() != 0;}
 			void setValid(){ Base::operator=(VoidType());}
 			// wrapper for optional::value().  Same rules as std::Get, so bad_optional_access is thrown if not a valid value			
-			const ErrorType& error() const
+			std::exception_ptr error() const
 			{
-				return std::get<ErrorType>(*this);
+				return std::get<std::exception_ptr>(*this);
 			}			
-			auto& operator=(const ErrorType& v){
+			auto& operator=(std::exception_ptr v){
 				Base::operator=(v);
 				return *this;
 			}
-			auto& operator=(ErrorType&& v){
-				Base::operator=(std::move(v));
+			template<class ET>
+			auto& operator=(ET&& v){
+				Base::operator=(std::make_exception_ptr(std::forward<ET>(v)));
 				return *this;
 			}
 	};
@@ -198,22 +279,22 @@ namespace core
 			EFutureState		mState;
 
 		};
-		template <typename T,typename ErrorType>
+		template <typename T>
 		class FutureData : public FutureData_Base,
 						private CallbackSubscriptor<::core::CSMultithreadPolicy,
 						FutureValue<typename 
 							std::conditional<
 								std::is_lvalue_reference<T>::value,
 								std::reference_wrapper<typename std::remove_reference<T>::type>,
-								T>::type,ErrorType>&>,
-						public std::enable_shared_from_this<FutureData<T,ErrorType>>
+								T>::type>&>,
+						public std::enable_shared_from_this<FutureData<T>>
 		{		
 		public:
 			typedef FutureValue<typename 
 			std::conditional<
 				std::is_lvalue_reference<T>::value,
 				std::reference_wrapper<typename std::remove_reference<T>::type>,
-				T>::type,ErrorType> ValueType;
+				T>::type> ValueType;
 			typedef CallbackSubscriptor<::core::CSMultithreadPolicy, ValueType&> Subscriptor;
 			/**
 			* default constructor
@@ -233,7 +314,7 @@ namespace core
 			template <class U>
 			void setValue(U&& value)
 			{
-				volatile auto protectMe= FutureData<T,ErrorType>::shared_from_this();
+				volatile auto protectMe= FutureData<T>::shared_from_this();
 				FutureData_Base::mSC.enter();	
 				if ( mState == NOTAVAILABLE)
 				{
@@ -245,9 +326,9 @@ namespace core
 					FutureData_Base::mSC.leave();
 				
 			}
-			void setError( const ErrorType& ei )
+			void setError( std::exception_ptr ei )
 			{
-				volatile auto protectMe=FutureData<T,ErrorType>::shared_from_this();
+				volatile auto protectMe=FutureData<T>::shared_from_this();
 				core::Lock lck(FutureData_Base::mSC);
 				if ( mState == NOTAVAILABLE)
 				{
@@ -256,14 +337,15 @@ namespace core
 					Subscriptor::triggerCallbacks(mValue);
 				}
 			};
-			void setError( ErrorType&& ei )
+			template <class ET>
+			void setError( ET&& ei )
 			{
-				volatile auto protectMe=FutureData<T,ErrorType>::shared_from_this();
+				volatile auto protectMe=FutureData<T>::shared_from_this();
 				core::Lock lck(FutureData_Base::mSC);
 
 				if ( mState == NOTAVAILABLE)
 				{
-					mValue = std::move(ei);
+					mValue = std::forward<ET>(ei);
 					mState = INVALID;
 					Subscriptor::triggerCallbacks(mValue);
 				}
@@ -328,14 +410,14 @@ namespace core
 
 		//specialization for void type. It's intented for functions returning void but working in a different thread
 		//so user need to know when it finish
-		template <typename ErrorType>
-		class FutureData<void,ErrorType> : public FutureData_Base,
-			private CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&>,
-			public std::enable_shared_from_this<FutureData<void,ErrorType>>
+		template <>
+		class FutureData<void> : public FutureData_Base,
+			private CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void>&>,
+			public std::enable_shared_from_this<FutureData<void>>
 		{
-			typedef CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void,ErrorType>&> Subscriptor;
+			typedef CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void>&> Subscriptor;
 		public:
-			typedef FutureValue<void,ErrorType> ValueType;
+			typedef FutureValue<void> ValueType;
 
 			FutureData(){};
 			
@@ -371,7 +453,7 @@ namespace core
 			const ValueType& getValue()const{ return mValue;}
 			inline void setValue( void )
 			{
-				volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
+				volatile auto protectMe=FutureData<void>::shared_from_this();
 				FutureData_Base::mSC.enter();	
 				if ( mState == NOTAVAILABLE)
 				{
@@ -385,9 +467,9 @@ namespace core
 			/**
 			* set error info. TAKES OWNSERHIP
 			*/
-			void setError( const ErrorType& ei )
+			void setError( std::exception_ptr ei )
 			{
-				volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
+				volatile auto protectMe=FutureData<void>::shared_from_this();
 				FutureData_Base::mSC.enter();
 				if ( mState == NOTAVAILABLE)
 				{
@@ -397,13 +479,14 @@ namespace core
 				}			
 				FutureData_Base::mSC.leave();
 			};
-			void setError( ErrorType&& ei )
+			template<class ET>
+			void setError( ET&& ei )
 			{
-				volatile auto protectMe=FutureData<void,ErrorType>::shared_from_this();
+				volatile auto protectMe=FutureData<void>::shared_from_this();
 				FutureData_Base::mSC.enter();
 				if ( mState == NOTAVAILABLE)
 				{
-					mValue = std::move(ei);
+					mValue = std::forward<ET>(ei);
 					mState = INVALID;
 					Subscriptor::triggerCallbacks(mValue);
 				}			
@@ -479,13 +562,13 @@ namespace core
 			inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
 					
 		};
-		template <typename T,typename ET>
+		template <typename T>
 		class Future_Common : public Future_Base
 		{
 		protected:
 			Future_Common()
 			{
-				mData = std::make_shared<FutureData<T,ErrorType>>();
+				mData = std::make_shared<FutureData<T>>();
 			};
 			Future_Common( const Future_Common& f ):Future_Base( f ){}
 			Future_Common( Future_Common&& f ):Future_Base( std::move(f) ){}
@@ -500,14 +583,13 @@ namespace core
 				return *this;
 			};
 		public:
-			typedef ET  ErrorType;			
-			inline  const typename FutureData<T,ErrorType>::ValueType& getValue() const{ return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
-			inline  typename FutureData<T,ErrorType>::ValueType& getValue() { return ((FutureData<T,ErrorType>*)mData.get())->getValue();}		
-			void assign( const typename FutureData<T,ErrorType>::ValueType& val)
+			inline  const typename FutureData<T>::ValueType& getValue() const{ return ((FutureData<T>*)mData.get())->getValue();}		
+			inline  typename FutureData<T>::ValueType& getValue() { return ((FutureData<T>*)mData.get())->getValue();}		
+			void assign( const typename FutureData<T>::ValueType& val)
 			{
 				getData().assign(val);
 			}
-			void assign(  typename FutureData<T,ErrorType>::ValueType&& val)
+			void assign(  typename FutureData<T>::ValueType&& val)
 			{
 				getData().assign(std::move(val));
 			}
@@ -524,15 +606,15 @@ namespace core
 			template <class F> auto subscribeCallback(F&& f) const						
 			{
 				//@todo no me gusta un pijo este cast, pero necesito que el subscribe actúa como mutable
-				return const_cast<Future_Common<T,ErrorType>*>(this)->getData().subscribeCallback( std::forward<F>(f));
+				return const_cast<Future_Common<T>*>(this)->getData().subscribeCallback( std::forward<F>(f));
 			}
 			template <class F> auto unsubscribeCallback(F&& f) const
 			{
-				return const_cast<Future_Common<T,ErrorType>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
+				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
 			}
 		private:
-			inline const FutureData<T,ErrorType>& getData() const{ return *(FutureData<T,ErrorType>*)mData; }
-			inline FutureData<T,ErrorType>& getData(){ return *(FutureData<T,ErrorType>*)mData.get(); }
+			inline const FutureData<T>& getData() const{ return *(FutureData<T>*)mData; }
+			inline FutureData<T>& getData(){ return *(FutureData<T>*)mData.get(); }
 		};
 		///@endcond
 	}
@@ -541,9 +623,10 @@ namespace core
 	*  Represents a value retreived by (possibly) another thread. This value maybe is not present at the moment
 	* and can be waited,etc
 	* A value is retrieved using various ways:
-	*	- polling in a loop checking for "getValid" and "getError"
+	*	- polling in a loop checking for "getValid" and "error"
 	*	- using wait and waitAsMThread functions
-	* should check getValid, in which case there is an error ( see getError )
+	*   - callback notification with subcribeCallback
+	* should check getValid, in which case there is an error ( see error )
 	* @todo por ahora un Future no es reaprovechable, es decir, una vez construido o establecido su valor o error
 	* ya no puede "resetearse". Ni siquiera s� si tiene sentido
 	* Adem�s, no est� pensado para ser usado por varios hilos a la vez (de nuevo, no creo que tenga sentido)
@@ -552,152 +635,205 @@ namespace core
 	
 	///@endcond
 	
-	template <typename T,typename ErrorType = ::core::ErrorInfo>
-	class Future : public _private::Future_Common<T,ErrorType>
+	template <typename T>
+	class Future : public _private::Future_Common<T>
 	{
 	public:
-		typedef typename _private::FutureData<T,ErrorType>::ValueType ValueType;
+		typedef typename _private::FutureData<T>::ValueType ValueType;
 		Future(){};
-		Future( const Future& f ):_private::Future_Common<T,ErrorType>(f){};
-		Future( Future&& f ):_private::Future_Common<T,ErrorType>(std::move(f)){};
+		Future( const Future& f ):_private::Future_Common<T>(f){};
+		Future( Future&& f ):_private::Future_Common<T>(std::move(f)){};
 		Future(const T& val)
 		{
-			_private::Future_Base::mData = std::make_shared<_private::FutureData<T,ErrorType>>(val);
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<T>>(val);
 		}
 		Future(T&& val)
 		{
-			_private::Future_Base::mData = std::make_shared<_private::FutureData<T,ErrorType>>(std::move(val));
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<T>>(std::move(val));
 		}
 		Future& operator= ( const Future& f )
 		{
-			_private::Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T>::operator=(f);
 			return *this;
 		};		
 		Future& operator= (  Future&& f )
 		{
-			_private::Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T>::operator=(f);
 			return *this;
 		};
 		template <class F>
 		void setValue( F&& value )
 		{
-		    ((_private::FutureData<T,ErrorType>*)_private::Future_Common<T,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
+		    ((_private::FutureData<T>*)_private::Future_Common<T>::mData.get())->setValue( std::forward<F>(value) ); 
 		}	
 		template <class F>
 		void setError( F&& ei )
 		{
-			((_private::FutureData<T,ErrorType>*)_private::Future_Common<T,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
+			((_private::FutureData<T>*)_private::Future_Common<T>::mData.get())->setError( std::forward<F>(ei) ); 
 		}
 	};
-	template <typename T,typename ErrorType>
-	class Future<T&,ErrorType> : public _private::Future_Common<T&,ErrorType>
+	template <typename T>
+	class Future<T&> : public _private::Future_Common<T&>
 	{
 	public:
-		typedef typename _private::FutureData<T&,ErrorType>::ValueType ValueType;
+		typedef typename _private::FutureData<T&>::ValueType ValueType;
 		Future(){};
-		Future( const Future& f ):_private::Future_Common<T&,ErrorType>(f){};
-		Future( Future&& f ):_private::Future_Common<T&,ErrorType>(std::move(f)){};
+		Future( const Future& f ):_private::Future_Common<T&>(f){};
+		Future( Future&& f ):_private::Future_Common<T&>(std::move(f)){};
 		Future(T& val)
 		{
-			_private::Future_Base::mData = std::make_shared<_private::FutureData<T&,ErrorType>>(val);
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<T&>>(val);
 		}
 
 
 		Future& operator= ( const Future& f )
 		{
-			_private::Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T>::operator=(f);
 			return *this;
 		};		
 		Future& operator= (  Future&& f )
 		{
-			_private::Future_Common<T,ErrorType>::operator=(f);
+			_private::Future_Common<T>::operator=(f);
 			return *this;
 		};
 		template <class F>
 		void setValue( F&& value )
 		{
-		    ((_private::FutureData<T&,ErrorType>*)_private::Future_Common<T&,ErrorType>::mData.get())->setValue( std::forward<F>(value) ); 
+		    ((_private::FutureData<T&>*)_private::Future_Common<T&>::mData.get())->setValue( std::forward<F>(value) ); 
 		}	
 		template <class F>
 		void setError( F&& ei )
 		{
-			((_private::FutureData<T&,ErrorType>*)_private::Future_Common<T&,ErrorType>::mData.get())->setError( std::forward<F>(ei) ); 
+			((_private::FutureData<T&>*)_private::Future_Common<T&>::mData.get())->setError( std::forward<F>(ei) ); 
 		}
 	};
 
 	//specialization for void
-	template <typename ErrorType>
-	class Future<void,ErrorType> : public _private::Future_Common<void,ErrorType>
+	template <>
+	class Future<void> : public _private::Future_Common<void>
 	{
 	public:
-		typedef typename _private::FutureData<void,ErrorType>::ValueType ValueType;
+		typedef typename _private::FutureData<void>::ValueType ValueType;
 		Future(){};
 		//fake initializacion to indicate we want to initialize as valid
 		Future(int a)
 		{
-			_private::Future_Base::mData = std::make_shared<_private::FutureData<void,ErrorType>>(a);
+			_private::Future_Base::mData = std::make_shared<_private::FutureData<void>>(a);
 		};
-		Future(const Future& f):_private::Future_Common<void,ErrorType>(f){};	
-		Future(Future&& f):_private::Future_Common<void,ErrorType>(std::move(f)){};	
+		Future(const Future& f):_private::Future_Common<void>(f){};	
+		Future(Future&& f):_private::Future_Common<void>(std::move(f)){};	
 		Future& operator= ( const Future& f )
 		{
-			_private::Future_Common<void,ErrorType>::operator=(f);
+			_private::Future_Common<void>::operator=(f);
 			return *this;
 		};		
 		Future& operator= (  Future&& f )
 		{
-			_private::Future_Common<void,ErrorType>::operator=(f);
+			_private::Future_Common<void>::operator=(f);
 			return *this;
 		};
 		
-		inline void setValue( void ){ ((_private::FutureData<void,ErrorType>*)_private::Future_Base::mData.get())->setValue( ); }		
+		inline void setValue( void ){ ((_private::FutureData<void>*)_private::Future_Base::mData.get())->setValue( ); }		
 		template <class F>
 		void setError( F&& ei )
 		{
-			((_private::FutureData<void,ErrorType>*)_private::Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
+			((_private::FutureData<void>*)_private::Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
 		}		
 	};
+	/**
+	 * @brief Exception class generated by WaitResult when wait for future gets an error
+	 * 
+	 */
+	class WaitException: public std::runtime_error
+	{
+		public:
+			WaitException(int code,const std::string& msg): mCode(code),std::runtime_error(msg){}
+			WaitException(int code,std::string&& msg): mCode(code),std::runtime_error(std::move(msg)){}
+			int getCode() const{ return mCode;}
+		private:
+			int mCode;
+	};
+
 	/** @brief wrapper for future value after wait
 	* @todo it shouldn't be in this file, but trying to find it a better place
 	**/
-	template <class T,class E> class WaitResult
+	/*template <class T> class WaitResult 
 	{        
 		public:
-			WaitResult(const ::core::EWaitError wc,const core::Future<T,E>& f):mWaitResult(wc),mFut(f){}
+			WaitResult(const ::core::EWaitError wc,const core::Future<T>& f):mWaitResult(wc),mFut(f){}
 			bool isValid () const
 			{
 				return (mWaitResult == ::core::EWaitError::FUTURE_WAIT_OK)?mFut.getValue().isValid():false;
 			}
-			typename core::Future<T,E>::ValueType::CReturnType value() const{ return mFut.getValue().value();}
-			typename core::Future<T,E>::ValueType::ReturnType value(){ return mFut.getValue().value();}
-			const E& error() const{ 
+			typename core::Future<T>::ValueType::CReturnType value() const
+			{
+				// return mFut.getValue().value();
+				if ( isValid() )
+					return mFut.getValue().value();
+				else
+					std::rethrow_exception(error());			
+			}
+			typename core::Future<T>::ValueType::ReturnType value()
+			{
+				if ( isValid() )
+					return mFut.getValue().value();
+				else
+					std::rethrow_exception(error()); 
+			}
+			std::exception_ptr error() const{ 
 				switch (mWaitResult)
 				{               
-				case ::core::EWaitError::FUTURE_WAIT_OK: //uhm... no cuadra...
+				case ::core::EWaitError::FUTURE_WAIT_OK:// @todo esto no cuadra.
 					return mFut.getValue().error();
 					break;
 				case ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
-					mEI.reset(new E(mWaitResult,"Kill signal received"));
-					return *mEI;
+					mEI = std::make_exception_ptr( WaitException(mWaitResult,"Kill signal received"));
+					return mEI;
 					break;
 				case ::core::EWaitError::FUTURE_WAIT_TIMEOUT:
-					mEI.reset(new E(mWaitResult,"Time out exceeded"));
-					return *mEI;
+					mEI = std::make_exception_ptr( WaitException(mWaitResult,"Time out exceeded"));
+					return mEI;
 					break;
 				case ::core::EWaitError::FUTURE_UNKNOWN_ERROR:
-					mEI.reset(new E(mWaitResult,"Unknown error"));
-					return *mEI;
+					mEI = std::make_exception_ptr( WaitException(mWaitResult,"Unknown error"));
+					return mEI;
 					break;
 				default:return mFut.getValue().error(); //silent warning
 				}                
 			}
 			//! @brief access internal just if needed to do excepctional things
-			const core::Future<T,E>& getFuture() const{ return mFut;}
-			core::Future<T,E>& getFuture(){ return mFut;}
+			const core::Future<T>& getFuture() const{ return mFut;}
+			core::Future<T>& getFuture(){ return mFut;}
 		private:
 			::core::EWaitError mWaitResult;
-			core::Future<T,E> mFut;
-			mutable std::unique_ptr<E> mEI; //error info when needed
+			core::Future<T> mFut;
+			mutable std::exception_ptr mEI; //error info when needed
 
+	};
+	*/
+	template <class T> class WaitResult 
+	{        
+		public:
+			WaitResult(const core::Future<T>& f):mFut(f){}
+			bool isValid () const
+			{
+				return mFut.getValue().isValid();
+			}
+			typename core::Future<T>::ValueType::CReturnType value() const
+			{				
+				return mFut.getValue().value();			
+			}
+			typename core::Future<T>::ValueType::ReturnType value()
+			{
+				return mFut.getValue().value();
+			}
+			std::exception_ptr error() const{ 
+				return mFut.getValue().error();				
+			}
+			//! @brief access internal just if needed to do excepctional things
+			const core::Future<T>& getFuture() const{ return mFut;}
+			core::Future<T>& getFuture(){ return mFut;}
+		private:
+			core::Future<T> mFut;
 	};
 }

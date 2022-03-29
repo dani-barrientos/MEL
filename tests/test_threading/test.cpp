@@ -129,7 +129,7 @@ static int _testsDebug(tests::BaseTest* test)
 	{
 
 		auto th1 = ThreadRunnable::create();
-		Future<void> fut;
+		Future<int> fut;
 		int cont = 0;;
 		th1->post([fut,&cont](RUNNABLE_TASK_PARAMS) mutable
 		{
@@ -149,7 +149,9 @@ static int _testsDebug(tests::BaseTest* test)
 				text::debug("normal");
 			}
 
-			//fut.setValue();
+			//fut.setValue(10);
+			//fut.setError(std::make_exception_ptr(std::runtime_error("Prueba error")));;
+			fut.setError( "error infame");
 			//return ::tasking::EGenericProcessResult::KILL;
 			return ::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::_killTrue,1000);
@@ -161,7 +163,17 @@ static int _testsDebug(tests::BaseTest* test)
 			text::debug("CINCO");
 			return ::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::_killTrue,700);
-	//	core::waitForFutureThread(fut);
+		try
+		{
+			auto res = core::waitForFutureThread(fut);
+			text::info("Valor = {}",res.value());
+		}catch(std::exception& e)
+		{
+			text::error("exception: {}",e.what());;
+		}catch(...)
+		{
+			text::error("unknown exception");
+		}
 		Thread::sleep(11000);		
 		text::info("HECHO");
 	}
@@ -202,11 +214,20 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 					text::error("This execution shouldn''t be done");
 					return 1.5f;
 					});
-				auto fr = ::tasking::waitForFutureMThread(fut);
+				try
+				{
+					auto fr = ::tasking::waitForFutureMThread(fut);
+					text::info("OK, execution was't done because process is killed");
+				}catch(...)
+				{
+					text::error("Execution should have recieved a kill signal");
+				}				
+				/*
 				if ( !fr.isValid() && fr.error().error == ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
 					text::info("OK, execution was't done because process is killed");
 				else
 					text::error("Execution should have recieved a kill signal");
+				*/
 
 			}
 			text::debug("Return result");
@@ -246,12 +267,14 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 					}
 				);
 
-		
-				auto fr = ::tasking::waitForFutureMThread(fut,2000);
-				if ( !fr.isValid())
-					text::error(fr.error().errorMsg);
-				else
+				try
+				{
+					auto fr = ::tasking::waitForFutureMThread(fut,2000);
 					text::debug("{}",fr.value());
+				}catch(std::exception& e)
+				{
+					text::error(e.what());
+				}
 			
 				// if ( fr != ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
 				// {
