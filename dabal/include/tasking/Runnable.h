@@ -294,9 +294,9 @@ namespace tasking
 		* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		*/
 		template <class TRet,class F,class KF = const std::function<bool()>&> 
-			Future<TRet> execute( F&& function,KF&& killFunction=_killFalse);
+			Future<TRet> execute( F&& function,KF&& killFunction=_killFalse) noexcept;
 		template <class TRet,class F,class KF = const std::function<bool()>&> 
-			Future<TRet> execute( F&& function,Future<TRet>,KF&& killFunction=_killFalse);
+			Future<TRet> execute( F&& function,Future<TRet>,KF&& killFunction=_killFalse) noexcept;
 
 		
 				
@@ -391,9 +391,9 @@ namespace tasking
 	}
 	
 	template <class TRet, class F,class KF> 
-	Future<TRet> Runnable::execute( F&& function,KF&& killFunction)
+	Future<TRet> Runnable::execute( F&& function,KF&& killFunction) noexcept
 	{
-		Future<TRet> future;
+		Future<TRet> future;	
 		return execute(std::forward<F>(function),future,std::forward<KF>(killFunction));		
 	}
 	/**
@@ -403,7 +403,7 @@ namespace tasking
 	 * @return same future as out
 	 */
 	template <class TRet, class F,class KF> 
-	Future<TRet> Runnable::execute( F&& f,Future<TRet> output,KF&& killFunction)
+	Future<TRet> Runnable::execute( F&& f,Future<TRet> output,KF&& killFunction) noexcept
 	{
 		//always post the task, despite being in same thread. This is the most consistent way of doing it
 
@@ -433,7 +433,7 @@ namespace tasking
 		post(
 			[output,f = std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
 			{
-				try
+				if constexpr (noexcept(f()))
 				{
 					if constexpr (std::is_same<void,TRet>::value)
 					{
@@ -444,6 +444,25 @@ namespace tasking
 					{
 						output.setValue(f());
 					}
+				}else
+				{
+					try
+					{
+						if constexpr (std::is_same<void,TRet>::value)
+						{
+							f();
+							output.setValue();
+						}
+						else
+						{
+							output.setValue(f());
+						}
+					}
+					catch(...)
+					{
+						//output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
+						output.setError( std::current_exception() );	
+					}
 				}
 				/*
 				//check chances of Exception
@@ -451,11 +470,7 @@ namespace tasking
 				{					
 					output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );						
 				}*/
-				catch(...)
-				{
-					//output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
-					output.setError( std::current_exception() );	
-				}
+				
 				return ::tasking::EGenericProcessResult::KILL;
 			},std::forward<KF>(killFunction)		
 		);

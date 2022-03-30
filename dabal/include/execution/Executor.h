@@ -114,13 +114,8 @@ namespace execution
     {        
         typedef std::invoke_result_t<F> TRet;
         ExFuture<ExecutorAgent,TRet> result(ex);
-        try
-        {
-            ex. template launch<TRet>(std::forward<F>(f),result);
-        }catch(...)
-        {
-            result.setError( std::current_exception() );	
-        }
+        ex. template launch<TRet>(std::forward<F>(f),result);
+
         return result;
     }
     /**
@@ -138,14 +133,7 @@ namespace execution
         typedef std::invoke_result_t<F,TArg> TRet;
 
         ExFuture<ExecutorAgent,TRet> result(ex);
-        try
-        {
-            ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);
-        }catch(...)
-        {
-            result.setError( std::current_exception() );	
-        }
-        
+        ex. template launch<TRet>(std::forward<F>(f),std::forward<TArg>(arg),result);                
         return result;
     }
     /**
@@ -182,7 +170,7 @@ namespace execution
                  //hasta aquí las copias tienen sentido
                 if ( input.isValid() )
                 {                                    
-                    launch(fut.ex,[result,arg = std::forward<TRet>(arg)]() mutable
+                    launch(fut.ex,[result,arg = std::forward<TRet>(arg)]() mutable noexcept
                     {
                         result.setValue(std::forward<TRet>(arg));                        
                     });
@@ -190,7 +178,7 @@ namespace execution
                 else
                 {
                     //set error as task in executor
-                    launch(fut.ex,[result,err = std::move(input.error())]( ) mutable
+                    launch(fut.ex,[result,err = std::move(input.error())]( ) mutable noexcept
                     {
                        result.setError(std::move(err));
                     });
@@ -219,16 +207,25 @@ namespace execution
             {       
 
                 if ( input.isValid() )
-                {                                       
-                    source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg> arg) mutable ->TRet 
-                    {                                          
-                        return f(arg.getValue().value());                         
-                    },source,result);            
+                {    
+                    if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                    {                                                        
+                        source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept->TRet 
+                        {                                          
+                            return f(arg.getValue().value());                         
+                        },source,result);            
+                    }else
+                    {
+                        source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable ->TRet 
+                        {                                          
+                            return f(arg.getValue().value());                         
+                        },source,result);            
+                    }
                 }
                 else
                 {
                     //set error as task in executor
-                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable noexcept
                     {
                        result.setError(std::move(err));
                     });
@@ -253,15 +250,24 @@ namespace execution
 
                 if ( input.isValid() )
                 {                                       
-                    source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void> arg)->TRet
-                    {                                          
-                        return f();                         
-                    },source,result);
+                    if constexpr (noexcept(f()))
+                    {
+                        source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void>& arg) noexcept->TRet
+                        {                                          
+                            return f();                         
+                        },source,result);
+                    }else
+                    {
+                        source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void>& arg)->TRet
+                        {                                          
+                            return f();                         
+                        },source,result);
+                    }
                 }
                 else
                 {
                     //set error as task in executor
-                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable noexcept
                     {
                        result.setError(std::move(err));
                     });
@@ -364,7 +370,7 @@ namespace execution
                     }else
                     {
                         //set error as task in executor
-                        launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                        launch(source.ex,[result,err = std::move(input.error())]( ) mutable noexcept
                         {
                             result.setError(std::move(err));
                         });
@@ -407,7 +413,7 @@ namespace execution
                     }else
                     {
                         //set error as task in executor
-                        launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                        launch(source.ex,[result,err = std::move(input.error())]( )  mutable noexcept
                         {
                             result.setError(std::move(err));
                         });
@@ -424,7 +430,8 @@ namespace execution
     }
     /**
      * @brief Execute given functions in a (possibly, depending con concrete executor) parallel way
-     * 
+     * If an exception is thrown in any of the callables, and noexcept is no specified, the
+     * value of the first exception thrown is set as error in the resulting future, so forwarding the error to the next element (if any) of the chain
      @return A ExFuture with same value as input future, whose content IS MOVED
      */
     template <class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,TArg> parallel(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
@@ -436,18 +443,22 @@ namespace execution
             {
                 if ( input.isValid() )
                 {
-                    //@todo aparcado el tema de detectar excepciones hasta bien meditado, que no me gusta
-                    auto barrier  = source.ex.parallel(source,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                    std::exception_ptr* except = new std::exception_ptr(nullptr);
+                    auto barrier  = source.ex.parallel(source,*except,std::forward<FTypes>(std::get<FTypes>(fs))...);
                     barrier.subscribeCallback(
-                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([source,result](const ::parallelism::BarrierData& ) mutable
-                        {                        
-                            result.assign(std::move(source.getValue()));//@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
+                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([source,result,except](const ::parallelism::BarrierData& ) mutable
+                        {                 
+                            if ( *except ) //any exception?
+                                result.setError(*except);
+                            else
+                                result.assign(std::move(source.getValue()));//@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
+                            delete except;
                             return ::core::ECallbackResult::UNSUBSCRIBE; 
                         }));
                 }else
                 {
                      //set error as task in executor
-                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable noexcept
                     {
                        result.setError(std::move(err));
                     });
@@ -475,7 +486,7 @@ namespace execution
             {       
                 if ( !input.isValid() )
                 {                                       
-                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg> arg)
+                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg)
                     {                                          
                         return f(arg.getValue().error());                         
                     },source,result);
@@ -535,7 +546,7 @@ igual no tiene mucho sentido y
             std::function<::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
             {
                 if ( input.isValid() )
-                {       
+                {                           
                     ResultTuple* output = new ResultTuple; //para que compile
                     auto barrier  = source.ex.parallel_convert(source,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
                     barrier.subscribeCallback(
@@ -549,7 +560,7 @@ igual no tiene mucho sentido y
                 }else
                 {
                      //set error as task in executor
-                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable
+                    launch(source.ex,[result,err = std::move(input.error())]( ) mutable noexcept
                     {
                        result.setError(std::move(err));
                     });

@@ -56,10 +56,11 @@ namespace parallelism
 			ThreadPool::ExecutionOpts newOpts(opts);
 			newOpts.useCallingThread = false;  //only one iteration in calling thread
 
+			std::exception_ptr except; //@todo para que compile, pero hay que pasarselo
 			bool finish = ((i == end) || (cont > nIterations));
 			while (!finish)
 			{
-				tp->execute(newOpts, barrier, i,std::function<void(I)>([ divisionSize, functor, increment, cont, nIterations, leftOver](I i) mutable
+				tp->execute(newOpts,except, barrier, i,std::function<void(I)>([ divisionSize, functor, increment, cont, nIterations, leftOver](I i) mutable
 				{
 					I j = i;
 					int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
@@ -103,9 +104,10 @@ namespace parallelism
 			{
 				(*vCopy.get())[idx++] = &(*j);
 			}
+			std::exception_ptr except; //@todo para que compile, pero hay que pasarselo
 			while (cont <= nIterations)
 			{
-				tp->execute(newOpts, barrier,cont,
+				tp->execute(newOpts,except, barrier,cont,
 					std::function<void()>([divisionSize, functor, increment, vCopy, nIterations, leftOver](int cont) mutable
 				{
 					int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
@@ -253,13 +255,14 @@ namespace parallelism
 						Advance<isArithIterator>::get(i, increment);
 					}
 				}
+				std::exception_ptr except; //@todo para compilar, hay que pasarselo por param
 				ThreadPool::ExecutionOpts newOpts(opts);
 				newOpts.useCallingThread = false;  //only one iteration in calling thread
 				bool finish = ((i == end) || (cont >= nElements));
 				while (!finish)
 				{
 					//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(GetElement<isArithIterator>::get(i)))); //@todo notengo claro que deba usar ref???
-					tp->execute(newOpts, result, i,typename std::decay<F>::type(functor)); 
+					tp->execute(newOpts,except, result, i,typename std::decay<F>::type(functor)); 
 					if (++cont < nElements)
 					{
 						Advance<isArithIterator >::get(i, increment);

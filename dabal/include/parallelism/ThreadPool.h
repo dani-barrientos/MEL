@@ -59,17 +59,16 @@ namespace parallelism
 			SchedulingPolicy schedPolicy = SchedulingPolicy::SP_ROUNDROBIN;
 			size_t threadIndex = 0; //set thread index to use when schedPolicy is SP_EXPLICIT
 		};
-		template <class TArg,class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,TArg&& arg,FTypes ... functions)
+		template <class TArg,class ... FTypes> void execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& barrier,TArg&& arg,FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
-			_execute(opts, barrier, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
+			_execute(opts,except, barrier, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 		}
-		template <class TArg,class ... FTypes> Barrier execute(const ExecutionOpts& opts, TArg&& arg,FTypes ... functions)
+		template <class TArg,class ... FTypes> Barrier execute(const ExecutionOpts& opts,std::exception_ptr& except, TArg&& arg,FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
 			Barrier result(nTasks);
-		//	std::tuple<FTypes...> args{ std::forward<FTypes>(functions)... };			
-			_execute(opts,result,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
+			_execute(opts,except,result,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
 			return result;
 		}
 		/**
@@ -97,13 +96,14 @@ namespace parallelism
 		std::shared_ptr<ThreadRunnable>*	mPool;
 		unsigned int		mNThreads;
 		volatile	int		mLastIndex;  //last thread used
+		core::CriticalSection mExceptionLock;  //one lock to proyect all exception set.
 		/**
 		* execute generic case.
 		* @param[in] opts execution options
 		* @note because this function doesn't wait for completion, input argument need to be bound and so copied
 		* to be able to provide it to the function when this is executed.
 		*/
-		template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts, Barrier& output, TArg&& arg,F&& func,FTypes&&... functions)
+		template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output, TArg&& arg,F&& func,FTypes&&... functions)
 		{
 			/*
 		//@todo	tengo que resolver aqui el tema de no bindear el arg..
@@ -123,29 +123,69 @@ namespace parallelism
 				func(std::forward<TArg>(arg));
 				output.set();			
 			}*/
-			_execute(opts, output, arg,std::forward<F>(func));
-			_execute(opts, output, arg,std::forward<FTypes>(functions)...);
+			_execute(opts,except, output, arg,std::forward<F>(func));
+			_execute(opts,except, output, arg,std::forward<FTypes>(functions)...);
 		}		
 		//base case
-		template <class F,class TArg> void _execute(const ExecutionOpts& opts,  Barrier& output,TArg&& arg, F&& func)
+		template <class F,class TArg> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,TArg&& arg, F&& func)
 		{
 			if ( opts.useCallingThread || mNThreads == 0 )
 			{
-                func(arg);
-                output.set();
+				if constexpr (std::is_nothrow_invocable<F,TArg>::value)
+				{
+					func(arg);
+				}else
+				{
+					try
+					{
+						func(arg);
+					}catch(...)
+					{
+						core::Lock lck(mExceptionLock);
+						if ( !except )
+							except = std::current_exception();
+					}						
+				}
+				output.set();
 			}
 			else
 			{
 				mLastIndex = _chooseIndex(opts);
 				//@todo	tengo que resolver aqui el tema de no bindear el arg..
-				mPool[mLastIndex]->post(
-                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
+				//if constexpr (std::is_nothrow_invocable<F,typename std::remove_reference<TArg>::type>::value)
+/*
+no me funciona por culpa del valuewrapper del executor, que tiene operador de conversion 
+sin embargo si uso un invoke_result_tr<F,Wrapper,sí pilla bien la conversion*/
+//				if ( noexcept(std::forward<F>(func)(std::forward<TArg>(arg)))) 
+				if constexpr (std::is_nothrow_invocable<F,TArg>::value)
+				{
+					mPool[mLastIndex]->post(
+					std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
+					{
+						func(arg);
+						output.set();
+						return tasking::EGenericProcessResult::KILL;
+					})
+					);
+				}else
+				{
+					mPool[mLastIndex]->post(
+                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([&except,this,func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
                    {
-                       func(arg);
-                       output.set();
-                       return tasking::EGenericProcessResult::KILL;
+						try
+						{
+							func(arg);
+						}catch(...)
+						{
+							core::Lock lck(mExceptionLock);
+							if ( !except )
+								except = std::current_exception();
+						}
+						output.set();
+						return tasking::EGenericProcessResult::KILL;
                    })
 				);
+				}
 				//mLastIndex = (int)thIdx;
 			}
 		}		

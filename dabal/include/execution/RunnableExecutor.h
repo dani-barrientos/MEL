@@ -35,22 +35,43 @@ namespace execution
             inline std::weak_ptr<Runnable>& getRunnable() { return mRunnable;}
             ///@{ 
             //! brief mandatory interface from Executor
-            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet> output) const
+            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<Runnable,TRet> output) const noexcept
             {
                 if ( !mRunnable.expired())
                 {         
-                    mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
-                }            
+                    //it seems that noexcept specifier is not preserved in bind, so need to use a lambda
+                   //mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                  //if constexpr (noexcept(f(arg)))
+                  if constexpr (std::is_nothrow_invocable<F,TArg>::value)
+                  {
+                    mRunnable.lock()->execute<TRet>(
+                        [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept ->TRet
+                        {                            
+                            return f(arg);
+                        },
+                        static_cast<Future<TRet>>(output)
+                    ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                  }else
+                  {
+                      mRunnable.lock()->execute<TRet>(
+                        [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable ->TRet
+                        {
+                            return f(arg);
+                        },
+                        static_cast<Future<TRet>>(output)
+                    ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                  }
+                }          
             }
-            template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const
+            template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const noexcept
             {
                 if ( !mRunnable.expired())
                 {
-                    mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);                   
                 }            
             }
             template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
-            template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<Runnable,TArg> fut, FTypes&&... functions);
+            template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<Runnable,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
             template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<Runnable,TArg> fut,ReturnTuple& result, FTypes&&... functions);
             ///@}
         private:
@@ -59,49 +80,106 @@ namespace execution
     };  
     namespace _private
     {
-        template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,F&& f)
+        template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
         {
-            //@todo no voy a ahcer la gestion de excepciones por ahora que tengo que meditar si realmente debo hacerlo asi
-            execution::launch(fut.ex,
-                [f = std::forward<F>(f),b](ExFuture<Runnable,TArg> fut) mutable
-                {                                        
-                    f(fut.getValue().value());
+            if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+            {
+                //use the exception pointer hasn't sense here because noexcept was specified
+                execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b](ExFuture<Runnable,TArg>& fut) mutable noexcept
+                    {                                        
+                        f(fut.getValue().value());
+                        b.set();
+                    },fut);
+            }else
+            {
+                execution::launch(fut.ex,
+                [f = std::forward<F>(f),b,&except](ExFuture<Runnable,TArg>& fut) mutable
+                {                               
+                    try
+                    {
+                        f(fut.getValue().value());
+                    }catch(...)
+                    {
+                        if ( !except )
+                            except = std::current_exception();
+                    }
                     b.set();
                 },fut);
+            }
         }
          //void overload
-        template <class F> void _invoke(ExFuture<Runnable,void> fut,::parallelism::Barrier& b,F&& f)
+        template <class F> void _invoke(ExFuture<Runnable,void> fut,::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
         {
-            execution::launch(fut.ex,
-                [f = std::forward<F>(f),b](ExFuture<Runnable,void> fut) mutable
-                {                    
-                    f();
-                    b.set();
-                },fut);
+            if constexpr (std::is_nothrow_invocable<F>::value)
+            {
+                execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b](ExFuture<Runnable,void>& fut) mutable noexcept
+                    {                    
+                        f();
+                        b.set();
+                    },fut);
+            }else
+            {
+                execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b,&except](ExFuture<Runnable,void>& fut) mutable
+                    {               
+                        try
+                        {
+                            f();
+                        }catch(...)
+                        {
+                            except = std::current_exception();
+                        }                        
+                        b.set();
+                    },fut);
+            }
         }
-        template <class TArg,class F,class ...FTypes> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,F&& f, FTypes&&... fs)
+        template <class TArg,class F,class ...FTypes> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,std::exception_ptr& except,F&& f, FTypes&&... fs)
         {            
-            _invoke(fut,b,std::forward<F>(f));
-            _invoke(fut,b,std::forward<FTypes>(fs)...);
+            _invoke(fut,b,except,std::forward<F>(f));
+            _invoke(fut,b,except,std::forward<FTypes>(fs)...);
         }
         template <int n,class ResultTuple, class F,class TArg> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,ResultTuple& output,F&& f)
         {
-            execution::launch(fut.ex,
-                [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg> fut) mutable
-                {                                        
-                    std::get<n>(output) = f(fut.getValue().value());
-                    b.set();
-                },fut);
+            if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+            {
+                execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg>& fut) mutable noexcept
+                    {                                        
+                        std::get<n>(output) = f(fut.getValue().value());
+                        b.set();
+                    },fut);
+            }else
+            {
+                execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg>& fut) mutable
+                    {                                        
+                        std::get<n>(output) = f(fut.getValue().value());
+                        b.set();
+                    },fut);
+            }
         }
          //void overload
-        template <int n,class ResultTuple,class F> void _invoke_with_result(ExFuture<Runnable,void> fut,::parallelism::Barrier& b,ResultTuple& output, F&& f)
+        template <int n,class ResultTuple,class F> void _invoke_with_result(ExFuture<Runnable,void>& fut,::parallelism::Barrier& b,ResultTuple& output, F&& f)
         {
-            execution::launch(fut.ex,
-                [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void> fut) mutable
-                {                    
-                    std::get<n>(output) = f();
-                    b.set();
-                },fut);
+            if constexpr (std::is_nothrow_invocable<F>::value)
+            {
+                execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void>& fut) mutable noexcept
+                    {                    
+                        std::get<n>(output) = f();
+                        b.set();
+                    },fut);
+            }else
+            {
+                 execution::launch(fut.ex,
+                    [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void>& fut) mutable
+                    {                    
+                        std::get<n>(output) = f();
+                        b.set();
+                    },fut);
+            }
         }
         
         template <int n,class ResultTuple,class TArg,class F,class ...FTypes> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,ResultTuple& output,F&& f, FTypes&&... fs)
@@ -170,10 +248,10 @@ namespace execution
             ptr->getScheduler().getLock().leave();
         return barrier;
     }
-    template <class TArg,class ...FTypes> ::parallelism::Barrier Executor<Runnable>::parallel( ExFuture<Runnable,TArg> fut,FTypes&&... functions)
+    template <class TArg,class ...FTypes> ::parallelism::Barrier Executor<Runnable>::parallel( ExFuture<Runnable,TArg> fut,std::exception_ptr& except,FTypes&&... functions)
     {
         ::parallelism::Barrier barrier(sizeof...(functions));
-        _private::_invoke(fut,barrier,functions...);
+        _private::_invoke(fut,barrier,except,functions...);
         return barrier;        
     }    
     template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier Executor<Runnable>::parallel_convert(ExFuture<Runnable,TArg> fut,ReturnTuple& result, FTypes&&... functions)

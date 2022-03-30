@@ -29,17 +29,36 @@ namespace execution
             const std::weak_ptr<ThreadPool>& getPool() const{ return mPool;}
             ///@{ 
             //! brief mandatory interface from Executor
-            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet> output) const
+            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ThreadPool,TRet> output) const noexcept
             {
                 if ( !mPool.expired())
                 {
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    //th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    if constexpr (std::is_nothrow_invocable<F,TArg>::value)
+                    {
+                        th->execute<TRet>(
+                            [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept ->TRet
+                            {
+                                return f(arg);
+                            },
+                            static_cast<Future<TRet>>(output)
+                        ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    }else
+                    {
+                       th->execute<TRet>(
+                            [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable ->TRet
+                            {
+                                return f(arg);
+                            },
+                            static_cast<Future<TRet>>(output)
+                        ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    }
                 }            
             }
-            template <class TRet,class F> void launch( F&& f,ExFuture<ThreadPool,TRet> output) const
+            template <class TRet,class F> void launch( F&& f,ExFuture<ThreadPool,TRet> output) const noexcept
             {
                   if ( !mPool.expired())
                 {
@@ -50,7 +69,7 @@ namespace execution
                 }       
             }
             template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
-            template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions);
+            template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
             template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<ThreadPool,TArg> fut,ReturnTuple& result, FTypes&&... functions);
             ///@}
         private:
@@ -85,7 +104,7 @@ namespace execution
                 {
                     return mFut.getValue().value();
                 }
-                const std::exception_ptr error() const
+                std::exception_ptr error() const
                 {
                     return mFut.getValue().error();
                 }
@@ -96,12 +115,21 @@ namespace execution
             FutType mFut;
         };
     }
-    template <class TArg,class ... FTypes> ::parallelism::Barrier Executor<ThreadPool>::parallel(ExFuture<ThreadPool,TArg> fut, FTypes&&... functions)
+    template <class TArg,class ... FTypes> ::parallelism::Barrier Executor<ThreadPool>::parallel(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except, FTypes&&... functions)
     {            
         ThreadPool::ExecutionOpts exopts;
         exopts.useCallingThread = false;
-        exopts.groupTasks = !getOpts().independentTasks;                        
-        return getPool().lock()->execute(exopts,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
+        exopts.groupTasks = !getOpts().independentTasks;
+/*        el psar este ValueWrapper hace que n ose detecte bien el noexcept. LO NECESITO PAR AENCAPSULAR EL FUTURE Y NO HACER COPIAS
+posibilidades
+ - QUE TODO EL TEMA DE EXCEPCIONES SE HAGA CON PARÁMETRO, ES DECIR, METER UN PARÁMETRO PARA INDICARLE QUE NO QUEREMOS
+ LANZAR EXCEPCIONES->ME JOROBA. AUNQUE POR UN LADO ESTÁ BIEN PORQUE ASÍ EL USUARIO SABE EXPLICITAMENTE QUE TIENE QUE CONRTOLAR ESTO 
+ LA VERAD QUE ASÍ ME EVITOR MUCHA COMKPLICACION, PERO EL NO ER AUTOMATICO NO MOLA...
+ - USAR ESE PARÁMETRO SOLO EN THREADPOOL->PERO ES MUY ADHOCM PORQUE IMPLICA QUE CONOZCO EL PROBLEAM DEL WRAPPER,QUE SIEMPRE PODRÁI OCURRIR
+
+EMN DEFINITIVA, MI PROBLEMA BASE ES QUE EL IS_NOTHROW_INVOCABLE LO SEPA
+*/
+        return getPool().lock()->execute(exopts,except,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
     }
     template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier Executor<ThreadPool>::parallel_convert(ExFuture<ThreadPool,TArg> fut,ReturnTuple& result, FTypes&&... functions)
     {            

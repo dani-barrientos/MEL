@@ -157,15 +157,63 @@ int _testDebug(tests::BaseTest* test)
 	extp.setOpts({true,true});   
 	{		
 		{	
+
 			auto idc = std::is_default_constructible<TestClass>::value;
 			auto f1 = 
-			execution::launch(exr,
-			[test](int arg)
+			execution::launch(extp,
+			[test](int arg) noexcept
 			{
-				//throw std::runtime_error("ERR EN LAUNCH");
+				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
 				return TestClass (8,test);
-				//return 1;
-			},7);
+			},7) |
+			execution::next([](TestClass& tc) 
+			{
+				//throw std::runtime_error("ERR EN NEXT");
+				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
+				text::info("Next");
+				return tc;
+			}
+			) 
+			|  execution::parallel(
+				[](TestClass& tc) noexcept 
+				{
+					text::info("B1");					
+					//throw std::runtime_error("ERR EN parallel");
+					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
+				}
+				,[](TestClass& tc) noexcept 
+				{					
+					//throw std::runtime_error("ERR EN parallel 2");
+					text::info("B2");
+				}
+				)
+			| execution::parallel_convert<std::tuple<int,float>>(
+				[](TestClass& tc) noexcept
+				{
+					
+					return 1;
+				},[](TestClass& tc)
+				{
+					return 6.7f;
+				}
+			);
+			;
+			try
+			{
+				auto res = core::waitForFutureThread(f1);
+				text::info("Wait ok...");
+			}catch(std::exception& e)
+			{
+				text::error("Error waiting for result.Reason = {}",e.what());
+			}
+			catch(test_execution::MyErrorInfo& e)
+			{
+				text::error("Error (MyErrorInfo)waiting for result.Reason = {}",e.errorMsg);
+			}
+			catch(...)
+			{
+				text::error("Error waiting for result.Reason = unknown");
+			}
 			auto f2 = 
 			execution::launch(exr,
 			[]()
@@ -173,62 +221,63 @@ int _testDebug(tests::BaseTest* test)
 				//throw std::runtime_error("ERR EN LAUNCH");
 				return "pepe";
 			});
-			auto f3 = execution::on_all(exr,f1,f2);
-			try
-			{
-				auto res = core::waitForFutureThread(f3);
-				const auto& val = res.value();
-				text::info("tras on_all[ {}, {} ]",std::get<0>(val).val,std::get<1>(val));
-			}
-			catch(std::exception& e)
-			{
-				text::info("Error {}", e.what());
-			}
+			
+			// auto f3 = execution::on_all(exr,f1,f2);
+			// try
+			// {
+			// 	auto res = core::waitForFutureThread(f3);
+			// 	const auto& val = res.value();
+			// 	text::info("tras on_all[ {}, {} ]",std::get<0>(val).val,std::get<1>(val));
+			// }
+			// catch(std::exception& e)
+			// {
+			// 	text::info("Error {}", e.what());
+			// }
 		}
 		int var = 7;
 		auto f_0 = 
 		execution::launch(exr,
-		[](int& arg)->int&
+		[](int& arg) noexcept ->int&
 		{
 			//throw std::runtime_error("ERR EN LAUNCH");
-			throw test_execution::MyErrorInfo(0,"ERR EN LAUNCH");
+			//throw test_execution::MyErrorInfo(0,"ERR EN LAUNCH");
 			arg=9;
 			return arg;
 		},std::ref(var))	
-		//execution::start(exr)´
-		| execution::next([](int& arg)//->int&  //@todo arreglar para que funcione el captureError
-		{
-			arg = 20;
-			//throw std::runtime_error("ERR EN NEXT1");
-			return arg;
-		}) 
-		| execution::parallel([](int& arg)
-			{
-				throw std::runtime_error("First error");
-				text::info("Bulk 1");
-			}/*,
-			[](int& arg)
-			{
-				//throw std::runtime_error("Second error");
-			}*/
-		)
-		| execution::captureError([](std::exception_ptr err)
-		{
-			try
-			{
-				std::rethrow_exception(err);
-			}catch(std::exception& e)
-			{
-				text::info("captureError unknown {}", e.what());
-			}catch(...)
-			{
-				text::info("captureError unknown");
-			}
-			return 8;
-		})
+		// //execution::start(exr)´
+		// | execution::next([](int& arg)//->int&  //@todo arreglar para que funcione el captureError
+		// {
+		// 	arg = 20;
+		// 	//throw std::runtime_error("ERR EN NEXT1");
+		// 	return arg;
+		// }) 
+		// | execution::parallel([](int& arg)
+		// 	{
+		// 		throw std::runtime_error("First error");
+		// 		text::info("Bulk 1");
+		// 	}/*,
+		// 	[](int& arg)
+		// 	{
+		// 		//throw std::runtime_error("Second error");
+		// 	}*/
+		// )
+		// | execution::captureError([](std::exception_ptr err)
+		// {
+		// 	try
+		// 	{
+		// 		std::rethrow_exception(err);
+		// 	}catch(std::exception& e)
+		// 	{
+		// 		text::info("captureError unknown {}", e.what());
+		// 	}catch(...)
+		// 	{
+		// 		text::info("captureError unknown");
+		// 	}
+		// 	return 8;
+		// })
 		
 		;
-		auto f = f_0 | execution::transfer(extp) | execution::parallel_convert<std::tuple<TestClass,string>>(
+		/*auto f = f_0 | execution::transfer(extp) | execution::parallel_convert<std::tuple<TestClass,string>>(
 			[test](int n)
 			{
 				//text::info("BULK 1 {}",v);
@@ -241,12 +290,12 @@ int _testDebug(tests::BaseTest* test)
 				//return v.value()+5;
 				return "pepe";
 			}
-		);
+		);*/
 
 		try
 		{
-			auto res = ::core::waitForFutureThread(f);
-			text::info("Value = [{},{}]",std::get<0>(res.value()).val,std::get<1>(res.value()));
+			auto res = ::core::waitForFutureThread(f_0);
+			//text::info("Value = [{},{}]",std::get<0>(res.value()).val,std::get<1>(res.value()));
 		}catch(std::exception& e)
 		{
 			text::info("ERR = {}",e.what());
@@ -755,7 +804,7 @@ int _testLaunch( tests::BaseTest* test)
 			execution::Executor<Runnable> exr(th1);
 			exr.setOpts({true,false,false});
 			text::info("\n\tBasicTests with RunnableExecutor");
-			_basicTests(exr,th1.get(),test);
+			//_basicTests(exr,th1.get(),test);
 			text::info("\n\tFinished BasicTests with RunnableExecutor");
 		}
 		{
@@ -766,7 +815,7 @@ int _testLaunch( tests::BaseTest* test)
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
 			text::info("\n\tBasicTests with ThreadPoolExecutor");
-			_basicTests(extp,th1.get(),test);
+			//_basicTests(extp,th1.get(),test);
 			text::info("\n\tFinished BasicTests with ThreadPoolExecutor");
 		}
 	}
