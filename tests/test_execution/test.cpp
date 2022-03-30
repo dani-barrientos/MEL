@@ -188,12 +188,14 @@ int _testDebug(tests::BaseTest* test)
 				}
 				)
 			| execution::parallel_convert<std::tuple<int,float>>(
-				[](TestClass& tc) noexcept
+				[](TestClass& tc)
 				{
-					
+					::tasking::Process::wait(100);
+					//throw std::runtime_error("ERR EN parallel");
 					return 1;
 				},[](TestClass& tc)
 				{
+					throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
 					return 6.7f;
 				}
 			);

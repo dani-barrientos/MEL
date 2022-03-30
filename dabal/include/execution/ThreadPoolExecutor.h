@@ -70,7 +70,7 @@ namespace execution
             }
             template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
             template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
-            template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<ThreadPool,TArg> fut,ReturnTuple& result, FTypes&&... functions);
+            template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions);
             ///@}
         private:
             std::weak_ptr<ThreadPool> mPool;      
@@ -131,12 +131,12 @@ EMN DEFINITIVA, MI PROBLEMA BASE ES QUE EL IS_NOTHROW_INVOCABLE LO SEPA
 */
         return getPool().lock()->execute(exopts,except,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
     }
-    template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier Executor<ThreadPool>::parallel_convert(ExFuture<ThreadPool,TArg> fut,ReturnTuple& result, FTypes&&... functions)
+    template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier Executor<ThreadPool>::parallel_convert(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
     {            
         ThreadPool::ExecutionOpts exopts;
         exopts.useCallingThread = false;
         exopts.groupTasks = !getOpts().independentTasks;    
-        return getPool().lock()->executeWithResult(exopts,result,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);
+        return getPool().lock()->executeWithResult(exopts,except,result,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);
     }
     typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
 }

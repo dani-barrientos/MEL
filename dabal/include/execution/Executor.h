@@ -546,15 +546,19 @@ igual no tiene mucho sentido y
             std::function<::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
             {
                 if ( input.isValid() )
-                {                           
+                {                       
+                    std::exception_ptr* except = new std::exception_ptr(nullptr);
                     ResultTuple* output = new ResultTuple; //para que compile
-                    auto barrier  = source.ex.parallel_convert(source,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                    auto barrier  = source.ex.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
                     barrier.subscribeCallback(
-                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,output](const ::parallelism::BarrierData& ) mutable
+                        std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,output,except](const ::parallelism::BarrierData& ) mutable
                         {      
-                            //@TODO RESOLVER QUE HAYA ERROR EN ALGUNO DE LOS ELEMENTOS
-                            result.setValue(std::move(*output));
-                            delete output;                  
+                            if ( *except ) //any exception?
+                                result.setError(*except);
+                            else
+                                result.setValue(std::move(*output));
+                            delete output;    
+                            delete except;              
                             return ::core::ECallbackResult::UNSUBSCRIBE; 
                         }));
                 }else

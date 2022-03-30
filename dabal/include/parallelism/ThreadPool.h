@@ -74,16 +74,16 @@ namespace parallelism
 		/**
 		 * @brief execute given functions and return result in the tuple		 
 		 */
-		template <class ReturnTuple,class TArg,class ... FTypes> void executeWithResult(const ExecutionOpts& opts, Barrier& barrier,ReturnTuple& output,TArg&& arg,FTypes ... functions)
+		template <class ReturnTuple,class TArg,class ... FTypes> void executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& barrier,ReturnTuple& output,TArg&& arg,FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
-			_executeWithResult<0,ReturnTuple>(opts, barrier, output,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
+			_executeWithResult<0,ReturnTuple>(opts, except,barrier, output,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 		}
-		template <class ReturnTuple, class TArg,class ... FTypes> Barrier executeWithResult(const ExecutionOpts& opts,ReturnTuple& output, TArg&& arg,FTypes ... functions)
+		template <class ReturnTuple, class TArg,class ... FTypes> Barrier executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except,ReturnTuple& output, TArg&& arg,FTypes ... functions)
 		{
 			constexpr int nTasks = sizeof...(functions);
 			Barrier result(nTasks);
-			_executeWithResult<0,ReturnTuple>(opts,result,output,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
+			_executeWithResult<0,ReturnTuple>(opts,except,result,output,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
 			return result;
 		}
 		/**
@@ -186,34 +186,68 @@ sin embargo si uso un invoke_result_tr<F,Wrapper,sí pilla bien la conversion*/
                    })
 				);
 				}
-				//mLastIndex = (int)thIdx;
 			}
 		}		
-		template <int n,class ReturnTuple,class F,class TArg,class ... FTypes> void _executeWithResult(const ExecutionOpts& opts, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func,FTypes&&... functions)
+		template <int n,class ReturnTuple,class F,class TArg,class ... FTypes> void _executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func,FTypes&&... functions)
 		{
-			_executeWithResult<n,ReturnTuple>(opts, output,result, arg,std::forward<F>(func));
-			_executeWithResult<n+1,ReturnTuple>(opts, output,result, arg,std::forward<FTypes>(functions)...);
+			_executeWithResult<n,ReturnTuple>(opts,except, output,result, arg,std::forward<F>(func));
+			_executeWithResult<n+1,ReturnTuple>(opts,except, output,result, arg,std::forward<FTypes>(functions)...);
 		}				
 		//base case
-		template <int n,class ReturnTuple,class F,class TArg> void _executeWithResult(const ExecutionOpts& opts, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func)
+		template <int n,class ReturnTuple,class F,class TArg> void _executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func)
 		{
 			if ( opts.useCallingThread || mNThreads == 0 )
 			{
-                func(arg);
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
+				{
+                	std::get<n>(result) = func(arg);
+				}else
+				{
+					try
+					{
+						std::get<n>(result) = func(arg);
+					}catch(...)
+					{
+						core::Lock lck(mExceptionLock);
+						if ( !except )
+							except = std::current_exception();
+					}		
+				}
                 output.set();
 			}
 			else
 			{
 				mLastIndex = _chooseIndex(opts);
-				mPool[mLastIndex]->post(
-                   std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg,&result](uint64_t, Process*) mutable
-                   {
-                       std::get<n>(result) = func(arg);
-                       output.set();
-                       return tasking::EGenericProcessResult::KILL;
-                   })
-				);
-				//mLastIndex = (int)thIdx;
+				if constexpr (std::is_nothrow_invocable<F,TArg>::value)
+				{
+					mPool[mLastIndex]->post(
+					std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg,&result](uint64_t, Process*) mutable
+					{
+						std::get<n>(result) = func(arg);
+						output.set();
+						return tasking::EGenericProcessResult::KILL;
+					})
+					);
+				}else
+				{
+					mPool[mLastIndex]->post(
+					std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([&except,this,func = std::forward<F>(func),output,arg,&result](uint64_t, Process*) mutable
+					{
+						try
+						{
+							std::get<n>(result) = func(arg);
+						}catch(...)
+						{
+							core::Lock lck(mExceptionLock);
+							if ( !except )
+								except = std::current_exception();
+						}		
+						output.set();
+						return tasking::EGenericProcessResult::KILL;
+					})
+					);
+				}
+				
 			}
 		}	
 		size_t _chooseIndex(const ExecutionOpts& sp);
