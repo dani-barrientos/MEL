@@ -266,7 +266,7 @@ int _testDebug(tests::BaseTest* test)
 				}
 				catch(test_execution::MyErrorInfo& e)
 				{
-					text::error("Error (MyErrorInfo)waiting for result.Reason = {}",e.errorMsg);
+					text::error("	Cause = {}",e.errorMsg);
 				}
 				catch(...)
 				{
