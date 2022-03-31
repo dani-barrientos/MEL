@@ -1,0 +1,24 @@
+
+/**
+\mainpage Introduction
+\a \b dabal is a library  for cooperative multitasking and, quite simple but useful, parallelism functionalities. The base piece of the system es de so called *microthread*.
+This can be similiar, in concept, as Windows Fiber, coroutines,.. but ver ydiferent in its working and use. A **microthread**
+
+<ul>
+	<li>\ref jsquirrel_conventions "Documenting conventions"<br/>
+		The conventions used to document the API
+	</li>
+	<li>\ref jsquirrel_core "Core"<br/>
+		The basic functionalities on which the rest is built
+	</li>
+	<li>\ref jsquirrel_judas "Judas library"<br/>
+		The API exposed by <em>Judas engine</em>
+	</li>
+	<li>\ref jsquirrel_api API
+	NO VALE	, A LO MEJOR DA IGUAL QUE APAREZCA AQUI, EN REALIDAD NO IMPORTA MUCHO
+ME GUSTARIA CAMBIAR EL todo list
+	</li>	
+	
+</ul>
+
+*/
