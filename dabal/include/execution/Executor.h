@@ -208,19 +208,10 @@ namespace execution
 
                 if ( input.isValid() )
                 {    
-                    if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
-                    {                                                        
-                        source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept->TRet 
-                        {                                          
-                            return f(arg.getValue().value());                         
-                        },source,result);            
-                    }else
-                    {
-                        source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable ->TRet 
-                        {                                          
-                            return f(arg.getValue().value());                         
-                        },source,result);            
-                    }
+                    source.ex. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg&>::value)->TRet 
+                    {                                          
+                        return f(arg.getValue().value());                         
+                    },source,result);            
                 }
                 else
                 {
@@ -352,19 +343,44 @@ namespace execution
                 {   
                     if ( input.isValid() )
                     {
-                        auto barrier  = source.ex.loop(std::forward<I>(begin), std::forward<I>(end),
-                        [f = std::forward<F>(functor),source](I idx) mutable
+                        std::exception_ptr* except = new std::exception_ptr(nullptr);
+                        ::parallelism::Barrier barrier;
+                        if constexpr (std::is_nothrow_invocable<F,I,TArg&>::value)
                         {
-                            //@todo arreglar el loop para que reciba I&&
-                            //f(std::forward<I>(idx),fut.getValue());
-                            f(idx,source.getValue().value());
-                        }
-                        , increment);
-                        barrier.subscribeCallback(
-                            std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,source](const ::parallelism::BarrierData& ) mutable
+                            barrier  = source.ex.loop(std::forward<I>(begin), std::forward<I>(end),
+                            [f = std::forward<F>(functor),source](I idx) mutable noexcept
                             {
-                                result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
-                                //result.assign(source.getValue());
+                                //@todo arreglar el loop para que reciba I&&
+                                //f(std::forward<I>(idx),fut.getValue());
+
+                                f(idx,source.getValue().value());                         
+                            }
+                            , increment);
+                        }else
+                        {
+                            barrier  = source.ex.loop(std::forward<I>(begin), std::forward<I>(end),
+                            [f = std::forward<F>(functor),source,except](I idx) mutable
+                            {
+                                try
+                                {
+                                    f(idx,source.getValue().value());                         
+                                }catch(...)
+                                {
+                                    if (!*except)
+                                        *except = std::current_exception();
+                                }
+                            }
+                            , increment);
+                        }
+                        barrier.subscribeCallback(
+                            std::function<::core::ECallbackResult( const ::parallelism::BarrierData&)>([result,source,except](const ::parallelism::BarrierData& ) mutable
+                            {                
+                                if ( *except ) //any exception?
+                                    result.setError(*except);
+                                else
+                                    result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
+                                    //result.assign(source.getValue());
+                                delete except;
                                 return ::core::ECallbackResult::UNSUBSCRIBE; 
                             }));
                     }else
@@ -471,12 +487,12 @@ namespace execution
   
     /**
      * @brief Capture previous error, if any, and execute the function
-     * this function works similar to next, but receiving an Error as the parameter and must return
+     * this function works similar to next, but receiving an std::exception_ptr as the parameter and must return
      * same type as input future is
      * no error was raised in previous works of the chain, the functions is not executed
      */    
     template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TArg> 
-        captureError(ExFuture<ExecutorAgent,TArg> source, F&& f)
+        catchError(ExFuture<ExecutorAgent,TArg> source, F&& f)
     {                
         typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
         ExFuture<ExecutorAgent,TArg> result(source.ex);
@@ -485,8 +501,8 @@ namespace execution
             std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
             {       
                 if ( !input.isValid() )
-                {                                       
-                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg)
+                {                
+                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) noexcept(std::is_nothrow_invocable<F,std::exception_ptr>::value)
                     {                                          
                         return f(arg.getValue().error());                         
                     },source,result);
@@ -637,7 +653,7 @@ igual no tiene mucho sentido y
             F mFunc;
             template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
             {
-                return ::execution::captureError(inputFut,std::forward<F>(mFunc));
+                return ::execution::catchError(inputFut,std::forward<F>(mFunc));
             }
         };
         template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::parallelism::Barrier& barrier, FType fut)
@@ -710,7 +726,7 @@ igual no tiene mucho sentido y
         return _private::ApplyBulk<FTypes...>(std::forward<FTypes>(functions)...);
     }
     ///@brief version for use with operator |
-    template <class F> _private::ApplyError<F> captureError(F&& f)
+    template <class F> _private::ApplyError<F> catchError(F&& f)
     {
         return _private::ApplyError<F>(std::forward<F>(f));
     }

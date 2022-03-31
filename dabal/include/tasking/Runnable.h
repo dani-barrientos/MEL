@@ -446,7 +446,7 @@ namespace tasking
 					}
 				}else
 				{
-					try
+					try	
 					{
 						if constexpr (std::is_same<void,TRet>::value)
 						{

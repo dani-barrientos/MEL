@@ -181,24 +181,45 @@ int _testDebug(tests::BaseTest* test)
 					//throw std::runtime_error("ERR EN parallel");
 					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
 				}
-				,[](TestClass& tc) noexcept 
+				,[](TestClass& tc)  
 				{					
-					//throw std::runtime_error("ERR EN parallel 2");
+					throw std::runtime_error("ERR EN parallel 2");
 					text::info("B2");
 				}
 				)
 			| execution::parallel_convert<std::tuple<int,float>>(
-				[](TestClass& tc)
+				[](TestClass& tc) noexcept
 				{
 					::tasking::Process::wait(100);
 					//throw std::runtime_error("ERR EN parallel");
 					return 1;
 				},[](TestClass& tc)
 				{
-					throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
+					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
 					return 6.7f;
 				}
-			);
+			)
+			| execution::catchError([](std::exception_ptr err) 
+			{
+				//throw std::runtime_error("ERR EN catchError");
+				std::rethrow_exception(err);
+				return std::tuple<int,float>(1,1.1f);
+			})
+			// | execution::catchError([](std::exception_ptr err) noexcept
+			// {
+			// 	return std::tuple<int,float>(2,2.1f);
+			// })
+			| execution::loop(0,10,[](int idx,std::tuple<int,float>& input)
+			{
+				text::info("Loop it {}. ",idx);
+				if ( idx == 4 )
+					throw test_execution::MyErrorInfo(idx,"usando MyErrorInfo");
+				std::get<1>(input)=10.4f;
+			})
+			| execution::next([](std::tuple<int,float>& input)
+			{
+				text::info("Values: [{}.{}] ",std::get<0>(input),std::get<1>(input));
+			})
 			;
 			try
 			{

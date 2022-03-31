@@ -153,10 +153,6 @@ namespace parallelism
 				mLastIndex = _chooseIndex(opts);
 				//@todo	tengo que resolver aqui el tema de no bindear el arg..
 				//if constexpr (std::is_nothrow_invocable<F,typename std::remove_reference<TArg>::type>::value)
-/*
-no me funciona por culpa del valuewrapper del executor, que tiene operador de conversion 
-sin embargo si uso un invoke_result_tr<F,Wrapper,sí pilla bien la conversion*/
-//				if ( noexcept(std::forward<F>(func)(std::forward<TArg>(arg)))) 
 				if constexpr (std::is_nothrow_invocable<F,TArg>::value)
 				{
 					mPool[mLastIndex]->post(

@@ -42,25 +42,13 @@ namespace execution
                     //it seems that noexcept specifier is not preserved in bind, so need to use a lambda
                    //mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
                   //if constexpr (noexcept(f(arg)))
-                  if constexpr (std::is_nothrow_invocable<F,TArg>::value)
-                  {
                     mRunnable.lock()->execute<TRet>(
-                        [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept ->TRet
+                        [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept(std::is_nothrow_invocable<F,TArg>::value) ->TRet
                         {                            
                             return f(arg);
                         },
                         static_cast<Future<TRet>>(output)
                     ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
-                  }else
-                  {
-                      mRunnable.lock()->execute<TRet>(
-                        [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable ->TRet
-                        {
-                            return f(arg);
-                        },
-                        static_cast<Future<TRet>>(output)
-                    ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
-                  }
                 }          
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const noexcept
@@ -70,7 +58,7 @@ namespace execution
                     mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);                   
                 }            
             }
-            template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
+            template <class I, class F>	 ::parallelism::Barrier loop( I&& begin, I&& end, F&& functor, int increment);
             template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<Runnable,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
             template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<Runnable,TArg> fut,std::exception_ptr& excpt,ReturnTuple& result, FTypes&&... functions);
             ///@}
@@ -238,19 +226,21 @@ namespace execution
     
         ::parallelism::Barrier barrier(nElements);
         if ( independentTasks)
-        {        
+        {                    
             for(auto i = begin; i < end;i+=increment)
+            {
                 ptr->fireAndForget(
-                    [functor,barrier,i]() mutable
+                    [functor,barrier,i]() mutable noexcept((std::is_nothrow_invocable<F,I>::value))
                     {
                         functor(i);
                         barrier.set();
                     },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
                 );
+            }
         }else
         {
             ptr->fireAndForget(
-                    [functor,barrier,begin,end,increment]() mutable
+                    [functor,barrier,begin,end,increment]() mutable noexcept(std::is_nothrow_invocable<F,I>::value)
                     {
                         for(auto i = begin; i < end;i+=increment)
                         {
