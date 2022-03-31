@@ -96,15 +96,12 @@ namespace tasking
             {
                 Event_mthread::EWaitCode eventResult;
                 int evId;
-            // spdlog::debug("Waiting for event in Thread {}",threadid);
                 eventResult = mEvent.waitAndDo([this,f,&evId]()
                 {
-                //   spdlog::debug("waitAndDo was done for Thread {}",threadid);
                     evId = f.subscribeCallback(
                     std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
                     {
                         mEvent.set();
-                     //  spdlog::debug("Event was set for Thread {}");
                         return ::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
                 },msecs); 
@@ -151,7 +148,6 @@ namespace tasking
             throw core::WaitException(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
             break;
         }
-        //return ::core::WaitResult<T>(receiver->wait(f,msecs),f);	
     }  
     
     DABAL_API ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE );

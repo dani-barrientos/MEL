@@ -502,9 +502,9 @@ namespace execution
             {       
                 if ( !input.isValid() )
                 {                
-                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) noexcept(std::is_nothrow_invocable<F,std::exception_ptr>::value)
+                    source.ex. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,std::exception_ptr>::value) -> TArg
                     {                                          
-                        return f(arg.getValue().error());                         
+                        return f(arg.getValue().error());
                     },source,result);
                 }else
                     result.assign(source.getValue());
@@ -753,7 +753,8 @@ igual no tiene mucho sentido y
         public:
             OnAllException(int idx,std::exception_ptr source,const string& msg):mElementIdx(idx),mSource(source),std::runtime_error(msg){}
             OnAllException(int idx,std::exception_ptr source,string&& msg):mElementIdx(idx),mSource(source),std::runtime_error(std::move(msg)){}
-            inline int getWrongElement() const{ return mElementIdx;}
+            inline int getWrongElement() const noexcept{ return mElementIdx;}
+            std::exception_ptr getCause() noexcept{ return mSource;}
         private:
             int  mElementIdx;
             std::exception_ptr mSource;

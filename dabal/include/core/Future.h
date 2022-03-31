@@ -744,60 +744,6 @@ int main()
 	/** @brief wrapper for future value after wait
 	* @todo it shouldn't be in this file, but trying to find it a better place
 	**/
-	/*template <class T> class WaitResult 
-	{        
-		public:
-			WaitResult(const ::core::EWaitError wc,const core::Future<T>& f):mWaitResult(wc),mFut(f){}
-			bool isValid () const
-			{
-				return (mWaitResult == ::core::EWaitError::FUTURE_WAIT_OK)?mFut.getValue().isValid():false;
-			}
-			typename core::Future<T>::ValueType::CReturnType value() const
-			{
-				// return mFut.getValue().value();
-				if ( isValid() )
-					return mFut.getValue().value();
-				else
-					std::rethrow_exception(error());			
-			}
-			typename core::Future<T>::ValueType::ReturnType value()
-			{
-				if ( isValid() )
-					return mFut.getValue().value();
-				else
-					std::rethrow_exception(error()); 
-			}
-			std::exception_ptr error() const{ 
-				switch (mWaitResult)
-				{               
-				case ::core::EWaitError::FUTURE_WAIT_OK:// @todo esto no cuadra.
-					return mFut.getValue().error();
-					break;
-				case ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
-					mEI = std::make_exception_ptr( WaitException(mWaitResult,"Kill signal received"));
-					return mEI;
-					break;
-				case ::core::EWaitError::FUTURE_WAIT_TIMEOUT:
-					mEI = std::make_exception_ptr( WaitException(mWaitResult,"Time out exceeded"));
-					return mEI;
-					break;
-				case ::core::EWaitError::FUTURE_UNKNOWN_ERROR:
-					mEI = std::make_exception_ptr( WaitException(mWaitResult,"Unknown error"));
-					return mEI;
-					break;
-				default:return mFut.getValue().error(); //silent warning
-				}                
-			}
-			//! @brief access internal just if needed to do excepctional things
-			const core::Future<T>& getFuture() const{ return mFut;}
-			core::Future<T>& getFuture(){ return mFut;}
-		private:
-			::core::EWaitError mWaitResult;
-			core::Future<T> mFut;
-			mutable std::exception_ptr mEI; //error info when needed
-
-	};
-	*/
 	template <class T> class WaitResult 
 	{        
 		public:
@@ -818,8 +764,8 @@ int main()
 				return mFut.getValue().error();				
 			}
 			//! @brief access internal just if needed to do excepctional things
-			const core::Future<T>& getFuture() const{ return mFut;}
-			core::Future<T>& getFuture(){ return mFut;}
+			const core::Future<T>& getFuture() const noexcept{ return mFut;}
+			core::Future<T>& getFuture() noexcept{ return mFut;}
 		private:
 			core::Future<T> mFut;
 	};

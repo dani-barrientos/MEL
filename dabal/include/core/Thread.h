@@ -243,19 +243,14 @@ namespace core
             ::core::EWaitError wait( const futT& f,unsigned int msecs)
             {
                 Event::EWaitCode eventresult;				
-            // spdlog::debug("Waiting for event in Thread {}",threadid);
 				int evId = f.subscribeCallback(
 					std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
 					{
 						mEvent.set();
-					//   spdlog::debug("Event was set for Thread {}",threadid);
 						return ::core::ECallbackResult::UNSUBSCRIBE; 
-					}));
-					
-				
+					}));				
                 eventresult = mEvent.wait(msecs); 
-				f.unsubscribeCallback(evId);
-            //  spdlog::debug("Wait was done in Thread {}",threadid);
+				f.unsubscribeCallback(evId);            
                 switch( eventresult )
                 {               
 				case ::core::Event::EVENT_WAIT_OK:
@@ -297,7 +292,6 @@ namespace core
             throw core::WaitException(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
             break;
         }
-		//return ::core::WaitResult<T>(receiver->wait(f,msecs),f);	
     }	
 	DABAL_API ::core::Event::EWaitCode waitForBarrierThread(const ::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 }
