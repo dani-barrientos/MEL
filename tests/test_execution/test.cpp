@@ -486,8 +486,86 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 		}
 	},0,::tasking::Runnable::_killFalse);
 }
+template <class ExecutorType> void _sampleReference(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	/*th->fireAndForget([ex,&str] () mutable
+	{
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,[](string& str) noexcept ->string&
+			{	
+				//First job
+				str += " Dani.";
+				return str;
+			},std::ref(str))
+			| execution::next( [](string& str) noexcept -> string&
+			{
+				//Second job 
+				str+= " .How are you?";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Third job
+				str += "Bye!";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Fourth job
+				str += "See you!";
+				return str;
+			})
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+			::text::info("Original str = {}",str);
+		}
+	},0,::tasking::Runnable::_killFalse);
+	*/
+	th->fireAndForget([ex,&str] () mutable
+	{
+		auto res = ::tasking::waitForFutureMThread(
+			execution::start(ex)
+			| execution::inmediate(std::ref(str))
+			| execution::next([](string& str) noexcept ->string&
+			{	
+				//First job
+				str += " Dani.";
+				return str;
+			})
+			| execution::next( [](string& str) noexcept -> string&
+			{
+				//Second job 
+				str+= " .How are you?";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Third job
+				str += "Bye!";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Fourth job
+				str += "See you!";
+				return str;
+			})
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+			::text::info("Original str = {}",str);
+		}
+	},0,::tasking::Runnable::_killFalse);
+
+}
 void _samples()
 {
+	text::set_level(text::level::info);
 	auto th = ThreadRunnable::create(true);			
 	execution::Executor<Runnable> exr(th);
 	exr.setOpts({true,false,false});
@@ -495,11 +573,13 @@ void _samples()
 	auto myPool = make_shared<parallelism::ThreadPool>(opts);
 	parallelism::ThreadPool::ExecutionOpts exopts;
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
-	extp.setOpts({true,true});	
-	_sampleBasic(exr);
+	extp.setOpts({true,true});
+	//_sampleBasic(exr);	
+//	_sampleBasic(extp);
+	_sampleReference(exr);
 	text::info("HECHO");
 }
-//más ejemplos: otro empezando con start y un inmediate; referencias, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
+//más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
 template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
 {
 

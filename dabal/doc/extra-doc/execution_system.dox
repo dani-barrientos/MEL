@@ -158,15 +158,100 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 	},0,::tasking::Runnable::_killFalse);
 }
 \endcode
-Outpu will be:
+Output will be:
 \code
 Parallel 1. 16.500000 hello!
 Parallel 2. 16.500000 hi!
 Parallel 2. 16.500000 whats up!
 Result value = 16.500000
 \endcode
+### Using references
+In this example, it's shown how to use references to variables. In order to be able to pass a reference to \ref ::execution::launch "launch" or to \ref ::execution::inmediate "inmediate"
+we must use [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref), because it's not possible to deduce what the user wants only by the type of the parameter.
+Also, when a function wants to return a reference to the next function in the chain, it's neccesary to indicate it without auto deduction. So, if using a lambda as in the examples,
+you must specify the return type.
+
+\code
+template <class ExecutorType> void _sampleReference(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,[](string& str) noexcept ->string&
+			{	
+				//First job
+				str += " Dani.";
+				return str;
+			},std::ref(str))
+			| execution::next( [](string& str) noexcept -> string&
+			{
+				//Second job 
+				str+= " .How are you?";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Third job
+				str += "Bye!";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Fourth job
+				str += "See you!";
+				return str;
+			})
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+			::text::info("Original str = {}",str);
+		}
+	},0,::tasking::Runnable::_killFalse);
+}
+\endcode
+And the output will be:
+\code
+Result value = Hello Dani. .How are you?Bye!See you!
+Original str = Hello Dani. .How are you?Bye!
+\endcode
+As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will receive a copy.
+And just as a way to better understanding, the previous code is functionally equivalent to this other (redundant parts are removed):
+\code
+auto res = ::tasking::waitForFutureMThread(
+    execution::start(ex)
+    | execution::inmediate(std::ref(str))
+    | execution::next([](string& str) noexcept ->string&
+    {	
+        //First job
+        str += " Dani.";
+        return str;
+    })
+    | execution::next( [](string& str) noexcept -> string&
+    {
+        //Second job 
+        str+= " .How are you?";
+        return str;
+    })
+    | execution::next( [](string& str ) noexcept
+    {
+        //Third job
+        str += "Bye!";
+        return str;
+    })
+    | execution::next( [](string& str ) noexcept
+    {
+        //Fourth job
+        str += "See you!";
+        return str;
+    })
+);
+\endcode
 
 PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall
 DOCUMENTAR EL INTERFAZ BIEN EN SU SITIO
+contar el tema del "perfect forwarding" y cuando se hacen copias
 
 */
