@@ -19,7 +19,9 @@ namespace core
     * to manage tasks correctly
 	*/
 	class DABAL_API ThreadRunnable : public Runnable
+    ///@cond HIDDEN_SYMBOLS
         ,public std::enable_shared_from_this<ThreadRunnable>
+    ///@endcond
 	{
 	public:
         enum EThreadState { 
@@ -115,7 +117,7 @@ namespace core
 		void _signalWakeup();
 	protected:
         /**
-		* @brief Create a thread with an empty loop, that continuosly processes posted tasks @see Runnable::post
+		* @brief Create a thread with an empty loop, that continuosly processes posted tasks
 		*/
         ThreadRunnable( unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE,unsigned int maxNewTasks = Runnable::DEFAULT_MAX_NEW_TASKS);
         /**

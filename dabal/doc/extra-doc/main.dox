@@ -23,13 +23,12 @@ And on top of this, achieving more genericity and flexibility, we have the \ref 
 sequences os tasks and where to execute them, in a way independent of the underliying execution system. More on this in \ef execution_system.
 <ul>
 	<li>\ref tasking_system "Tasking System"<br/>
-		The conventions used to document the API
+		The base support for the rest of the system.
 	</li>
-	<li>\ref execution_system "COSAS DE FUTURES,paralelismo,.. ¿como le llamo?"<br/>
-		The basic functionalities on which the rest is built
+	<li>\ref execution_system "COSAS DE FUTURES,paralelismo,.. ¿como le llamo?"<br/>		
 	</li>
 	<li>\ref execution_system "Execution system"<br/>
-		The basic functionalities on which the rest is built
+		High level tasking execution system
 	</li>
 	
 	
