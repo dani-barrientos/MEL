@@ -3,8 +3,10 @@
 #
 cmake_minimum_required (VERSION 3.8)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 message("Building for " ${DABAL_OS})
+message("Supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 if(NOT DEFINED ENV{VCPKG_ROOT})
   message("vcpkg root not defined!.Missing?")
 endif()
@@ -15,7 +17,6 @@ endif()
 message( "Toolchain " ${CMAKE_TOOLCHAIN_FILE})
 
 project ("dabal")
-
 
 
 #add_compile_definitions(PROCESSSCHEDULER_USE_LOCK_FREE)
@@ -30,6 +31,7 @@ add_subdirectory ("tests")
 add_executable (main "main.cpp")
 target_link_libraries(main "dabal")
 target_link_libraries(main "tests")
+
 #copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
 if(DABAL_OS STREQUAL "DABAL_WINDOWS")
 add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to MyTest

@@ -20,6 +20,41 @@ using std::vector;
 
 const std::string TestExecution::TEST_NAME = "execution";
 
+/*
+example code to detect MSVC compile error in some version related with  /permissive- and /Zc:lambda flags
+struct MyClass
+{
+    //no working in MSVC
+    template <class TArg,class F> void test(F&& f,TArg&& arg) noexcept( sizeof(TArg)>0)
+    {
+        //This compile in MSVC
+        if constexpr (sizeof(TArg)>1)
+        {
+            
+        }
+        //But this next doesn't compile in MSVC
+        // auto g = []() noexcept( std::is_integral<TArg>::value)
+        // {
+        // };
+        auto g = []() noexcept( sizeof(TArg) > 1)
+        {
+        };
+        
+    }
+};
+
+int f1(float&)
+{
+    return 6;
+}
+void f()
+{
+ MyClass mc1;
+    float var = 7.1f;
+    mc1.test(f1,var);
+
+}
+*/
 //test for development purposes
 namespace test_execution
 {
@@ -160,7 +195,7 @@ int _testDebug(tests::BaseTest* test)
 
 			auto idc = std::is_default_constructible<TestClass>::value;
 			auto f1 = 
-			execution::launch(exr,
+			execution::launch(extp,
 			[test](int arg) noexcept
 			{
 				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");

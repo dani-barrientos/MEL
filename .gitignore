@@ -5,7 +5,7 @@
 /build
 /CMakeFiles
 /dabal/CMakeFiles
-/dabal/doc
+/dabal/doc/generated
 CMakeUserPresets.json
 android/main/.gradle
 android/main/.idea

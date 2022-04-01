@@ -58,31 +58,30 @@ using core::Callback;
 
 /**
  * @brief Tasking system
- * @details Based on the concept of *microthread*, which is represented by class Process. A microthread alows to have cooperative multitasking, such that a single
- * thread can excute thousands concurrent tasks. Think microthread as a very light fiber
- */
+ * @details Based on the concept of *microthread*, which is represented by class Process. A microthread alows to have cooperative multitasking, so that a single
+ * thread can execute thousands concurrent (in a *cooperative* sense ) tasks. Think microthread as a very light fiber
+*/
 namespace tasking
 {
-
-// meter los processprops o similar
-// o bien esto se pasará en el Runnable y éste asignará los atributos necesarios según los props??casi mnejor	
-// lo de usar binary tampco vale para mucho
 	class ProcessScheduler;  //predeclaration
 	/**
 	* @class Process
-	* @brief A periodic task,. implementing a *microthread*
-	* A Process is scheduled by a ProcessScheduler.
-	* @remarks tasks are accoring according to a Timer, which uses uint64_t type to express msecs, but for eficiency reasons
+	* @brief A periodic task, implementing a *microthread*.
+	* @details Once the process is inserted in a \ref ::tasking::ProcessScheduler (usually done through a Runnable via ::tasking::Runnable::post or ::tasking::Runnable::execute) 
+	* the update() (private) member function will be called. because this class is **abstract**, a concrete %Process must implement the function onUpdate function to code its custom behaviour.
+	* The task will be executed as time intervals, given by the period (\ref getPeriod) until is killed (see \ref kill)
+	* @remarks  Tasks are executed according to a \ref ::core::Timer "Timer", which uses uint64_t type to express msecs, but for eficiency reasons
 	* using a 64 bits type on 32 bits machines will be very "agressive", so we use unsigned int as time for tasks so getting the low part
 	* of the original 64 bit time and hoping it will be enough...
-	* @todo what about using size_t constant?I'm afraid it would have problems
-	* @remarks switching a Process inside a try/catch context will invalidate exception handling for this context. If this fact is carefully considered when doing "switchs"
-	* it will not be a problema, but in Windows (maybe other Operating Systems?) there is a exploitation prevent system (called SEHOP, see https://blogs.technet.microsoft.com/srd/2009/02/02/preventing-the-exploitation-of-structured-exception-handler-seh-overwrites-with-sehop/) )that will make the app crash
+	* @remarks Switching a Process inside a try/catch context doesn't fit very well with exception handling for this context. This issue is being addressed... If this fact is carefully considered when doing "switchs"
+	* it will not be a problem, but in Windows (maybe other Operating Systems?) there is a exploitation prevent system (called SEHOP, see https://blogs.technet.microsoft.com/srd/2009/02/02/preventing-the-exploitation-of-structured-exception-handler-seh-overwrites-with-sehop/) )that will make the app crash
 	* because Windows interpret it as a hack process. This option is disabled in worksations but enabled for Windows Server- To disable it, go to HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/Session Manager/Kernel/DisableExceptionChainValidation
 	*/
 	class DABAL_API Process :
+	///@cond HIDDEN_SYMBOLS
 		public std::enable_shared_from_this<Process>,
 		public MThreadAttributtes		
+	///@endcond
 	{
 		DABAL_CORE_OBJECT_TYPEINFO_ROOT;
 	
@@ -99,7 +98,7 @@ namespace tasking
 			KILLING_WAITING_FOR_SCHEDULED , //!< switched and no shceduled yet
 			DEAD  //!< process is out of process manager
 		};
-		//! reason why Process returns for context switch
+		//! Reason why the process returns from context switch
 		enum class ESwitchResult{
 			ESWITCH_OK,  //!< return from context switch was ok
 			ESWITCH_WAKEUP,  //!<return from context switch was because a wakeup
@@ -109,12 +108,12 @@ namespace tasking
 		
 		/**
 		* @brief constructor
-		* @param capacity Initial capacity.in bytes A value of 0 means no stack precreated. in any case, stack grow as is needed
+		* @param capacity Initial stack capacity,in bytes. A value of 0 means no stack precreated. In any case, stack grows as needed
 		*/
 		Process( unsigned short capacity = 0 );
 		virtual ~Process(void);
 		/**
-		* sets ProcessScheduler which holds this process. Each process can only be scheduled by one ProcessScheduler
+		* @brief Sets ProcessScheduler which holds this process. Each process can only be scheduled by one ProcessScheduler
 		*/
 		void setProcessScheduler( ProcessScheduler* const  mgr);
 		/**
@@ -140,11 +139,11 @@ namespace tasking
 		*/
 		void kill( bool force = false );
 		/**
-		* sets process in init state
+		* @brief Sets process in init state
 		*/
 		virtual void reset();
 		/**
-		* Set the period for this process
+		* @brief Set the period for this process
 		* @param value the new period (in msecs)
 		*/
 		inline void setPeriod(unsigned int value);
@@ -174,60 +173,38 @@ namespace tasking
 		
 
 		/**
-		* gets ProcessScheduler which holds this Process
+		* @brief  Gets \ref ProcessScheduler which holds this Process
 		*/
 		inline ProcessScheduler *const getProcessScheduler() const;
 
-		/**
-		* add new Process to internal ProcessScheduler to execute
-		* @brief this Process will be executed at its own period but will be paused and killed
-		*  when parent Process will be
-		*/
-		//void attachProcess( Process* );		
 		/**
 		* @return true if process received kill signal
 		* @see switchProcess for comments
 		*/
 		static ESwitchResult wait( unsigned int msegs ) OPTIMIZE_FLAGS; 
 		/**
-		* wrapper for _switchProcess
-		* @return true if process received kill signal
-		* @remarks the objective is to throw a ProcessException if process has received kill signal, but an unknown error in
-		*	Visual Studio microthread implementacion doesn't allow it. Also, you can not use a try-catch block after any context switch operation
-		*   (switchProcess,wait,sleep) except in a child function. For example the next code breaks:
-		*		{
-		*			switchProcess(false);
-		*			try{
-		*				....tikitiki...
-		*				throw <some exception>;
-		*			}catch( <some exception> ){}
-		*		}
-		*		but if you put the try-catch block in another function, called by this, then it works (but maybe it hasn't any usefulness)
-		*
-		* @remarks see comments on SEHOP in file header
-		*/
-		
-		static ESwitchResult switchProcess( bool v ) OPTIMIZE_FLAGS;
+		 * @brief Evict current process and will continue executing from the same point the next time is scheduled
+		 * @details this function is a static one because, in the same way threads work, is the *currently executing process* which can be evicted
+		 * in any point of the execution call stack. 
+		 * @param continueInmediately if true, the process will continue executing in the next shceduler cycle, so without respecting the period.
+		 */		
+		static ESwitchResult switchProcess( bool continueInmediately ) OPTIMIZE_FLAGS;
 		/**
-		* stop process. To reactivate you must use wakeUp
-		* @param[in] postSleep functor (signature <void,void>) to execute just in the moment when Process go to sleep
-		* @return resulting state of thes 88 operation
+		* @brief Sleep current process and execute given callable. To reactivate to you must use \ref wakeUp
+		* @param[in] postSleep functor (signature void(void) ) to execute just in the moment when Process go to sleep
+		* @return resulting state of these operation
 		* @see sleep
 		* @remarks not multithread-safe
 		*/
 		template <class F>
 		static ESwitchResult sleepAndDo( F postSleep );
 		/**
+		 * @brief Wait for a given time and execute given callable
 		* @param[in] postWait functor (signature <void,void>) to execute just in the moment when Process go to sleep
 		* @return resulting state of the operation
 		* @see sleep
 		* @remarks not multithread-safe
-		*/
-		// template <class F>
-		// static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS
-		// {
-		// 	return _wait( msegs,new Callback<void,void>( postWait,::core::use_functor ) );
-		// }
+		*/		
 		template <class F>
 		static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS;
 		/**
@@ -238,10 +215,9 @@ namespace tasking
 		static ESwitchResult sleep( ) OPTIMIZE_FLAGS;
 		inline bool getAsleep() const;
 		/**
-		 * wakeup an asleep process or an evicted process (that process having called swtich or wait)
+		 * @brief wakeup an asleep process or an evicted process (that process having called swtich or wait)
 		 */
 		void wakeUp();
-
 	private:
 		//static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 		static mpl::Tuple<TYPELIST(int,Process*,unsigned int)> _preSleep() OPTIMIZE_FLAGS;

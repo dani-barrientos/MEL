@@ -82,7 +82,7 @@ namespace tasking
     }  
     */
    /**
-    * wait for future completion, returning a wapper around the internal vale
+    * @brief wait for future completion, returning a wapper around the internal vale
     * @throws core::WaitException if some error occured while waiting of the internal future exception if it has any error
     */
    template<class T> ::core::WaitResult<T> waitForFutureMThread(  const core::Future<T>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)

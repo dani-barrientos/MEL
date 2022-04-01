@@ -1,23 +1,37 @@
 
 /**
 \mainpage Introduction
-\a \b dabal is a library  for cooperative multitasking and, quite simple but useful, parallelism functionalities. The base piece of the system es de so called *microthread*.
-This can be similiar, in concept, as Windows Fiber, coroutines,.. but ver ydiferent in its working and use. A **microthread**
+\a \b dabal is a library  for cooperative multitasking and, quite simple but useful, parallelism functionalities. The base piece of the system es de so called \ref ::tasking::Process "microthread",
+which can be seen as lightweight threads for cooperative multitasking (similar, but not equal, in concept as Windows fibers o coroutines)
+From now on, we will use *Process* instead of *microthread* for readability and to capture de idea that we are talking about processes (tasks), but without forgetting their *microthread* capabilities,
+which are almost the same as a usually a thread has: \ref ::tasking::Process::wait "wait", \ref ::tasking::Process::sleep "sleep", \ref ::tasking::Process::switchProcess "switchProcess" (usually known as *yield*)
 
+\ref ::tasking::Process "Processes", \ref ::tasking::ProcessScheduler "schedulers" and \ref ::tasking::Runnable "runnables" together form the basic task system: a *Runnable* is an object
+with a ::tasking::ProcessScheduler and this is an aggregate of ::tasking::Process.
+
+Also, we have \ref ::core::ThreadRunnable "ThreadRunnable" which is a \ref ::core::Thread "Thread" specialization to behave as a \ref ::tasking::Runnable "Runnable", so being able to be posted \ref ::tasking::Process "processes" (remember, microthreads, so with *microthreading* capabilities)
+On top of this basic tasking system. we have some constructs that allows to apply modern idioms to our code, specifically asynchronous programming
+
+We will talk more about each of this points in detail
+
+The library also has a lot of helper functionalities. Although the code use C++17 features, because the main pieces of this library dates back to the begining of year 2000, a lot of template metaprogramming 
+was done to be able to resolve things like \ref ::core::Callback "callbacks" \ref ::mpl::linkFunctor "binding args", etc.. Most of this features are *now* (since C++11) resolved with bind, function, etc..
+So, some functionalities could be removed and used the "new" C++11 equivalents, specifically those in \ref ::mpl namespace.
+
+
+And on top of this, achieving more genericity and flexibility, we have the \ref execution_system "Execution System". This is a fully template module that allows to express in a very easy, understable and efficient way,
+sequences os tasks and where to execute them, in a way independent of the underliying execution system. More on this in \ef execution_system.
 <ul>
-	<li>\ref jsquirrel_conventions "Documenting conventions"<br/>
+	<li>\ref tasking_system "Tasking System"<br/>
 		The conventions used to document the API
 	</li>
-	<li>\ref jsquirrel_core "Core"<br/>
+	<li>\ref execution_system "COSAS DE FUTURES,paralelismo,.. ¿como le llamo?"<br/>
 		The basic functionalities on which the rest is built
 	</li>
-	<li>\ref jsquirrel_judas "Judas library"<br/>
-		The API exposed by <em>Judas engine</em>
+	<li>\ref execution_system "Execution system"<br/>
+		The basic functionalities on which the rest is built
 	</li>
-	<li>\ref jsquirrel_api API
-	NO VALE	, A LO MEJOR DA IGUAL QUE APAREZCA AQUI, EN REALIDAD NO IMPORTA MUCHO
-ME GUSTARIA CAMBIAR EL todo list
-	</li>	
+	
 	
 </ul>
 

@@ -53,8 +53,10 @@ namespace tasking
 //useful macro to declare task parameters
 #define RUNNABLE_TASK_PARAMS uint64_t t,Process* p
 	class Runnable; //predeclaration
+	///@cond HIDDEN_SYMBOLS
 	namespace _private
 	{
+
 		class DABAL_API RunnableTask final: public GenericProcess
 		{
 		public:		
@@ -128,8 +130,6 @@ namespace tasking
 			//MemZoneList::iterator iterator; quitar
 		};
 	}
-	///@cond HIDDEN_SYMBOLS
-	//template <class TRet, class F> struct ExecuteTask; //predeclaration
 	///@endcond
 	/**
 	* @class Runnable

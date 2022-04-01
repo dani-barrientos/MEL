@@ -1,7 +1,11 @@
 ﻿# specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_definitions(DABAL_EXPORTS)
+if ( MSVC )
+    add_compile_options(/permissive- /Zc:lambda)
+endif()
 add_library(dabal SHARED  "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/core/Timer.cpp"
@@ -13,6 +17,7 @@ add_library(dabal SHARED  "source/tasking/CriticalSection_mthread.cpp"
 #set_target_properties(dabal PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 
 if(DABAL_OS STREQUAL "DABAL_WINDOWS")
+    #target_compile_options(dabal PUBLIC "/permissive-")
     if(DABAL_ARQ STREQUAL "DABAL_X86_MSVC")
         target_sources(dabal PRIVATE "source/tasking/Process_X86_MSVC.cpp")
     else()

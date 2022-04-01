@@ -8,14 +8,6 @@
  */
 namespace execution
 {       
-    /* 
-    enum  EErrorCodes
-    {
-        //@todo completar y dar sentido
-        ERROR_UNKNOWN,
-        ERROR_EXCEPTION
-    };
-    */
     template <typename ExecutorAgent,typename ResultType> class ExFuture;// predeclaration
     template <class ExecutorAgent> class Executor    
     {
@@ -27,7 +19,7 @@ namespace execution
         template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg> fut,ReturnTuple& result, FTypes&&... functions);
     };
     /**
-     * @brief Extension of core::Future to apply to executors
+     * @brief Extension of \ref core::Future to apply to executors
      * Any executor function will return an ExFuture, allowing this way to chain functions
      */
     template <typename ExecutorAgent,typename ResultType>
