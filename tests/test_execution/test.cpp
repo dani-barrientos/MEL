@@ -450,7 +450,56 @@ int _testDebug(tests::BaseTest* test)
 	Thread::sleep(5000);
 	return 0;
 }
-
+//code for the samples in the documentation
+template <class ExecutorType> void _sampleBasic(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex] () mutable
+	{
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,[](float param) noexcept
+			{	
+				return param+6.f;
+			},10.5f)
+			| execution::next( [](float& param) noexcept
+			{
+				return std::to_string(param);
+			})
+			| execution::parallel( 
+				[](string& str)
+				{					
+					text::info("Parallel 1. {}",str+" hello!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" hi!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" whats up!");
+				}
+			)
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+		}
+	},0,::tasking::Runnable::_killFalse);
+}
+void _samples()
+{
+	auto th = ThreadRunnable::create(true);			
+	execution::Executor<Runnable> exr(th);
+	exr.setOpts({true,false,false});
+	parallelism::ThreadPool::ThreadPoolOpts opts;
+	auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,true});	
+	_sampleBasic(exr);
+	text::info("HECHO");
+}
+//más ejemplos: otro empezando con start y un inmediate; referencias, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
 template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
 {
 
@@ -1196,6 +1245,9 @@ int TestExecution::onExecuteTest()
 				case 1000:
 					_testDebug(this);
 					break;
+				case 1001:
+					_samples();
+					break;					
 				case 0:
 					result = _testLaunch(this);
 					break;

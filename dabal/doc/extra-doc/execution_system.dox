@@ -53,6 +53,7 @@ As can be seen, dabal already provides high level tools to facilitate task execu
 in any point of the chain. And, of course, think how to resolve the same problem only with plain C++ threads...
 
 Instead, with the execution system, built on top of those functionalities, we could write:
+
 \code
     auto th1 = ThreadRunnable::create(true);	
 	execution::Executor<Runnable> exr(th1); //Create executor based on ThreadRunnable
@@ -89,15 +90,80 @@ Instead, with the execution system, built on top of those functionalities, we co
 
     }
 \endcode
-As can be seen in the example code, the expresiveness and flexibility of this mechanism is far superior. The used executor can be any executor, the *only thing* to do 
+As can be seen in the example code, the expresiveness and flexibility of this mechanism is far superior. The used executor can be any executor type, the *only thing* to do 
 (of course, it can be difficult) is to implement the neccesary parts of a new execution system when neccesary (for example, an execution system based on GPU processing).
-Dabal provides two types of executors, the ones used in this example: an executor based on \ref tasking::Runnable "runnables" and a executor based on \ref ::core::ThreadPool "a thread pool".
+Dabal provides two types of executors, the ones used in this example: an executor based on \ref tasking::Runnable "runnables" and an executor based on \ref ::core::ThreadPool "a thread pool".
 Both has microthread capabilities, meaning that the tasks executed in any of then can take advange of cooperative multitasking (see ::Tasking::Process).
 Some examples will be provided in the next sections trying to describe al the functionalities with simple cases, and showing all the power of this system.
 ## Usage samples
-### Basic sample
+The following samples are for educational purposes only. This means that the task acomplished may not make any sense or that aren't dont in the best possible way. The goal
+is to show the different functionalities and its power.
+All the samples are done without worrying on the underlying executor, and implemented as template functions.
+This functions could be used as:
 \code
-uno simplon y que se vea la creacion del executor. En los demás no mostrar esta creacion, poner funcion template
+	//create a RunnableExecutor
+	auto th = ThreadRunnable::create(true);			
+	execution::Executor<Runnable> exr(th);
+	exr.setOpts({true,false,false});
+	_sampleBasic(exr); //call sample with the RunnableExecutor
+	//now create an executor based on a ThreadPool
+	parallelism::ThreadPool::ThreadPoolOpts opts;
+	auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,true});	
+	_sampleBasic(extp); //use same sample with this new executor
+	
+\endcode
+### Basic sample
+A simple execution chain. This code consists of three execution steps:
+	- first task generating a float, from another float given as argument
+	- second task converting this float to string, a passing it to the next step
+	- third step launch three *parallel* tasks. This doesn't mean neccesarily that that task will be executed in parallel,
+	is just a hint so that the executor will do it in that way if it hast the capacity.
+\code
+template <class ExecutorType> void _sampleBasic(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex] () mutable
+	{
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,[](float param) noexcept
+			{	
+				return param+6.f;
+			},10.5f)
+			| execution::next( [](float& param) noexcept
+			{
+				return std::to_string(param);
+			})
+			| execution::parallel( 
+				[](string& str)
+				{					
+					text::info("Parallel 1. {}",str+" hello!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" hi!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" whats up!");
+				}
+			)
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+		}
+	},0,::tasking::Runnable::_killFalse);
+}
+\endcode
+Outpu will be:
+\code
+Parallel 1. 16.500000 hello!
+Parallel 2. 16.500000 hi!
+Parallel 2. 16.500000 whats up!
+Result value = 16.500000
 \endcode
 
 PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall
