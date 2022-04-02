@@ -323,7 +323,7 @@ In the previous code, and exception is thrown in the second job, so third and fo
 exceptions are checked.
 Things to take into account:
  - If a job won't throw an exception (you have to be sure) you _shoud mark this function as **noexcept**_. This way, the generated code will be more efficient (mainly in space).
- - Of course, yo can throw any type of object and follow the usual rules for exception management
+ - Of course, yo can throw any type of object and follow the usual rules for exception management.
  - the *waitForFuture* functions will throw a \ref ::core::WaitException "WaitException" if the wait was unsuccessful, as process killed, timeout,..
 
 But, what if we want to capture the error at some point and continue the chain of jobs? See next example:
@@ -386,9 +386,65 @@ And the output will be:
 [info] Original str = Hello Dani. How are you?
 \endcode
 Because the error was captured in the job chain, no exception was thrown. The \ref ::execution::catchError "catchError" function gets an exception as parameter
-and *must return the same type* as the previous job in the chain (because this type is what thet job expects . If no exception was launched *before* the catchError call,
+and *must return the same type* as the previous job in the chain (because this type is what that job expects . If no exception was launched *before* the catchError call,
 this function will be ignored.
 
+### Changing executor
+In this example we will show how to tranfer execution from one executor to another in the same flow. This is acomplished by the function \ref ::execution::transfer "transfer".
+It's better seen with an example:
+\code
+void _sampleTransfer()
+{	
+	auto th = ThreadRunnable::create();
+	execution::Executor<Runnable> exr(th);
+	exr.setOpts({true,false,false});
+	parallelism::ThreadPool::ThreadPoolOpts opts;
+	auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,false});
+	th->fireAndForget([exr,extp] () mutable
+	{
+		
+		try
+		{
+			auto res = ::tasking::waitForFutureMThread(
+				execution::start(exr)
+				| execution::inmediate("Hello "s)
+				| execution::next( [](string& str) noexcept
+				{
+					//Second job 
+					text::info("NEXT: {}",str);
+					return str + ". How are you?";
+				})
+				| execution::transfer(extp)  //now transfer execution to the other executor!!
+				| execution::loop(0,10, [](int idx, string& str) noexcept
+				{
+					text::info("Iteration {}", str + std::to_string(idx));
+				})
+				| execution::next( [](string& str ) noexcept
+				{
+					//Fourth job. 
+					str += "See you!";
+					return str;
+				})
+			);
+			::text::info("Result value = {}",res.value());
+		}
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}catch(std::exception& e)
+		{
+			::text::error("Some error occured!! Reason: {}",e.what());
+		}
+	},0,::tasking::Runnable::_killFalse);
+}
+\endcode
+The code consists of two diferent executors, one based on a ThreadRunnable and other based on a ThreadPool. The eecutions start in
+the ThreadRunnable executor and just before the loop, execution is transferred to the other. 
+### Converging several job flows
+usar el on all
 PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall, loop
 DOCUMENTAR EL INTERFAZ BIEN EN SU SITIO
 contar el tema del "perfect forwarding" y cuando se hacen copias

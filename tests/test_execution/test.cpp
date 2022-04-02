@@ -665,6 +665,56 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 		::text::info("Original str = {}",str);
 	},0,::tasking::Runnable::_killFalse);
 }
+void _sampleTransfer()
+{	
+	auto th = ThreadRunnable::create();
+	execution::Executor<Runnable> exr(th);
+	exr.setOpts({true,false,false});
+	parallelism::ThreadPool::ThreadPoolOpts opts;
+	auto myPool = make_shared<parallelism::ThreadPool>(opts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,false});
+	th->fireAndForget([exr,extp] () mutable
+	{
+		
+		try
+		{
+			auto res = ::tasking::waitForFutureMThread(
+
+				execution::start(exr)
+				| execution::inmediate("Hello "s)
+				| execution::next( [](string& str) noexcept
+				{
+					//Second job 
+					text::info("NEXT: {}",str);
+					return str + ". How are you?";
+				})
+				| execution::transfer(extp)
+				| execution::loop(0,10, [](int idx, string& str) noexcept
+				{
+					text::info("Iteration {}", str + std::to_string(idx));
+				})
+				| execution::next( [](string& str ) noexcept
+				{
+					//Fourth job. 
+					str += "See you!";
+					return str;
+				})
+			);
+			::text::info("Result value = {}",res.value());
+		}
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}catch(std::exception& e)
+		{
+			::text::error("Some error occured!! Reason: {}",e.what());
+		}
+	},0,::tasking::Runnable::_killFalse);
+// @todo	el prolema es que si no pongo esto no se ejecuta nada, por temas del kill y demas
+	::core::Thread::sleep(10000);
+}
 void _samples()
 {
 	text::set_level(text::level::info);
@@ -680,10 +730,12 @@ void _samples()
 //	_sampleBasic(extp);
 //	_sampleReference(exr);
 	//_sampleError1(exr);
-	_sampleError2(extp);
+	//_sampleError2(extp);
+	_sampleTransfer();
 	text::info("HECHO");
 }
 //más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
+//tal vez algun ejemplo serio de verdad como colofon
 template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
 {
 
