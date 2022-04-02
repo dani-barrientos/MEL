@@ -188,7 +188,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 			| execution::next( [](string& str) noexcept -> string&
 			{
 				//Second job 
-				str+= " .How are you?";
+				str+= " How are you?";
 				return str;
 			})
 			| execution::next( [](string& str ) noexcept
@@ -214,11 +214,12 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 \endcode
 And the output will be:
 \code
-Result value = Hello Dani. .How are you?Bye!See you!
-Original str = Hello Dani. .How are you?Bye!
+Result value = Hello Dani. How are you?Bye!See you!
+Original str = Hello Dani. How are you?Bye!
 \endcode
-As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will receive a copy.
-And just as a way to better understanding, the previous code is functionally equivalent to this other (redundant parts are removed):
+As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will
+ receive a copy.
+Also just as a way to better understanding, the previous code is **functionally equivalent** to this other (redundant parts are removed):
 \code
 auto res = ::tasking::waitForFutureMThread(
     execution::start(ex)
@@ -232,7 +233,7 @@ auto res = ::tasking::waitForFutureMThread(
     | execution::next( [](string& str) noexcept -> string&
     {
         //Second job 
-        str+= " .How are you?";
+        str+= " How are you?";
         return str;
     })
     | execution::next( [](string& str ) noexcept
@@ -249,8 +250,146 @@ auto res = ::tasking::waitForFutureMThread(
     })
 );
 \endcode
+Instead of launching a callable intially, the chain of execution is started with a \ref ::execution::start "start", followed by a \ref ::execution::inmediate "inmediate".
+Although in this example this doesn't improves anything, can be usefull in other situations.
 
-PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall
+### Error management
+This is a very important part and need to be addressed carefully. When using any of the wait functions (\ref ::tasking::waitForFutureMThread or \ref ::core::waitForFutureThread)
+an exception will be thrown if any error occurs while execution that sequence of jobs the program is waiting for. If this wait mechanisms are not used, the returned \ref ::execution::ExFuture
+from the execution chain must be checked for error (see \ref ::core::Future_Common::getValue "Future::getValue" and \ref ::core::FutureValue)
+
+Let's see an example code:
+
+\code
+template <class ExecutorType> void _sampleError1(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		try
+		{
+		    auto res = ::tasking::waitForFutureMThread(
+                execution::launch(ex,[](string& str) noexcept ->string&
+                {	
+                    //First job
+                    str += " Dani.";
+                    return str;
+                },std::ref(str))
+                | execution::next( [](string& str) -> string&
+                {
+                    //Second job 
+                    str+= " How are you?";
+                    throw std::runtime_error("This is an error");
+                    //return str;
+                })
+                | execution::next( [](string& str ) noexcept
+                {
+                    //Third job. Will never be executed!!!
+                    str += "Bye!";
+                    return str;
+                })
+                | execution::next( [](string& str ) noexcept
+                {
+                    //Fourth job. Will never be executed
+                    str += "See you!";
+                    return str;
+                })
+		    );
+			::text::info("Result value = {}",res.value());
+		}
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}
+		catch(std::exception& e)
+		{
+			::text::error("Some error occured!! Reason: {}",e.what());
+		}
+		catch(...)
+		{
+			::text::error("Some error occured!! Unknwon reason: {}");
+		}
+		::text::info("Original str = {}",str);
+	},0,::tasking::Runnable::_killFalse);
+}
+\endcode
+Output will be:
+\code
+[error] Some error occured!! Reason: This is an error
+[info] Original str = Hello Dani. How are you?
+\endcode
+In the previous code, and exception is thrown in the second job, so third and fourth jobs won't be executed. The wait is wrapped with a try/catch and the neccesary
+exceptions are checked.
+Things to take into account:
+ - If a job won't throw an exception (you have to be sure) you _shoud mark this function as **noexcept**_. This way, the generated code will be more efficient (mainly in space).
+ - Of course, yo can throw any type of object and follow the usual rules for exception management
+ - the *waitForFuture* functions will throw a \ref ::core::WaitException "WaitException" if the wait was unsuccessful, as process killed, timeout,..
+
+But, what if we want to capture the error at some point and continue the chain of jobs? See next example:
+\code
+template <class ExecutorType> void _sampleError2(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		try
+		{
+			auto res = ::tasking::waitForFutureMThread(
+				execution::launch(ex,[](string& str) noexcept ->string&
+				{	
+					//First job
+					str += " Dani.";
+					return str;
+				},std::ref(str))
+				| execution::next( [](string& str) -> string&
+				{
+					//Second job 
+					str+= " How are you?";
+					throw std::runtime_error("This is an error");
+					//return str;
+				})
+				| execution::next( [](string& str ) noexcept
+				{
+					//Third job. Will never be executed!!!
+					str += "Bye!";
+					return str;
+				})
+				| execution::catchError( [](std::exception_ptr err)
+				{
+					return "Error caught!! ";
+				})
+				| execution::next( [](string& str ) noexcept
+				{
+					//Fourth job. 
+					str += "See you!";
+					return str;
+				})
+			);
+			::text::info("Result value = {}",res.value());
+		}
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}catch(std::exception& e)
+		{
+			::text::error("Some error occured!! Reason: {}",e.what());
+		}
+		::text::info("Original str = {}",str);
+	},0,::tasking::Runnable::_killFalse);
+}
+\endcode
+And the output will be:
+\code
+[info] Result value = Error caught!! See you!
+[info] Original str = Hello Dani. How are you?
+\endcode
+Because the error was captured in the job chain, no exception was thrown. The \ref ::execution::catchError "catchError" function gets an exception as parameter
+and *must return the same type* as the previous job in the chain (because this type is what thet job expects . If no exception was launched *before* the catchError call,
+this function will be ignored.
+
+PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall, loop
 DOCUMENTAR EL INTERFAZ BIEN EN SU SITIO
 contar el tema del "perfect forwarding" y cuando se hacen copias
 

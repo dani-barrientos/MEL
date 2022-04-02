@@ -502,7 +502,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 			| execution::next( [](string& str) noexcept -> string&
 			{
 				//Second job 
-				str+= " .How are you?";
+				str+= " How are you?";
 				return str;
 			})
 			| execution::next( [](string& str ) noexcept
@@ -539,7 +539,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 			| execution::next( [](string& str) noexcept -> string&
 			{
 				//Second job 
-				str+= " .How are you?";
+				str+= " How are you?";
 				return str;
 			})
 			| execution::next( [](string& str ) noexcept
@@ -563,6 +563,108 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 	},0,::tasking::Runnable::_killFalse);
 
 }
+template <class ExecutorType> void _sampleError1(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		try
+		{
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,[](string& str) noexcept ->string&
+			{	
+				//First job
+				str += " Dani.";
+				return str;
+			},std::ref(str))
+			| execution::next( [](string& str) -> string&
+			{
+				//Second job 
+				/*if ( ::tasking::Process::wait(1000) != ::tasking::Process::ESwitchResult::ESWITCH_OK)
+					return str;*/
+				str+= " How are you?";
+				throw std::runtime_error("This is an error");
+				//return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Third job. Will never be executed!!!
+				str += "Bye!";
+				return str;
+			})
+			| execution::next( [](string& str ) noexcept
+			{
+				//Fourth job. Will never be executed
+				str += "See you!";
+				return str;
+			})
+			
+		);
+			::text::info("Result value = {}",res.value());
+		}
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}
+		catch(std::exception& e)
+		{
+			::text::error("Some error occured!! Reason: {}",e.what());
+		}
+		::text::info("Original str = {}",str);
+	},0,::tasking::Runnable::_killFalse);
+}
+template <class ExecutorType> void _sampleError2(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		try
+		{
+			auto res = ::tasking::waitForFutureMThread(
+				execution::launch(ex,[](string& str) noexcept ->string&
+				{	
+					//First job
+					str += " Dani.";
+					return str;
+				},std::ref(str))
+				| execution::next( [](string& str) -> string&
+				{
+					//Second job 
+					str+= " How are you?";
+					throw std::runtime_error("This is an error");
+					//return str;
+				})
+				| execution::next( [](string& str ) noexcept
+				{
+					//Third job. Will never be executed!!!
+					str += "Bye!";
+					return str;
+				})
+				| execution::catchError( [](std::exception_ptr err)
+				{
+					return "Error caught!! ";
+				})
+				| execution::next( [](string& str ) noexcept
+				{
+					//Fourth job. 
+					str += "See you!";
+					return str;
+				})
+			);
+			::text::info("Result value = {}",res.value());
+		}
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}catch(std::exception& e)
+		{
+			::text::error("Some error occured!! Reason: {}",e.what());
+		}
+		::text::info("Original str = {}",str);
+	},0,::tasking::Runnable::_killFalse);
+}
 void _samples()
 {
 	text::set_level(text::level::info);
@@ -576,7 +678,9 @@ void _samples()
 	extp.setOpts({true,true});
 	//_sampleBasic(exr);	
 //	_sampleBasic(extp);
-	_sampleReference(exr);
+//	_sampleReference(exr);
+	//_sampleError1(exr);
+	_sampleError2(extp);
 	text::info("HECHO");
 }
 //más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
