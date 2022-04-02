@@ -165,6 +165,8 @@ Parallel 2. 16.500000 hi!
 Parallel 2. 16.500000 whats up!
 Result value = 16.500000
 \endcode
+Although the samples are shown using *lambdas* for clarity, any other callable can be used, as for example
+**PONER EJEMPLO EJECUTANDO OTRA FUNCION Y OTRA CON BIND->luego contar el tema del bind y noexcept
 ### Using references
 In this example, it's shown how to use references to variables. In order to be able to pass a reference to \ref ::execution::launch "launch" or to \ref ::execution::inmediate "inmediate"
 we must use [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref), because it's not possible to deduce what the user wants only by the type of the parameter.
@@ -444,7 +446,83 @@ void _sampleTransfer()
 The code consists of two diferent executors, one based on a ThreadRunnable and other based on a ThreadPool. The eecutions start in
 the ThreadRunnable executor and just before the loop, execution is transferred to the other. 
 ### Converging several job flows
-usar el on all
+Here an example on how to create several execution flows and merge their work.
+\code
+template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
+{	
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex1,ex2] () mutable
+	{
+        //first flow in one of the executors
+        auto job1 = execution::start(ex1)
+        | execution::next( []()
+        {
+            ::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
+            text::info("First job");
+            return "First Job";
+        });
+
+        //second job in the other executor
+        auto job2 = execution::start(ex1)
+        | execution::parallel( []() noexcept
+        {
+            ::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
+            text::info("second job, t1");
+        },
+        []() noexcept
+        {
+            ::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
+            text::info("second job, t2");
+
+        })
+        | execution::next( []() noexcept
+        {
+            return 10;
+        });
+        //third job in the same executor as before
+        //second job in the other executor
+        auto job3 = execution::start(ex1)
+        | execution::parallel_convert<std::tuple<int,float>>(
+         []() noexcept
+        {
+            ::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
+            text::info("second job, t1");
+            return 5;
+        },
+        []() noexcept
+        {
+            ::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
+            text::info("second job, t2");
+            return 8.7f;
+        });
+       
+		try
+		{
+            //on_all need to be executed in a context of some excutor, so one of them is given
+            auto res = ::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
+            //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
+            auto& val = res.value();
+            ::text::info("Result value = [{},{},({},{})]",std::get<0>(val),std::get<1>(val),std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val)));
+        }
+		catch(core::WaitException& e)
+		{
+			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+		}
+	},0,::tasking::Runnable::_killFalse);
+}
+\endcode
+\code
+And the output is:
+second job, t2
+second job, t1
+First job
+Result value = [First Job,10,(5,8.7)]
+\endcode
+Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, as a tuple. Also, 
+the third job returns a tuple (this is how \ref ::execution::parallel_convert "parallel_convert" works), and it's shown between parenthesis.
+### More complex sample
+algo más complejo, tal vez el de la media del vector. pero me gustaria que fuese practico y pudiesehacer transfer y cosas asi
+
 PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall, loop
 DOCUMENTAR EL INTERFAZ BIEN EN SU SITIO
 contar el tema del "perfect forwarding" y cuando se hacen copias

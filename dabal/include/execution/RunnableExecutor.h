@@ -7,7 +7,7 @@
 namespace execution
 {   
     
-
+    using tasking::Runnable;
     /**
      * @brief Concrete options for this type of executor
      */

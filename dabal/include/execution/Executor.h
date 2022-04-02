@@ -2,6 +2,8 @@
 //#include <execution/Continuation.h>
 #include <execution/CommonDefs.h>
 #include <type_traits>
+#include <string>
+#include <stdexcept>
 /**
  * @brief High level execution utilities
  * @details This namespace contains class, functions..to give a consistent execution interface independent of the underliying execution system
@@ -743,8 +745,8 @@ igual no tiene mucho sentido y
     class OnAllException : public std::runtime_error
     {
         public:
-            OnAllException(int idx,std::exception_ptr source,const string& msg):mElementIdx(idx),mSource(source),std::runtime_error(msg){}
-            OnAllException(int idx,std::exception_ptr source,string&& msg):mElementIdx(idx),mSource(source),std::runtime_error(std::move(msg)){}
+            OnAllException(int idx,std::exception_ptr source,const std::string& msg):mElementIdx(idx),mSource(source),std::runtime_error(msg){}
+            OnAllException(int idx,std::exception_ptr source,std::string&& msg):mElementIdx(idx),mSource(source),std::runtime_error(std::move(msg)){}
             inline int getWrongElement() const noexcept{ return mElementIdx;}
             std::exception_ptr getCause() noexcept{ return mSource;}
         private:
