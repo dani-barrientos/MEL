@@ -340,9 +340,13 @@ class MyClass1
 		{
 			return p1+p2;
 		};
-		string f2(float& p)
+		string f2(float& p) noexcept
 		{
 			return std::to_string(p);
+		}
+		float operator()(float p)
+		{
+			return p + 5.6f;
 		}
 };
 //comentar el tema del noexcept del bind y enlace a mi pregunta
@@ -357,8 +361,9 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 		auto res = ::tasking::waitForFutureMThread(
 			execution::launch(ex,
 				std::bind(&MyClass1::f1,&obj,6.7f,_1),10.5f)
-			| std::bind(&MyClass1::f2,&obj,_1) tengo problema con referencia en floAt
-			
+			| execution::next(std::bind(&MyClass1::f2,&obj,_1))
+			seguir este ejemplo
+		/*	
 			| execution::parallel( 
 				[](string& str)
 				{					
@@ -372,7 +377,7 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 				{
 					text::info("Parallel 2. {}",str+" whats up!");
 				}
-			)
+			)*/
 		);
 		if (res.isValid())
 		{
