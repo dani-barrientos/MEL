@@ -620,7 +620,7 @@ igual no tiene mucho sentido y
     } 
 
     /**
-     * @brief Excepcion thrown by on_all when some of the futures raise error
+     * @brief Excepcion thrown by \ref ::execution::on_all "on_all" when some of the futures raise error
      * It contains a reference to the causing exception and the element in the tuple which caused de exception
      * 
      */

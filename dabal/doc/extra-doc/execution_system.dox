@@ -99,6 +99,7 @@ Some examples will be provided in the next sections trying to describe al the fu
 The following samples are for educational purposes only. This means that the tasks acomplished may not make any sense or that they aren't done in the best possible way. The goal
 is to show the different functionalities and its power.
 All the samples are done without worrying on the underlying executor, and implemented as template functions.
+
 This functions could be used as:
 \code{.cpp}
 	//create a RunnableExecutor
@@ -115,7 +116,14 @@ This functions could be used as:
 	_sampleBasic(extp); //use same sample with this new executor
 	
 \endcode
-### Basic sample
+[comment]<> pongo los dos tipos de enlaces:propios de markdown y de doxygen
+ - [Basic sample](#basic_sample)
+ - \ref using_references "Using references"
+ - \ref error_management "Error management"
+ - \ref chaging_executor "Changing executor"
+ - [Converging jobs](#converging_jobs)
+
+### Basic sample	{#basic_sample}
 A simple execution chain. This code consists of three execution steps:
 	- first task generating a float, from another float given as argument
 	- second task converting this float to string, a passing it to the next step
@@ -167,11 +175,49 @@ Result value = 16.500000
 \endcode
 Although the samples are shown using *lambdas* for clarity, any other callable can be used:
 \code{.cpp}
+template <class ExecutorType> void _sampleCallables(ExecutorType ex)
+{
+	auto th = ThreadRunnable::create();
+	MyClass obj;
+	 using namespace std::placeholders;
+	th->fireAndForget([ex,&obj] () mutable
+	{
 
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,
+				std::bind(&MyClass::f1,&obj,6.7f,_1),10.5f)
+			| execution::next(std::bind(&MyClass::f2,&obj,_1))
+	
+			| execution::parallel( 
+				MyClass(),
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" hi!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" whats up!");
+				}
+			)
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+		}
+	},0,::tasking::Runnable::_killFalse);
+}
 \endcode
+And the output will be:
+\code
+Parallel operator() 17.200001 hi!
+Parallel 2. 17.200001 whats up!
+Parallel 2. 17.200001 hi!
+Result value = 17.200001
+\endcode
+In the previous example we see some other callables: member functions, using bind and function object (with operator() ).
 \warning std::bind doesn't preserve **noexcept** specifier ( https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind)- This is an important
 aspect to take into account as is explained in [this section](#error_management)
-### Using references
+### Using references	{#using_references}
 In this example, it's shown how to use references to variables. In order to be able to pass a reference to \ref ::execution::launch "launch" or to \ref ::execution::inmediate "inmediate"
 we must use [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref), because it's not possible to deduce what the user wants only by the type of the parameter.
 Also, when a function wants to return a reference to the next function in the chain, it's neccesary to indicate it without auto deduction. So, if using a lambda as in the examples,
@@ -395,7 +441,7 @@ Because the error was captured in the job chain, no exception was thrown. The \r
 and *must return the same type* as the previous job in the chain (because this type is what that job expects . If no exception was launched *before* the catchError call,
 this function will be ignored.
 
-### Changing executor
+### Changing executor	{#chaging_executor}
 In this example we will show how to tranfer execution from one executor to another in the same flow. This is acomplished by the function \ref ::execution::transfer "transfer".
 It's better seen with an example:
 \code{.cpp}
@@ -449,7 +495,7 @@ void _sampleTransfer()
 \endcode
 The code consists of two diferent executors, one based on a ThreadRunnable and other based on a ThreadPool. The eecutions start in
 the ThreadRunnable executor and just before the loop, execution is transferred to the other. 
-### Converging several job flows
+### Converging several job flows	{#converging_jobs}
 Here an example on how to create several execution flows and merge their work.
 \code{.cpp}
 template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
@@ -527,8 +573,7 @@ the third job returns a tuple (this is how \ref ::execution::parallel_convert "p
 ### More complex sample
 algo más complejo, tal vez el de la media del vector. pero me gustaria que fuese practico y pudiesehacer transfer y cosas asi
 
-PONER EJEMPLOS TIPICOS COMPILABLES Y EJECUTABLES: launch, next, transfer, gestion errores, onall, loop
-DOCUMENTAR EL INTERFAZ BIEN EN SU SITIO
+CONTAR TEMA PERFECT FORWARDING Y COPIAS Y TAL. PONER ALGUN EJMPLO CON CALSE CON CONSTRUCTOR DE COPIA Y QUE SE VEAN LAS COPIAS QUE SE HACEN
 contar el tema del "perfect forwarding" y cuando se hacen copias
 
 */

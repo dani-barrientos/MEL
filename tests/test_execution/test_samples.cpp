@@ -333,7 +333,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		}
 	},0,::tasking::Runnable::_killFalse);
 }
-class MyClass1
+class MyClass
 {
 	public:
 		float f1(float p1,float p2) noexcept
@@ -344,31 +344,27 @@ class MyClass1
 		{
 			return std::to_string(p);
 		}
-		float operator()(float p)
+		void operator()(string& str)
 		{
-			return p + 5.6f;
+			text::info("Parallel operator() {}",str+" hi!");
 		}
 };
-//comentar el tema del noexcept del bind y enlace a mi pregunta
+
 template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 {
 	auto th = ThreadRunnable::create();
-	MyClass1 obj;
+	MyClass obj;
 	 using namespace std::placeholders;
 	th->fireAndForget([ex,&obj] () mutable
 	{
 
 		auto res = ::tasking::waitForFutureMThread(
 			execution::launch(ex,
-				std::bind(&MyClass1::f1,&obj,6.7f,_1),10.5f)
-			| execution::next(std::bind(&MyClass1::f2,&obj,_1))
-			seguir este ejemplo
-		/*	
+				std::bind(&MyClass::f1,&obj,6.7f,_1),10.5f)
+			| execution::next(std::bind(&MyClass::f2,&obj,_1))
+	
 			| execution::parallel( 
-				[](string& str)
-				{					
-					text::info("Parallel 1. {}",str+" hello!");
-				},
+				MyClass(),
 				[](string& str)
 				{
 					text::info("Parallel 2. {}",str+" hi!");
@@ -377,14 +373,13 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 				{
 					text::info("Parallel 2. {}",str+" whats up!");
 				}
-			)*/
+			)
 		);
 		if (res.isValid())
 		{
 			::text::info("Result value = {}",res.value());
 		}
 	},0,::tasking::Runnable::_killFalse);
-
 }
 //más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
 //me falta el PARALLEL_CONVERT
@@ -409,6 +404,6 @@ void test_execution::samples()
 	//_sampleError2(extp);
 	//_sampleTransfer();
    // _sampleSeveralFlows(exr,extp);
-   _sampleCallables(exr);
+   _sampleCallables(extp);
 	text::info("HECHO");
 }
