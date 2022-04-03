@@ -4,13 +4,14 @@
 #include <type_traits>
 #include <string>
 #include <stdexcept>
+#include <execution/ExFuture.h>
 /**
  * @brief High level execution utilities
  * @details This namespace contains class, functions..to give a consistent execution interface independent of the underliying execution system
  */
 namespace execution
 {       
-    template <typename ExecutorAgent,typename ResultType> class ExFuture;// predeclaration
+   // template <typename ExecutorAgent,typename ResultType> class ExFuture;// predeclaration
     template <class ExecutorAgent> class Executor    
     {
         //mandatory interface to imlement in specializations
@@ -20,86 +21,8 @@ namespace execution
         template <class TArg,class ...FTypes> ::parallelism::Barrier parallel(ExFuture<ExecutorAgent,TArg> fut, FTypes&&... functions);
         template <class ReturnTuple,class TArg,class ...FTypes> ::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg> fut,ReturnTuple& result, FTypes&&... functions);
     };
-    /**
-     * @brief Extension of \ref core::Future to apply to executors
-     * Any executor function will return an ExFuture, allowing this way to chain functions
-     */
-    template <typename ExecutorAgent,typename ResultType>
-	class ExFuture : public Future<ResultType>
-    {
-        public:
-            ExFuture(const ExFuture& ob):Future<ResultType>(ob),ex(ob.ex){}
-            ExFuture(ExFuture&& ob):Future<ResultType>(std::move(ob)),ex(std::move(ob.ex)){}
-            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
-            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType>(val),ex(aEx){}
-            ExFuture(Executor<ExecutorAgent> aEx,ResultType&& val):Future<ResultType>(std::move(val)),ex(aEx){}
-		
-            ExFuture& operator= ( const ExFuture& f )
-            {
-                Future<ResultType>::operator=( f );
-                ex = f.ex;
-                return *this;
-            };
-            ExFuture& operator= ( ExFuture&& f )
-            {
-                Future<ResultType>::operator=( std::move(f));
-                ex = std::move(f.ex);
-                return *this;
-            };
-            Executor<ExecutorAgent> ex;
-		
-    };
-    //for reference type
-    template <typename ExecutorAgent,typename ResultType>
-	class ExFuture<ExecutorAgent,ResultType&> : public Future<ResultType&>
-    {
-        public:
-            ExFuture(const ExFuture& ob):Future<ResultType&>(ob),ex(ob.ex){}
-            ExFuture(ExFuture&& ob):Future<ResultType&>(std::move(ob)),ex(std::move(ob.ex)){}
-            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
-            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType&>(val),ex(aEx){}
-		
-            ExFuture& operator= ( const ExFuture& f )
-            {
-                Future<ResultType&>::operator=( f );
-                ex = f.ex;
-                return *this;
-            };
-            ExFuture& operator= ( ExFuture&& f )
-            {
-                Future<ResultType&>::operator=( std::move(f));
-                ex = std::move(f.ex);
-                return *this;
-            };
-            Executor<ExecutorAgent> ex;
-		
-    };
-    //specialization for void
-    template <typename ExecutorAgent>
-	class ExFuture<ExecutorAgent,void> : public Future<void>
-    {
-        public:
-            ExFuture(const ExFuture& ob):Future<void>(ob),ex(ob.ex){}
-            ExFuture(ExFuture&& ob):Future<void>(std::move(ob)),ex(std::move(ob.ex)){}
-            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
-            ExFuture(Executor<ExecutorAgent> aEx,int dummy):Future<void>(dummy),ex(aEx)
-            {}            
-            ExFuture& operator= ( const ExFuture& f )
-            {
-                Future<void>::operator=( f );
-                ex = f.ex;
-                return *this;
-            };
-            ExFuture& operator= ( ExFuture&& f )
-            {
-                Future<void>::operator=( std::move(f));
-                ex = std::move(f.ex);
-                return *this;
-            };
-
-            Executor<ExecutorAgent> ex;
-		
-    };
+  		
+    // };
     /**
      * @brief Launch given functor in given executor
      * @return ExFuture with return type of function
@@ -584,6 +507,7 @@ igual no tiene mucho sentido y
         ));
         return result;
     }
+    ///@cond HIDDEN_SYMBOLS
     namespace _private
     {
         template <class TRet> struct ApplyInmediate
@@ -729,6 +653,8 @@ igual no tiene mucho sentido y
     {
         return _private::ApplyParallelConvert<ReturnTuple,FTypes...>(std::forward<FTypes>(functions)...);
     }
+    ///@endcond
+
     /**
      * @brief overload operator | for chaining
     */
@@ -738,7 +664,7 @@ igual no tiene mucho sentido y
     } 
 
     /**
-     * @brief Excepcion throw by on_all when some of the futures raise error
+     * @brief Excepcion thrown by on_all when some of the futures raise error
      * It contains a reference to the causing exception and the element in the tuple which caused de exception
      * 
      */

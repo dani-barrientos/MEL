@@ -1,20 +1,4 @@
 
-/**
-* @class MEncapsulate
-* encapsulate an object and a member function in an functor
-*
-* Example:
-* you have an object with a member function, say float Clase::funcion(int), and you want to create a functor for this
-*
-* Clase obj;
-* MEncapsulate<Clase,float,int> me( &Clase::function,&obj );
-*
-* or use the herlper function:
-*	makeMemberEncapsulate(&Class::execute,&obj )
-*
-* The you can use the new object as a normal functor: float result = me( 5 );
-*/
-
 namespace mpl
 {
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
@@ -72,6 +56,21 @@ namespace mpl
 	};
 
 	///@endcond
+	/**
+	* @class MEncapsulate
+	* encapsulate an object and a member function in an functor
+	*
+	* Example:
+	* you have an object with a member function, say float Clase::funcion(int), and you want to create a functor for this
+	*
+	* Clase obj;
+	* MEncapsulate<Clase,float,int> me( &Clase::function,&obj );
+	*
+	* or use the herlper function:
+	*	makeMemberEncapsulate(&Class::execute,&obj )
+	*
+	* The you can use the new object as a normal functor: float result = me( 5 );
+	*/
 	template <bool isConst, class T, class PointerType, class TRet, VARIABLE_ARGS>
 	class MEncapsulate : public MEncapsulate_Base<isConst,T,PointerType,TRet,VARIABLE_ARGS_DECL>
 	{

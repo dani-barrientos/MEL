@@ -1,13 +1,10 @@
 namespace core
 {
 	/**
-	* base class for classes with callback subscription functionality
-	* template arguments:
-	* @todo now very simple and in pa�ales, but useful to save time: allow container selection, allow pointer-to-CallbackListType or object selection 
-	* @todo VERSION CHAPUCERA DEL MULTITHREADED A LA ESPERA DE TENER COMPLETAS LAS HERRAMIENTAS NECESARIAS
-
+	* @brief callback subscription functionalit
 	*/
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS	
+	///@cond HIDDEN_SYMBOLS
 	namespace _private
 	{
 		template <bool> struct _CriticalSectionWrapper
@@ -29,6 +26,7 @@ namespace core
 			_Lock(_CriticalSectionWrapper<false>& cs){}
 		};
 	}
+	///@endcond
 	template <class ThreadingPolicy, VARIABLE_ARGS >
 	class CallbackSubscriptor_Base
 	{

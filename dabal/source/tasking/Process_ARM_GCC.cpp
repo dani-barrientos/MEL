@@ -1,16 +1,9 @@
-//QUITAR EL ULTIMO; QUE ES POR ÑAPAS DEL AIRPLAY
-#if (defined(_ARM_GCC)&&!defined(I3D_ARCH_X86))
+
 #include <core/Process.h>
 using core::Process;
 using core::MThreadAttributtes;
 
 #include <core/ProcessScheduler.h>
-
-/*TODO:
-      version ARM
-    intentar compilarlo en AirPlay....
-    - hacer los sleep, wait, syncobject..
-*/
 
 #define mSwitchedOFF offsetof( MThreadAttributtes,mSwitched)
 #define mIniSPOFF offsetof( MThreadAttributtes,mIniSP)
@@ -66,10 +59,10 @@ volatile void fakeFunction( )
 	
 	asm volatile ( "mov r1,#1");
 	asm volatile ("str r1, [r0,%[v]]"::[v] "J" (mSwitchedOFF) );//R2<--mSwitched
-	//calculamos tamaño de la pila
+	//calculamos tamaï¿½o de la pila
 	asm volatile( "ldr r1,[r0,%[v]]"::[v] "J" (mIniSPOFF)); //iniSP
 	asm volatile( "sub r1,r1,sp");
-	//asm volatile ( "add r1,r1,#4" ); //tamaño de pila
+	//asm volatile ( "add r1,r1,#4" ); //tamaï¿½o de pila
 	//call recrece pila
 	asm volatile( "stmfd sp!,{r0}" );
 	asm volatile( "bl resizeStack" ); 
@@ -83,7 +76,7 @@ volatile void fakeFunction( )
 	asm volatile ( "bne copyloop" );
 	//dejo SP como estaba al principio
 	//asm volatile( "ldr sp,[r0,#12]" ); SE SUPONE QUE EL BUCLE ANTERIOR YA LO HACE
-	//asm volatile( "add sp,#20" ); //a pelo, tengo que buscar el estándard
+	//asm volatile( "add sp,#20" ); //a pelo, tengo que buscar el estï¿½ndard
 	//retornar al punto de llamada
 	asm volatile( "ldr pc,[r0,%[v]]"::[v] "J" (mLROFF) );
 
@@ -102,6 +95,3 @@ volatile void switchProcess( bool returnInmediately)
     asm volatile( "ldr r0,%0\n":"+m" (mt));
     asm volatile( "bl wrapperSwitch");
 }
-
-#endif
-

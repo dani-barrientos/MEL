@@ -4,7 +4,7 @@
 using ::core::Type;
 
 
-
+///@cond HIDDEN_SYMBOLS
 namespace core
 {
 
@@ -78,4 +78,4 @@ namespace core
 #endif
 
 }
-
+///@endcond

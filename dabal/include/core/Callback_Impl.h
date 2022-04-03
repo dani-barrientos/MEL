@@ -9,8 +9,10 @@ namespace core
 	class IRefCount;
 	/**
 	* @class Callback
-	* @brief create Callback from functor
-	* @todo no est� implementado el considerar cosas distintas a Functores, y posiblemente no sea necesario
+	* @brief create Callback from callable
+	* @remarks this class dates back to the early 2000s, when no C++11 existed at all. This class is a kind of std::function. But
+	* can't be replaced because the operator == is used intensively, but is deleted in the standard for some deep reason that are not applicable here.
+	* This operator is neccesary in order to be able to compare two Callback instances, used as a base tool for unsubscribing in ::core::CallbackSubscriptor
 	*/
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
 		struct use_functor_t
@@ -22,7 +24,7 @@ namespace core
 		const static use_functor_t use_functor = use_functor_t();
 		const static use_function_t use_function = use_function_t();
 
-		
+///@cond HIDDEN_SYMBOLS		
 		template <bool b,class T,class TRet,VARIABLE_ARGS >
 		struct _CallbackCreator
 		{
@@ -43,7 +45,7 @@ namespace core
 				//return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
 			}
 		};
-
+		
 		template< class TRet, VARIABLE_ARGS >
 		class  Callback_Base
 		{
@@ -127,9 +129,13 @@ namespace core
 			return *this;
 		}
 
+///@endcond
 		//CLASS Callback
 		template <class TRet, VARIABLE_ARGS>
-		class Callback : public Callback_Base< TRet,VARIABLE_ARGS_DECL >
+		class Callback :
+		///@cond HIDDEN_SYMBOLS
+		 public Callback_Base< TRet,VARIABLE_ARGS_DECL >
+		///@endcond
 		{
 		public:
 			/**

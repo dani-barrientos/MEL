@@ -518,7 +518,7 @@ second job, t1
 First job
 Result value = [First Job,10,(5,8.7)]
 \endcode
-Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, as a tuple. Also, 
+Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, **as a tuple**. Also, 
 the third job returns a tuple (this is how \ref ::execution::parallel_convert "parallel_convert" works), and it's shown between parenthesis.
 ### More complex sample
 algo más complejo, tal vez el de la media del vector. pero me gustaria que fuese practico y pudiesehacer transfer y cosas asi

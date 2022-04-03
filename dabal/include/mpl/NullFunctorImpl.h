@@ -1,14 +1,5 @@
 
 
-/**
-* @class NullFunctor
-* Always return void. If you need to return another type, use ReturnAdaptor over NullFunctor
-* create a functor with no operation. usefull if some code needs a functor but you don't want to execute
-* nothing
-*
-* Example:
-*/
-
 namespace mpl
 {
 	
@@ -26,8 +17,20 @@ namespace mpl
 		}
 	};
 	///@endcond
+	/**
+* @class NullFunctor
+* Always return void. If you need to return another type, use ReturnAdaptor over NullFunctor
+* create a functor with no operation. usefull if some code needs a functor but you don't want to execute
+* nothing
+*
+* Example:
+*/
+
 	template < VARIABLE_ARGS>
-	class NullFunctor : public NullFunctor_Base< VARIABLE_ARGS_DECL>
+	class NullFunctor 
+	///@cond HIDDEN_SYMBOLS
+	: public NullFunctor_Base< VARIABLE_ARGS_DECL>
+	///@endcond
 	{
 	public:
 		NullFunctor(){};

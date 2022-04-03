@@ -11,7 +11,7 @@ namespace tasking
 	using std::list;
 	using core::Callback;
 	/**
-	* class similar to Event Class (which is for thread synchronization) but for Process (with Microthread behaviour)
+	* @brief class similar to Event Class (which is for thread synchronization) but for Process (with Microthread behaviour)
 	* Multithread safe
 	*/
 	class DABAL_API Event_mthread

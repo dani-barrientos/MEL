@@ -2,12 +2,12 @@
 /**
 \mainpage Introduction
 \a \b dabal is a library  for cooperative multitasking and, quite simple but useful, parallelism functionalities. The base piece of the system es de so called \ref ::tasking::Process "microthread",
-which can be seen as lightweight threads for cooperative multitasking (similar, but not equal, in concept as Windows fibers o coroutines)
+which can be seen as lightweight threads for cooperative multitasking (similar, but not equal, in concept as Windows fibers o coroutines).
 From now on, we will use *Process* instead of *microthread* for readability and to capture de idea that we are talking about processes (tasks), but without forgetting their *microthread* capabilities,
 which are almost the same as a usually a thread has: \ref ::tasking::Process::wait "wait", \ref ::tasking::Process::sleep "sleep", \ref ::tasking::Process::switchProcess "switchProcess" (usually known as *yield*)
 
-\ref ::tasking::Process "Processes", \ref ::tasking::ProcessScheduler "schedulers" and \ref ::tasking::Runnable "runnables" together form the basic task system: a *Runnable* is an object
-with a ::tasking::ProcessScheduler and this is an aggregate of ::tasking::Process.
+\ref ::tasking::Process "Processes", \ref ::tasking::ProcessScheduler "schedulers" and \ref ::tasking::Runnable "runnables" together form the basic task system: a \ref ::Tasking::Result "Runnable" is an object
+with a \ref ::tasking::ProcessScheduler "ProcessScheduler" and this is an aggregate of \ref ::tasking::Process "Process".
 
 Also, we have \ref ::core::ThreadRunnable "ThreadRunnable" which is a \ref ::core::Thread "Thread" specialization to behave as a \ref ::tasking::Runnable "Runnable", so being able to be posted \ref ::tasking::Process "processes" (remember, microthreads, so with *microthreading* capabilities)
 On top of this basic tasking system. we have some constructs that allows to apply modern idioms to our code, specifically asynchronous programming

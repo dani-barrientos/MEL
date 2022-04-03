@@ -5,6 +5,7 @@ namespace tasking
 {
 	using ::tasking::Event_mthread;
 	/**
+	 * @brief A critical section for synchronizing microthreads (AKA \ref ::tasking::Process "Process")
 	* not multihread safe
 	*/
 	class DABAL_API CriticalSection_mthread

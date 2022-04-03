@@ -1,23 +1,4 @@
 
-/**
-* @class ParamAdder
-* @brief create new functor with new param for operator() AFTER any other param
-* usage:
-*	suppose we have a function with signature: int f(  )
-*	and we need this function to adapt to a function with one argument of, for example, float type. Then do:
-*	addParam<int,float,void>( f );
-*	That create a function wich receives a float, so you call that function this way:
-*			addParam<int,float,void>( f )( 6.7f ); where first argument is return type, second is new type and else original arguments
-*
-* same is valid for functors with more params and other return values. Example:
-*		void f( int, float ) --> want to convert to void f( int, float, char );
-*	addParam<void,char,int,float>( f )(5,6.7f,'a');
-*
-*
-* this is neccesary in a lot of cases, for example, when chaining functors with different arguments types
-*/
-
-
 namespace mpl
 {
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
@@ -49,8 +30,28 @@ namespace mpl
 		T mFunctor;
 	};
 	///@endcond
+	/**
+	* @class ParamAdder
+	* @brief create new functor with new param for operator() AFTER any other param
+	* usage:
+	*	suppose we have a function with signature: int f(  )
+	*	and we need this function to adapt to a function with one argument of, for example, float type. Then do:
+	*	addParam<int,float,void>( f );
+	*	That create a function wich receives a float, so you call that function this way:
+	*			addParam<int,float,void>( f )( 6.7f ); where first argument is return type, second is new type and else original arguments
+	*
+	* same is valid for functors with more params and other return values. Example:
+	*		void f( int, float ) --> want to convert to void f( int, float, char );
+	*	addParam<void,char,int,float>( f )(5,6.7f,'a');
+	*
+	*
+	* this is neccesary in a lot of cases, for example, when chaining functors with different arguments types
+	*/
 	template <class T,class TRet,class NewArg,VARIABLE_ARGS>
-	class ParamAdder : public ParamAdder_Base<T,TRet,NewArg>
+	class ParamAdder 
+	///@cond HIDDEN_SYMBOLS
+	: public ParamAdder_Base<T,TRet,NewArg>
+	///@endcond
 	{
 	public:
 		ParamAdder( T&& functor ):ParamAdder_Base<T,TRet,NewArg>(std::forward<T>(functor)){};

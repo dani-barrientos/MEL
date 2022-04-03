@@ -1,12 +1,5 @@
 #include <core/TLS.h>
 using core::TLS;
-#ifdef _AIRPLAY
-#include <map>
-using std::map;
-
-static TLS::TLSKey gCurrentKey = 0; //TODO para salri del paso en AIRPLAY!!
-static map< TLS::TLSKey,const void* > gKeysMap;
-#endif
 bool TLS::createKey(TLSKey& key ) {
 #ifdef _WINDOWS
 	DWORD result = TlsAlloc();

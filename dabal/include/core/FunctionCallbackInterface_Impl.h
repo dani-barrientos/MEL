@@ -1,4 +1,5 @@
 
+///@cond HIDDEN_SYMBOLS
 namespace core
 {
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
@@ -24,7 +25,7 @@ namespace core
 		FunctionCallbackInterface_Base( const FunctionCallbackInterface_Base& ev2 ) : mFunction( ev2.mFunction )
 		{
 		}
-		//function<> objects haven´t operator=== available, so we have to invalidate here
+		//function<> objects havenï¿½t operator=== available, so we have to invalidate here
 		bool operator==(const CallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>& ev2) const override
 		{
 			return false;
@@ -56,7 +57,7 @@ namespace core
 		FunctionCallbackInterface_Base(const FunctionCallbackInterface_Base& ev2) : mFunction(ev2.mFunction)
 		{
 		}
-		//function<> objects haven´t operator=== available, so we have to invalidate here
+		//function<> objects havenï¿½t operator=== available, so we have to invalidate here
 		bool operator==(const CallbackInterface_Base<TRet, void>& ev2) const override
 		{
 			return false;
@@ -82,7 +83,7 @@ namespace core
 		{
 			return FunctionCallbackInterface_Base<TRet,VARIABLE_ARGS_DECL>::mFunction( VARIABLE_ARGS_USE );
 		}
-		//function<> objects haven´t operator=== available, so we have to invalidate here
+		//function<> objects havenï¿½t operator=== available, so we have to invalidate here
 		bool operator==(const FunctionCallbackInterface& ev2) const 
 		{
 			return false;
@@ -164,7 +165,7 @@ namespace core
 		{
 			return FunctionCallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>::mFunction( VARIABLE_ARGS_USE );
 		}
-		//function<> objects haven´t operator=== available, so we have to invalidate here
+		//function<> objects havenï¿½t operator=== available, so we have to invalidate here
 		bool operator==(const FunctionCallbackInterface<TRet,VARIABLE_ARGS_DECL,void>& ev2) const 
 		{
 			return false;
@@ -184,4 +185,4 @@ namespace core
 }
 
 
-
+///@endcond

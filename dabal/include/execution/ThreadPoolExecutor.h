@@ -7,14 +7,17 @@ namespace execution
     using ::parallelism::ThreadPool;
    
     /**
-     * @brief Executor specialization using a ThreadPool as execution agent
+     * @brief Concrete options for this type of executor
      */
-     struct ThreadPoolExecutorOpts
+    struct ThreadPoolExecutorOpts
     {
         bool independentTasks = true; //<! if true, try to make each iteration independent
         //opcion temporal, espero poder quitarla
         bool autoKill = true; //!<if true, launched tasks will be autokilled if the Runnable receives a kill signal, else, Runanble won't finish until tasks finished
     };
+        /**
+     * @brief Executor specialization using a ThreadPool as execution agent
+     */
     template <> class Executor<ThreadPool>
     {
         public:
@@ -71,6 +74,7 @@ namespace execution
         exopts.groupTasks = !getOpts().independentTasks;
         return ::parallelism::_for(getPool().lock().get(),exopts,std::forward<I>(begin),std::forward<I>(end),std::forward<F>(functor),increment );   
     }
+    ///@cond HIDDEN_SYMBOLS
     namespace _private
     {
         template <class T> class ValueWrapper
@@ -103,6 +107,7 @@ namespace execution
             FutType mFut;
         };
     }
+    ///@endcond
     template <class TArg,class ... FTypes> ::parallelism::Barrier Executor<ThreadPool>::parallel(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except, FTypes&&... functions)
     {            
         ThreadPool::ExecutionOpts exopts;

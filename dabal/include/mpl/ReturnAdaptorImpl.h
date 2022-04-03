@@ -1,16 +1,3 @@
-/**
-* @class ReturnAdaptor
-* adapt functor to return specific values
-*
-* Example:
-* you have the function:
-*		int funcion( float,char )
-* and you want to create a new function as this but returning a boolean, say true
-*
-*	returnAdaptor<float,char>( funcion, true )
-* so this created a new function as "funcion" but returning true
-*/
-
 
 namespace mpl
 {
@@ -82,8 +69,23 @@ namespace mpl
 	};
 
 	///@endcond
+	/**
+	* @class ReturnAdaptor
+	* adapt functor to return specific values
+	*
+	* Example:
+	* you have the function:
+	*		int funcion( float,char )
+	* and you want to create a new function as this but returning a boolean, say true
+	*
+	*	returnAdaptor<float,char>( funcion, true )
+	* so this created a new function as "funcion" but returning true
+	*/
 	template <class TRet, class T, VARIABLE_ARGS >
-	class ReturnAdaptor : public ReturnAdaptor_Base<TRet, T >
+	class ReturnAdaptor
+	///@cond HIDDEN_SYMBOLS
+	 : public ReturnAdaptor_Base<TRet, T >
+	 ///@endcond
 	{
 	public:
 		ReturnAdaptor( const T& functor, typename TypeTraits<TRet>::ParameterType retorno ):ReturnAdaptor_Base<TRet, T >( functor, retorno ){};

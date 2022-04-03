@@ -1,4 +1,8 @@
 #pragma once
+/**
+* @file 
+* Typical Traits  for types
+*/
 
 #include <mpl/BasicTypes.h>
 using mpl::NullType;
@@ -6,15 +10,9 @@ using mpl::NullType;
 #include <mpl/_If.h>
 using mpl::_if;
 #include <mpl/CommonTypes.h>
-#include <type_traits>  //TODO tratar de no meterlo porque pa eso ya este archivo sobraría en gran parte
+#include <type_traits>  //TODO tratar de no meterlo porque pa eso ya este archivo sobrarï¿½a en gran parte
 
-/**
-* @class TypeTraits
-* Typical Traits  for types
-* @todo según  "C++ Template Metaprogramming: Concepts, Tools, and Techniques from Boost and Beyond"
-* es mejor tenerlos como metafunciones y no le falta razón
-*
-*/
+
 namespace mpl
 {
 	template <class U>
@@ -245,7 +243,7 @@ namespace mpl
 
 	//COMPRUEBA SI LA CLASE TIENE DEFINIDO EL operator==
 	//TODAVIA MUY TEMPORAL HASTA TENER METODO GENERALIZADO
-	//!@todo todavía no valido cuando el operator pertenece a una clase base de T
+	//!@todo todavï¿½a no valido cuando el operator pertenece a una clase base de T
 /*	template <class T> struct ComparableTraits
 	{
 		template <class U, bool (U::*)(const U&) const> struct AUXSTRUCT{};
@@ -326,8 +324,8 @@ namespace mpl
 		//metodo no totalmente preciso pero valido casi siempre
 		typedef typename _if< (isClass && sizeof(typename std::decay<T>::type)<= sizeof(int))||!isClass,T,typename ReferenceTraits<T>::ReferenceType >::Result		ParameterType;  //mejor parametro para pasar a funciones. Recordad que pone el const en las referencias
        // typedef typename _if< (isClass && sizeof(T)<= sizeof(int))||!isClass,T,T& >::Result		ReturnType; //para retorno de funciones. CREO QUE NO LO TENGO BIEN;LO HICE A PRISA
-		//TODO no válido para T == void
-		// cuidado si tenemos un struct vacio da sizeof = 1, pero llamará a constructor de copia(si hay...)typedef typename _if< sizeof(T) <= sizeof(int),T,typename ReferenceTraits<T>::ReferenceType >::Result		ParameterType;
+		//TODO no vï¿½lido para T == void
+		// cuidado si tenemos un struct vacio da sizeof = 1, pero llamarï¿½ a constructor de copia(si hay...)typedef typename _if< sizeof(T) <= sizeof(int),T,typename ReferenceTraits<T>::ReferenceType >::Result		ParameterType;
 
 		typedef typename UnRef<T>::Result	UnReferenced;
 

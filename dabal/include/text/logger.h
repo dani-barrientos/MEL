@@ -8,7 +8,6 @@
 #include <string>
 /**
  * @brief the only sense of this file is as a wrapper to spdlog in order t oavoid its use if no used in any concrete platform
- * 
  */
 namespace text
 {

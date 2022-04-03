@@ -24,7 +24,7 @@ namespace core
 	
 	 /**
 	 * @class Thread
-	 * Platform-independent thread implementation.
+	 * @brief Platform-independent thread implementation.
 	 * Provides generic methods for performing common thread-based tasks like
 	 * handling priorities, sleeping, joining, and exposes additional methods for 
 	 * queuing external tasks to be executed within the main thread loop (see Thread::post).<br>
@@ -36,7 +36,6 @@ namespace core
 	 * Please note that it's generally better to inherit from Thread_Impl insted of Thread directly, as
 	 * it provides a few off-the-shelf features like task execution and few more things. Thread can of course
 	 * be inherited, but will require additional programming to handle things safely.
-	 * 
 	 */
 	class DABAL_API Thread
 	{

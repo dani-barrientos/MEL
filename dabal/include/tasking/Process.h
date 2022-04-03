@@ -208,7 +208,7 @@ namespace tasking
 		template <class F>
 		static ESwitchResult waitAndDo( unsigned int msegs,F postWait ) OPTIMIZE_FLAGS;
 		/**
-		* pause ##current## process. To reactivate you must use wakeUp
+		* @brief pause **current process**. To reactivate you must use wakeUp
 		* @return true if process received kill signal
 		* @see switchProcess for comments
 		*/

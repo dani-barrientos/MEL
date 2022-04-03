@@ -1,4 +1,7 @@
-/**
+
+namespace mpl
+{
+/*
 * macros and template to know if an object has a specific member function
 * usage. Example: suppose you want to know if some Class has a member function int pepito( float,char) const
 * Then you must use macro DECLARE_HASMEMBER as follows:
@@ -14,8 +17,6 @@
 * @remarks  THIS IS NOT ONLY VALID( yet ) FOR MEMBERS BELONGING TO PARENT CLASSES. So if,in the previous example, MiClase inherits from 
 * MiClase_Base and this class has pepito method then, Haspepito<MiClase>::Result is FALSE (this will be addressed in a future)
 */
-namespace mpl
-{
 	#define DECLARE_HASMEMBER(func_name,TRet,args, attributes ) \
 	template <class T> struct Has##func_name \
 	{ \

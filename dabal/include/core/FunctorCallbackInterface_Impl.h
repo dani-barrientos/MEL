@@ -1,4 +1,4 @@
-
+///@cond HIDDEN_SYMBOLS
 namespace core
 {
 #if VARIABLE_NUM_ARGS == VARIABLE_MAX_ARGS
@@ -173,4 +173,4 @@ namespace core
 }
 
 
-
+///@endcond
