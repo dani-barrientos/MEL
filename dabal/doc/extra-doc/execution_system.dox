@@ -12,7 +12,7 @@ system, which is described in another sections. These tools are enoguh for simpl
 
  For example, let's assume we want to execute a task *t1* in some thread, then, when the task is finished, execute another task *t2* and, when this is finished, execute two parallel tasks *t3* and *t4* in some thread pool.
  With the *basic* tools in dabal, this is not so much hard, but a kind of mess. The code could be:
- \code
+ \code{.cpp}
   auto th1 = ThreadRunnable::create();
 
   auto fut = th1->excute<void>([]()
@@ -54,7 +54,7 @@ in any point of the chain. And, of course, think how to resolve the same problem
 
 Instead, with the execution system, built on top of those functionalities, we could write:
 
-\code
+\code{.cpp}
     auto th1 = ThreadRunnable::create(true);	
 	execution::Executor<Runnable> exr(th1); //Create executor based on ThreadRunnable
     parallelism::ThreadPool::ThreadPoolOpts opts;
@@ -96,11 +96,11 @@ Dabal provides two types of executors, the ones used in this example: an executo
 Both has microthread capabilities, meaning that the tasks executed in any of then can take advange of cooperative multitasking (see ::Tasking::Process).
 Some examples will be provided in the next sections trying to describe al the functionalities with simple cases, and showing all the power of this system.
 ## Usage samples
-The following samples are for educational purposes only. This means that the task acomplished may not make any sense or that aren't dont in the best possible way. The goal
+The following samples are for educational purposes only. This means that the tasks acomplished may not make any sense or that they aren't done in the best possible way. The goal
 is to show the different functionalities and its power.
 All the samples are done without worrying on the underlying executor, and implemented as template functions.
 This functions could be used as:
-\code
+\code{.cpp}
 	//create a RunnableExecutor
 	auto th = ThreadRunnable::create(true);			
 	execution::Executor<Runnable> exr(th);
@@ -121,7 +121,7 @@ A simple execution chain. This code consists of three execution steps:
 	- second task converting this float to string, a passing it to the next step
 	- third step launch three *parallel* tasks. This doesn't mean neccesarily that that task will be executed in parallel,
 	is just a hint so that the executor will do it in that way if it hast the capacity.
-\code
+\code{.cpp}
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
 	auto th = ThreadRunnable::create();
@@ -159,21 +159,25 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 }
 \endcode
 Output will be:
-\code
+\code{.cpp}
 Parallel 1. 16.500000 hello!
 Parallel 2. 16.500000 hi!
 Parallel 2. 16.500000 whats up!
 Result value = 16.500000
 \endcode
-Although the samples are shown using *lambdas* for clarity, any other callable can be used, as for example
-**PONER EJEMPLO EJECUTANDO OTRA FUNCION Y OTRA CON BIND->luego contar el tema del bind y noexcept
+Although the samples are shown using *lambdas* for clarity, any other callable can be used:
+\code{.cpp}
+
+\endcode
+\warning std::bind doesn't preserve **noexcept** specifier ( https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind)- This is an important
+aspect to take into account as is explained in [this section](#error_management)
 ### Using references
 In this example, it's shown how to use references to variables. In order to be able to pass a reference to \ref ::execution::launch "launch" or to \ref ::execution::inmediate "inmediate"
 we must use [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref), because it's not possible to deduce what the user wants only by the type of the parameter.
 Also, when a function wants to return a reference to the next function in the chain, it's neccesary to indicate it without auto deduction. So, if using a lambda as in the examples,
 you must specify the return type.
 
-\code
+\code{.cpp}
 template <class ExecutorType> void _sampleReference(ExecutorType ex)
 {	
 	string str = "Hello";
@@ -215,14 +219,14 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 }
 \endcode
 And the output will be:
-\code
+\code{.cpp}
 Result value = Hello Dani. How are you?Bye!See you!
 Original str = Hello Dani. How are you?Bye!
 \endcode
 As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will
  receive a copy.
 Also just as a way to better understanding, the previous code is **functionally equivalent** to this other (redundant parts are removed):
-\code
+\code{.cpp}
 auto res = ::tasking::waitForFutureMThread(
     execution::start(ex)
     | execution::inmediate(std::ref(str))
@@ -255,14 +259,14 @@ auto res = ::tasking::waitForFutureMThread(
 Instead of launching a callable intially, the chain of execution is started with a \ref ::execution::start "start", followed by a \ref ::execution::inmediate "inmediate".
 Although in this example this doesn't improves anything, can be usefull in other situations.
 
-### Error management
+### Error management	{#error_management}
 This is a very important part and need to be addressed carefully. When using any of the wait functions (\ref ::tasking::waitForFutureMThread or \ref ::core::waitForFutureThread)
 an exception will be thrown if any error occurs while execution that sequence of jobs the program is waiting for. If this wait mechanisms are not used, the returned \ref ::execution::ExFuture
 from the execution chain must be checked for error (see \ref ::core::Future_Common::getValue "Future::getValue" and \ref ::core::FutureValue)
 
 Let's see an example code:
 
-\code
+\code{.cpp}
 template <class ExecutorType> void _sampleError1(ExecutorType ex)
 {	
 	string str = "Hello";
@@ -317,7 +321,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 }
 \endcode
 Output will be:
-\code
+\code{.cpp}
 [error] Some error occured!! Reason: This is an error
 [info] Original str = Hello Dani. How are you?
 \endcode
@@ -329,7 +333,7 @@ Things to take into account:
  - the *waitForFuture* functions will throw a \ref ::core::WaitException "WaitException" if the wait was unsuccessful, as process killed, timeout,..
 
 But, what if we want to capture the error at some point and continue the chain of jobs? See next example:
-\code
+\code{.cpp}
 template <class ExecutorType> void _sampleError2(ExecutorType ex)
 {	
 	string str = "Hello";
@@ -383,7 +387,7 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 }
 \endcode
 And the output will be:
-\code
+\code{.cpp}
 [info] Result value = Error caught!! See you!
 [info] Original str = Hello Dani. How are you?
 \endcode
@@ -394,7 +398,7 @@ this function will be ignored.
 ### Changing executor
 In this example we will show how to tranfer execution from one executor to another in the same flow. This is acomplished by the function \ref ::execution::transfer "transfer".
 It's better seen with an example:
-\code
+\code{.cpp}
 void _sampleTransfer()
 {	
 	auto th = ThreadRunnable::create();
@@ -447,7 +451,7 @@ The code consists of two diferent executors, one based on a ThreadRunnable and o
 the ThreadRunnable executor and just before the loop, execution is transferred to the other. 
 ### Converging several job flows
 Here an example on how to create several execution flows and merge their work.
-\code
+\code{.cpp}
 template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
 {	
 	auto th = ThreadRunnable::create();
@@ -511,7 +515,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 	},0,::tasking::Runnable::_killFalse);
 }
 \endcode
-\code
+\code{.cpp}
 And the output is:
 second job, t2
 second job, t1

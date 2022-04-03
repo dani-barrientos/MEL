@@ -2,6 +2,7 @@
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <functional>
 using std::string;
 #include <memory>
 using namespace std::literals::string_literals;
@@ -332,6 +333,54 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		}
 	},0,::tasking::Runnable::_killFalse);
 }
+class MyClass1
+{
+	public:
+		float f1(float p1,float p2) noexcept
+		{
+			return p1+p2;
+		};
+		string f2(float& p)
+		{
+			return std::to_string(p);
+		}
+};
+//comentar el tema del noexcept del bind y enlace a mi pregunta
+template <class ExecutorType> void _sampleCallables(ExecutorType ex)
+{
+	auto th = ThreadRunnable::create();
+	MyClass1 obj;
+	 using namespace std::placeholders;
+	th->fireAndForget([ex,&obj] () mutable
+	{
+
+		auto res = ::tasking::waitForFutureMThread(
+			execution::launch(ex,
+				std::bind(&MyClass1::f1,&obj,6.7f,_1),10.5f)
+			| std::bind(&MyClass1::f2,&obj,_1) tengo problema con referencia en floAt
+			
+			| execution::parallel( 
+				[](string& str)
+				{					
+					text::info("Parallel 1. {}",str+" hello!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" hi!");
+				},
+				[](string& str)
+				{
+					text::info("Parallel 2. {}",str+" whats up!");
+				}
+			)
+		);
+		if (res.isValid())
+		{
+			::text::info("Result value = {}",res.value());
+		}
+	},0,::tasking::Runnable::_killFalse);
+
+}
 //más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
 //me falta el PARALLEL_CONVERT
 //tal vez algun ejemplo serio de verdad como colofon
@@ -354,6 +403,7 @@ void test_execution::samples()
 	//_sampleError1(exr);
 	//_sampleError2(extp);
 	//_sampleTransfer();
-    _sampleSeveralFlows(exr,extp);
+   // _sampleSeveralFlows(exr,extp);
+   _sampleCallables(exr);
 	text::info("HECHO");
 }

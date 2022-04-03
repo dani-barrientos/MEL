@@ -12,25 +12,25 @@
 	class ExFuture : public Future<ResultType>
     {
         public:
-            ExFuture(const ExFuture& ob):Future<ResultType>(ob),ex(ob.ex){}
-            ExFuture(ExFuture&& ob):Future<ResultType>(std::move(ob)),ex(std::move(ob.ex)){}
-            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
-            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType>(val),ex(aEx){}
-            ExFuture(Executor<ExecutorAgent> aEx,ResultType&& val):Future<ResultType>(std::move(val)),ex(aEx){}
+            ExFuture(const ExFuture& ob):Future<ResultType>(ob),agent(ob.agent){}
+            ExFuture(ExFuture&& ob):Future<ResultType>(std::move(ob)),agent(std::move(ob.agent)){}
+            ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}            
+            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType>(val),agent(aEx){}
+            ExFuture(Executor<ExecutorAgent> aEx,ResultType&& val):Future<ResultType>(std::move(val)),agent(aEx){}
 		
             ExFuture& operator= ( const ExFuture& f )
             {
                 Future<ResultType>::operator=( f );
-                ex = f.ex;
+                agent = f.agent;
                 return *this;
             };
             ExFuture& operator= ( ExFuture&& f )
             {
                 Future<ResultType>::operator=( std::move(f));
-                ex = std::move(f.ex);
+                agent = std::move(f.agent);
                 return *this;
             };
-            Executor<ExecutorAgent> ex;
+            Executor<ExecutorAgent> agent; //!< execution agent associated with this instance
 		
     };
     ///@cond HIDDEN_SYMBOLS
@@ -39,24 +39,24 @@
 	class ExFuture<ExecutorAgent,ResultType&> : public Future<ResultType&>
     {
         public:
-            ExFuture(const ExFuture& ob):Future<ResultType&>(ob),ex(ob.ex){}
-            ExFuture(ExFuture&& ob):Future<ResultType&>(std::move(ob)),ex(std::move(ob.ex)){}
-            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
-            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType&>(val),ex(aEx){}
+            ExFuture(const ExFuture& ob):Future<ResultType&>(ob),agent(ob.agent){}
+            ExFuture(ExFuture&& ob):Future<ResultType&>(std::move(ob)),agent(std::move(ob.agent)){}
+            ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}            
+            ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType&>(val),agent(aEx){}
 		
             ExFuture& operator= ( const ExFuture& f )
             {
                 Future<ResultType&>::operator=( f );
-                ex = f.ex;
+                agent = f.agent;
                 return *this;
             };
             ExFuture& operator= ( ExFuture&& f )
             {
                 Future<ResultType&>::operator=( std::move(f));
-                ex = std::move(f.ex);
+                agent = std::move(f.agent);
                 return *this;
             };
-            Executor<ExecutorAgent> ex;
+            Executor<ExecutorAgent> agent; //!< execution agent associated with this instance
 		
     };
     //specialization for void
@@ -64,25 +64,25 @@
 	class ExFuture<ExecutorAgent,void> : public Future<void>
     {
         public:
-            ExFuture(const ExFuture& ob):Future<void>(ob),ex(ob.ex){}
-            ExFuture(ExFuture&& ob):Future<void>(std::move(ob)),ex(std::move(ob.ex)){}
-            ExFuture(Executor<ExecutorAgent> aEx):ex(aEx){}            
-            ExFuture(Executor<ExecutorAgent> aEx,int dummy):Future<void>(dummy),ex(aEx)
+            ExFuture(const ExFuture& ob):Future<void>(ob),agent(ob.agent){}
+            ExFuture(ExFuture&& ob):Future<void>(std::move(ob)),agent(std::move(ob.agent)){}
+            ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}            
+            ExFuture(Executor<ExecutorAgent> aEx,int dummy):Future<void>(dummy),agent(aEx)
             {}            
             ExFuture& operator= ( const ExFuture& f )
             {
                 Future<void>::operator=( f );
-                ex = f.ex;
+                agent = f.agent;
                 return *this;
             };
             ExFuture& operator= ( ExFuture&& f )
             {
                 Future<void>::operator=( std::move(f));
-                ex = std::move(f.ex);
+                agent = std::move(f.agent);
                 return *this;
             };
 
-            Executor<ExecutorAgent> ex;
+            Executor<ExecutorAgent> agent; //!< execution agent associated with this instance
 		
     };
     ///@endcond

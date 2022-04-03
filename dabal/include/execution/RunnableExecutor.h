@@ -73,7 +73,7 @@ namespace execution
             if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
             {
                 //use the exception pointer hasn't sense here because noexcept was specified
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                     [f = std::forward<F>(f),b](ExFuture<Runnable,TArg>& fut) mutable noexcept
                     {                                        
                         f(fut.getValue().value());
@@ -81,7 +81,7 @@ namespace execution
                     },fut);
             }else
             {
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                 [f = std::forward<F>(f),b,&except](ExFuture<Runnable,TArg>& fut) mutable
                 {                               
                     try
@@ -101,7 +101,7 @@ namespace execution
         {
             if constexpr (std::is_nothrow_invocable<F>::value)
             {
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                     [f = std::forward<F>(f),b](ExFuture<Runnable,void>& fut) mutable noexcept
                     {                    
                         f();
@@ -109,7 +109,7 @@ namespace execution
                     },fut);
             }else
             {
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                     [f = std::forward<F>(f),b,&except](ExFuture<Runnable,void>& fut) mutable
                     {               
                         try
@@ -133,7 +133,7 @@ namespace execution
         {
             if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
             {
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                     [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg>& fut) mutable noexcept
                     {                                        
                         std::get<n>(output) = f(fut.getValue().value());
@@ -141,7 +141,7 @@ namespace execution
                     },fut);
             }else
             {
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                     [f = std::forward<F>(f),b,&output,&except](ExFuture<Runnable,TArg>& fut) mutable
                     {            
                         try
@@ -161,7 +161,7 @@ namespace execution
         {
             if constexpr (std::is_nothrow_invocable<F>::value)
             {
-                execution::launch(fut.ex,
+                execution::launch(fut.agent,
                     [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void>& fut) mutable noexcept
                     {                    
                         std::get<n>(output) = f();
@@ -169,7 +169,7 @@ namespace execution
                     },fut);
             }else
             {
-                 execution::launch(fut.ex,
+                 execution::launch(fut.agent,
                     [f = std::forward<F>(f),b,&output,&except](ExFuture<Runnable,void>& fut) mutable
                     {   
                         try
