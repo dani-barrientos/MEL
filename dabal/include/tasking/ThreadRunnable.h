@@ -8,7 +8,7 @@ using tasking::Runnable;
 #ifndef USE_CUSTOM_EVENT
 #include <condition_variable>
 #endif
-namespace core
+namespace tasking
 {
 	/**
 	* @class ThreadRunnable
@@ -106,7 +106,7 @@ namespace core
 	#endif
         volatile bool mEnd; // request
         EThreadState mState;
-        Event mPauseEV;
+        ::core::Event mPauseEV;
 	
 		::core::ECallbackResult _processAwaken(std::shared_ptr<Process> p);
         void _execute();       

@@ -40,7 +40,7 @@ namespace execution
                 if ( !mRunnable.expired())
                 {         
                     //it seems that noexcept specifier is not preserved in bind, so need to use a lambda
-                   //mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                   //mRunnable.lock()->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);
                   //if constexpr (noexcept(f(arg)))
                     mRunnable.lock()->execute<TRet>(
                         [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept(std::is_nothrow_invocable<F,TArg>::value) ->TRet
@@ -48,14 +48,14 @@ namespace execution
                             return f(arg);
                         },
                         static_cast<Future<TRet>>(output)
-                    ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    ,mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);
                 }          
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const noexcept
             {
                 if ( !mRunnable.expired())
                 {
-                    mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);                   
+                    mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);                   
                 }            
             }
             template <class I, class F>	 ::parallelism::Barrier loop( I&& begin, I&& end, F&& functor, int increment);
@@ -234,7 +234,7 @@ namespace execution
                     {
                         functor(i);
                         barrier.set();
-                    },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
+                    },0,autoKill?Runnable::killTrue:Runnable::killFalse,!mustLock
                 );
             }
         }else
@@ -247,7 +247,7 @@ namespace execution
                             functor(i);            
                         }            
                         barrier.set();
-                    },0,autoKill?Runnable::_killTrue:Runnable::_killFalse,!mustLock
+                    },0,autoKill?Runnable::killTrue:Runnable::killFalse,!mustLock
                 );           
         }
         if ( mustLock )

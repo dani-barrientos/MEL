@@ -253,8 +253,8 @@ namespace tasking
 		virtual bool finished() = 0;
 
 		//helper functions to use as the "killFunctor" parameter in post(),fireAndForget(), and execute()
-		static std::function<bool()> _killTrue;
-		static std::function<bool()> _killFalse;
+		static std::function<bool()> killTrue;
+		static std::function<bool()> killFalse;
 		/**
 		* Posts a new execution request over a functor
 		* The execution is NOT guaranteed to be taken into account inmediatly.
@@ -270,7 +270,7 @@ namespace tasking
 		template <class ProcessType = ::tasking::_private::RunnableTask,class AllocatorType = ::tasking::_private::Allocator<ProcessType>, class F,class KF = const std::function<bool()>&>
 		std::shared_ptr<Process> post(
 			F&& task_proc,
-			KF&& killFunction=_killFalse,
+			KF&& killFunction=killFalse,
 			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
 			unsigned int period = 0,unsigned int startTime = 0,
 			bool lockScheduler = true);
@@ -283,7 +283,7 @@ namespace tasking
 		std::shared_ptr<Process> fireAndForget(
 			F&& task_proc,
 			unsigned int startTime = 0,
-			KF&& killFunction=_killTrue,
+			KF&& killFunction=killTrue,
 			bool lockScheduler = true);
 		/**
 		* @brief Executes a function in a context of the Runnable.
@@ -294,9 +294,9 @@ namespace tasking
 		* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 		*/
 		template <class TRet,class F,class KF = const std::function<bool()>&> 
-			Future<TRet> execute( F&& function,KF&& killFunction=_killFalse) noexcept;
+			Future<TRet> execute( F&& function,KF&& killFunction=killFalse) noexcept;
 		template <class TRet,class F,class KF = const std::function<bool()>&> 
-			Future<TRet> execute( F&& function,Future<TRet>,KF&& killFunction=_killFalse) noexcept;
+			Future<TRet> execute( F&& function,Future<TRet>,KF&& killFunction=killFalse) noexcept;
 
 		
 				

@@ -163,7 +163,7 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 		{
 			::text::info("Result value = {}",res.value());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 Output will be:
@@ -222,7 +222,7 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 		{
 			::text::info("Result value = {}",res.value());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 And the output will be:
@@ -279,7 +279,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 			::text::info("Result value = {}",res.value());
 			::text::info("Original str = {}",str);
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 And the output will be:
@@ -381,7 +381,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 			::text::error("Some error occured!! Unknwon reason: {}");
 		}
 		::text::info("Original str = {}",str);
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 Output will be:
@@ -447,7 +447,7 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 			::text::error("Some error occured!! Reason: {}",e.what());
 		}
 		::text::info("Original str = {}",str);
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 And the output will be:
@@ -508,7 +508,7 @@ void _sampleTransfer()
 		{
 			::text::error("Some error occured!! Reason: {}",e.what());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 The code consists of two diferent executors, one based on a ThreadRunnable and other based on a ThreadPool. The eecutions start in
@@ -576,7 +576,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		{
 			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 \code{.cpp}

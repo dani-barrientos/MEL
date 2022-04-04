@@ -1,6 +1,6 @@
 #pragma once
-#include <core/ThreadRunnable.h>
-using core::ThreadRunnable;
+#include <tasking/ThreadRunnable.h>
+using tasking::ThreadRunnable;
 #include <parallelism/Barrier.h>
 using parallelism::Barrier;
 #include <mpl/Tuple.h>

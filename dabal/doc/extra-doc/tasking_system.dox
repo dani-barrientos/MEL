@@ -2,4 +2,8 @@
 /**
 \page tasking_system Tasking System
 BLA;BLA;BLA
+
+meter diagrama
+explicar bien que la destruir un threadrunnable se ahce join y tal..
+por atnto mejor meter los threadrunnable aqui
 */

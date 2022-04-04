@@ -1,8 +1,9 @@
 #include "test.h"
+#include "test_samples.h"
 using namespace test_threading;
 #include <iostream>
-#include <core/ThreadRunnable.h>
-using core::ThreadRunnable;
+#include <tasking/ThreadRunnable.h>
+using tasking::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
@@ -154,7 +155,7 @@ static int _testsDebug(tests::BaseTest* test)
 			fut.setError( "error infame");
 			//return ::tasking::EGenericProcessResult::KILL;
 			return ::tasking::EGenericProcessResult::CONTINUE;
-		},Runnable::_killTrue,1000);
+		},Runnable::killTrue,1000);
 		th1->post([](RUNNABLE_TASK_PARAMS)
 		{
 			tasking::Process::wait(100);
@@ -162,7 +163,7 @@ static int _testsDebug(tests::BaseTest* test)
 			tasking::Process::wait(2200);
 			text::debug("CINCO");
 			return ::tasking::EGenericProcessResult::CONTINUE;
-		},Runnable::_killTrue,700);
+		},Runnable::killTrue,700);
 		try
 		{
 			auto res = core::waitForFutureThread(fut);
@@ -231,7 +232,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 
 			}
 			text::debug("Return result");
-			return 6;},Runnable::_killTrue);
+			return 6;},Runnable::killTrue);
 			
 		text::debug("Start Waiting for result");
 		// auto fr = ::core::waitForFutureThread(fut,2000);
@@ -250,7 +251,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	
 	th1->post( [th2](RUNNABLE_TASK_PARAMS)
 	{
-		auto& autokill = Runnable::_killTrue;
+		auto& autokill = Runnable::killTrue;
 		std::shared_ptr<Process> p1=th2->post([th2](uint64_t t,Process* p)
 		{
 			static bool firstTime = true;
@@ -319,7 +320,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		text::debug("execution done");
 		return ::tasking::EGenericProcessResult::KILL;
 	}
-	,Runnable::_killTrue,3000);
+	,Runnable::killTrue,3000);
 	
 	/*
 	th1->post( [&sharedVar](RUNNABLE_TASK_PARAMS)
@@ -392,7 +393,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
 					return ::tasking::EGenericProcessResult::KILL;
-				},Runnable::_killFalse,1000,0);		
+				},Runnable::killFalse,1000,0);		
 			}
 			::Thread::sleep(1) ;//to wait for taks
 		}
@@ -415,7 +416,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 				{
 					//spdlog::debug("Lambda {}",count);
 					return ::tasking::EGenericProcessResult::KILL;
-				},Runnable::_killFalse,1000,0);
+				},Runnable::killFalse,1000,0);
 			}	
 			::Thread::sleep(1) ;//wait for tasks finished
 		}
@@ -587,6 +588,9 @@ int TestThreading::onExecuteTest()
 					break;
 				case 1000:
 					result = _testsDebug(this);
+					break;
+				case 1001:
+					samples();
 					break;
 				default:;					
 			}

@@ -39,7 +39,7 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
                 ::text::error("Error while waiting: Unknown reason={}");
               }
             },
-            0, ::tasking::Runnable::_killFalse);
+            0, ::tasking::Runnable::killFalse);
 }
 template <class ExecutorType> void _sampleReference(ExecutorType ex)
 {	
@@ -78,7 +78,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 			::text::info("Result value = {}",res.value());
 			::text::info("Original str = {}",str);
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 	*/
 	th->fireAndForget([ex,&str] () mutable
 	{
@@ -115,7 +115,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 			::text::info("Result value = {}",res.value());
 			::text::info("Original str = {}",str);
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 
 }
 template <class ExecutorType> void _sampleError1(ExecutorType ex)
@@ -167,7 +167,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 			::text::error("Some error occured!! Reason: {}",e.what());
 		}
 		::text::info("Original str = {}",str);
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 template <class ExecutorType> void _sampleError2(ExecutorType ex)
 {	
@@ -218,7 +218,7 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 			::text::error("Some error occured!! Reason: {}",e.what());
 		}
 		::text::info("Original str = {}",str);
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 void _sampleTransfer()
 {	
@@ -265,7 +265,7 @@ void _sampleTransfer()
 		{
 			::text::error("Some error occured!! Reason: {}",e.what());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
 {	
@@ -327,7 +327,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		{
 			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 class MyClass
 {
@@ -375,7 +375,7 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 		{
 			::text::info("Result value = {}",res.value());
 		}
-	},0,::tasking::Runnable::_killFalse);
+	},0,::tasking::Runnable::killFalse);
 }
 //más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
 //me falta el PARALLEL_CONVERT

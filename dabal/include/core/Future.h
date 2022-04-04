@@ -18,9 +18,6 @@ namespace core
 	/**
 	* @brief Generic result error codes for future waiting
 	*/
-// no me gusta: ni nombre, deberái ser EWaitReuslt, ni qye aparezca eso de FUTURE
-// no megusta que esté aqui, ¿dodne lo meto?
-// no sé cómo encajar el unknownerror
 	enum EWaitError{
 		FUTURE_WAIT_OK = 0,
 		FUTURE_RECEIVED_KILL_SIGNAL = -1, //!<Wait for Future was interrupted because waiting Process was killed
@@ -161,6 +158,7 @@ namespace core
 	};
 	///@endcond
 	enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
+	
 	///@cond HIDDEN_SYMBOLS
 	namespace _private
 	{
@@ -471,16 +469,19 @@ namespace core
 			inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
 					
 		};
-		///@endcond		
 		
 	}
+	///@endcond		
 	/**
 	 * @brief Common code for Futures that doesn't need to be templated
 	 * 
 	 * @tparam T 
 	 */
 	template <typename T>
-	class Future_Common : public _private::Future_Base
+	class Future_Common 
+	///@cond HIDDEN_SYMBOLS
+	: public _private::Future_Base
+	///@endcond
 	{
 	protected:
 		Future_Common()

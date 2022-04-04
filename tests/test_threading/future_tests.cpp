@@ -1,6 +1,6 @@
 #include "future_tests.h"
-#include <core/ThreadRunnable.h>
-using core::ThreadRunnable;
+#include <tasking/ThreadRunnable.h>
+using tasking::ThreadRunnable;
 using namespace std;
 #include <text/logger.h>
 #include <mpl/LinkArgs.h>

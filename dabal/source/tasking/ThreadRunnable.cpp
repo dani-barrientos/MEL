@@ -1,5 +1,5 @@
-#include <core/ThreadRunnable.h>
-using core::ThreadRunnable;
+#include <tasking/ThreadRunnable.h>
+using tasking::ThreadRunnable;
 #include <mpl/MemberEncapsulate.h>
 #include <core/TLS.h>
 using core::TLS;
@@ -135,7 +135,7 @@ void ThreadRunnable::onPostTask(std::shared_ptr<Process> process)
 {
 	_signalWakeup();
 	//::spdlog::debug("GenericThread::_processWaken");
-	return ECallbackResult::NO_UNSUBSCRIBE;
+	return core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 void ThreadRunnable::onCycleEnd()
 {

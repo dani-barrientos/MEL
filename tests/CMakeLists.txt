@@ -16,7 +16,8 @@ if ( MSVC )
 endif()
 
 #add_executable (tests "main.cpp")
-add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "common/source/BaseTest.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" "test_threading/test.cpp"
+add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "common/source/BaseTest.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" 
+"test_threading/test.cpp" "test_threading/test_samples.cpp"
 "test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp" "test_execution/test_samples.cpp")
 
 target_include_directories(tests PUBLIC "common/include")

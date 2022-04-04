@@ -39,14 +39,14 @@ namespace execution
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    //th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);
+                    //th->execute<TRet>(std::bind(std::forward<F>(f),std::forward<TArg>(arg)),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);
                     th->execute<TRet>(
                             [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept(std::is_nothrow_invocable<F,TArg>::value) ->TRet
                             {
                                 return f(arg);
                             },
                             static_cast<Future<TRet>>(output)
-                        ,mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);                  
+                        ,mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);                  
                 }            
             }
             template <class TRet,class F> void launch( F&& f,ExFuture<ThreadPool,TRet> output) const noexcept
@@ -56,7 +56,7 @@ namespace execution
                     ThreadPool::ExecutionOpts opts;
                     opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                     auto th = mPool.lock()->selectThread(opts);
-                    th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::_killTrue:Runnable::_killFalse);               
+                    th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);               
                 }       
             }
             template <class I, class F>	 ::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);

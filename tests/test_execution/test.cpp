@@ -1,7 +1,7 @@
 #include "test.h"
 using test_execution::TestExecution;
-#include <core/ThreadRunnable.h>
-using core::ThreadRunnable;
+#include <tasking/ThreadRunnable.h>
+using tasking::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
