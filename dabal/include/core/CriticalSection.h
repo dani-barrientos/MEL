@@ -78,7 +78,7 @@ namespace core {
 	}
 	/**
 	* @class Lock
-	* @brief Helper class for easy use of the CriticalSections class to lock scopes. You just have to declare a 'Lock' local variable
+	* @brief Helper class for easy use of the CriticalSection class to lock scopes. You just have to declare a 'Lock' local variable
 	* using the pertinent CriticalSection as constructor argument. The ambit will be thread-safe using the given CriticalSection. When
 	* the execution goes out of the scope, the CriticalSection will be automatically released.
 	* Example:
