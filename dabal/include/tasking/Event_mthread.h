@@ -28,8 +28,6 @@ namespace tasking
 		* operation terminates (the default value is true)
 		* @param signaled flag indicating the initial status of the event. If set to true, the event will
 		* be created as "signaled" meaning the next wait operation will return immediately.
-		*
-		* TODO hacer subscripci�n a eventos
 		*/
 		Event_mthread(bool autoRelease=true, bool signaled=false);
 		~Event_mthread();

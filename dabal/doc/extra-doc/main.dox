@@ -32,8 +32,7 @@ sequences os tasks and where to execute them, in a way independent of the underl
 	<li>\ref execution_system "Execution system"<br/>
 		High level tasking execution system
 	</li>
-	
-	
+		
 </ul>
 
 */
