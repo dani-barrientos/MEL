@@ -10,37 +10,36 @@ using namespace std::literals::string_literals;
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
 	auto th = ThreadRunnable::create();
-	th->fireAndForget([ex] () mutable
-	{
-		auto res = ::tasking::waitForFutureMThread(
-			execution::launch(ex,[](float param) noexcept
-			{	
-				return param+6.f;
-			},10.5f)
-			| execution::next( [](float& param) noexcept
-			{
-				return std::to_string(param);
-			})
-			| execution::parallel( 
-				[](string& str)
-				{					
-					text::info("Parallel 1. {}",str+" hello!");
-				},
-				[](string& str)
-				{
-					text::info("Parallel 2. {}",str+" hi!");
-				},
-				[](string& str)
-				{
-					text::info("Parallel 2. {}",str+" whats up!");
-				}
-			)
-		);
-		if (res.isValid())
-		{
-			::text::info("Result value = {}",res.value());
-		}
-	},0,::tasking::Runnable::_killFalse);
+        th->fireAndForget(
+            [ex]() mutable {
+              try {
+                auto res = ::tasking::waitForFutureMThread(
+                    execution::launch(
+                        ex, [](float param) noexcept { return param + 6.f; },
+                        10.5f) |
+                    execution::next([](float &param) noexcept {
+                      return std::to_string(param);
+                    }) |
+                    execution::parallel(
+                        [](string &str) {
+                          text::info("Parallel 1. {}", str + " hello!");
+                        },
+                        [](string &str) {
+                          text::info("Parallel 2. {}", str + " hi!");
+                        },
+                        [](string &str) {
+                          text::info("Parallel 2. {}", str + " whats up!");
+                        }));
+                if (res.isValid()) {
+                  ::text::info("Result value = {}", res.value());
+                }
+              } catch (core::WaitException &e) {
+                ::text::error("Error while waiting: Reason={}", e.what());
+              } catch (...) {
+                ::text::error("Error while waiting: Unknown reason={}");
+              }
+            },
+            0, ::tasking::Runnable::_killFalse);
 }
 template <class ExecutorType> void _sampleReference(ExecutorType ex)
 {	
@@ -232,8 +231,7 @@ void _sampleTransfer()
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,false});
 	th->fireAndForget([exr,extp] () mutable
-	{
-		
+	{		
 		try
 		{
 			auto res = ::tasking::waitForFutureMThread(
@@ -268,8 +266,6 @@ void _sampleTransfer()
 			::text::error("Some error occured!! Reason: {}",e.what());
 		}
 	},0,::tasking::Runnable::_killFalse);
-// @todo	el prolema es que si no pongo esto no se ejecuta nada, por temas del kill y demas, ya que es el propio hilo
-	//::core::Thread::sleep(10000);
 }
 template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
 {	
@@ -397,13 +393,13 @@ void test_execution::samples()
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});
     
-	//_sampleBasic(exr);	
+	_sampleBasic(exr);	
 //	_sampleBasic(extp);
 //	_sampleReference(exr);
 	//_sampleError1(exr);
 	//_sampleError2(extp);
 	//_sampleTransfer();
    // _sampleSeveralFlows(exr,extp);
-   _sampleCallables(extp);
+  // _sampleCallables(extp);
 	text::info("HECHO");
 }

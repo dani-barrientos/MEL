@@ -423,7 +423,7 @@ igual no tiene mucho sentido y
   */  
     /**
      * @brief Same as @ref parallel but returning a tuple with the values for each functor
-     * So, these functors must return a value, return void is not alloed
+     * So, these functors must return a value, return void is not allowed
      */
     template <class ResultTuple, class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
     {

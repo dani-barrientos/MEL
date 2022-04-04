@@ -173,8 +173,26 @@ Parallel 2. 16.500000 hi!
 Parallel 2. 16.500000 whats up!
 Result value = 16.500000
 \endcode
+
 Although the samples are shown using *lambdas* for clarity, any other callable can be used:
+
 \code{.cpp}
+class MyClass
+{
+	public:
+		float f1(float p1,float p2) noexcept
+		{
+			return p1+p2;
+		};
+		string f2(float& p) noexcept
+		{
+			return std::to_string(p);
+		}
+		void operator()(string& str)
+		{
+			text::info("Parallel operator() {}",str+" hi!");
+		}
+};
 template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 {
 	auto th = ThreadRunnable::create();

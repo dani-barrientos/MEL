@@ -5,6 +5,12 @@ cmake_minimum_required (VERSION 3.8)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_CXX_CLANG_TIDY 
+  clang-tidy;
+  -header-filter=.;
+  -checks=*;)
+
 message("Building for " ${DABAL_OS})
 message("Supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 if(NOT DEFINED ENV{VCPKG_ROOT})

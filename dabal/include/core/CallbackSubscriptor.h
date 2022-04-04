@@ -16,6 +16,10 @@ namespace core {
 		SE_BACK,
 		SE_FRONT
 	};
+	/**
+	 * @brief Type resturned by callbacks subscribed to \ref ::CallbackSubscriptor "CallbackSubscriptors"
+	 * 
+	 */
 	enum class ECallbackResult : uint8_t{ NO_UNSUBSCRIBE,UNSUBSCRIBE};
 	struct CSMultithreadPolicy{};
 	struct CSNoMultithreadPolicy{};
