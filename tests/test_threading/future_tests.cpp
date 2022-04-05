@@ -242,7 +242,7 @@ class MasterThread : public ThreadRunnable
 			auto t0 = getTimer()->getMilliseconds();
             constexpr unsigned MAX_TIME = 5500;
 			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
-			if ( r != ::tasking::Event_mthread::EVENTMT_WAIT_OK )
+			if ( r != ::tasking::EEventMTWaitCode::EVENTMT_WAIT_OK )
 			{
 				text::error("Wait for responses failed!!!!. {} workers remaining",mBarrier.getActiveWorkers());
 				this->finish();  

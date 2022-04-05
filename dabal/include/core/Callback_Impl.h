@@ -1,12 +1,10 @@
 using core::FunctorCallbackInterface;
-//using core::SmartPtrCallbackInterface;
 using core::FunctionCallbackInterface;
-//using core::IRefCount;
 
 
 namespace core
 {
-	class IRefCount;
+	
 	/**
 	* @class Callback
 	* @brief create Callback from callable
@@ -25,7 +23,7 @@ namespace core
 		const static use_function_t use_function = use_function_t();
 
 ///@cond HIDDEN_SYMBOLS		
-		template <bool b,class T,class TRet,VARIABLE_ARGS >
+		template <class T,class TRet,VARIABLE_ARGS >
 		struct _CallbackCreator
 		{
 			
@@ -34,15 +32,6 @@ namespace core
 				//typedef typename ::std::decay<T>::type NewType;
 				//return new FunctorCallbackInterface<TRet, NewType, VARIABLE_ARGS_DECL>(::std::forward<NewType>(functor));
 				return new FunctorCallbackInterface<TRet, typename ::std::remove_reference<T>::type, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
-			}
-		};
-		template <class T, class TRet, VARIABLE_ARGS_NODEFAULT >
-		struct _CallbackCreator<true, T, TRet, VARIABLE_ARGS_DECL>
-		{
-			static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T&& functor)
-			{
-				throw std::runtime_error("SmartPtrCallbackInterface not implemented");
-				//return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
 			}
 		};
 		
@@ -57,14 +46,9 @@ namespace core
 			* @remarks second parameter only is used to distinguish from copy constructor.
 			* Pass
 			*/
-			/*template<class T> Callback_Base( T& functor, const use_functor_t& )
-			{
-				//mCallBack = new FunctorCallbackInterface<TRet,T,VARIABLE_ARGS_DECL>( functor );
-				mCallBack = _CallbackCreator< mpl::Conversion<T, IRefCount*>::exists, T, TRet, VARIABLE_ARGS_DECL>::create(functor);
-			}*/
 			template<class T> Callback_Base(T&& functor, const use_functor_t&)
 			{
-				mCallBack = _CallbackCreator< mpl::Conversion<T, IRefCount*>::exists, T, TRet, VARIABLE_ARGS_DECL>::create(::std::forward<T>(functor));
+				mCallBack = _CallbackCreator<T, TRet, VARIABLE_ARGS_DECL>::create(::std::forward<T>(functor));
 			}
 			
 			template<class T> Callback_Base(T&& functor, const use_function_t&)
@@ -201,15 +185,10 @@ namespace core
 
 #else
 
-template <bool b,class T,class TRet,VARIABLE_ARGS >
-struct _CallbackCreator<b,T,TRet,VARIABLE_ARGS_DECL,void>
+template <class T,class TRet,VARIABLE_ARGS >
+struct _CallbackCreator<T,TRet,VARIABLE_ARGS_DECL,void>
 {	
-/*	static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T& functor)
-	{
-		//typedef typename ::std::decay<T>::type NewType;
-		typedef typename T NewType;
-		return new FunctorCallbackInterface<TRet, NewType, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
-	}*/
+
 	static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T&& functor)
 	{
 
@@ -220,19 +199,6 @@ struct _CallbackCreator<b,T,TRet,VARIABLE_ARGS_DECL,void>
 //		return new FunctorCallbackInterface<TRet, NewType, VARIABLE_ARGS_DECL>(::std::forward<NewType>(functor));
 		return new FunctorCallbackInterface<TRet, typename ::std::remove_reference<T>::type, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
 	}
-};
-template <class T,class TRet,VARIABLE_ARGS >
-struct _CallbackCreator<true,T,TRet,VARIABLE_ARGS_DECL,void>
-{
-	/*static CallbackInterface<TRet, VARIABLE_ARGS_DECL>* create(T& functor)
-	{
-		return new SmartPtrCallbackInterface<TRet, typename mpl::TypeTraits<T>::PointeeType, VARIABLE_ARGS_DECL>(functor);
-	}*/
-    static CallbackInterface<TRet,VARIABLE_ARGS_DECL>* create( T&& functor )
-    {
-		throw std::runtime_error("SmartPtrCallbackInterface not implemented");
-        //return new SmartPtrCallbackInterface<TRet,typename mpl::TypeTraits<T>::PointeeType,VARIABLE_ARGS_DECL>(::std::forward<T>(functor) );
-    }
 };
 
 
@@ -247,13 +213,9 @@ template< class TRet, VARIABLE_ARGS >
 
 		Callback_Base(){ mCallBack = 0;};
 		
-	/*	template<class T> Callback_Base( T& functor,const use_functor_t& )
-		{
-			mCallBack = _CallbackCreator< mpl::Conversion<T,IRefCount*>::exists,T,TRet,VARIABLE_ARGS_DECL>::create( functor );
-		}*/
 		template<class T> Callback_Base(T&& functor, const use_functor_t&)
 		{
-			mCallBack = _CallbackCreator< mpl::Conversion<T, IRefCount*>::exists, T, TRet, VARIABLE_ARGS_DECL>::create(::std::forward<T>(functor));
+			mCallBack = _CallbackCreator<  T, TRet, VARIABLE_ARGS_DECL>::create(::std::forward<T>(functor));
 			//mCallBack = new FunctorCallbackInterface<TRet, T, VARIABLE_ARGS_DECL>(::std::forward<T>(functor));
 		}
 		template<class T> Callback_Base(T&& functor, const use_function_t&)

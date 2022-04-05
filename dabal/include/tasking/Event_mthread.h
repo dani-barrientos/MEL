@@ -10,18 +10,156 @@ namespace tasking
 	using ::tasking::Process;
 	using std::list;
 	using core::Callback;
+	enum class EEventMTWaitCode {
+				EVENTMT_WAIT_OK,
+				EVENTMT_WAIT_TIMEOUT,
+				EVENTMT_WAIT_KILL};
+	static const int EVENTMT_WAIT_INFINITE = -1;
+	class EventBase
+	{
+		public:
+			EventBase(bool autoRelease=true, bool signaled=false);
+			
+			void reset();
+		private:
+
+			typedef list< std::shared_ptr<Process> > TProcessList;
+			void _triggerActivation( bool sendToAll );
+		protected:
+			bool mSignaled;
+			bool mAutoRelease;
+			TProcessList mWaitingProcesses;
+			void _set( bool sendToAll );
+
+	};
+	
 	/**
-	* @brief class similar to Event Class (which is for thread synchronization) but for Process (with Microthread behaviour)
-	* Multithread safe
+	 * @brief Policy for multithread safe event
+	 */
+	class EventMTThreadSafePolicy : public EventBase
+	{
+		public:
+			EventMTThreadSafePolicy(bool autoRelease, bool signaled);
+			void set(bool sendToAll)
+			{
+				core::Lock lck(mCS);
+				EventBase::_set(sendToAll);
+			}
+		protected:
+			EEventMTWaitCode _wait( unsigned int msecs ); 			
+			template <class F>
+			EEventMTWaitCode _waitAndDo( F postSleep,unsigned int msecs ) 
+			{
+				EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
+				mCS.enter();
+				if ( !mSignaled )
+				{
+					auto p = ::tasking::ProcessScheduler::getCurrentProcess();
+					mWaitingProcesses.push_back( p ); 
+					
+					Process::ESwitchResult switchResult;
+					if ( msecs == EVENTMT_WAIT_INFINITE )
+						switchResult = ::tasking::Process::sleepAndDo([this,postSleep]()
+						{
+							mCS.leave();
+							postSleep();
+						} );
+					else
+						switchResult = ::tasking::Process::waitAndDo(msecs, [this,postSleep]()
+						{
+							mCS.leave();
+							postSleep();
+						});
+					switch ( switchResult )
+					{
+					case Process::ESwitchResult::ESWITCH_KILL:
+						result = EEventMTWaitCode::EVENTMT_WAIT_KILL;
+						break;
+					case Process::ESwitchResult::ESWITCH_WAKEUP:
+						result = EEventMTWaitCode::EVENTMT_WAIT_OK; 
+						break;
+					default:
+						result = EEventMTWaitCode::EVENTMT_WAIT_TIMEOUT;
+						break;
+					}
+					//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
+					//maybe other process do wait on this events
+					mCS.enter();
+					mWaitingProcesses.remove( p );
+					mCS.leave();
+				}else
+				{
+					mCS.leave();
+					postSleep();
+				}
+				return result;
+			}
+		private:
+			core::CriticalSection mCS;
+	};
+		/**
+	 * @brief Policy for non-multithread safe event
+	 */
+	class EventNoMTThreadSafePolicy : public EventBase
+	{
+		public:
+			EventNoMTThreadSafePolicy(bool autoRelease, bool signaled);
+			void set(bool sendToAll)
+			{
+				EventBase::_set(sendToAll);
+			}
+		protected:
+			EEventMTWaitCode _wait( unsigned int msecs );			
+			template <class F>
+			EEventMTWaitCode _waitAndDo( F postSleep,unsigned int msecs ) 
+			{
+				EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
+				if ( !mSignaled )
+				{
+					auto p = ::tasking::ProcessScheduler::getCurrentProcess();
+					mWaitingProcesses.push_back( p ); 
+					
+					Process::ESwitchResult switchResult;
+					if ( msecs == EVENTMT_WAIT_INFINITE )
+						switchResult = ::tasking::Process::sleepAndDo([postSleep]()
+						{
+							postSleep();
+						} );
+					else
+						switchResult = ::tasking::Process::waitAndDo(msecs, [this,postSleep]()
+						{
+							postSleep();
+						});
+					switch ( switchResult )
+					{
+					case Process::ESwitchResult::ESWITCH_KILL:
+						result = EEventMTWaitCode::EVENTMT_WAIT_KILL;
+						break;
+					case Process::ESwitchResult::ESWITCH_WAKEUP:
+						result = EEventMTWaitCode::EVENTMT_WAIT_OK; 
+						break;
+					default:
+						result = EEventMTWaitCode::EVENTMT_WAIT_TIMEOUT;
+						break;
+					}
+					//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
+					//maybe other process do wait on this events
+					mWaitingProcesses.remove( p );
+				}else
+				{
+					postSleep();
+				}
+				return result;
+			}
+			
+	};
+	/**
+	* @brief class similar to Event Class (which is for thread synchronization) but for Process (with Microthread behaviour)	
 	*/
-	class DABAL_API Event_mthread
+	template <class MultithreadPolicy = EventMTThreadSafePolicy> class Event_mthread : public MultithreadPolicy
 	{
 	public:
-		enum EWaitCode {
-			EVENTMT_WAIT_OK,
-			EVENTMT_WAIT_TIMEOUT,
-			EVENTMT_WAIT_KILL};
-		static const int EVENTMT_WAIT_INFINITE = -1;
+		
 		/**
 		* Creates a new event.
 		* @param autoRelease flag indicating if the new vent should be auto-reset whenever a wait
@@ -29,96 +167,37 @@ namespace tasking
 		* @param signaled flag indicating the initial status of the event. If set to true, the event will
 		* be created as "signaled" meaning the next wait operation will return immediately.
 		*/
-		Event_mthread(bool autoRelease=true, bool signaled=false);
-		~Event_mthread();
+		Event_mthread(bool autoRelease=true, bool signaled=false):MultithreadPolicy(autoRelease,signaled){}
+		//~Event_mthread();
 
 		/**
 		* activate event
 		* @param[in] sendToAll If true then all attached Processed are awake else, only one in FIFO way
 		*/
-		void set( bool sendToAll = true );
+		void set( bool sendToAll = true ){MultithreadPolicy::set(sendToAll);}
 
 		/**
 		* wait for event to be triggered
 		* @param[in] msecs to wait for
-		* @return EWaitCode
+		* @return EEventMTWaitCode
 		*/
-		inline EWaitCode wait( unsigned int msecs = EVENTMT_WAIT_INFINITE)
+		inline EEventMTWaitCode wait( unsigned int msecs = EVENTMT_WAIT_INFINITE)
 		{
-			return _wait( msecs );
+			return MultithreadPolicy::_wait( msecs );
 		}
 
 		/**
-		* sleep Process, executing callback on sleep,until wakeup
-		* internally use a SmartPtrList
+		* sleep Process, executing callback on sleep,until wakeup		
 		* @return bool with same meaning as wait
 		*/
 		template <class F>
-		EWaitCode waitAndDo( F postSleep,unsigned int msecs = EVENTMT_WAIT_INFINITE )
+		EEventMTWaitCode waitAndDo( F postSleep,unsigned int msecs = EVENTMT_WAIT_INFINITE )
 		{
-			return _waitAndDo( postSleep,msecs );
+			return MultithreadPolicy::_waitAndDo( postSleep,msecs );
 		}
 
-		void reset();
 	private:
-		bool mSignaled;
-		bool mAutoRelease;
 
-		typedef list< std::shared_ptr<Process> > TProcessList;
-		TProcessList mWaitingProcesses;
-        core::CriticalSection mCS;//!@todo: revisar esto, que es un arreglo chapucero para solucionar un "hueco" evidente en los accesos a mWaitingProcesses
-
-
-		void _triggerActivation( bool sendToAll );
-		EWaitCode _wait( unsigned int msecs );
-
-		template <class F>
-		EWaitCode _waitAndDo( F postSleep,unsigned int msecs ) 
-		{
-			EWaitCode result = EVENTMT_WAIT_OK;
-			mCS.enter();
-			if ( !mSignaled )
-			{
-				auto p = ::tasking::ProcessScheduler::getCurrentProcess();
-				mWaitingProcesses.push_back( p ); 
-				
-				Process::ESwitchResult switchResult;
-				if ( msecs == EVENTMT_WAIT_INFINITE )
-					switchResult = ::tasking::Process::sleepAndDo([this,postSleep]()
-					{
-						mCS.leave();
-						postSleep();
-					} );
-				else
-					switchResult = ::tasking::Process::waitAndDo(msecs, [this,postSleep]()
-					{
-						mCS.leave();
-						postSleep();
-					});
-				switch ( switchResult )
-				{
-				case Process::ESwitchResult::ESWITCH_KILL:
-					result = EVENTMT_WAIT_KILL;
-					break;
-				case Process::ESwitchResult::ESWITCH_WAKEUP:
-					result = EVENTMT_WAIT_OK; 
-					break;
-				default:
-					result = EVENTMT_WAIT_TIMEOUT;
-					break;
-				}
-				//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
-				//maybe other process do wait on this events
-				mCS.enter();
-				mWaitingProcesses.remove( p );
-				mCS.leave();
-			}else
-			{
-				mCS.leave();
-				postSleep();
-			}
-
-			return result;
-		}
+		
 	};
 }

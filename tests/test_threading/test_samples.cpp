@@ -90,8 +90,9 @@ void _sample2()
 }
 void _sample3()
 {
-    Event_mthread event;  
-    CriticalSection_mthread cs;
+    Event_mthread<::tasking::EventNoMTThreadSafePolicy> event;  
+    CriticalSection_mthread<false> cs;
+    
     auto th1 = ThreadRunnable::create(); //order is important here to respect reverse order of destruction
     th1->fireAndForget( [&cs,&event]() mutable
         {

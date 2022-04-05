@@ -6,7 +6,7 @@
 // YOU MUST IMPLEMENT A CREATION FUNCITON: See createSingleton at this file.
 //
 // TODO no est� bien del todo el lock/unlock en los accessos. REVISAR DETENIDAMENTE
-// You can use Singleton with a SmartPtr. See template parameters
+
 ///////////////////////////////////////////////////////////
 
 #pragma once
@@ -14,7 +14,7 @@
 #include <DabalLibType.h>
 #include <memory>
 #include <stdexcept>
-//#include <core/SmartPtr.h>
+
 #include <mpl/Type2Type.h>
 using mpl::Type2Type;
 #include <mpl/_If.h>
@@ -32,7 +32,7 @@ namespace core
 	 * son Singletong can be inherited.Although, abstract singleton is neccesary when you need to customize singleton
 	 * creation (passing arguments to constructor). If singleton is declared as non-abstract, default constructor is
 	 * called on first getSingleton call.
-	 * Singleton must be deleted when no more needed using deleteSingleton function. When deleteSingleton es used
+	 * Singleton must be deleted when no more needed using deleteSingleton function. When deleteSingleton is used
 	 * it check for No more references to object (if using SmartPtr, of course) and throw an Exception if there are more references.
 	 * If you don't like this behaviour you must overwrite deleteSingleton and do your own work.
 	 * You can use SmartPtr for internal singleton. For that purpose use third parameter
@@ -53,7 +53,6 @@ namespace core
             }
         protected:
             typedef typename _if< useSmartPtr, std::shared_ptr<T> ,T*>::Result Tpointer;
-            //typedef typename _if< Conversion< T,IRefCount*>::Exists, SmartPtr<T> ,T*>::Result Tpointer;
 			typedef typename ThreadingPolicy<Tpointer>::VolatileType  InstanceType;
             static InstanceType mObject; //TODO considerar el VolatileType, importante
 	

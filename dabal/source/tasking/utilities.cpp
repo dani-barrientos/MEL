@@ -1,14 +1,14 @@
 #include <tasking/utilities.h>
-::tasking::Event_mthread::EWaitCode tasking::waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs)
+::tasking::EEventMTWaitCode tasking::waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs)
 {
 	using ::tasking::Event_mthread;
 
 	struct _Receiver
 	{		
 		_Receiver():mEvent(false,false){}
-		Event_mthread::EWaitCode wait(const ::parallelism::Barrier& barrier,unsigned int msecs)
+		EEventMTWaitCode wait(const ::parallelism::Barrier& barrier,unsigned int msecs)
 		{
-			Event_mthread::EWaitCode eventresult;
+			EEventMTWaitCode eventresult;
 		 	//spdlog::info("Waiting for event");
 			int evId;
 			eventresult = mEvent.waitAndDo([this,barrier,&evId]()
@@ -26,7 +26,7 @@
 			return eventresult;
 		}
 		private:
-		::tasking::Event_mthread mEvent;
+		::tasking::Event_mthread<> mEvent;
 
 	};
 	auto receiver = std::make_unique<_Receiver>();

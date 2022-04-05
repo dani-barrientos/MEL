@@ -26,7 +26,6 @@ namespace core
 			static CriticalSection mCs;
 		};
 	public:
-		//typedef T volatile VolatileType;  TODO problemas con SmartPtr
 		typedef T VolatileType; 
 		typedef Locker<T> Lock;
 	

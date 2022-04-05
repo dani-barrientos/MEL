@@ -21,7 +21,7 @@ namespace tasking
     * @brief Waits for future completion, returning a wapper around the internal vale
     * @throws core::WaitException if some error occured while waiting of the internal future exception if it has any error
     */
-   template<class T> ::core::WaitResult<T> waitForFutureMThread(  const core::Future<T>& f,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE)
+   template<class T> ::core::WaitResult<T> waitForFutureMThread(  const core::Future<T>& f,unsigned int msecs = EVENTMT_WAIT_INFINITE)
     {
         using ::tasking::Event_mthread;
         struct _Receiver
@@ -30,7 +30,7 @@ namespace tasking
             using futT = core::Future<T>;
             ::core::EWaitError wait( const futT& f,unsigned int msecs)
             {
-                Event_mthread::EWaitCode eventResult;
+                EEventMTWaitCode eventResult;
                 int evId;
                 eventResult = mEvent.waitAndDo([this,f,&evId]()
                 {
@@ -44,13 +44,13 @@ namespace tasking
                 f.unsubscribeCallback(evId); //maybe timeout, so callback won't be unsubscribed automatically       
                 switch( eventResult )
                 {
-                case Event_mthread::EVENTMT_WAIT_OK:                    
+                case EEventMTWaitCode::EVENTMT_WAIT_OK:                    
                     return ::core::EWaitError::FUTURE_WAIT_OK;
-                case Event_mthread::EVENTMT_WAIT_KILL:
+                case EEventMTWaitCode::EVENTMT_WAIT_KILL:
                     //event was triggered because a kill signal                    
                     return ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL;
                     break;
-                case Event_mthread::EVENTMT_WAIT_TIMEOUT:
+                case EEventMTWaitCode::EVENTMT_WAIT_TIMEOUT:
                     return ::core::EWaitError::FUTURE_WAIT_TIMEOUT;
                     break;
                 default:
@@ -58,7 +58,7 @@ namespace tasking
                 }			                        
             }
             private:
-            ::tasking::Event_mthread mEvent;
+            ::tasking::Event_mthread<> mEvent;
 
         };
         auto receiver = std::make_unique<_Receiver>();
@@ -86,6 +86,6 @@ namespace tasking
         }
     }  
     
-    DABAL_API ::tasking::Event_mthread::EWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::Event_mthread::EVENTMT_WAIT_INFINITE );
+    DABAL_API ::tasking::EEventMTWaitCode waitForBarrierMThread(const ::parallelism::Barrier& b,unsigned int msecs = ::tasking::EVENTMT_WAIT_INFINITE );
 
 }

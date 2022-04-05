@@ -1,10 +1,8 @@
 #pragma once
 #include <core/Type.h>
 #include <core/FunctorCallbackInterface.h>
-//#include <core/SmartPtrCallbackInterface.h>
 #include <core/FunctionCallbackInterface.h>
 #include <mpl/Conversion.h>
-//#include <core/IRefCount.h>
 #include <mpl/TypeTraits.h>
 #include <stdexcept>
 #undef INCLUDE_PATH

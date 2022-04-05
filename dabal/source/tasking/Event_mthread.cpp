@@ -1,20 +1,23 @@
 #include <tasking/Event_mthread.h>
 using tasking::Event_mthread;
+using tasking::EventBase;
+using tasking::EventMTThreadSafePolicy;
+using tasking::EventNoMTThreadSafePolicy;
 #include <tasking/ProcessScheduler.h>
 using tasking::ProcessScheduler;
 
-Event_mthread::Event_mthread(bool autoRelease, bool signaled): 
-	mSignaled( signaled ),
+EventBase::EventBase(bool autoRelease, bool signaled):mSignaled( signaled ),
 	mAutoRelease( autoRelease )
+	{
+		
+	}
+
+// EventBase::~EventBase()
+// {
+// 	//TODO despertar los procesos?
+// }
+void EventBase::_set( bool sendToAll )
 {
-}
-Event_mthread::~Event_mthread()
-{
-	//TODO despertar los procesos?
-}
-void Event_mthread::set( bool sendToAll )
-{
-	core::Lock lck(mCS);
 	mSignaled = true;
 	_triggerActivation( sendToAll );
 	if ( mAutoRelease )
@@ -23,7 +26,7 @@ void Event_mthread::set( bool sendToAll )
 	}
 }
 
-Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs ) 
+/*Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs ) 
 {
 	EWaitCode result = EVENTMT_WAIT_OK;
 	mCS.enter();
@@ -64,16 +67,14 @@ Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs )
 		mCS.leave();
 	return result;
 }
+*/
 
-
-void Event_mthread::reset()
+void EventBase::reset()
 {
 	mSignaled = false;
 }
-void Event_mthread::_triggerActivation( bool sendToAll )
-{
-    //core::Lock lck(mCS);
-    
+void EventBase::_triggerActivation( bool sendToAll )
+{   
 	if ( sendToAll )
 	{
 		for( TProcessList::iterator i = mWaitingProcesses.begin(); i != mWaitingProcesses.end(); ++i )
@@ -88,4 +89,84 @@ void Event_mthread::_triggerActivation( bool sendToAll )
 			mWaitingProcesses.pop_front();
 		}
 	}
+}
+
+
+EventMTThreadSafePolicy::EventMTThreadSafePolicy(bool autoRelease, bool signaled):EventBase(autoRelease,signaled)
+{
+
+}
+tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msecs ) 
+{
+	EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
+	mCS.enter();
+	if ( !EventBase::mSignaled )
+	{
+		auto p = ProcessScheduler::getCurrentProcess();
+		EventBase::mWaitingProcesses.push_back( p ); //remember. not multithread-safe
+		
+		Process::ESwitchResult switchResult;
+		if ( msecs == EVENTMT_WAIT_INFINITE )
+			switchResult = ::tasking::Process::sleepAndDo([this]()
+			{
+				mCS.leave();
+			} );
+		else
+			switchResult = ::tasking::Process::waitAndDo(msecs, [this]()
+			{
+				mCS.leave();
+			});
+		switch ( switchResult )
+		{
+		case Process::ESwitchResult::ESWITCH_KILL:
+			result = EEventMTWaitCode::EVENTMT_WAIT_KILL;
+			break;
+		case Process::ESwitchResult::ESWITCH_WAKEUP:
+			result = EEventMTWaitCode::EVENTMT_WAIT_OK; 
+			break;
+		default:
+			result = EEventMTWaitCode::EVENTMT_WAIT_TIMEOUT;
+			break;
+		}
+		//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
+		//maybe other process do wait on this events
+		mCS.enter();
+		mWaitingProcesses.remove( p );
+		mCS.leave();
+	}else
+		mCS.leave();
+	return result;
+}
+
+EventNoMTThreadSafePolicy::EventNoMTThreadSafePolicy(bool autoRelease, bool signaled):EventBase(autoRelease,signaled){}
+tasking::EEventMTWaitCode EventNoMTThreadSafePolicy::_wait( unsigned int msecs ) 
+{
+	EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
+	if ( !EventBase::mSignaled )
+	{
+		auto p = ProcessScheduler::getCurrentProcess();
+		EventBase::mWaitingProcesses.push_back( p ); //remember. not multithread-safe
+		
+		Process::ESwitchResult switchResult;
+		if ( msecs == EVENTMT_WAIT_INFINITE )
+			switchResult = ::tasking::Process::sleep();
+		else
+			switchResult = ::tasking::Process::wait(msecs);
+		switch ( switchResult )
+		{
+		case Process::ESwitchResult::ESWITCH_KILL:
+			result = EEventMTWaitCode::EVENTMT_WAIT_KILL;
+			break;
+		case Process::ESwitchResult::ESWITCH_WAKEUP:
+			result = EEventMTWaitCode::EVENTMT_WAIT_OK; 
+			break;
+		default:
+			result = EEventMTWaitCode::EVENTMT_WAIT_TIMEOUT;
+			break;
+		}
+		//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
+		//maybe other process do wait on this events
+		mWaitingProcesses.remove( p );
+	}
+	return result;
 }

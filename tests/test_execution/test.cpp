@@ -1044,7 +1044,7 @@ template <class F> void _measureTest(string txt,F f, size_t loopSize)
 	tests::BaseTest::addMeasurement(txt+" time:",mean);
 	text::info("Finished. Time: {}",mean);
 }
-auto gTestFunc=[](int idx,const auto&)
+auto gTestFunc=[](int idx)
 	{
 		text::debug("iteracion pre {}",idx);
 		::tasking::Process::switchProcess(true);
@@ -1064,80 +1064,84 @@ int _testFor(tests::BaseTest* test)
 	}
 	#define CHUNK_SIZE 512	
 	
-	// _measureTest("Runnable executor with independent tasks and lockOnce",
-	// 	[loopSize]()
-	// 	{	
-	// 		auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-	// 		execution::Executor<Runnable> ex(th1);			
-	// 		execution::RunnableExecutorOpts opts;
-	// 		opts.independentTasks = true;
-	// 		opts.lockOnce = true;
-	// 		ex.setOpts(opts);
-	// 		const int idx0 = 0;
-	// 		core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
-	// 		//text::debug("hecho");
-	// 		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-	// 			th1->getScheduler().resetPool();
-	// 		#endif
-	// 	},loopSize
-	// );
+	_measureTest("Runnable executor with independent tasks and lockOnce",
+		[loopSize]()
+		{	
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			execution::Executor<Runnable> ex(th1);			
+			execution::RunnableExecutorOpts opts;
+			opts.independentTasks = true;
+			opts.lockOnce = true;
+			ex.setOpts(opts);
+			const int idx0 = 0;
+			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			//text::debug("hecho");
+			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
+				th1->getScheduler().resetPool();
+			#endif
+		},loopSize
+	);
 
-	// _measureTest("Runnable executor with independent tasks and NO lockOnce on post",
-	// 	[loopSize]()
-	// 	{
-	// 		auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-	// 		execution::Executor<Runnable> ex(th1);	
-	// 		execution::RunnableExecutorOpts exopts;
-	// 		exopts.independentTasks = true;
-	// 		exopts.lockOnce = false;
-	// 		ex.setOpts(exopts);
-	// 		const int idx0 = 0;
-	// 		// auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
-	// 		// );
-	// 		core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+	_measureTest("Runnable executor with independent tasks and NO lockOnce on post",
+		[loopSize]()
+		{
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			exopts.lockOnce = false;
+			ex.setOpts(exopts);
+			const int idx0 = 0;
+			// auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
+			// );
+			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 			
-	// 	},loopSize
-	// );
+		},loopSize
+	);
 
-	// _measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
-	// 	[loopSize]() mutable
-	// 	{
-	// 		auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
-	// 		execution::Executor<Runnable> ex(th1);	
-	// 		execution::RunnableExecutorOpts exopts;
-	// 		exopts.independentTasks = true;
-	// 		exopts.lockOnce = true;
-	// 		int idx0 = 0;
-	// 		auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
-	// 		th1->resume();
-	// 		core::waitForFutureThread(r);
-	// 		th1->suspend();
-	// 	},loopSize
-	// );
-	// _measureTest("Runnable executor with independent tasks,NO lockOnce on post and pausing thread",
-	// 	[loopSize]() 	
-	// 	{
-	// 		auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
-	// 		execution::Executor<Runnable> ex(th1);	
-	// 		execution::RunnableExecutorOpts exopts;
-	// 		exopts.independentTasks = true;
-	// 		exopts.lockOnce = false;
-	// 		const int idx0 = 0;
-	// 		auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
-	// 		th1->resume();
-	// 		core::waitForFutureThread(r);
-	// 		th1->suspend();
-	// 	},loopSize
-	// );
-	// _measureTest("Runnable executor WITHOUT independent tasks",
-	// 	[loopSize]()
-	// 	{
-	// 		auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-	// 		e´xopts.lockOnce = true;
-	// 		const int idx0 = 0;
-	// 		core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
-	// 	},loopSize
-	// );
+	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
+		[loopSize]() mutable
+		{
+			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			exopts.lockOnce = true;
+			int idx0 = 0;
+			auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
+			th1->resume();
+			core::waitForFutureThread(r);
+			th1->suspend();
+		},loopSize
+	);
+	_measureTest("Runnable executor with independent tasks,NO lockOnce on post and pausing thread",
+		[loopSize]() 	
+		{
+			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			exopts.lockOnce = false;
+			const int idx0 = 0;
+			auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
+			th1->resume();
+			core::waitForFutureThread(r);
+			th1->suspend();
+		},loopSize
+	);
+	_measureTest("Runnable executor WITHOUT independent tasks",
+		[loopSize]()
+		{
+			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			execution::Executor<Runnable> ex(th1);	
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = false;
+			exopts.lockOnce = false;
+			exopts.lockOnce = true;
+			const int idx0 = 0;
+			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+		},loopSize
+	);
 	// _measureTest("ThreadPool executor, grouped tasks",
 	// 	[loopSize]()
 	// 	{

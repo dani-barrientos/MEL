@@ -1,23 +1,53 @@
 #include <tasking/CriticalSection_mthread.h>
 using ::tasking::CriticalSection_mthread;
-using ::tasking::Lock_mthread;
+//using ::tasking::Lock_mthread;
 #include <tasking/ProcessScheduler.h>
 using ::tasking::ProcessScheduler;
 #include <stdexcept>
 
-CriticalSection_mthread::CriticalSection_mthread() :
+template <> CriticalSection_mthread<true>::CriticalSection_mthread() :
 	mEvent(false, true),
 	mOwner(NULL),
 	mCount(0)
 {
 }
-bool CriticalSection_mthread::enter()
+template <> bool CriticalSection_mthread<true>::enter()
 {
 	auto current = ProcessScheduler::getCurrentProcess();
 	//remember: this is not multithread, is multi-microthread
 	if (mOwner != current)
 	{
-		if (mEvent.wait() == Event_mthread::EVENTMT_WAIT_KILL)
+		if (mEvent.wait() == EEventMTWaitCode::EVENTMT_WAIT_KILL)
+			return false;
+		mEvent.reset();
+		mOwner = current;
+	}
+	mCount.fetch_add(1,std::memory_order_relaxed);	
+	return true;
+}
+template <> void CriticalSection_mthread<true>::leave()
+{
+	//if (--mCount == 0)
+	if (mCount.fetch_sub(1,std::memory_order_relaxed) == 1 )
+	{
+		mEvent.set(false);
+		mOwner = NULL;
+	}
+}
+
+CriticalSection_mthread<false>::CriticalSection_mthread() :
+	mEvent(false, true),
+	mOwner(NULL),
+	mCount(0)
+{
+}
+bool CriticalSection_mthread<false>::enter()
+{
+	auto current = ProcessScheduler::getCurrentProcess();
+	//remember: this is not multithread, is multi-microthread
+	if (mOwner != current)
+	{
+		if (mEvent.wait() == EEventMTWaitCode::EVENTMT_WAIT_KILL)
 			return false;
 		mEvent.reset();
 		mOwner = current;
@@ -25,7 +55,7 @@ bool CriticalSection_mthread::enter()
 	++mCount;
 	return true;
 }
-void CriticalSection_mthread::leave()
+void CriticalSection_mthread<false>::leave()
 {
 	if (--mCount == 0)
 	{
@@ -34,13 +64,12 @@ void CriticalSection_mthread::leave()
 	}
 }
 
-Lock_mthread::Lock_mthread(CriticalSection_mthread& cs) :mCS(cs)
-{
-	if (!cs.enter())
-		throw std::runtime_error("can't lock critical section");
-//		throw ::core::IllegalStateException("can't lock critical section");
-}
-Lock_mthread::~Lock_mthread()
-{
-	mCS.leave();
-}
+// Lock_mthread::Lock_mthread(CriticalSection_mthread& cs) :mCS(cs)
+// {
+// 	if (!cs.enter())
+// 		throw std::runtime_error("can't lock critical section");
+// }
+// Lock_mthread::~Lock_mthread()
+// {
+// 	mCS.leave();
+// }
