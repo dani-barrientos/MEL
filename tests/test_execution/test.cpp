@@ -1072,9 +1072,9 @@ int _testFor(tests::BaseTest* test)
 		{	
 			auto th1 = ThreadRunnable::create(true,opts);
 			execution::Executor<Runnable> ex(th1);			
-			execution::RunnableExecutorOpts opts;
-			opts.independentTasks = true;
-			ex.setOpts(opts);
+			execution::RunnableExecutorOpts exopts;
+			exopts.independentTasks = true;
+			ex.setOpts(exopts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 			//text::debug("hecho");
@@ -1086,9 +1086,9 @@ int _testFor(tests::BaseTest* test)
 		{	
 			auto th1 = ThreadRunnable::create(true,opts);
 			execution::Executor<Runnable> ex(th1);			
-			execution::RunnableExecutorOpts opts;
-			opts.independentTasks = true;
-			ex.setOpts(opts);
+			execution::RunnableExecutorOpts exOpts;
+			exOpts.independentTasks = true;
+			ex.setOpts(exOpts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 			//text::debug("hecho");
