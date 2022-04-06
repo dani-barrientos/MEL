@@ -24,6 +24,8 @@ using mpl::returnAdaptor;
 using core::TLS;
 #include <cassert>
 #include <core/Thread.h> //para pruebas, QUITAR!!!
+#include <limits>
+#undef max
 
 static TLS::TLSKey	gTLSCurrentProcessKey;
 static bool gTLSInited = false;
@@ -212,7 +214,7 @@ void ProcessScheduler::executeProcesses()
 				//very ugly methos until having a best approach. it should occur very,very few times, so 
 				//it shouldn't impact on performance
 				invalidate = (++count < maxCount);
-				core::Thread::yield();
+				core::Thread::yield();  
 				resetBuffer = true;
 			}
 		}while(invalidate);
