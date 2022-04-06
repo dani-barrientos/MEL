@@ -161,22 +161,13 @@ namespace tasking
 		};
 	public:			
 		static const unsigned int DEFAULT_POOL_SIZE = 512;
-		static const unsigned int DEFAULT_MAX_NEW_TASKS = DEFAULT_POOL_SIZE*4;
+		//static const unsigned int DEFAULT_MAX_NEW_TASKS = DEFAULT_POOL_SIZE*4;
 		
-		//error codes for Future::ErrorInfo when execute a task (see Runnable::execute)
-		/*
-		static const int ERRORCODE_UNKNOWN_EXCEPTION = 1; //when execute detectes exception but is unknown
-		static const int ERRORCODE_EXCEPTION = 2; //known exception. ErrorInfo in Future will contain the cloned exception		
-		*/
-	/*	
-	ahora no encaja mucho, ya veré con el tiempo
-	enum class State
+		struct RunnableCreationOptions
 		{
-			INITIALIZED, //!<only initialized, not running
-			RUNNING, //!<Running
-			FINISHED //!finshed, not running
+			unsigned int maxPoolSize = DEFAULT_POOL_SIZE; //!< maximum initial size for internal process pool. 
+			ProcessScheduler::SchedulerOptions schedulerOpts; //!< creation options for internal scheduler
 		};
-*/
 		inline ::core::ThreadId getOwnerThreadId() const { assert(mOwnerThread != 0); return mOwnerThread; }
 		/**
 		* Manually set the owner thread ID.
@@ -195,7 +186,7 @@ namespace tasking
 		friend class ::tasking::_private:: RunnableTask;
 		RunnableInfo* mCurrentInfo;
 		ProcessScheduler	mTasks;
-		unsigned int		mMaxPoolSize;  //max number of tasks for each pool (the number of pools is dynamic)
+		RunnableCreationOptions mOpts;
 		::tasking::_private::MemZoneList mRTZone;
 		//std::atomic<State>	mState;
 		CriticalSection	mMemPoolCS;		
@@ -234,15 +225,12 @@ namespace tasking
 		* @return an integer being the internal task id just created
 		* @internally, it calls protected onPostTask, so children can add custom behaviour
 		*/
-		void postTask(std::shared_ptr<Process> process,unsigned int startTime = 0,bool lockScheduler = true);
+		void postTask(std::shared_ptr<Process> process,unsigned int startTime = 0);
 
 		/**
-		* Creates a new runnable object.
-		* @param maxPoolSize initial size of task pool. Will grow until maxNewTasks is reached (in lock_free_mode)
-		* @param maxNewTasks maximum number of new tasks allowed for lock_free_mode. When this number of tasks is reached,
-		* all will continue working, but a little lock is aplied until processed. So, it's used as a way to improve performance
+		* @brief Constructor 
 		*/
-		Runnable(unsigned int maxPoolSize=DEFAULT_POOL_SIZE,unsigned int maxNewTasks = DEFAULT_MAX_NEW_TASKS);
+		Runnable(RunnableCreationOptions opts);
 		virtual ~Runnable();
 
 		/**
@@ -272,8 +260,7 @@ namespace tasking
 			F&& task_proc,
 			KF&& killFunction=killFalse,
 			/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
-			unsigned int period = 0,unsigned int startTime = 0,
-			bool lockScheduler = true);
+			unsigned int period = 0,unsigned int startTime = 0);
 		/**
 		 * @brief Convenient function to post no periodic task with signature void f()
 		 * @param[in] task_proc functor with signature void f(void)
@@ -283,8 +270,7 @@ namespace tasking
 		std::shared_ptr<Process> fireAndForget(
 			F&& task_proc,
 			unsigned int startTime = 0,
-			KF&& killFunction=killTrue,
-			bool lockScheduler = true);
+			KF&& killFunction=killTrue);
 		/**
 		* @brief Executes a function in a context of the Runnable.
 		* If this Runnable is in the same thread than caller then, depending on forcepost parameter, the functor
@@ -327,7 +313,7 @@ namespace tasking
 		{
 			return (unsigned int)getScheduler().getActiveProcessCount();
 		}
-		inline unsigned int getMaxPoolSize() const{ return mMaxPoolSize;}
+		inline unsigned int getMaxPoolSize() const{ return mOpts.maxPoolSize;}
 	private:
 
 	};
@@ -336,21 +322,20 @@ namespace tasking
 	std::shared_ptr<Process> Runnable::post(
 		F&& task_proc,
 		KF&& killFunction,
-		unsigned int period,unsigned int startTime,bool lockScheduler )
+		unsigned int period,unsigned int startTime )
 	{
 		::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
 		p->setProcessCallback( ::std::forward<F>(task_proc) );
 		p->setPeriod( period );
 		p->setKillCallback( ::std::forward<KF>(killFunction) );
-		postTask(p,startTime,lockScheduler);
+		postTask(p,startTime);
 		return p;	
 	}
 	template <class ProcessType ,class AllocatorType, class F,class KF>		
 	std::shared_ptr<Process> Runnable::fireAndForget(
 			F&& f,
 			unsigned int startTime,
-			KF&& killFunction,
-			bool lockScheduler )
+			KF&& killFunction)
 	{
 		// return post<ProcessType,AllocatorType>(
 		// 	RUNNABLE_CREATETASK
@@ -369,7 +354,7 @@ namespace tasking
 				f();
 				return ::tasking::EGenericProcessResult::KILL;
 			}
-			,std::forward<KF>(killFunction),0,startTime,lockScheduler
+			,std::forward<KF>(killFunction),0,startTime
 		);
 	}
 

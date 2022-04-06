@@ -370,13 +370,13 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
 //@todo habrái que hacerlo con un profiler, un sistema de benchmarking...
 int  _testPerformanceLotTasks(tests::BaseTest* test)
 {
-//algo tengo mal en los presets que en window dsrelease no tira, lo raro es que está gemnerando una caprta debug aunque sea relase
-//parece ser que es por cosas del generador de MSVC que no sabe la configuracion
 	int result = 0;
 	constexpr int nIterations = 1;
 	constexpr int nTasks = 100000;
 
-	auto th1 =ThreadRunnable::create(true,nTasks); //GenericThread::createEmptyThread(true,true,nTasks);
+	Runnable::RunnableCreationOptions opts;
+	opts.maxPoolSize = nTasks;
+	auto th1 =ThreadRunnable::create(true,opts);
 	th1->start();	
 	uint64_t t0,t1;
 	int count = 0;
@@ -427,51 +427,67 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 	//Thread::sleep(45000);	
 	return result;
 }
+//@note para pruebas lock free
 std::atomic<int> sCount(0);
 int _test_concurrent_post( ::tests::BaseTest* test)
 {	
-	auto consumer =ThreadRunnable::create(true,500,2000);
-	constexpr int NUM_POSTS = 4;
-	constexpr int NUM_ITERS = 700;
-	std::array< std::shared_ptr<ThreadRunnable>,60> producers;
+	constexpr int NUM_POSTS = 100000;
+	constexpr int NUM_PRODUCERS = 50;
+	{
+	Runnable::RunnableCreationOptions opts;
+	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2};
+	//opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+	auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
+	std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
 	for(size_t i=0;i<producers.size();++i)
 	{
 		producers[i] = ThreadRunnable::create(true);
 	}
-
-	//consumer->suspend();
-
-	for(int c = 0; c < NUM_ITERS; c++ )
-	{
-		for(size_t i=0;i<producers.size();++i)
+	for(size_t i=0;i<producers.size();++i)
+	{		
+		producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
 		{
-			producers[i]->fireAndForget(
-				[consumer,NUM_POSTS]()
+			::tasking::Process::wait(50);//to wait for all producer posts done
+			for(auto i = 0; i < NUM_POSTS; ++i)
+			{
+				//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+				//if (::tasking::Process::wait(1000) == ::tasking::Process::ESwitchResult::ESWITCH_OK)
 				{
-					for(auto i = 0; i < NUM_POSTS; ++i)
-					{
-						//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-						//if (::tasking::Process::wait(1000) == ::tasking::Process::ESwitchResult::ESWITCH_OK)
+					consumer->fireAndForget(
+						[]()
 						{
-							consumer->fireAndForget(
-								[]()
-								{
-									++sCount;
-								}
-							);
-						}
-					}
+							++sCount;
+						},0,Runnable::killFalse
+					);
 				}
+			}
+			return tasking::EGenericProcessResult::KILL;
+		},Runnable::killFalse);
+	}
+/*
+//prueba sin usar producers, desde aqui directamente
+	for(auto i = 0; i < NUM_POSTS; ++i)
+	{
+		//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+		//if (::tasking::Process::wait(1000) == ::tasking::Process::ESwitchResult::ESWITCH_OK)
+		{
+			consumer->fireAndForget(
+				[]()
+				{
+					++sCount;
+				},0,Runnable::killFalse
 			);
 		}
 	}
+*/
 	text::info("Esperando...");
-	//consumer->resume();
-	Thread::sleep(10000);
-	if ( sCount == producers.size()*NUM_POSTS*NUM_ITERS )
+	//Thread::sleep(5000);  //no tengo que hacerlo, pero peta con el lockfree, lo quitaré cuando esté bien todo
+	}
+	
+	if ( sCount == NUM_PRODUCERS*NUM_POSTS )
 		text::info("_test_concurrent_post OK. {} Posts",sCount.load());
 	else
-		text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",producers.size()*NUM_POSTS*NUM_ITERS,sCount.load());
+		text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",NUM_PRODUCERS*NUM_POSTS,sCount.load());
 	return 0;
 }
 int _throwExc(int& v)

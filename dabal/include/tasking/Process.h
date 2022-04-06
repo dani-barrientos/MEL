@@ -1,4 +1,9 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2001,20021 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 #include <DabalLibType.h>
 #include <core/Type.h>

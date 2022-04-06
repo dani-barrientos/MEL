@@ -124,10 +124,10 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
             result = true;
             break;
         case KERN_NOT_SUPPORTED:
-            Logger::getLogger()->error("Error setting thread affinity. Operation not supported");
+            text::error("Error setting thread affinity. Operation not supported");
             break;
         default:
-            Logger::getLogger()->errorf("Error setting thread affinity: %d",err);
+            text::errorf("Error setting thread affinity: %d",err);
     }
      */
     return true;
@@ -147,7 +147,7 @@ static bool _setAffinity(uint64_t affinity, HANDLETYPE h )
 	if (!result)
 	{
 		int err = errno;
-		//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);		
+
 		text::error("Error setting thread affinity. {}", err);
 	}
 	
@@ -521,7 +521,7 @@ bool Thread::setAffinity(uint64_t affinity)
 		if (!result)
 		{
 			int err = errno;
-			//Logger::getLogger()->errorf("Error setting thread affinity. %d", 1, err);
+			//text::error("Error setting thread affinity. {}", err);
 		}
 	}
 	else

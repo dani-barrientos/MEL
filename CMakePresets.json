@@ -178,14 +178,14 @@
             "hidden": true,
             "filter": {
                 "include": {
-                    "name": "Run1"
+                    "name": "RunAll"
                 }
             },
             "execution": {
                 "stopOnFailure": true
             },
             "output": {
-                "verbosity": "default"
+                "verbosity": "verbose"
             }
         },
         {

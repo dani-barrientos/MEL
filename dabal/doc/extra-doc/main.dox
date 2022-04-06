@@ -1,7 +1,11 @@
 
 /**
 \mainpage Introduction
-\a \b dabal is a library  for cooperative multitasking and, quite simple but useful, parallelism functionalities. The base piece of the system es de so called \ref ::tasking::Process "microthread",
+\a \b dabal is a library  for cooperative multitasking and generic execution system. Also it includes some quite simple but useful parallelism functionalities. 
+For a powerful parallelism engine there are some good options as https://oneapi-src.github.io/oneTBB/index.html. Those kind of libraries could be integrated in the 
+\ref execution_system  "the execution system" as a new engine.
+
+The base piece of the system es de so called \ref ::tasking::Process "microthread",
 which can be seen as lightweight threads for cooperative multitasking (similar, but not equal, in concept as Windows fibers o coroutines).
 From now on, we will use *Process* instead of *microthread* for readability and to capture de idea that we are talking about processes (tasks), but without forgetting their *microthread* capabilities,
 which are almost the same as a usually a thread has: \ref ::tasking::Process::wait "wait", \ref ::tasking::Process::sleep "sleep", \ref ::tasking::Process::switchProcess "switchProcess" (usually known as *yield*)

@@ -59,7 +59,6 @@ void* ::tasking::_private::RunnableTask::operator new( size_t s,Runnable* owner 
 			}
 		}
 	}
-	//Logger::getLogger()->fatal( "Runnable::not enough memory" );
 	throw std::bad_alloc();
 	*/
 	
@@ -97,14 +96,14 @@ RTMemPool* Runnable::_addNewPool()
 	RTMemPool auxPool;
 	//reserve memory and mark all blocks as free 
 	auxPool.owner = this;
-	auxPool.pool = (RTMemBlock*)malloc( sizeof(RTMemBlock)*mMaxPoolSize );
+	auxPool.pool = (RTMemBlock*)malloc( sizeof(RTMemBlock)*mOpts.maxPoolSize );
 	auxPool.count = 0;
 	mRTZone.push_front(std::move(auxPool));
 	//@todo guardar iterador
 	auto poolIterator = mRTZone.getList().begin();
 	//poolIterator->iterator = poolIterator;
 	result = &(*poolIterator);
-	for ( unsigned int i = 0; i < mMaxPoolSize; ++i )
+	for ( unsigned int i = 0; i < mOpts.maxPoolSize; ++i )
 	{
 		result->pool[i].memState = RTMemBlock::EMemState::FREE;
 		result->pool[i].owner = result;
@@ -154,14 +153,13 @@ Runnable* Runnable::getCurrentRunnable()
 	}*/
 }
 
-Runnable::Runnable(unsigned int maxPoolSize,unsigned int maxNewTasks):
+Runnable::Runnable(RunnableCreationOptions options ):
 	mCurrentInfo(nullptr),
-	//mState(State::INITIALIZED),
-	mMaxPoolSize(maxPoolSize),
-	mTasks(maxPoolSize,maxNewTasks),
+	//mState(State::INITIALIZED),	
+	mTasks(options.schedulerOpts),
+	mOpts(std::move(options)),
 	mOwnerThread(0)  //assume 0 is invalid thread id!!
 {
-		
 	//create one default pool
 	gCurrrentRunnableCS.enter();
 	
@@ -193,13 +191,10 @@ void Runnable::setTimer(std::shared_ptr<Timer> timer )
 	mTasks.setTimer( timer );
 }
 
-void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime,bool lockScheduler)
+void Runnable::postTask(std::shared_ptr<Process> process, unsigned int startTime)
 {
 //	assert( process && "is NULL");
-	if ( lockScheduler)
-		mTasks.insertProcess( process,startTime );
-	else
-		mTasks.insertProcessNoLock( process,startTime );
+	mTasks.insertProcess( process,startTime );
 	onPostTask( process );
 }
 

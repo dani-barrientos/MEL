@@ -8,8 +8,8 @@ static TLS::TLSKey gCurrentThreadKey;
 static bool gCurrentThreadKeyCreated = false;
 static CriticalSection gCurrrentThreadCS;
 
-
-ThreadRunnable::ThreadRunnable( unsigned int maxTasksSize,unsigned int maxNewTasks):Runnable(maxTasksSize,maxNewTasks),mState(THREAD_INIT),mEnd(false),
+Runnable::RunnableCreationOptions ThreadRunnable::sDefaultOpts;
+ThreadRunnable::ThreadRunnable( Runnable::RunnableCreationOptions opts):Runnable(std::move(opts)),mState(THREAD_INIT),mEnd(false),
 	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
 	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&ThreadRunnable::_processAwaken, this));

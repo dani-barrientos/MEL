@@ -99,8 +99,8 @@ class MasterThread : public ThreadRunnable
 {
 	public:
 		MasterThread(std::shared_ptr<ThreadRunnable> producer,std::array<std::shared_ptr<ThreadRunnable>,nConsumers> consumers,unsigned int maxTime,::tests::BaseTest* test) : 
-			ThreadRunnable(true),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime),mTest(test)
-		{
+			ThreadRunnable(),mConsumers(consumers),mProducer(producer),mMaxTime(maxTime),mTest(test)
+		{	
 		}	
 		~MasterThread()
 		{

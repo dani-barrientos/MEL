@@ -90,25 +90,26 @@ tests::BaseTest* MyErrorInfo::test = nullptr;
  * class for testing copies, moves, etc..
  * 
  */
+static tests::BaseTest* sCurrentTest = nullptr;
 struct TestClass
 {
 	float val;
-	tests::BaseTest* test;
-	tests::BaseTest::LogLevel logLevel;
 	bool addToBuffer;
-	TestClass():test(nullptr){}
-	TestClass(tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(1),test(aTest),logLevel(ll),addToBuffer(atb)
+private:
+	tests::BaseTest::LogLevel logLevel;
+public:
+
+	TestClass(tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(1),logLevel(ll),addToBuffer(atb)
 	{
 		_printTxt("TestClass constructor\n");
 	}
-	explicit TestClass(float aVal,tests::BaseTest* aTest,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(aVal),test(aTest),logLevel(ll),addToBuffer(atb)
+	explicit TestClass(float aVal,tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info,bool atb = true):val(aVal),logLevel(ll),addToBuffer(atb)
 	{
 		_printTxt("TestClass constructor\n");
 	}
 	TestClass(const TestClass& ob)
 	{
 		val = ob.val;
-		test = ob.test;
 		logLevel = ob.logLevel;
 		addToBuffer = ob.addToBuffer;
 		_printTxt("TestClass copy constructor\n");
@@ -117,8 +118,6 @@ struct TestClass
 	{
 		val = ob.val;
 		ob.val = -1;
-		test = ob.test;
-//		ob.test = nullptr; lo necesito en destructor
 		logLevel = ob.logLevel;		
 		addToBuffer = ob.addToBuffer;
 		_printTxt("TestClass move constructor\n");
@@ -130,7 +129,6 @@ struct TestClass
 	TestClass& operator=(const TestClass& ob)
 	{
 		val = ob.val;
-		test = ob.test;
 		logLevel = ob.logLevel;
 		addToBuffer = ob.addToBuffer;
 		_printTxt("TestClass copy operator=\n");
@@ -140,18 +138,21 @@ struct TestClass
 	{
 		val = ob.val;
 		ob.val = -1;
-		test = ob.test;
 //		ob.test = nullptr; lo necesito en destructor
 		logLevel = ob.logLevel;
 		addToBuffer = ob.addToBuffer;
 		_printTxt("TestClass move operator=\n");
 		return *this;
 	}
+	void setLogLevel(tests::BaseTest::LogLevel ll)
+	{
+		logLevel = ll;
+	}
 	private:
 	void _printTxt(const string& str)
 	{
-		if (addToBuffer && test)
-			test->addTextToBuffer(str,logLevel);
+		if (addToBuffer && sCurrentTest)
+			sCurrentTest->addTextToBuffer(str,logLevel);
 		else
 		{
 			switch (logLevel)
@@ -184,13 +185,14 @@ int _testDebug(tests::BaseTest* test)
 	auto th1 = ThreadRunnable::create(true);	
 	//auto th2 = ThreadRunnable::create(true);	
 	execution::Executor<Runnable> exr(th1);		
-	exr.setOpts({true,false,false});
+	exr.setOpts({true,false});
 	//now executor for threadpool
 	parallelism::ThreadPool::ThreadPoolOpts opts;
 	auto myPool = make_shared<parallelism::ThreadPool>(opts);
 	parallelism::ThreadPool::ExecutionOpts exopts;
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
+	sCurrentTest = test;
 	{		
 		{	
 
@@ -200,7 +202,7 @@ int _testDebug(tests::BaseTest* test)
 			[test](int arg) noexcept
 			{
 				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-				return TestClass (8,test);
+				return TestClass (8);
 			},7) |
 			execution::next([](TestClass& tc) 
 			{
@@ -255,7 +257,7 @@ int _testDebug(tests::BaseTest* test)
 			| execution::next([](std::tuple<int,float>& input)
 			{
 				text::info("Values: [{}.{}] ",std::get<0>(input),std::get<1>(input));
-				return TestClass(11,nullptr);
+				return TestClass(11);
 			})
 			;
 			// try
@@ -458,8 +460,9 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 {
 
 	core::Event event;
-	TestClass pp(8,test);
+	TestClass pp(8);
 	vector<TestClass> vec;
+	sCurrentTest = test;
 	//use a task to make it more complex
 	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
 	{
@@ -467,13 +470,12 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		text::info("Simple functor chaining. using operator | from now");
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
-		{
-			
+		{		
 		auto th2 = ThreadRunnable::create();
 		execution::Executor<Runnable> ex2(th2);		
 		auto res1_1 = 
 			execution::start(ex)
-			| execution::inmediate(TestClass(initVal,test,ll)) 				
+			| execution::inmediate(TestClass(initVal,ll)) 				
 			| execution::parallel(
 				[](TestClass& v)
 				{
@@ -520,8 +522,9 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		}
 
 		}		
-		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
+		test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
 		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+
 		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 			
 		// 	base form to do the same
@@ -563,7 +566,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 
 		//now using reference
 		test->clearTextBuffer();
-		pp.logLevel = ll;
+		pp.setLogLevel(ll);
 		text::info("Simple functor chaining using reference");
 		try
 		{
@@ -617,11 +620,11 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 					{				
 						//fill de vector with a simple case for the result to be predecible
 						//I don't want out to log the initial constructions, oncly constructons and after this function
-						auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+						auto t = TestClass(INITIAL_VALUE,tests::BaseTest::LogLevel::None,false);
 						v.resize(LOOP_SIZE,t);	
 						for(auto& elem:v)
 						{
-							elem.logLevel = ll;
+							elem.setLogLevel(ll);
 							elem.addToBuffer = true;
 						}
 						return v;
@@ -702,11 +705,11 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 					{				
 						//fill de vector with a simple case for the result to be predecible
 						//I don't want out to log the initial constructions, oncly constructons and after this function
-						auto t = TestClass(INITIAL_VALUE,test,tests::BaseTest::LogLevel::None,false);
+						auto t = TestClass(INITIAL_VALUE,tests::BaseTest::LogLevel::None,false);
 						v.resize(LOOP_SIZE,t);	
 						for(auto& elem:v)
 						{
-							elem.logLevel = ll;
+							elem.setLogLevel(ll);
 							elem.addToBuffer = true;
 						}
 						return std::move(v); 
@@ -865,7 +868,7 @@ int _testLaunch( tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(true);			
 			execution::Executor<Runnable> exr(th1);
-			exr.setOpts({true,false,false});
+			exr.setOpts({true,false});
 			text::info("\n\tBasicTests with RunnableExecutor");
 			_basicTests(exr,th1.get(),test);
 			text::info("\n\tFinished BasicTests with RunnableExecutor");
@@ -1054,107 +1057,97 @@ auto gTestFunc=[](int idx)
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
-	// text::set_level(text::level::info);
-	
+	// text::set_level(text::level::info);	
     int loopSize = DEFAULT_LOOPSIZE;
     //check for loopsize options, if given
 	auto opt = tests::CommandLine::getSingleton().getOption("ls");
 	if ( opt != nullopt) {
 		loopSize = std::stol(opt.value());
 	}
-	#define CHUNK_SIZE 512	
-	
-	_measureTest("Runnable executor with independent tasks and lockOnce",
-		[loopSize]()
+	Runnable::RunnableCreationOptions blockingOpts;
+	Runnable::RunnableCreationOptions lockFreeOpts;
+	lockFreeOpts.schedulerOpts = tasking::ProcessScheduler::LockFreeOptions{10000,4}; //big initial buffer
+	_measureTest("Runnable executor with independent tasks",
+		[loopSize,opts = blockingOpts]()
 		{	
-			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			auto th1 = ThreadRunnable::create(true,opts);
 			execution::Executor<Runnable> ex(th1);			
 			execution::RunnableExecutorOpts opts;
 			opts.independentTasks = true;
-			opts.lockOnce = true;
 			ex.setOpts(opts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 			//text::debug("hecho");
-			#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-				th1->getScheduler().resetPool();
-			#endif
+			
 		},loopSize
 	);
-
-	_measureTest("Runnable executor with independent tasks and NO lockOnce on post",
-		[loopSize]()
-		{
-			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
-			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorOpts exopts;
-			exopts.independentTasks = true;
-			exopts.lockOnce = false;
-			ex.setOpts(exopts);
+	_measureTest("Runnable executor with independent tasks, Lock-free",
+		[loopSize,opts = lockFreeOpts]()
+		{	
+			auto th1 = ThreadRunnable::create(true,opts);
+			execution::Executor<Runnable> ex(th1);			
+			execution::RunnableExecutorOpts opts;
+			opts.independentTasks = true;
+			ex.setOpts(opts);
 			const int idx0 = 0;
-			// auto barrier = ex.loop(idx0,loopSize,gTestFunc,lhints,1
-			// );
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			//text::debug("hecho");
 			
 		},loopSize
 	);
 
-	_measureTest("Runnable executor with independent tasks,lockOnce and pausing thread",
-		[loopSize]() mutable
+	_measureTest("Runnable executor with independent tasks pausing thread",
+		[loopSize,opts = blockingOpts]() mutable
 		{
-			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
+			auto th1 = ThreadRunnable::create(false,opts);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorOpts exopts;
 			exopts.independentTasks = true;
-			exopts.lockOnce = true;
 			int idx0 = 0;
 			auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
 			th1->resume();
 			core::waitForFutureThread(r);
 			th1->suspend();
 		},loopSize
-	);
-	_measureTest("Runnable executor with independent tasks,NO lockOnce on post and pausing thread",
-		[loopSize]() 	
-		{
-			auto th1 = ThreadRunnable::create(false,CHUNK_SIZE);
-			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorOpts exopts;
-			exopts.independentTasks = true;
-			exopts.lockOnce = false;
-			const int idx0 = 0;
-			auto r = execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
-			th1->resume();
-			core::waitForFutureThread(r);
-			th1->suspend();
-		},loopSize
-	);
+	);	
 	_measureTest("Runnable executor WITHOUT independent tasks",
-		[loopSize]()
+		[loopSize,opts = blockingOpts]()
 		{
-			auto th1 = ThreadRunnable::create(true,CHUNK_SIZE);
+			auto th1 = ThreadRunnable::create(true,opts);
 			execution::Executor<Runnable> ex(th1);	
 			execution::RunnableExecutorOpts exopts;
 			exopts.independentTasks = false;
-			exopts.lockOnce = false;
-			exopts.lockOnce = true;
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 		},loopSize
 	);
-	// _measureTest("ThreadPool executor, grouped tasks",
-	// 	[loopSize]()
-	// 	{
-	// 		parallelism::ThreadPool::ThreadPoolOpts opts;
-	// 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
-	// 		execution::Executor<parallelism::ThreadPool> extp(myPool);
-	// 		execution::ThreadPoolExecutorOpts exopts;
-	// 		exopts.independentTasks = false;
-	// 		extp.setOpts(exopts);
-	// 		const int idx0 = 0;
-	// 		core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
-	// 	},loopSize
-	// );
+	_measureTest("ThreadPool executor, grouped tasks",
+		[loopSize]()
+		{
+			parallelism::ThreadPool::ThreadPoolOpts opts;
+			auto myPool = make_shared<parallelism::ThreadPool>(opts);
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
+			execution::ThreadPoolExecutorOpts exopts;
+			exopts.independentTasks = false;
+			extp.setOpts(exopts);
+			const int idx0 = 0;
+			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
+		},loopSize
+	);
+	_measureTest("ThreadPool executor, grouped tasks, lock-free",
+		[loopSize]()
+		{
+			parallelism::ThreadPool::ThreadPoolOpts opts;
+			opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+			auto myPool = make_shared<parallelism::ThreadPool>(opts);
+			execution::Executor<parallelism::ThreadPool> extp(myPool);
+			execution::ThreadPoolExecutorOpts exopts;
+			exopts.independentTasks = false;
+			extp.setOpts(exopts);
+			const int idx0 = 0;
+			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
+		},loopSize
+	);
 	/*
 	lo quito por ahora porque es mucho más lento y es bobada
 	_measureTest("ThreadPool executor, no grouped tasks",

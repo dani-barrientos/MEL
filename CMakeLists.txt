@@ -26,7 +26,6 @@ message( "Toolchain " ${CMAKE_TOOLCHAIN_FILE})
 project ("dabal")
 
 
-#add_compile_definitions(PROCESSSCHEDULER_USE_LOCK_FREE)
 add_compile_definitions(${DABAL_OS})
 add_compile_definitions(${DABAL_ARQ})
 if(USE_SPDLOG)

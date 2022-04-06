@@ -27,6 +27,7 @@ using ::mpl::Int2Type;
 #include <atomic>
 #include <memory>
 #include <deque>
+#include <variant>
 
 namespace tasking
 {
@@ -43,8 +44,8 @@ namespace tasking
 	{
 		typedef unsigned int ThreadID;
 		friend class Process;
-		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-		class NewTasksContainer
+		//container for new tasks when using lock_Free
+		class LockFreeTasksContainer
 		{		
 			public:	
 				struct ElementType
@@ -60,11 +61,11 @@ namespace tasking
 				std::atomic<size_t> mSize;
 				std::deque<PoolType> mPool;				
 				size_t mChunkSize;
-				size_t mMaxSize;
+				size_t mMaxSize; 
 				volatile bool mInvalidate;
 				CriticalSection mSC;
 			public:
-				NewTasksContainer(size_t chunkSize,size_t maxSize );
+				LockFreeTasksContainer(size_t chunkSize,size_t maxChunks );
 				PoolType::value_type& operator[](size_t idx);
 				void add(std::shared_ptr<Process>& process,unsigned int startTime);
 				inline size_t getCurrIdx(std::memory_order mo = std::memory_order_relaxed){
@@ -74,22 +75,43 @@ namespace tasking
 				size_t size() const{return mSize.load(std::memory_order_acquire);}  //pruebas memoryorder
 				//return previous value
 				size_t exchangeIdx(size_t v,std::memory_order order = std::memory_order_seq_cst);
-				void lock();
+				//void lock();
 				bool isInvalidate() const{ return mInvalidate;}
 				void setInvalidate(bool v){ mInvalidate = v;}
 				size_t getMaxSize() const{ return mMaxSize;}
 
 		};
-		#endif
+		
 	public:
 		typedef std::pair<std::shared_ptr<Process>,unsigned int> ProcessElement;
-		typedef forward_list<ProcessElement> TProcessList; //pairs of processes and starttime
-		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-		typedef NewTasksContainer TNewProcesses;
-		#else
-		typedef std::deque< std::pair<std::shared_ptr<Process>,unsigned int> > TNewProcesses; //pairs of processes and starttime
-		#endif
-		ProcessScheduler(size_t initialPoolSize,size_t maxNewTasks);
+		typedef forward_list<ProcessElement> TProcessList; //pairs of processes and starttime		
+		typedef std::deque< std::pair<std::shared_ptr<Process>,unsigned int> > TNewProcesses; //pairs of processes and starttime in blocking scheduler
+		
+
+		/**
+		 * @brief options for lock_free scheduler
+		 * 
+		 */
+		struct LockFreeOptions
+		{
+			size_t chunkSize = 512; //!< number of task per block
+			size_t maxChunks = 4; //!< maximun number of blocks to allocate when growing, before reset
+	
+		};
+		//! @brief option for blocking scheduler
+		struct BlockingOptions
+		{
+			//empty now
+		};
+		//!@brief Scheduler creation options. By default use BlockingOotions
+		typedef std::variant<BlockingOptions,LockFreeOptions> SchedulerOptions;
+		/**
+		 * @brief Constructor
+		 * 
+		 * @param initialPoolSize  initial size of pool tasks, that will grow if neccesary. if > maxNewTasks, is assigned same value (only for lock-free mode)
+		 * @param maxNewTasks maximum task to grow the pool. When this size is overcame, the buffer is reseted.(only for lock-free mode)
+		 */
+		ProcessScheduler( SchedulerOptions opts);
 		~ProcessScheduler(void);
 
 		/**
@@ -159,7 +181,7 @@ namespace tasking
 		//inline bool checkFor(unsigned int taskId);
 
 		inline TProcessList& getProcesses();
-		inline TNewProcesses& getPendingProcesses();
+//		inline TNewProcesses& getPendingProcesses();
 		/**
 		* remove all processes without taking care
 		* @remarks for use with caution
@@ -175,13 +197,6 @@ namespace tasking
 		*/
 		inline const std::shared_ptr<Timer> getTimer() const;
 		inline std::shared_ptr<Timer> getTimer() ;
-		/**
-		 * @brief Get the Lock object
-		 * @details Requesting lock on CriticalSection will avoid scheduler to access task while locked
-		 * @warning use very carefully!! 
-		 * @return CriticalSection& 
-		 */
-		inline CriticalSection& getLock(){ return mCS;}
 
         /**
         * get current executing process in currenexecutiont thread
@@ -223,24 +238,18 @@ namespace tasking
 		{
 			mES.unsubscribeCallback(id);
 		}
-
-		#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-		//pruebas
-		void resetPool();
-		#endif
-	private:		
-
-		WakeSubscriptor mWS;
-		SleepSubscriptor mSS;
-		EvictSubscriptor mES;
+	private:				
+		SchedulerOptions mOpts;
+		bool mIsLockFree; //same as checking index in mOpts but for performance
 		struct ProcessInfo  //for TLS
 		{
 			std::shared_ptr<Process> current;
 		};
 		ProcessInfo*	mProcessInfo;
 		TProcessList mProcessList;
-		//new processes to insert next time
-		TNewProcesses  mNewProcesses;
+		std::unique_ptr<LockFreeTasksContainer> mLockFreeTasks;
+		//new processes to insert next time blocking variant
+		TNewProcesses  mBlockingTasks;
 		size_t mLastIdx;	
 		mutable CriticalSection	mCS;		
 		std::shared_ptr<Timer>			mTimer;
@@ -250,6 +259,9 @@ namespace tasking
 		#ifndef NDEBUG
 		void* _stack = nullptr;
 		#endif
+		WakeSubscriptor mWS;
+		SleepSubscriptor mSS;
+		EvictSubscriptor mES;
 
 		/**
 		* helper function
@@ -288,10 +300,10 @@ namespace tasking
 	{
 		return mProcessList;
 	}
-	ProcessScheduler::TNewProcesses& ProcessScheduler::getPendingProcesses()
+	/*ProcessScheduler::TNewProcesses& ProcessScheduler::getPendingProcesses()
 	{
 		return mNewProcesses;
-	}
+	}*/
 
 	unsigned int ProcessScheduler::getProcessCount() const
 	{

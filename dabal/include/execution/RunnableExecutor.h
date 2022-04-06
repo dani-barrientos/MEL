@@ -14,8 +14,6 @@ namespace execution
     struct RunnableExecutorOpts
     {
         bool independentTasks = true; //<! if true, try to make each iteration independent
-        //opcion temporal, espero poder quitarla
-        bool lockOnce = false; //!<if true,Runnable internal scheduler lock is taken before posting loop taksks
         bool autoKill = true; //!<if true, launched tasks will be autokilled if the Runnable receives a kill signal, else, Runanble won't finish until tasks finished
     };
     /**
@@ -211,7 +209,6 @@ namespace execution
         {
             throw std::runtime_error("Runnable has been destroyed");
         }
-        bool mustLock = getOpts().lockOnce;
         bool autoKill = getOpts().autoKill;
         bool independentTasks = getOpts().independentTasks;
         int length;
@@ -221,8 +218,6 @@ namespace execution
             length = std::distance(begin, end);
         int nElements = independentTasks?(length+increment-1)/increment:1; //round-up        
         auto ptr = getRunnable().lock();        
-        if ( mustLock )
-            ptr->getScheduler().getLock().enter();
     
         ::parallelism::Barrier barrier(nElements);
         if ( independentTasks)
@@ -234,7 +229,7 @@ namespace execution
                     {
                         functor(i);
                         barrier.set();
-                    },0,autoKill?Runnable::killTrue:Runnable::killFalse,!mustLock
+                    },0,autoKill?Runnable::killTrue:Runnable::killFalse
                 );
             }
         }else
@@ -247,11 +242,9 @@ namespace execution
                             functor(i);            
                         }            
                         barrier.set();
-                    },0,autoKill?Runnable::killTrue:Runnable::killFalse,!mustLock
+                    },0,autoKill?Runnable::killTrue:Runnable::killFalse
                 );           
-        }
-        if ( mustLock )
-            ptr->getScheduler().getLock().leave();
+        }        
         return barrier;
     }
     template <class TArg,class ...FTypes> ::parallelism::Barrier Executor<Runnable>::parallel( ExFuture<Runnable,TArg> fut,std::exception_ptr& except,FTypes&&... functions)

@@ -105,7 +105,7 @@ This functions could be used as:
 	//create a RunnableExecutor
 	auto th = ThreadRunnable::create(true);			
 	execution::Executor<Runnable> exr(th);
-	exr.setOpts({true,false,false});
+	exr.setOpts({true,false});
 	_sampleBasic(exr); //call sample with the RunnableExecutor
 	//now create an executor based on a ThreadPool
 	parallelism::ThreadPool::ThreadPoolOpts opts;
@@ -467,7 +467,7 @@ void _sampleTransfer()
 {	
 	auto th = ThreadRunnable::create();
 	execution::Executor<Runnable> exr(th);
-	exr.setOpts({true,false,false});
+	exr.setOpts({true,false});
 	parallelism::ThreadPool::ThreadPoolOpts opts;
 	auto myPool = make_shared<parallelism::ThreadPool>(opts);
 	parallelism::ThreadPool::ExecutionOpts exopts;

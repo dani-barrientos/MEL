@@ -73,39 +73,7 @@ namespace core {
 	 * It allows up to four base clases (multiple inheritance)
 	 */
 
-	class DABAL_API Type {
-		private:
-
-			class DABAL_API ReflectionMap
-			{
-				friend class Type;
-			public:
-
-
-				ReflectionMap();
-				~ReflectionMap();
-				const Type * operator[](const char * name);
-
-			private:
-
-				CriticalSection mCS;
-				std::map<std::string, const Type *> mReflectionMap;
-
-				void registerType (const char * name, const Type * type);
-				void unregisterType (const char * name);
-			};
-
-		public:
-			
-			inline static ReflectionMap& Reflection()
-			{
-				// En principio no es necesario hacer thread-safe este m�todo para evitar la construcci�n duplicada
-				// del ReflectionMap, porque no existe posibidad ya que se crear� en la fase de inicializaci�n, siendo
-				// todas las llamadas desde el mismo hilo de aplicaci�n.
-				static ReflectionMap mReflection;
-				return mReflection;
-			}
-
+	class DABAL_API Type {		
 		private:
 
 			const char* mName;

@@ -31,18 +31,17 @@ namespace tasking
             THREAD_FINISHING = binary<1000>::value, 
             THREAD_FINISHING_DONE = binary<10000>::value,
             THREAD_FINISHED = binary<100000>::value
-        };	
+        };        
 		/**
 		 * @brief Create new ThreadRunnable
 		 * 
 		 * @param autoRun if false, thread will be created suspende (but really running). The reason to no call this parameter "createSuspended" is because legacy issues
-		 * @param maxTasksSize 
-         * @param maxNewTasks maximum number of new task to posted until pool es reset, so incurring in a little extra cost
+		 * @param opts creation options
 		 * @return std::shared_ptr<ThreadRunnable> 
 		 */
-		static std::shared_ptr<ThreadRunnable> create( bool autoRun = true,unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE,unsigned int maxNewTasks = Runnable::DEFAULT_MAX_NEW_TASKS )
+		static std::shared_ptr<ThreadRunnable> create( bool autoRun = true,Runnable::RunnableCreationOptions opts = sDefaultOpts)
 		{
-            auto th = new ThreadRunnable(maxTasksSize,maxNewTasks);
+            auto th = new ThreadRunnable(std::move(opts));
             th->start();
             std::shared_ptr<ThreadRunnable> result(th);
 			if (!autoRun)  //really means auto pause if no autorun, always create running
@@ -92,10 +91,8 @@ namespace tasking
         */
         static ThreadRunnable* getCurrentThreadRunnable();
 	private:
-        // struct ThreadInfo
-        // {
-        //     std::shared_ptr<ThreadRunnable> tr;
-        // };
+        static Runnable::RunnableCreationOptions sDefaultOpts;
+        
         std::unique_ptr<Thread> mThread;
 	#ifdef USE_CUSTOM_EVENT
 		Event	mWaitForTasks; 
@@ -119,7 +116,7 @@ namespace tasking
         /**
 		* @brief Create a thread with an empty loop, that continuosly processes posted tasks
 		*/
-        ThreadRunnable( unsigned int maxTasksSize = Runnable::DEFAULT_POOL_SIZE,unsigned int maxNewTasks = Runnable::DEFAULT_MAX_NEW_TASKS);
+        ThreadRunnable( Runnable::RunnableCreationOptions opts = sDefaultOpts) ;
         /**
          * @brief Called by start() function
          * Children can override it to add custom behaviour

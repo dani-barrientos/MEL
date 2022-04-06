@@ -30,7 +30,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 		mPool = new std::shared_ptr<ThreadRunnable>[mNThreads];
 		for (unsigned int i = 0; i < mNThreads; ++i)
 		{
-			auto th = ThreadRunnable::create(false);
+			auto th = ThreadRunnable::create(false,opts.threadOpts);
 			mPool[i] = th;
 			if (pAff != 0 && applyAffinity)
 			{

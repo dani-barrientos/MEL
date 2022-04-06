@@ -224,7 +224,7 @@ void _sampleTransfer()
 {	
 	auto th = ThreadRunnable::create();
 	execution::Executor<Runnable> exr(th);
-	exr.setOpts({true,false,false});
+	exr.setOpts({true,false});
 	parallelism::ThreadPool::ThreadPoolOpts opts;
 	auto myPool = std::make_shared<parallelism::ThreadPool>(opts);
 	parallelism::ThreadPool::ExecutionOpts exopts;
@@ -386,7 +386,7 @@ void test_execution::samples()
 	text::set_level(text::level::info);
 	auto th = ThreadRunnable::create(true);			
 	execution::Executor<Runnable> exr(th);
-	exr.setOpts({true,false,false});
+	exr.setOpts({true,false});
 	parallelism::ThreadPool::ThreadPoolOpts opts;
 	auto myPool = std::make_shared<parallelism::ThreadPool>(opts);
 	parallelism::ThreadPool::ExecutionOpts exopts;

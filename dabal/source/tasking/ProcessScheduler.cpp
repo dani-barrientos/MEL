@@ -28,34 +28,34 @@ using core::TLS;
 static TLS::TLSKey	gTLSCurrentProcessKey;
 static bool gTLSInited = false;
 static CriticalSection gPSCS;
-#ifdef PROCESSSCHEDULER_USE_LOCK_FREE	
+
 //initial memory for new posted tasks
-ProcessScheduler::NewTasksContainer::NewTasksContainer(size_t chunkSize,size_t maxSize):
-	mChunkSize(chunkSize),mMaxSize(maxSize),mInvalidate(false)
+ProcessScheduler::LockFreeTasksContainer::LockFreeTasksContainer(size_t chunkSize,size_t maxChunks):
+	mChunkSize(chunkSize),mMaxSize(maxChunks*chunkSize),mInvalidate(false)
 {
-	if ( maxSize < chunkSize )
+	if ( mMaxSize == 0 )
 		mMaxSize = chunkSize;
 	//Create one chunk. it will grow when needed
 	mPool.emplace_back(chunkSize);
-	//mPool.resize(chunkSize);
 	mSize = chunkSize;
 }
-ProcessScheduler::NewTasksContainer::PoolType::value_type& ProcessScheduler::NewTasksContainer::operator[](size_t idx)
+ProcessScheduler::LockFreeTasksContainer::PoolType::value_type& ProcessScheduler::LockFreeTasksContainer::operator[](size_t idx)
 {	
 	size_t nPool = idx/mChunkSize;
 	size_t newIdx = idx%mChunkSize;
 	
 	return mPool[nPool][newIdx];
 }
-size_t ProcessScheduler::NewTasksContainer::exchangeIdx(size_t v,std::memory_order order)
+size_t ProcessScheduler::LockFreeTasksContainer::exchangeIdx(size_t v,std::memory_order order)
 {
 	return mCurrIdx.exchange(v,order);
 }
-void ProcessScheduler::NewTasksContainer::add(std::shared_ptr<Process>& process,unsigned int startTime)
+void ProcessScheduler::LockFreeTasksContainer::add(std::shared_ptr<Process>& process,unsigned int startTime)
 {	
 	bool insert = true;
 	size_t idx; 	
-	while(mInvalidate);
+	//block caller until buffer reset is resolved
+	while(mInvalidate){};  
 	idx = mCurrIdx.fetch_add(1,::std::memory_order_release);  //no lo tengo claro todavía, estudiar
 	if ( idx >= size())
 	{
@@ -67,6 +67,7 @@ void ProcessScheduler::NewTasksContainer::add(std::shared_ptr<Process>& process,
 			auto newSize = currSize + mChunkSize;
 			mPool.emplace_back(mChunkSize);
 			mSize.store(newSize,std::memory_order_release);
+	//		spdlog::info("añado chunk. New size= {}",newSize);
 		}
 	}
 	ElementType& element = operator[](idx);
@@ -74,35 +75,36 @@ void ProcessScheduler::NewTasksContainer::add(std::shared_ptr<Process>& process,
 	element.p = std::move(process);
 	element.valid.store(true,std::memory_order_release);
 }
-void ProcessScheduler::NewTasksContainer::clear()
+void ProcessScheduler::LockFreeTasksContainer::clear()
 {
 	mPool.clear();
 	mPool.emplace_back(mChunkSize);
 	mSize = mChunkSize;
 }
 
-void ProcessScheduler::NewTasksContainer::lock()
-{
-	Lock lck(mSC);
-}
-void ProcessScheduler::ProcessScheduler::resetPool()
-{
-	mNewProcesses.exchangeIdx(0);
-	mLastIdx = 0;
-	mNewProcesses.clear();
-}
-#endif
-ProcessScheduler::ProcessScheduler(size_t initialPoolSize,size_t maxNewTasks):
+// void ProcessScheduler::LockFreeTasksContainer::lock()
+// {
+// 	Lock lck(mSC);
+// }
+
+
+
+ProcessScheduler::ProcessScheduler(SchedulerOptions opts):
 	mLastIdx(0),
 	mTimer( nullptr ),
-#ifdef PROCESSSCHEDULER_USE_LOCK_FREE	
-	mNewProcesses(initialPoolSize,maxNewTasks),
-#endif
+	mOpts(std::move(opts)),
 	mProcessCount( 0 ),
 	mInactiveProcessCount( 0 ),
 	mKillingProcess( false ),
 	mProcessInfo(nullptr)
 {
+	mIsLockFree = std::holds_alternative<LockFreeOptions>(mOpts);
+	if ( mIsLockFree)
+	{
+		const LockFreeOptions& op = std::get<LockFreeOptions>(mOpts);
+		mLockFreeTasks.reset(new LockFreeTasksContainer(op.chunkSize,op.maxChunks));
+	}
+
 	gPSCS.enter();
 	if ( !gTLSInited )
 	{
@@ -152,127 +154,97 @@ void ProcessScheduler::executeProcesses()
 	auto previousProcess = mProcessInfo->current;
 	assert(	mTimer != NULL );
 	uint64_t time= mTimer->getMilliseconds();
-
-#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-	bool invalidate = false;
-	bool resetBuffer = false;	
-	size_t currSize = mNewProcesses.size();
-	if ( currSize > mNewProcesses.getMaxSize())
+	if (mIsLockFree)
 	{
-		//need to reset buffer, too big
-		spdlog::info("Muy grande: {}",currSize);
-		mNewProcesses.setInvalidate(true);
-		invalidate = true;
-	}
-	int count = 0;
-	do
-	{
-		bool empty;
-		size_t endIdx = mNewProcesses.getCurrIdx(std::memory_order_acquire); 
-		if ( endIdx > currSize )
+		bool invalidate = false;
+		bool resetBuffer = false;	
+		size_t currSize = mLockFreeTasks->size();
+		if ( currSize > mLockFreeTasks->getMaxSize())
 		{
-			@todo ojo, no es correcto, no tiene mucho sentido
-			mNewProcesses.lock();
+			//need to reset buffer, too big
+			//spdlog::info("Muy grande: {}",currSize);
+			mLockFreeTasks->setInvalidate(true); //yo creo que en esto está lo que no furrula
+			invalidate = true;
 		}
-		NewTasksContainer::ElementType* element;
-		for(size_t idx = mLastIdx;idx < endIdx; ++idx)
-		{		
-			//maybe producer thread hasn't inserted the process yet
-			empty = true;
-			//auto& element = mNewProcesses[idx];
-			element = &mNewProcesses[idx];
-			do{
-				if ( element->valid)
-				//if ( element->p != nullptr && element->st != std::numeric_limits<unsigned int>::max())
-				{
-					element->p->mLastUpdateTime = time; 
-					element->p->setProcessScheduler( this );
-					//mProcessList.push_front( TProcessList::value_type(std::move(element->p),element->st) );
-					mProcessList.emplace_front( std::move(element->p),element->st );
-					element->st = std::numeric_limits<unsigned int>::max();
-					element->valid.store(false,std::memory_order_release);				
-					empty = false;
-				}
-				/*else
-					spdlog::info("VACIO");*/
-			}while(empty);
-		}
-		mLastIdx = endIdx;
-		if ( invalidate )
-		{
-			//@todo revisar, esto no es correcto realmente
-			//maybe index changed because new post was done while processing
-			//invalidate = (mNewProcesses.getCurrIdx() == endIdx);
-			//pruebas
-			invalidate = (++count < 10);
-			core::Thread::sleep(10);			
-			resetBuffer = true;
-		}
-	}while(invalidate);
-	if ( resetBuffer )
-	{
-		mNewProcesses.exchangeIdx(0,std::memory_order_acquire);
-		/*tebgo que impedir que siga creciendo el  uffer a lo tonto, ¿eliminar lo que hay?
-		es que si igualo el size, luego volverá a crecer->igual 
-		pero al borrarlo va a ser poco óptimo. Igual debería borrar sólo lo que me pasé del tamaño maximo
-		ahora para probar lo reseteo
-		*/
-		mNewProcesses.clear();
-		mNewProcesses.setInvalidate(false);
-	}
-	/*
-	mNewProcesses.block(); //avoid producer threads to overcome this idx temporaryly
-	auto oldIdx = mNewProcesses.exchangeIdx(0);
-	if ( oldIdx > mNewProcesses.size() )
-	{
-		mNewProcesses.lock();
-	}
-	//process remaining processes until now
-
-	for(size_t idx = endIdx;idx < oldIdx; ++idx)
-	{
-		//maybe producer thread hasn't inserted the process yet
-		//@todo cuidado que es un pair, podría estar uinsertado el proceso y no el tiempo
-		empty = true;
-		auto& element = mNewProcesses[idx];
+		int count = 0;
+		constexpr int maxCount = 10; //number of iterations to check for new task and give time for possible posting threads to finish their operation
 		do
 		{
-		//	if ( element.valid)
-			if ( element.p != nullptr)
-			{
-				element.p->mLastUpdateTime = time; 
-				element.p->setProcessScheduler( this );
-				mProcessList.push_front( TProcessList::value_type(std::move(element.p),element.st) );
-				//element.valid.store(false,std::memory_order_release);				
-				empty = false;
-			 }
-			 //else
-			// 	spdlog::info("VACIO");		
-		}while(empty);
-	}
-	mNewProcesses.unblock();//remove barrier
-	*/
-
-#else
-	//don't block if no new processes. size member is not atomic, but if a new process is being inserted in this moment, it will be inserted in next iteration
-	if ( !mNewProcesses.empty())
-	{
-		mCS.enter();
-		TNewProcesses::reverse_iterator i;
-		TNewProcesses::reverse_iterator end;
-		end = mNewProcesses.rend();
-	
-		for( auto i = mNewProcesses.rbegin(); i != end; ++i )
-		{			
-			(*i).first->mLastUpdateTime = time; 
-			(*i).first->setProcessScheduler( this );
-			mProcessList.push_front( std::move(*i) );
-		}
-		mNewProcesses.clear();	
+			bool empty;
+			size_t endIdx = mLockFreeTasks->getCurrIdx(std::memory_order_acquire); 
+			/*
+			intentar mejoras:
+			- lo de las iteraciones para ver si cambia el indice y el sleep es un ful. como mucho un yield
+			- es curiosi porque no se cumpló nunca que cambiase el indice
+			- no me gusta lo del element->valid->especialmente no me gusta tener tantos atomic
+			*/
 		
-		mCS.leave();
+			LockFreeTasksContainer::ElementType* element;
+			if ( count > 0 && mLastIdx != endIdx)
+			{
+				//para depuracion
+				text::info("index changed in iteration {}",count);
+			}
+			for(size_t idx = mLastIdx;idx < endIdx; ++idx)
+			{		
+				//maybe producer thread hasn't inserted the process yet
+				empty = true;
+				element = &(*mLockFreeTasks)[idx];
+				do{
+					if ( element->valid)
+					//if ( element->p != nullptr && element->st != std::numeric_limits<unsigned int>::max())
+					{
+						element->p->mLastUpdateTime = time; 
+						element->p->setProcessScheduler( this );
+						//mProcessList.push_front( TProcessList::value_type(std::move(element->p),element->st) );
+						mProcessList.emplace_front( std::move(element->p),element->st );
+						element->st = std::numeric_limits<unsigned int>::max();
+						element->valid.store(false,std::memory_order_release);				
+						empty = false;
+					}
+					/*else
+						spdlog::info("VACIO");*/
+				}while(empty);
+			}
+			mLastIdx = endIdx;
+			if ( invalidate )
+			{
+				//very ugly methos until having a best approach. it should occur very,very few times, so 
+				//it shouldn't impact on performance
+				invalidate = (++count < maxCount);
+				core::Thread::yield();
+				resetBuffer = true;
+			}
+		}while(invalidate);
+		if ( resetBuffer )
+		{
+			mLockFreeTasks->exchangeIdx(0,std::memory_order_acquire);
+			mLastIdx = 0;
+			mLockFreeTasks->clear();
+			mLockFreeTasks->setInvalidate(false);
+			//text::info("Buffer reseteado");
+		}	
+	}else
+	{
+		//don't block if no new processes. size member is not atomic, but if a new process is being inserted in this moment, it will be inserted in next iteration
+		if ( !mBlockingTasks.empty())
+		{
+			mCS.enter();
+			TNewProcesses::reverse_iterator i;
+			TNewProcesses::reverse_iterator end;
+			end = mBlockingTasks.rend();
+		
+			for( auto i = mBlockingTasks.rbegin(); i != end; ++i )
+			{			
+				(*i).first->mLastUpdateTime = time; 
+				(*i).first->setProcessScheduler( this );
+				mProcessList.push_front( std::move(*i) );
+			}
+			mBlockingTasks.clear();	
+			
+			mCS.leave();
+		}
 	}
-#endif
 	_executeProcesses( time,mProcessList);
 	mProcessInfo->current = previousProcess;
 }
@@ -417,7 +389,8 @@ void ProcessScheduler::destroyAllProcesses()
 		(*i).first->setProcessScheduler( NULL );
 	}
 	mProcessList.clear();
-	mNewProcesses.clear();
+	mBlockingTasks.clear();
+	mLockFreeTasks=nullptr;
 }
 
 void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned int startTime)
@@ -425,12 +398,14 @@ void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned 
 	if (process == nullptr)
 		return;
 	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
-#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-	mNewProcesses.add( process,startTime );
-#else
-	Lock lck(mCS);
-	mNewProcesses.push_back( std::make_pair(process,startTime) );
-#endif
+	if ( mIsLockFree)
+	{
+		mLockFreeTasks->add( process,startTime );
+	}else
+	{
+		Lock lck(mCS);
+		mBlockingTasks.push_back( std::make_pair(process,startTime) );
+	}
 }
 
 
@@ -439,12 +414,13 @@ void ProcessScheduler::insertProcessNoLock( std::shared_ptr<Process> process,uns
 	if (process == nullptr)
 		return;
 	mProcessCount.fetch_add(1,::std::memory_order_relaxed);
-
-#ifdef PROCESSSCHEDULER_USE_LOCK_FREE
-	mNewProcesses.add( process,startTime );
-#else
-	mNewProcesses.push_back( std::make_pair(process,startTime) );
-#endif
+	if ( mIsLockFree)
+	{
+		mLockFreeTasks->add( process,startTime );
+	}
+	{
+		mBlockingTasks.push_back( std::make_pair(process,startTime) );
+	}
 }
 
 void ProcessScheduler::setTimer(std::shared_ptr<Timer> timer )

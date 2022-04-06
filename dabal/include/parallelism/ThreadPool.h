@@ -47,6 +47,7 @@ namespace parallelism
 			int nThreads = THREADS_USE_ALL_CORES; //number of threads to create or THREADS_USE_ALL_CORES. if negative number, means all available cores minus nThreads (p.e, if 8 available cores and set -2, use 6 cores)
 			uint64_t affinity = THREAD_AFFINITY_ALL;  //by default, all cores allowed
 			bool forceAffinitty = false; //force each thread to be in a fixed core 
+			Runnable::RunnableCreationOptions threadOpts;
 		};
 		//typedef Callback<void, void> TaskType;
 
