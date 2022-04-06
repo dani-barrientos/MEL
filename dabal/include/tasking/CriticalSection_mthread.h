@@ -25,7 +25,7 @@ namespace tasking
 		std::shared_ptr<::tasking::Process>	mOwner;
 		std::atomic<int>	mCount; //number of times owner as acquired section
 	};
-	template <> class CriticalSection_mthread<false>
+	template <> class DABAL_API CriticalSection_mthread<false>
 	{
 	public:
 		CriticalSection_mthread();

@@ -25,50 +25,6 @@ void EventBase::_set( bool sendToAll )
 		reset();
 	}
 }
-
-/*Event_mthread::EWaitCode Event_mthread::_wait( unsigned int msecs ) 
-{
-	EWaitCode result = EVENTMT_WAIT_OK;
-	mCS.enter();
-	if ( !mSignaled )
-	{
-		auto p = ProcessScheduler::getCurrentProcess();
-		mWaitingProcesses.push_back( p ); //remember. not multithread-safe
-        
-		Process::ESwitchResult switchResult;
-		if ( msecs == EVENTMT_WAIT_INFINITE )
-			switchResult = ::tasking::Process::sleepAndDo([this]()
-			{
-				mCS.leave();
-			} );
-		else
-			switchResult = ::tasking::Process::waitAndDo(msecs, [this]()
-			{
-				mCS.leave();
-			});
-		switch ( switchResult )
-		{
-		case Process::ESwitchResult::ESWITCH_KILL:
-			result = EVENTMT_WAIT_KILL;
-			break;
-		case Process::ESwitchResult::ESWITCH_WAKEUP:
-			result = EVENTMT_WAIT_OK; 
-			break;
-		default:
-			result = EVENTMT_WAIT_TIMEOUT;
-			break;
-		}
-		//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
-		//maybe other process do wait on this events
-        mCS.enter();
-		mWaitingProcesses.remove( p );
-        mCS.leave();
-	}else
-		mCS.leave();
-	return result;
-}
-*/
-
 void EventBase::reset()
 {
 	mSignaled = false;

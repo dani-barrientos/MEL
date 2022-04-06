@@ -15,7 +15,7 @@ namespace tasking
 				EVENTMT_WAIT_TIMEOUT,
 				EVENTMT_WAIT_KILL};
 	static const int EVENTMT_WAIT_INFINITE = -1;
-	class EventBase
+	class DABAL_API EventBase
 	{
 		public:
 			EventBase(bool autoRelease=true, bool signaled=false);
@@ -36,7 +36,7 @@ namespace tasking
 	/**
 	 * @brief Policy for multithread safe event
 	 */
-	class EventMTThreadSafePolicy : public EventBase
+	class DABAL_API EventMTThreadSafePolicy : public EventBase
 	{
 		public:
 			EventMTThreadSafePolicy(bool autoRelease, bool signaled);
@@ -100,11 +100,11 @@ namespace tasking
 		/**
 	 * @brief Policy for non-multithread safe event
 	 */
-	class EventNoMTThreadSafePolicy : public EventBase
+	class DABAL_API EventNoMTThreadSafePolicy : public EventBase
 	{
 		public:
 			EventNoMTThreadSafePolicy(bool autoRelease, bool signaled);
-			void set(bool sendToAll)
+			inline void set(bool sendToAll)
 			{
 				EventBase::_set(sendToAll);
 			}
