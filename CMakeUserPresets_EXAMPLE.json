@@ -139,6 +139,26 @@
                     ]
                 }
             }    
+        },
+        {
+            "name": "Mac Debug",
+            "inherits":"Mac Debug Base",
+            "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_TOOLCHAIN_FILE":"/Users/dani/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            }
+        },
+        {
+            "name": "Mac Release",
+            "inherits": "Mac Release Base",
+            "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_TOOLCHAIN_FILE":"/Users/dani/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            }
         }
     ],  
      "buildPresets": [
