@@ -9,8 +9,8 @@ Very brief guide on how to build.
 
 *CMakePresets.json* file includes the base configuration for builds in Windows, MacOsX and Linux, but you need to provide your *CMakeUserPresets* for your concrete case. A *CMakeUserPresets_EXAMPLE.json* is included as a guide toi crete your custom configuration.
 There are 2 diferent macros that guide compilation based on target platform.
-- MEL_OS : target operating system. Available OS are: **MEL_WINDOWS**, **MEL_LINUX**,**MEL_MACOSX**,**MEL_ANDROID** (iOS platform is working progress)
-- MEL_ARQ: CPU arquitecture and compiler, mainly for assembler syntax resolution
+- **MEL_OS** : target operating system. Available OS are: *MEL_WINDOWS*, *MEL_LINUX*,*MEL_MACOSX*,*MEL_ANDROID* (iOS platform is working progress)
+- **MEL_ARQ**: CPU arquitecture and compiler, mainly for assembler syntax resolution
 Issues/facts:
 - CMAKE_BUILD_TYPE hasn't any effect with Visual Studio Generator. It has to be done in a "build preset" with the "configuration" parameter
 - MacOSX:
@@ -21,6 +21,6 @@ Issues/facts:
    - If you want to use *spdlog*, concrete android triplet need to be installed (https://vcpkg.readthedocs.io/en/latest/users/android/#android-build-requirements)
   
  # testing
- execute ctest in out/build/[required configuration]/tests
- need to add option -D XX to cmake tools configuration (Ctest args).At this moment, the passed XX seems to be ignored
+ if using Visual Studio Code, execute *Run CTest*,or execute ctest from commandline in out/build/[required configuration]/tests
+ 
  
