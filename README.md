@@ -1,10 +1,10 @@
-# dabal
+# MEL
 
 
 # notes
 Preprocessor macros for arquitecture, OS, and API
 There are 3 diferent macros that guide compilation based on target platform.
-- DABAL_OS : target operating system. Available OS are: **DABAL_WINDOWS**, **DABAL_LINUX**,**DABAL_MACOSX**,**DABAL_IOS**,**DABAL_ANDROID**
+- MEL_OS : target operating system. Available OS are: **DABAL_WINDOWS**, **DABAL_LINUX**,**DABAL_MACOSX**,**DABAL_IOS**,**DABAL_ANDROID**
 - DABAL_ARQ: CPU arquitecture and compiler, fo assembler syntax resolution
 - by default, installing gcc o clang in a 64bit platform will only install 64 bit libraries. You need to installa all, using for example target_compile_options
 - CMAKE_BUILD_TYPE hasn't any effect with Visual Studio Generator. It has to be done in a "build preset" with the "configuration" parameter
