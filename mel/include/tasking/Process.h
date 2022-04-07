@@ -1,6 +1,6 @@
 #pragma once
 /*
- * SPDX-FileCopyrightText: 2001,20021 Daniel Barrientos <danivillamanin@gmail.com>
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
  *
  * SPDX-License-Identifier: MIT
  */

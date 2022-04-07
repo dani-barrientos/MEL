@@ -1,8 +1,9 @@
-///////////////////////////////////////////////////////////
-//  ProcessScheduler.h
-//  Implementation of the Class ProcessScheduler
-//  Created on:      29-mar-2005 10:00:12
-///////////////////////////////////////////////////////////
+
+/*
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 #pragma once
 
