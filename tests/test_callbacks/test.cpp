@@ -7,6 +7,7 @@ using mel::core::CallbackSubscriptor;
 using mel::mpl::Int2Type;
 #include <TestManager.h>
 using tests::TestManager;
+using namespace mel;
 
 const std::string TestCallbacks::TEST_NAME = "callbacks";
 
@@ -22,8 +23,8 @@ const std::string TestCallbacks::TEST_NAME = "callbacks";
 }
 
 
-typedef std::pair<Int2Type<0>,CallbackSubscriptor<::core::CSNoMultithreadPolicy,float>> CS1; 
-typedef std::pair<Int2Type<1>,CallbackSubscriptor<::core::CSNoMultithreadPolicy,float&>> CS2; 
+typedef std::pair<Int2Type<0>,CallbackSubscriptor<::mel::core::CSNoMultithreadPolicy,float>> CS1; 
+typedef std::pair<Int2Type<1>,CallbackSubscriptor<::mel::core::CSNoMultithreadPolicy,float&>> CS2; 
 class Pepe : private CS1,
  private CS2
 {
@@ -67,20 +68,20 @@ int TestCallbacks::onExecuteTest()
 
     int s1 = pp.subscribe1(f1);
 
-    const std::function<::core::ECallbackResult(float)> f = [](float v)
+    const std::function<::mel::core::ECallbackResult(float)> f = [](float v)
     {
         return ::mel::core::ECallbackResult::UNSUBSCRIBE;
     };
     pp.subscribe1(f);
-    pp.subscribe1(std::function<::core::ECallbackResult(float)>(f1));
-    pp.subscribe2(std::function<::core::ECallbackResult(float&)>(
+    pp.subscribe1(std::function<::mel::core::ECallbackResult(float)>(f1));
+    pp.subscribe2(std::function<::mel::core::ECallbackResult(float&)>(
         [](float)
         {
             return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
         }
     ));
-    pp.subscribe2(std::function<::core::ECallbackResult(float&)>(f2));
-    _subscribe(pp,std::function<::core::ECallbackResult(float&)>(
+    pp.subscribe2(std::function<::mel::core::ECallbackResult(float&)>(f2));
+    _subscribe(pp,std::function<::mel::core::ECallbackResult(float&)>(
         [](float)
         {
             return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
@@ -119,10 +120,10 @@ core::ECallbackResult f4(int,float,float,int,int,float,int )
 int test_callbacks::test()
 {
     
-    CallbackSubscriptor<::core::CSNoMultithreadPolicy,int> cs;   
-    CallbackSubscriptor<::core::CSMultithreadPolicy,int,float> cs2;
-    CallbackSubscriptor<::core::CSNoMultithreadPolicy,void> cs3;
-    CallbackSubscriptor<::core::CSMultithreadPolicy,int,float,float,int,int,float,int> cs4;
+    CallbackSubscriptor<::mel::core::CSNoMultithreadPolicy,int> cs;   
+    CallbackSubscriptor<::mel::core::CSMultithreadPolicy,int,float> cs2;
+    CallbackSubscriptor<::mel::core::CSNoMultithreadPolicy,void> cs3;
+    CallbackSubscriptor<::mel::core::CSMultithreadPolicy,int,float,float,int,int,float,int> cs4;
 
     cs.subscribeCallback(f1);
     cs.triggerCallbacks(1);

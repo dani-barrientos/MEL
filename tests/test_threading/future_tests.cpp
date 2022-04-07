@@ -13,7 +13,7 @@ using ::mel::parallelism::Barrier;
 #include <CommandLine.h>
 #include <vector>
 using std::vector;
-
+using namespace mel;
 //Test with custom error
 struct MyErrorInfo 
 {
@@ -165,31 +165,31 @@ class MasterThread : public ThreadRunnable
 						{
 						case 0:
 							mConsumers[i]->post(
-								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								mpl::linkFunctor<::mel::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
 								makeMemberEncapsulate(&MasterThread::_consumerTask<10>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
 							);
 							break;
 						case 1:
 							mConsumers[i]->post(
-								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								mpl::linkFunctor<::mel::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
 								makeMemberEncapsulate(&MasterThread::_consumerTask<100>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
 							);
 							break;
 						case 2:
 							mConsumers[i]->post(
-								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								mpl::linkFunctor<::mel::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
 								makeMemberEncapsulate(&MasterThread::_consumerTask<1000>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
 							);
 							break;							
 						case 3:
 							mConsumers[i]->post(
-								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								mpl::linkFunctor<::mel::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
 								makeMemberEncapsulate(&MasterThread::_consumerTask<2000>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
 							);
 							break;
 						case 4:
 							mConsumers[i]->post(
-								mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
+								mpl::linkFunctor<::mel::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(
 								makeMemberEncapsulate(&MasterThread::_consumerTask<64>,this),::mpl::_v1,::mpl::_v2,channel,result,nTasks++)
 							);
 							break;

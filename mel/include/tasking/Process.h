@@ -227,10 +227,10 @@ namespace mel
 		private:
 			//static ESwitchResult _sleep(  Callback<void,void>* ) OPTIMIZE_FLAGS;
 			static mel::mpl::Tuple<TYPELIST(int,Process*,unsigned int)> _preSleep() OPTIMIZE_FLAGS;
-			static ESwitchResult _postSleep(mpl::Tuple<TYPELIST(int,Process*,unsigned int)>) OPTIMIZE_FLAGS;
+			static ESwitchResult _postSleep(mel::mpl::Tuple<TYPELIST(int,Process*,unsigned int)>) OPTIMIZE_FLAGS;
 			//static ESwitchResult _wait( unsigned int msegs, Callback<void,void>* ) OPTIMIZE_FLAGS;
 			static mel::mpl::Tuple<TYPELIST(bool,Process*)> _preWait() OPTIMIZE_FLAGS;
-			static ESwitchResult _postWait(uint64_t msegs,mpl::Tuple<TYPELIST(bool,Process*)>) OPTIMIZE_FLAGS;
+			static ESwitchResult _postWait(uint64_t msegs,mel::mpl::Tuple<TYPELIST(bool,Process*)>) OPTIMIZE_FLAGS;
 			EProcessState mState;
 			EProcessState mPreviousState;
 			volatile bool mWakeup; //temp value to know if context switch comes from a wakeup

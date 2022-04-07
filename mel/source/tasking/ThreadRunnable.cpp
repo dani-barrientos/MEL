@@ -76,7 +76,7 @@ bool ThreadRunnable::join(unsigned int millis)
     onJoined();
     return result;
 }
-::tasking::EGenericProcessResult ThreadRunnable::_suspendInternal(uint64_t millis,Process* proc) {
+mel::tasking::EGenericProcessResult ThreadRunnable::_suspendInternal(uint64_t millis,Process* proc) {
 	mPauseEV.wait();
 	return ::mel::tasking::EGenericProcessResult::KILL;
 }
@@ -131,7 +131,7 @@ void ThreadRunnable::onPostTask(std::shared_ptr<Process> process)
 	_signalWakeup();
 }
 
-::core::ECallbackResult ThreadRunnable::_processAwaken(std::shared_ptr<Process> p)
+mel::core::ECallbackResult ThreadRunnable::_processAwaken(std::shared_ptr<Process> p)
 {
 	_signalWakeup();
 	//::spdlog::debug("GenericThread::_processWaken");

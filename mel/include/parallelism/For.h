@@ -69,14 +69,14 @@ namespace mel
 						{
 							functor(j);
 							if (++n < size)
-								Advance<::mpl::TypeTraits<I>::isArith>::get(j, increment);
+								Advance<::mel::mpl::TypeTraits<I>::isArith>::get(j, increment);
 						}
 					}
 							)
 					);
 					if (++cont <= nIterations)  //because an iteration for each thread
 					{
-						Advance<::mpl::TypeTraits<I>::isArith>::get(i, divisionSize*increment);
+						Advance<::mel::mpl::TypeTraits<I>::isArith>::get(i, divisionSize*increment);
 					}
 					else
 						finish = true;
@@ -212,9 +212,9 @@ namespace mel
 			}
 		}
 		public:
-			//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor,int inc = 1) : For(tp, opts, std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), inc, Distance<::mpl::TypeTraits<I>::isArith>::get(begin,end) )
-			template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, Distance<::mpl::TypeTraits<I>::isArith>::get(begin, end))
-			//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, ::mel::parallelism::Distance<::mpl::TypeTraits<std::decay<I>::type>::isArith>::get(begin, end))
+			//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor,int inc = 1) : For(tp, opts, std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), inc, Distance<::mel::mpl::TypeTraits<I>::isArith>::get(begin,end) )
+			template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, Distance<::mel::mpl::TypeTraits<I>::isArith>::get(begin, end))
+			//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, ::mel::parallelism::Distance<::mel::mpl::TypeTraits<std::decay<I>::type>::isArith>::get(begin, end))
 			{
 			}
 			For() {}
@@ -314,7 +314,7 @@ namespace mel
 		}	
 		template <class I, class F>	 Barrier _for(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int increment = 1)
 		{
-			return _private::_for(tp,opts,begin,end,std::forward<F>(functor),increment,Distance<::mpl::TypeTraits<I>::isArith>::get(begin, end));
+			return _private::_for(tp,opts,begin,end,std::forward<F>(functor),increment,Distance<::mel::mpl::TypeTraits<I>::isArith>::get(begin, end));
 		}
 	};
 }

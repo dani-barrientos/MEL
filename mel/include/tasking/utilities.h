@@ -1,13 +1,7 @@
 #pragma once
 /**
  * @file utilities.h
- * @author Daniel Barrientos (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2022-01-16
- * 
- * @copyright Copyright (c) 2022
- *  Utilities on task, because lack of a better place...Some funcions are intended to be put in a custom file/class..
+ * @brief Utilities on tasking, because lack of a better place...Some funcions are intended to be put in a custom file/class..
  * 
  */
 #include <core/Future.h>
@@ -37,7 +31,7 @@ namespace mel
                     eventResult = mEvent.waitAndDo([this,f,&evId]()
                     {
                         evId = f.subscribeCallback(
-                        std::function<::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
+                        std::function<::mel::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
                         {
                             mEvent.set();
                             return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
@@ -74,16 +68,16 @@ namespace mel
                     std::rethrow_exception(f.getValue().error());
                 break;
             case ::mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
-                throw mel::core::WaitException(::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received");
+                throw mel::core::WaitException(mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received");
                 break;
             case ::mel::core::EWaitError::FUTURE_WAIT_TIMEOUT:
-                throw mel::core::WaitException(::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Time out exceeded");
+                throw mel::core::WaitException(mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Time out exceeded");
                 break;
             case ::mel::core::EWaitError::FUTURE_UNKNOWN_ERROR:
-                throw mel::core::WaitException(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
+                throw mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
                 break;
             default:
-                throw mel::core::WaitException(::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
+                throw mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
                 break;
             }
         }  

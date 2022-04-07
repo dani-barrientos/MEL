@@ -68,7 +68,7 @@ namespace mel
         };  
         namespace _private
         {
-            template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
+            template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
             {
                 if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
                 {
@@ -97,7 +97,7 @@ namespace mel
                 }
             }
             //void overload
-            template <class F> void _invoke(ExFuture<Runnable,void> fut,::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
+            template <class F> void _invoke(ExFuture<Runnable,void> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
             {
                 if constexpr (std::is_nothrow_invocable<F>::value)
                 {
@@ -124,12 +124,12 @@ namespace mel
                         },fut);
                 }
             }
-            template <class TArg,class F,class ...FTypes> void _invoke(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,std::exception_ptr& except,F&& f, FTypes&&... fs)
+            template <class TArg,class F,class ...FTypes> void _invoke(ExFuture<Runnable,TArg> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,F&& f, FTypes&&... fs)
             {            
                 _invoke(fut,b,except,std::forward<F>(f));
                 _invoke(fut,b,except,std::forward<FTypes>(fs)...);
             }
-            template <int n,class ResultTuple, class F,class TArg> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output,F&& f)
+            template <int n,class ResultTuple, class F,class TArg> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output,F&& f)
             {
                 if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
                 {
@@ -157,7 +157,7 @@ namespace mel
                 }
             }
             //void overload
-            template <int n,class ResultTuple,class F> void _invoke_with_result(ExFuture<Runnable,void>& fut,::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output, F&& f)
+            template <int n,class ResultTuple,class F> void _invoke_with_result(ExFuture<Runnable,void>& fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output, F&& f)
             {
                 if constexpr (std::is_nothrow_invocable<F>::value)
                 {
@@ -186,7 +186,7 @@ namespace mel
                 }
             }
             
-            template <int n,class ResultTuple,class TArg,class F,class ...FTypes> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output,F&& f, FTypes&&... fs)
+            template <int n,class ResultTuple,class TArg,class F,class ...FTypes> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output,F&& f, FTypes&&... fs)
             {            
                 _invoke_with_result<n>(fut,b,except,output,std::forward<F>(f));
                 _invoke_with_result<n+1>(fut,b,except,output,std::forward<FTypes>(fs)...);

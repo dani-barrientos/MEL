@@ -184,7 +184,7 @@ Process::ESwitchResult Process::switchProcess( bool v )
 	}
 	return result;
 }
-mpl::Tuple<TYPELIST(bool,Process*)> Process::_preWait() 
+mel::mpl::Tuple<TYPELIST(bool,Process*)> Process::_preWait() 
 {
 	auto p = ProcessScheduler::getCurrentProcess();
 	
@@ -193,7 +193,7 @@ mpl::Tuple<TYPELIST(bool,Process*)> Process::_preWait()
 	return mel::mpl::Tuple<TYPELIST(bool,Process*)>(prevSwitch,p.get());
 	
 }
-Process::ESwitchResult Process::_postWait(uint64_t msegs,mpl::Tuple<TYPELIST(bool,Process*)> input) 
+Process::ESwitchResult Process::_postWait(uint64_t msegs,mel::mpl::Tuple<TYPELIST(bool,Process*)> input) 
 {
 	ESwitchResult result;
 	auto p = input.get<1>();
@@ -218,7 +218,7 @@ Process::ESwitchResult Process::sleep( )
 
 
 //return: 0 -> false, 1 = true; 2 = already asleep, 3 = process killed 
-mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()
+mel::mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()
 {
 	auto p = ProcessScheduler::getCurrentProcess();
 	const auto state = p->getState();
@@ -239,7 +239,7 @@ mpl::Tuple<TYPELIST(int,Process*,unsigned int)> Process::_preSleep()
 	p->mSwitched = true; //needed to cheat that is already switched just in case is checked as a response of postSleep
 	return mel::mpl::Tuple<TYPELIST(int,Process*,unsigned int)>(prevSwitch?1:0,p.get(),currentPeriod);
 }
-Process::ESwitchResult Process::_postSleep(mpl::Tuple<TYPELIST(int,Process*,unsigned int)> input) 
+Process::ESwitchResult Process::_postSleep(mel::mpl::Tuple<TYPELIST(int,Process*,unsigned int)> input) 
 {
 	auto p = input.get<1>();
 	if ( input.get<0>() == 2 ) //it hasn't any sense, but just in case this condition could be reached

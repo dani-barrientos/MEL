@@ -78,8 +78,8 @@ class MyProcess : public Process
 		{
 			int aux = mVar;
 			++mVar;
-			text::debug("MyProcess");
-			::tasking::Process::wait(70050);
+			mel::text::debug("MyProcess");
+			mel::tasking::Process::wait(70050);
 			mVar = aux;
 		}	
 		int& mVar;
@@ -89,13 +89,13 @@ class MyTask
 {
 	public:
 	MyTask(Process* target,int& var):mTarget(target),mVar(var){}
-	::tasking::EGenericProcessResult operator()(uint64_t,Process*)
+	mel::tasking::EGenericProcessResult operator()(uint64_t,Process*)
 	{
-		text::debug("MyTask");
+		mel::text::debug("MyTask");
 		++mVar;
 		if ( mTarget )
 			mTarget->pause();
-		tasking::Process::wait(213);
+		mel::tasking::Process::wait(213);
 		if ( mTarget )
 			mTarget->wakeUp();
 		return ::mel::tasking::EGenericProcessResult::CONTINUE;
@@ -104,10 +104,10 @@ class MyTask
 	Process* mTarget;
 	int& mVar;
 };
-::tasking::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
+mel::tasking::EGenericProcessResult staticFuncTask(RUNNABLE_TASK_PARAMS,int& var)
 {
 	++var;
-	text::debug("staticFuncTask");
+	mel::text::debug("staticFuncTask");
 	return ::mel::tasking::EGenericProcessResult::CONTINUE;
 }
 static Timer sTimer;
@@ -121,12 +121,12 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 {
 	auto elapsed = std::abs((int64_t)t1-(int64_t)t0);
 	if ( elapsed > TIME_MARGIN)
-		text::warn("Margin time overcome {}. Info: {}",elapsed,text);
+		mel::text::warn("Margin time overcome {}. Info: {}",elapsed,text);
 }
 //test for debuggin stuff
 static int _testsDebug(tests::BaseTest* test)
 {
-	text::set_level(text::level::debug);
+	mel::text::set_level(mel::text::level::debug);
 	{
 
 		auto th1 = ThreadRunnable::create();
@@ -137,17 +137,17 @@ static int _testsDebug(tests::BaseTest* test)
 			//auto th = ThreadRunnable::getCurrentThreadRunnable(); 
 			if ( cont == 1 )
 			{
-				text::debug("UNO");
+				mel::text::debug("UNO");
 				//tasking::Process::sleep();
-				tasking::Process::wait(2500);
-				text::debug("DOS");
-				tasking::Process::wait(5000);
-				text::debug("TRES");
+				mel::tasking::Process::wait(2500);
+				mel::text::debug("DOS");
+				mel::tasking::Process::wait(5000);
+				mel::text::debug("TRES");
 				cont = 0;
 			}else
 			{
 				++cont;
-				text::debug("normal");
+				mel::text::debug("normal");
 			}
 
 			//fut.setValue(10);
@@ -158,70 +158,70 @@ static int _testsDebug(tests::BaseTest* test)
 		},Runnable::killTrue,1000);
 		th1->post([](RUNNABLE_TASK_PARAMS)
 		{
-			tasking::Process::wait(100);
-			text::debug("CUATRO");
-			tasking::Process::wait(2200);
-			text::debug("CINCO");
+			mel::tasking::Process::wait(100);
+			mel::text::debug("CUATRO");
+			mel::tasking::Process::wait(2200);
+			mel::text::debug("CINCO");
 			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::killTrue,700);
 		try
 		{
 			auto res = mel::core::waitForFutureThread(fut);
-			text::info("Valor = {}",res.value());
+			mel::text::info("Valor = {}",res.value());
 		}catch(std::exception& e)
 		{
-			text::error("exception: {}",e.what());;
+			mel::text::error("exception: {}",e.what());;
 		}catch(...)
 		{
-			text::error("unknown exception");
+			mel::text::error("unknown exception");
 		}
 		Thread::sleep(11000);		
-		text::info("HECHO");
+		mel::text::info("HECHO");
 	}
 	return 0;
 }
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
-	text::set_level(text::level::info);
+	mel::text::set_level(mel::text::level::info);
 	auto lvl = mel::text::get_level();
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
-	size_t s3 = sizeof(MThreadAttributtes);
-	text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
+	size_t s3 = sizeof(mel::tasking::MThreadAttributtes);
+	mel::text::info("Process size {} ; GenericProcess size {}; MThreadAttributes {} ",s1,s2,s3);
 
 	{
 		auto th1 = ThreadRunnable::create();
-		text::debug("Request execution");
+		mel::text::debug("Request execution");
 		auto fut = th1->execute<int>([th = th1.get()]{
-			text::debug("Start function execution...");
+			mel::text::debug("Start function execution...");
 			if ( ::mel::tasking::Process::wait(2000) != mel::tasking::Process::ESwitchResult::ESWITCH_OK )
 			{
-				text::error("Task killed!!");
+				mel::text::error("Task killed!!");
 				Timer t;				
 				auto t0 = t.getMilliseconds();
-				text::debug("La espera siguiente no deberia tener efecto");
+				mel::text::debug("La espera siguiente no deberia tener efecto");
 				//::tasking::Process::wait(2000);
-				::tasking::Process::sleep();
+				::mel::tasking::Process::sleep();
 				auto t1 = t.getMilliseconds();
 				if ( t1 != t0 )
-					text::error("Wait shoudn't have been done");
+					mel::text::error("Wait shoudn't have been done");
 				else
-					text::info("Wait wasn't done, OK");
+					mel::text::info("Wait wasn't done, OK");
 				//now, try to execute "something" in same thread. Shoouldn do anything				
 				//@todo ahora está impidiendo la espera correctamente. Lo que tengo que meditar es si debo impedir el execute como tal, ya que se está haciendo
 				//igual no tiene sentido porque el execute realmente se hace desde cualqueir sitio, no un mthread forzosamente
 				auto fut = th->execute<float>([]{
-					text::error("This execution shouldn''t be done");
+					mel::text::error("This execution shouldn''t be done");
 					return 1.5f;
 					});
 				try
 				{
 					auto fr = ::mel::tasking::waitForFutureMThread(fut);
-					text::info("OK, execution was't done because process is killed");
+					mel::text::info("OK, execution was't done because process is killed");
 				}catch(...)
 				{
-					text::error("Execution should have recieved a kill signal");
+					mel::text::error("Execution should have recieved a kill signal");
 				}				
 				/*
 				if ( !fr.isValid() && fr.error().error == ::mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
@@ -231,10 +231,10 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 				*/
 
 			}
-			text::debug("Return result");
+			mel::text::debug("Return result");
 			return 6;},Runnable::killTrue);
 			
-		text::debug("Start Waiting for result");
+		mel::text::debug("Start Waiting for result");
 		// auto fr = ::mel::core::waitForFutureThread(fut,2000);
 		// mel::text::debug("Wait done");
 		// if ( !fr.isValid())
@@ -255,7 +255,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		std::shared_ptr<Process> p1=th2->post([th2](uint64_t t,Process* p)
 		{
 			static bool firstTime = true;
-			text::debug("Ejecuto p1");
+			mel::text::debug("Ejecuto p1");
 			if ( firstTime )
 			{
 				firstTime = false;
@@ -263,7 +263,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 				auto fut = th2->execute<int>(
 					[]()
 					{
-						::tasking::Process::wait(20000);
+						::mel::tasking::Process::wait(20000);
 						return 6;
 					}
 				);
@@ -271,53 +271,53 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 				try
 				{
 					auto fr = ::mel::tasking::waitForFutureMThread(fut,2000);
-					text::debug("{}",fr.value());
+					mel::text::debug("{}",fr.value());
 				}catch(std::exception& e)
 				{
-					text::error(e.what());
+					mel::text::error(e.what());
 				}
 			
 				// if ( fr != ::mel::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
 				// {
 				// 	spdlog::error(fut.getValue().error().errorMsg);
 				// }
-				text::debug("espero en p1");
+				mel::text::debug("espero en p1");
 				auto wr = mel::tasking::Process::wait(10000);			
-				text::debug("vuelvo a esperar en p1");
+				mel::text::debug("vuelvo a esperar en p1");
 
 				// esto tengo que arreglarlo para que, si soy autokill, no vuelva a esperar si está en trying_tokill
 				// meditar sobre estos temas, no me convence demasiado la forma en que está planteado
 				//wr = mel::tasking::Process::wait(10000);
 				wr = mel::tasking::Process::switchProcess(true);
 				wr = mel::tasking::Process::sleep();
-				text::debug("fin espera en p1");				 
+				mel::text::debug("fin espera en p1");				 
 			
 			}
-			text::debug("Continuo");
+			mel::text::debug("Continuo");
 			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},autokill,2000,000);
 		th2->fireAndForget(
 			[p1]()
 			{
-				text::debug("Ejecuto p2");
-				tasking::Process::wait(4000);
+				mel::text::debug("Ejecuto p2");
+				mel::tasking::Process::wait(4000);
 				// spdlog::debug("Pauso proceso");
 				//  if ( p1 )
 				//  	p1->pause();
 			//	tasking::Process::wait(1000);
-				text::debug("Mato proceso");
+				mel::text::debug("Mato proceso");
 				p1->kill();
 				// spdlog::debug("Vuelvo a pausar proceso");
 				// if ( p1 )
 				// 	p1->pause();
-				tasking::Process::wait(25000);
-				text::debug("Despierto proceso");
+				mel::tasking::Process::wait(25000);
+				mel::text::debug("Despierto proceso");
 				if ( p1 )
 				 	p1->wakeUp();
 			}
 		);
 
-		text::debug("execution done");
+		mel::text::debug("execution done");
 		return ::mel::tasking::EGenericProcessResult::KILL;
 	}
 	,Runnable::killTrue,3000);
@@ -348,7 +348,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 	},true,2000,000);
 	*/
 	// th1->post<CustomProcessType,MyAllocator>(
-	// 	::mpl::linkFunctor<::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
+	// 	::mpl::linkFunctor<::mel::tasking::EGenericProcessResult,TYPELIST(uint64_t,Process*)>(staticFuncTask,::mpl::_v1,::mpl::_v2,::mpl::_v3,mpl::createRef(sharedVar))
 	// 	,true,4200);
 	// auto p = make_shared<MyProcess>(sharedVar);
 	// p->setPeriod(0);
@@ -360,7 +360,7 @@ preparar bien el test: quiero que los procesos actúa sobre algún objeto y teng
  - incrementar/dec variable de forma que deba siempre ser isgreaterequal
 - 
 */
-	text::debug("finish");
+	mel::text::debug("finish");
 	// th1->finish();
 	// th1->join();
 	
@@ -400,7 +400,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 		Thread::sleep(10);
 	}
 	t1 = sTimer.getMilliseconds();	
-	text::info("Time launching {} tasks with global new: {} msecs",nTasks,t1-t0);
+	mel::text::info("Time launching {} tasks with global new: {} msecs",nTasks,t1-t0);
 
 	Thread::sleep(2000);
 	t0 = sTimer.getMilliseconds();	;
@@ -423,7 +423,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 		Thread::sleep(10);
 	}
 	t1 = sTimer.getMilliseconds();
-	text::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
+	mel::text::info("Time launching {} tasks with default allocator: {} msecs",nTasks,t1-t0);
 	//Thread::sleep(45000);	
 	return result;
 }
@@ -447,11 +447,11 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 	{		
 		producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
 		{
-			::tasking::Process::wait(50);//to wait for all producer posts done
+			mel::tasking::Process::wait(50);//to wait for all producer posts done
 			for(auto i = 0; i < NUM_POSTS; ++i)
 			{
 				//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-				//if (::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+				//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 				{
 					consumer->fireAndForget(
 						[]()
@@ -469,7 +469,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 	for(auto i = 0; i < NUM_POSTS; ++i)
 	{
 		//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-		//if (::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+		//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 		{
 			consumer->fireAndForget(
 				[]()
@@ -480,14 +480,14 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 		}
 	}
 */
-	text::info("Esperando...");
+	mel::text::info("Esperando...");
 	//Thread::sleep(5000);  //no tengo que hacerlo, pero peta con el lockfree, lo quitaré cuando esté bien todo
 	}
 	
 	if ( sCount == NUM_PRODUCERS*NUM_POSTS )
-		text::info("_test_concurrent_post OK. {} Posts",sCount.load());
+		mel::text::info("_test_concurrent_post OK. {} Posts",sCount.load());
 	else
-		text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",NUM_PRODUCERS*NUM_POSTS,sCount.load());
+		mel::text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",NUM_PRODUCERS*NUM_POSTS,sCount.load());
 	return 0;
 }
 int _throwExc(int& v)
@@ -516,29 +516,29 @@ int _testExceptions( tests::BaseTest* test)
 		//	tasking::Process::wait(2000);
 			try
 			{
-				text::info("Task1: Context switch");
-				tasking::Process::wait(2000);
-				text::info("Task1: Throw exception");
+				mel::text::info("Task1: Context switch");
+				mel::tasking::Process::wait(2000);
+				mel::text::info("Task1: Throw exception");
 				//_throwExc(val);
 
 				_throwMyException(val);
-				text::error("Task1: After throw exception. Shouldn't occur");
+				mel::text::error("Task1: After throw exception. Shouldn't occur");
 			}catch(int v)
 			{
 				if ( v == val)
-					text::info("Task1: Captured exception ok");
+					mel::text::info("Task1: Captured exception ok");
 				else
-					text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
-				tasking::Process::wait(5000);
+					mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+				mel::tasking::Process::wait(5000);
 			}catch(MyException& exc)
 			{
 				if ( exc.code == val)
 				{
-					text::info("Task1: Captured exception ok. msg ={}",exc.msg);
+					mel::text::info("Task1: Captured exception ok. msg ={}",exc.msg);
 				}
 				else
-					text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
-				tasking::Process::wait(5000);
+					mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
+				mel::tasking::Process::wait(5000);
 			}			
 			
 			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
@@ -551,9 +551,9 @@ int _testExceptions( tests::BaseTest* test)
 			try
 			{
 
-				text::info("Task2: Context switch");
-				tasking::Process::wait(3000);
-				text::info("Task2: Throw exception");
+				mel::text::info("Task2: Context switch");
+				mel::tasking::Process::wait(3000);
+				mel::text::info("Task2: Throw exception");
 				_throwExc(val);
 			#if USE_SPDLOG
 				spdlog::error("Task2: After throw exception. Shouldn't occur");
@@ -561,9 +561,9 @@ int _testExceptions( tests::BaseTest* test)
 			}catch( int v)
 			{
 				if ( v == val)
-					text::info("Task2: Captured exception ok");
+					mel::text::info("Task2: Captured exception ok");
 				else
-					text::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+					mel::text::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
 			}			
 			
 			 return ::mel::tasking::EGenericProcessResult::CONTINUE;

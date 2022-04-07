@@ -50,7 +50,7 @@ namespace mel
 		addParam< ::mel::tasking::EGenericProcessResult,Process*,uint64_t,void > \
 		(addParam< ::mel::tasking::EGenericProcessResult,uint64_t,void >( f ) ) 
 	//macro to simplify task creation from lambda expression
-	#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::tasking::EGenericProcessResult (uint64_t, Process*)>(lambda)
+	#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::mel::tasking::EGenericProcessResult (uint64_t, Process*)>(lambda)
 	//useful macro to declare task parameters
 	#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p
 		class Runnable; //predeclaration
@@ -176,7 +176,7 @@ namespace mel
 			* this allows the caller to set it up-front, just in case it's needed.
 			* @param tid the owner thread to be set.
 			*/
-			inline void setOwnerThreadId(::core::ThreadId tid) {mOwnerThread=tid;}
+			inline void setOwnerThreadId(mel::core::ThreadId tid) {mOwnerThread=tid;}
 			static Runnable* getCurrentRunnable();
 		protected:
 		public:  //por temas de depuracion
@@ -188,13 +188,13 @@ namespace mel
 			RunnableInfo* mCurrentInfo;
 			ProcessScheduler	mTasks;
 			RunnableCreationOptions mOpts;
-			::tasking::_private::MemZoneList mRTZone;
+			mel::tasking::_private::MemZoneList mRTZone;
 			//std::atomic<State>	mState;
 			CriticalSection	mMemPoolCS;		
-			::core::ThreadId	mOwnerThread;//thread executing Runnable		
+			mel::core::ThreadId	mOwnerThread;//thread executing Runnable		
 			
 			//! helper function. Create new pool and append it at front
-			::tasking::_private::RTMemPool* _addNewPool();
+			mel::tasking::_private::RTMemPool* _addNewPool();
 			//! helper function to remove pool. Internally at least one pool remains, so maybe pool is not removed
 			void _removePool( ::mel::tasking::_private::RTMemPool* );
 			

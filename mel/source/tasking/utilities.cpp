@@ -1,5 +1,5 @@
 #include <tasking/utilities.h>
-::tasking::EEventMTWaitCode mel::tasking::waitForBarrierMThread(const ::mel::parallelism::Barrier& b,unsigned int msecs)
+mel::tasking::EEventMTWaitCode mel::tasking::waitForBarrierMThread(const ::mel::parallelism::Barrier& b,unsigned int msecs)
 {
 	using ::mel::tasking::Event_mthread;
 
@@ -15,7 +15,7 @@
 			{
 			//   spdlog::debug("waitAndDo was done for Thread {}",threadid);
 				evId = barrier.subscribeCallback(
-				std::function<::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([this](const ::mel::parallelism::BarrierData& ) 
+				std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([this](const ::mel::parallelism::BarrierData& ) 
 				{
 					 mEvent.set();
 				    //spdlog::info("Event was set");
@@ -26,7 +26,7 @@
 			return eventresult;
 		}
 		private:
-		::tasking::Event_mthread<> mEvent;
+		mel::tasking::Event_mthread<> mEvent;
 
 	};
 	auto receiver = std::make_unique<_Receiver>();

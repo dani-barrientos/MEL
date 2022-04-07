@@ -363,14 +363,14 @@ void ProcessScheduler::killProcesses( bool deferred )
 		mKillingProcess = true;
 		auto task = std::make_shared<GenericProcess>();
 		task->setProcessCallback(
-			addParam<::tasking::EGenericProcessResult,Process*, uint64_t,void>
+			addParam<::mel::tasking::EGenericProcessResult,Process*, uint64_t,void>
 			(
-				addParam<::tasking::EGenericProcessResult, uint64_t,void>
+				addParam<::mel::tasking::EGenericProcessResult, uint64_t,void>
 				(
 					returnAdaptor<void>
 					(
 						makeMemberEncapsulate( &ProcessScheduler::_killTasks, this )
-						,::tasking::EGenericProcessResult::KILL
+						,mel::tasking::EGenericProcessResult::KILL
 					)
 				)
 			)			

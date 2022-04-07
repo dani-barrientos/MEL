@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/errno.h>
+namespace mel
+{
 namespace core {
 
 
@@ -80,5 +82,6 @@ void Event::reset() {
 }
 
 //end namespace
+}
 }
 #endif

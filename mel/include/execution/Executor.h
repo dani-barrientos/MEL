@@ -80,7 +80,7 @@ namespace mel
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             ExFuture<ExecutorAgent,NewType> result(fut.agent);
             fut.subscribeCallback(
-                std::function<::core::ECallbackResult( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
                 {                                 
                     //launch tasks as response for callback for two reasons: manage the case when Future is already available when checked, so callback is trigered
                     //on calling thread and to decouple tasks and no staturate execution resoruce and independence tasks
@@ -120,7 +120,7 @@ namespace mel
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
                 {       
 
                     if ( input.isValid() )
@@ -153,7 +153,7 @@ namespace mel
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
                 {       
 
                     if ( input.isValid() )
@@ -196,7 +196,7 @@ namespace mel
             ExFuture<NewExecutorAgent,TRet> result(newAgent);
             typedef typename ExFuture<OldExecutorAgent,TRet>::ValueType  ValueType;
             fut.subscribeCallback(
-                std::function<::core::ECallbackResult( ValueType&)>([result](ValueType& input) mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([result](ValueType& input) mutable
                 {
                     result.assign(input);
                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
@@ -214,7 +214,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(
-                std::function<::core::ECallbackResult( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
                 {
                     try
                     {   
@@ -250,7 +250,7 @@ namespace mel
                                 , increment);
                             }
                             barrier.subscribeCallback(
-                                std::function<::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source,except](const ::mel::parallelism::BarrierData& ) mutable
+                                std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source,except](const ::mel::parallelism::BarrierData& ) mutable
                                 {                
                                     if ( *except ) //any exception?
                                         result.setError(*except);
@@ -285,7 +285,7 @@ namespace mel
             ExFuture<ExecutorAgent,void> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             source.subscribeCallback(
-                std::function<::core::ECallbackResult( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
                 {
                     try
                     {   
@@ -300,7 +300,7 @@ namespace mel
                             }
                             , increment);
                             barrier.subscribeCallback(
-                                std::function<::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source](const ::mel::parallelism::BarrierData& ) mutable
+                                std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source](const ::mel::parallelism::BarrierData& ) mutable
                                 {
                                     result.assign(std::move(source.getValue()));
                                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
@@ -335,14 +335,14 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
-                std::function<::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
                     {
                         std::exception_ptr* except = new std::exception_ptr(nullptr);
                         auto barrier  = source.agent.parallel(source,*except,std::forward<FTypes>(std::get<FTypes>(fs))...);
                         barrier.subscribeCallback(
-                            std::function<::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([source,result,except](const ::mel::parallelism::BarrierData& ) mutable
+                            std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([source,result,except](const ::mel::parallelism::BarrierData& ) mutable
                             {                 
                                 if ( *except ) //any exception?
                                     result.setError(*except);
@@ -378,7 +378,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
                 {       
                     if ( !input.isValid() )
                     {                
@@ -406,7 +406,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg,ErrorType> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
                 {       
                     if ( !input.isValid() )
                     {                                       
@@ -434,7 +434,7 @@ namespace mel
             ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
-                std::function<::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
                     {                       
@@ -442,7 +442,7 @@ namespace mel
                         ResultTuple* output = new ResultTuple; //para que compile
                         auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
                         barrier.subscribeCallback(
-                            std::function<::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,output,except](const ::mel::parallelism::BarrierData& ) mutable
+                            std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,output,except](const ::mel::parallelism::BarrierData& ) mutable
                             {      
                                 if ( *except ) //any exception?
                                     result.setError(*except);
@@ -532,10 +532,10 @@ namespace mel
                     return ::mel::execution::catchError(inputFut,std::forward<F>(mFunc));
                 }
             };
-            template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::parallelism::Barrier& barrier, FType fut)
+            template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::mel::parallelism::Barrier& barrier, FType fut)
             {
                 fut.subscribeCallback(
-                    std::function<::core::ECallbackResult( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
+                    std::function<::mel::core::ECallbackResult( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
                     {
                         std::get<n>(*tup) = std::move(input);
                         barrier.set();
@@ -654,7 +654,7 @@ namespace mel
             _ttype* tupleRes = new _ttype;
 
             barrier.subscribeCallback(
-            std::function<::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,tupleRes](const ::mel::parallelism::BarrierData& ) mutable
+            std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,tupleRes](const ::mel::parallelism::BarrierData& ) mutable
             {
                 ReturnType resultVal;			
                 auto r = ::mel::execution::_private::_moveValue<0>(*tupleRes,resultVal);

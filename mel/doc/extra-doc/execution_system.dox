@@ -5,8 +5,8 @@ The goal of this module is to provide a very high level API for task execution i
 This *problem* it's becoming very important because the need to exploit the modern hardware. As the CPU speed is incrementing very slowly, the improvements in software development come from taking advantage
 of the parallel capacities, use of GPU as computational resource, distributed systems...So, it's necessasary to provide new idioms to programmers such that doing this kind of tasks won't be a hell. 
 
-DABAL provides clasical mechanism for concurrent/parallel programming: \ref mel::core::Thread "threads", \ref ::mel::core::CriticalSection "critical sections",...and no so classicals as the microchtread 
-system, which is described in another sections. These tools are enoguh for simple tasks. But there are two main problems:
+ \b mel provides clasical mechanism for concurrent/parallel programming: \ref mel::core::Thread "threads", \ref ::mel::core::CriticalSection "critical sections",...and no so classicals as the microthread 
+system, which is described in another sections. These tools are enough for simple tasks. But there are two main problems:
  - The way the user make the code will depend on the used tool: the code won't be the same if using a thread to launch a task or a microthread. Or, even worse, use the GPU or other systems
  - Doing complex task can be hard to express and the programmer will soon get lost in the code.
 

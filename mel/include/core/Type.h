@@ -64,7 +64,6 @@
 namespace mel
 {
 	/**
-	* @namespace core
 	* @brief core system classes and functions
 	*/
 	namespace core {

@@ -44,5 +44,5 @@ namespace mel
 
 	//end namespace
 	}
-	#endif
 }
+#endif

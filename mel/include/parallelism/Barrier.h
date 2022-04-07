@@ -11,7 +11,7 @@ namespace mel
 			public std::enable_shared_from_this<BarrierData>
 		{
 			friend class ::mel::parallelism::Barrier;		
-			typedef CallbackSubscriptor<::core::CSNoMultithreadPolicy,const BarrierData&> Subscriptor;
+			typedef CallbackSubscriptor<::mel::core::CSNoMultithreadPolicy,const BarrierData&> Subscriptor;
 		private:
 			BarrierData(size_t nWorkers):mActiveWorkers(nWorkers){}		
 			void set();		
@@ -31,7 +31,7 @@ namespace mel
 			}
 		protected:
 			size_t	mActiveWorkers; 
-			::core::CriticalSection mCS;
+			mel::core::CriticalSection mCS;
 
 		};
 		/**

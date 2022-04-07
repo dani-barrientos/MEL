@@ -3,7 +3,6 @@ using test_parallelism::TestParallelism;
 #include <TestManager.h>
 using tests::TestManager;
 #include <parallelism/ThreadPool.h>
-using namespace parallelism;
 #include <parallelism/For.h>
 
 #include <array>
@@ -14,7 +13,8 @@ using mel::core::Timer;
 #include <random>
 #include <sstream>
 #include <text/logger.h>
-
+using namespace mel;
+using namespace mel::parallelism;
 const std::string TestParallelism::TEST_NAME = "parallelism";
 static std::atomic<int> sAt = 0;
 class Base

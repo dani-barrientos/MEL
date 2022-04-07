@@ -3,7 +3,7 @@
 #include <tasking/utilities.h>
 #include <tasking/CriticalSection_mthread.h>
 #include <tasking/Event_mthread.h>
-using namespace tasking;
+using namespace mel::tasking;
 #include <functional>
 #include <string>
 using std::string;
@@ -90,7 +90,7 @@ void _sample2()
 }
 void _sample3()
 {
-    Event_mthread<::tasking::EventNoMTThreadSafePolicy> event;  
+    Event_mthread<::mel::tasking::EventNoMTThreadSafePolicy> event;  
     CriticalSection_mthread<false> cs;
     
     auto th1 = ThreadRunnable::create(); //order is important here to respect reverse order of destruction

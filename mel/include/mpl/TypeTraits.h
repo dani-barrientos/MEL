@@ -1,7 +1,7 @@
 #pragma once
 /**
 * @file 
-* Typical Traits  for types
+* @brief Typical Traits for types
 */
 
 #include <mpl/BasicTypes.h>

@@ -190,7 +190,7 @@ namespace mel
 			};
 			template <typename T>
 			class FutureData : public FutureData_Base,
-							private CallbackSubscriptor<::core::CSMultithreadPolicy,
+							private CallbackSubscriptor<::mel::core::CSMultithreadPolicy,
 							FutureValue<typename 
 								std::conditional<
 									std::is_lvalue_reference<T>::value,
@@ -204,7 +204,7 @@ namespace mel
 					std::is_lvalue_reference<T>::value,
 					std::reference_wrapper<typename std::remove_reference<T>::type>,
 					T>::type> ValueType;
-				typedef CallbackSubscriptor<::core::CSMultithreadPolicy, ValueType&> Subscriptor;
+				typedef CallbackSubscriptor<::mel::core::CSMultithreadPolicy, ValueType&> Subscriptor;
 				/**
 				* default constructor
 				*/
@@ -321,10 +321,10 @@ namespace mel
 			//so user need to know when it finish
 			template <>
 			class FutureData<void> : public FutureData_Base,
-				private CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void>&>,
+				private CallbackSubscriptor<::mel::core::CSMultithreadPolicy,FutureValue<void>&>,
 				public std::enable_shared_from_this<FutureData<void>>
 			{
-				typedef CallbackSubscriptor<::core::CSMultithreadPolicy,FutureValue<void>&> Subscriptor;
+				typedef CallbackSubscriptor<::mel::core::CSMultithreadPolicy,FutureValue<void>&> Subscriptor;
 			public:
 				typedef FutureValue<void> ValueType;
 

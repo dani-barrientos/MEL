@@ -213,7 +213,7 @@ namespace mel
 
 		protected:
 			CallbackListType mCallbacks;
-			_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,::core::CSMultithreadPolicy>::result> mSC;
+			_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,mel::core::CSMultithreadPolicy>::result> mSC;
 
 			CallbackSubscriptor_Base( const CallbackSubscriptor_Base& o2 ):mTriggering(false)
 			{

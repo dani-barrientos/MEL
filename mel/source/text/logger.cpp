@@ -1,9 +1,9 @@
 #include <text/logger.h>
 
 #ifndef USE_SPDLOG
-::text::level::ELevel mel::text::level::_private::sLevel = ::mel::text::level::ELevel::critical;
+::mel::text::level::ELevel mel::text::level::_private::sLevel = ::mel::text::level::ELevel::critical;
 #endif
-void mel::text::set_level(::text::level::ELevel level)
+void mel::text::set_level( mel::text::level::ELevel level)
 {
 #ifdef USE_SPDLOG
     spdlog::level::level_enum lvl;
@@ -30,7 +30,7 @@ void mel::text::set_level(::text::level::ELevel level)
     level::_private::sLevel = level;
 #endif
 }
-::text::level::ELevel mel::text::get_level()
+::mel::text::level::ELevel mel::text::get_level()
 {
     #ifdef USE_SPDLOG
     ::mel::text::level::ELevel result;

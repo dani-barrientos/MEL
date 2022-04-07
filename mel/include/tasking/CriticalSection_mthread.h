@@ -23,10 +23,11 @@ namespace mel
 			void leave();
 			//TODO try enter
 		private:
-			Event_mthread<::tasking::EventMTThreadSafePolicy> mEvent;
-			std::shared_ptr<::tasking::Process>	mOwner;
+			Event_mthread<mel::tasking::EventMTThreadSafePolicy> mEvent;
+			std::shared_ptr<mel::tasking::Process>	mOwner;
 			std::atomic<int>	mCount; //number of times owner as acquired section
 		};
+		///@cond HIDDEN_SYMBOLS
 		template <> class MEL_API CriticalSection_mthread<false>
 		{
 		public:
@@ -40,8 +41,8 @@ namespace mel
 			void leave();
 			//TODO try enter
 		private:
-			Event_mthread<::tasking::EventNoMTThreadSafePolicy> mEvent;
-			std::shared_ptr<::tasking::Process>	mOwner;
+			Event_mthread<::mel::tasking::EventNoMTThreadSafePolicy> mEvent;
+			std::shared_ptr<::mel::tasking::Process>	mOwner;
 			int	mCount; //number of times owner as acquired section
 		};
 		namespace _private
@@ -68,6 +69,7 @@ namespace mel
 			};
 			
 		}
+		///@endcond
 		class Lock_mthread
 		{
 		public:

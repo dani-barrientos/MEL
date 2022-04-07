@@ -1,7 +1,7 @@
 #include <core/Type.h>
 #include <assert.h>
 using std::string;
-
+namespace mel{
 namespace core {
 
 const Type Type::NOTYPE(NULL,NULL);
@@ -86,4 +86,5 @@ bool Type::instanceOf(const Type &t) const {
 	
 }
 //end namespace
+}
 }

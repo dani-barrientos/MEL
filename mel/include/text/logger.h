@@ -6,11 +6,13 @@
 #include <iostream>
 #endif
 #include <string>
+
 /**
+ * @file
  * @brief The only sense of this file is as a wrapper to spdlog in order t avoid its use if no installed in any concrete platform
  */
 namespace mel
-{
+{    
     namespace text
     {
         namespace level

@@ -5,6 +5,7 @@
 #include <functional>
 using std::string;
 #include <memory>
+using namespace mel;
 using namespace std::literals::string_literals;
 //code for the samples in the documentation
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)

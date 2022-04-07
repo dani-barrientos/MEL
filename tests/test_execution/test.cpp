@@ -18,6 +18,7 @@ using mel::tasking::Process;
 #include <vector>
 using std::vector;
 #include "test_samples.h"
+using namespace mel;
 
 const std::string TestExecution::TEST_NAME = "execution";
 

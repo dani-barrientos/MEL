@@ -52,7 +52,7 @@ EventMTThreadSafePolicy::EventMTThreadSafePolicy(bool autoRelease, bool signaled
 {
 
 }
-tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msecs ) 
+mel::tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msecs ) 
 {
 	EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
 	mCS.enter();
@@ -95,7 +95,7 @@ tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msecs )
 }
 
 EventNoMTThreadSafePolicy::EventNoMTThreadSafePolicy(bool autoRelease, bool signaled):EventBase(autoRelease,signaled){}
-tasking::EEventMTWaitCode EventNoMTThreadSafePolicy::_wait( unsigned int msecs ) 
+mel::tasking::EEventMTWaitCode EventNoMTThreadSafePolicy::_wait( unsigned int msecs ) 
 {
 	EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
 	if ( !EventBase::mSignaled )

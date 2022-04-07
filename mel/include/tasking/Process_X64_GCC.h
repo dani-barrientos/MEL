@@ -1,4 +1,5 @@
 #pragma once
+
 namespace mel
 {
     namespace tasking
@@ -6,7 +7,7 @@ namespace mel
         struct MThreadAttributtes;
     }
     using mel::tasking::MThreadAttributtes;
-    extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
+    //extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
     ///@cond HIDDEN_SYMBOLS
     namespace tasking
     {
@@ -28,3 +29,4 @@ namespace mel
     }
     ///@endcond
 }
+extern "C"  void resizeStack(  mel::tasking::MThreadAttributtes* process,  unsigned int newSize );

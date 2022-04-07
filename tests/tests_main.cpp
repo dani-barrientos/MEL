@@ -13,6 +13,7 @@ using tests::TestManager;
 
 #include <text/logger.h>
 
+using namespace mel;
 #define LIST_OPTION "list"
 #define TEST_OPTION "t"
 #define ALL_TESTS_OPTION "a"

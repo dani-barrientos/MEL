@@ -14,7 +14,7 @@ ThreadPool::ThreadPool( const ThreadPoolOpts& opts ):
 	}
 	else if (opts.nThreads < 0)
 	{
-		int n = (int)::core::getNumProcessors() + opts.nThreads;
+		int n = (int)mel::core::getNumProcessors() + opts.nThreads;
 		if (n < 0)
 			n = 0;
 		mNThreads = (unsigned int)n;
