@@ -1,5 +1,4 @@
 #pragma once
-#include <core/Type.h>
 #include <core/FunctorCallbackInterface.h>
 #include <core/FunctionCallbackInterface.h>
 #include <mpl/Conversion.h>

@@ -10,15 +10,21 @@ using tests::TestManager;
 using namespace mel;
 
 const std::string TestCallbacks::TEST_NAME = "callbacks";
+tests::BaseTest* sCurrentTest = nullptr;
+void addText(string str)
+{
+    if ( sCurrentTest )
+        sCurrentTest->addTextToBuffer(std::move(str),tests::BaseTest::LogLevel::Info);
+}
 
 ::core::ECallbackResult f1(float a)
 {
-    std::cout << "f1 "<< a << '\n';
+    addText("f1");
     return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 ::core::ECallbackResult f2(float& a)
 {
-    std::cout << "f2 "<< a << '\n';
+    addText("f2");
     return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 
@@ -58,45 +64,74 @@ class Pepe : private CS1,
          return CS2::second.triggerCallbacks(a);
      }
 };
-template <class F> void _subscribe( Pepe& obj,F&& f)
+template <class F> void _subscribe2( Pepe& obj,F&& f)
 {
 	obj.subscribe2(std::forward<F>(f));
 }
 int TestCallbacks::onExecuteTest()
 {    
+    sCurrentTest = this;
     Pepe pp;
 
-    int s1 = pp.subscribe1(f1);
+    pp.subscribe1(f1);
 
     const std::function<::mel::core::ECallbackResult(float)> f = [](float v)
     {
+        addText("lambda1");
         return ::mel::core::ECallbackResult::UNSUBSCRIBE;
     };
     pp.subscribe1(f);
-    pp.subscribe1(std::function<::mel::core::ECallbackResult(float)>(f1));
+    int s1 = pp.subscribe1(std::function<::mel::core::ECallbackResult(float)>(f1));
     pp.subscribe2(std::function<::mel::core::ECallbackResult(float&)>(
         [](float)
         {
+            addText("lambda2");
             return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
         }
     ));
     pp.subscribe2(std::function<::mel::core::ECallbackResult(float&)>(f2));
-    _subscribe(pp,std::function<::mel::core::ECallbackResult(float&)>(
+    _subscribe2(pp,std::function<::mel::core::ECallbackResult(float&)>(
+        [](float)
+        {
+            addText("lambda3");
+            return ::mel::core::ECallbackResult::UNSUBSCRIBE;
+        }
+    ));
+    sCurrentTest->clearTextBuffer();
+    pp.trigger1(5);
+    sCurrentTest->checkOccurrences("f1",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->checkOccurrences("lambda1",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->clearTextBuffer();
+    pp.trigger1(5);
+    sCurrentTest->checkOccurrences("f1",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->checkOccurrences("lambda1",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    pp.unsubscribe1(s1);
+    pp.unsubscribe1( std::function<::mel::core::ECallbackResult(float&)>(
         [](float)
         {
             return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
-        }
-    ));
-    // pp.subscribe2(
-    //     [](float) 
-    //     {
-    //         return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
-    //     }
-    // );
-    //pp.unsubscribe1(f1);
-    //pp.unsubscribe1(s1);
+        }));
+    sCurrentTest->clearTextBuffer();
     pp.trigger1(5);
+    sCurrentTest->checkOccurrences("f1",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    pp.unsubscribe1(f1);
+    sCurrentTest->clearTextBuffer();
+    pp.trigger1(5);
+    sCurrentTest->checkOccurrences("f1",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+
+    //Second subscriptor
+    sCurrentTest->clearTextBuffer();
     pp.trigger2(6);  
+    sCurrentTest->checkOccurrences("f2",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->checkOccurrences("lambda2",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->checkOccurrences("lambda3",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->clearTextBuffer();
+    pp.trigger2(6);  
+    sCurrentTest->checkOccurrences("f2",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->checkOccurrences("lambda2",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    sCurrentTest->checkOccurrences("lambda3",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+    
+    
     return 0;
 }
 /*

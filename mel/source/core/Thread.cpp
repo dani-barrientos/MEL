@@ -167,7 +167,6 @@ namespace mel
 		return _setAffinity(affinity,gettid());
 	#endif
 	}
-	MEL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Thread);
 
 	#ifdef _WINDOWS
 		DWORD WINAPI _threadProc(void* lpParameter)

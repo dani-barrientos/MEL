@@ -1,6 +1,5 @@
 #pragma once
 #include <functional>
-#include <typeinfo>
 
 /**
 * CallbackInterface implementation for C++ function objects and lambdas

@@ -6,8 +6,6 @@
  */
 
 #include <DabalLibType.h>
-#include <core/Type.h>
-using mel::core::Type;
 
 #include <mpl/binary.h>
 using mel::mpl::binary;
@@ -89,7 +87,6 @@ namespace mel
 			public MThreadAttributtes		
 		///@endcond
 		{
-			MEL_CORE_OBJECT_TYPEINFO_ROOT;
 		
 			//!should be implemented in platform-dependent code
 			static void _switchProcess( ) OPTIMIZE_FLAGS ;

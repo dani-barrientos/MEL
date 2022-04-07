@@ -86,7 +86,6 @@ void ::mel::tasking::_private::RunnableTask::operator delete(void* ptr, Runnable
 	RTMemBlock* mBlock = (RTMemBlock*)((char*)ptr - offsetof(RTMemBlock, task));
 	mBlock->memState = RTMemBlock::EMemState::FREE;
 }
-MEL_CORE_OBJECT_TYPEINFO_IMPL_ROOT(Runnable);
 
 std::function<bool()> Runnable::killTrue;
 std::function<bool()> Runnable::killFalse([]{return false;});

@@ -2,7 +2,6 @@
 using mel::tasking::GenericProcess;
 using ::mel::tasking::EGenericProcessResult;
 
-MEL_CORE_OBJECT_TYPEINFO_IMPL(GenericProcess,Process);
 GenericProcess::GenericProcess() :
 	mProcessCallback( 0 )
 	,mUpdateResult( EGenericProcessResult::CONTINUE )	

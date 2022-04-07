@@ -1,12 +1,12 @@
 
 /**
 \mainpage Introduction
-\a \b mel is a library  for cooperative multitasking and generic execution system. Also it includes some quite simple but useful parallelism functionalities. 
+\a \b MEL is a library for cooperative multitasking and generic execution system. Also it includes some quite simple but useful parallelism functionalities. 
 For a powerful parallelism engine there are some good options as https://oneapi-src.github.io/oneTBB/index.html. Those kind of libraries could be integrated in the 
 \ref execution_system  "the execution system" as a new engine.
 
-The base piece of the system es de so called \ref ::mel::tasking::Process "microthread",
-which can be seen as lightweight threads for cooperative multitasking (similar, but not equal, in concept as Windows fibers o coroutines).
+The base piece of the system es the so called \ref ::mel::tasking::Process "microthread",which can be seen as lightweight threads for cooperative multitasking 
+(similar in concept, but not equal, as Windows fibers o coroutines).
 From now on, we will use *Process* instead of *microthread* for readability and to capture de idea that we are talking about processes (tasks), but without forgetting their *microthread* capabilities,
 which are almost the same as a usually a thread has: \ref ::mel::tasking::Process::wait "wait", \ref ::mel::tasking::Process::sleep "sleep", \ref ::mel::tasking::Process::switchProcess "switchProcess" (usually known as *yield*)
 

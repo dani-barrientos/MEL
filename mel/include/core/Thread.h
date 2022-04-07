@@ -47,7 +47,6 @@ namespace mel
 			friend void* _threadProc(void* param);
 	#endif
 
-			MEL_CORE_OBJECT_TYPEINFO_ROOT;
 			public:
 				enum YieldPolicy {
 					YP_ANY_THREAD_ANY_PROCESSOR=0,

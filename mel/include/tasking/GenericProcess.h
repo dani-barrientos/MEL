@@ -15,7 +15,6 @@ namespace mel
 		*/
 		class MEL_API GenericProcess : public Process
 		{
-			MEL_CORE_OBJECT_TYPEINFO;
 		public:
 			typedef std::function<EGenericProcessResult (uint64_t,Process*)> GenericCallback;
 		private:

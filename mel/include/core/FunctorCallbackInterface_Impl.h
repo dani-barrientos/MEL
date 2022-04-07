@@ -7,10 +7,8 @@ namespace mel
 		template<class TRet, class F,VARIABLE_ARGS>
 		class  FunctorCallbackInterface_Base : public CallbackInterface<TRet, VARIABLE_ARGS_DECL>
 		{
-			MEL_CORE_OBJECT_TYPEINFO;
 		protected:
 			typename ::std::decay<F>::type mFunction;
-			//typename F mFunction;
 
 		public:
 			/**
@@ -26,7 +24,7 @@ namespace mel
 			bool operator==(const CallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>& ev2) const override
 			{
 				const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL> *ev;
-				if ( getMyType().instanceOf( ev2.getMyType() ) )
+				if ( dynamic_cast<const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL>*>(&ev2))
 				//if ( typeid(*this)==typeid(ev2))
 				{
 					ev = static_cast<const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL> *>(&ev2);
@@ -38,13 +36,10 @@ namespace mel
 					return false;
 			}
 		};
-		template <class TRet,class F,VARIABLE_ARGS_NODEFAULT>
-		MEL_CORE_OBJECT_TYPEINFO_IMPL(FunctorCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
 
 		template<class TRet, class F,VARIABLE_ARGS>
 		class  FunctorCallbackInterface : public FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>
 		{
-				MEL_CORE_OBJECT_TYPEINFO;
 		public:
 			/**
 			* @todo modificar al estilo de las cosas de mpl para permitir const F&
@@ -93,14 +88,11 @@ namespace mel
 		};
 
 
-		template <class TRet,class F,VARIABLE_ARGS_NODEFAULT>
-		MEL_CORE_OBJECT_TYPEINFO_IMPL(FunctorCallbackInterface <TRet coma F coma VARIABLE_ARGS_DECL >,FunctorCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >);
 
 	#else
 		template<class TRet, class F, VARIABLE_ARGS>
 		class  FunctorCallbackInterface_Base<TRet,F,VARIABLE_ARGS_DECL,void> : public CallbackInterface<TRet, VARIABLE_ARGS_DECL>
 		{
-			MEL_CORE_OBJECT_TYPEINFO;
 		protected:
 			typename ::std::decay<F>::type mFunction;
 			//F mFunction;
@@ -119,16 +111,8 @@ namespace mel
 			bool operator==(const CallbackInterface_Base<TRet, VARIABLE_ARGS_DECL>& ev2) const override
 			{
 				const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL> *ev;
-				/*
-	#ifdef _WINDOWS
-				OutputDebugString(typeid(*this).name());
-				OutputDebugString("\n");
-				OutputDebugString(typeid(ev2).name());
-				OutputDebugString("\n");
-				OutputDebugString(typeid(mFunction).name());
-				OutputDebugString("\n");
-	#endif*/
-				if (getMyType().instanceOf(ev2.getMyType()))
+				
+				if ( dynamic_cast<const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL>*>(&ev2))
 				//if (typeid(*this) == typeid(ev2))
 				{
 					ev = static_cast<const FunctorCallbackInterface_Base <TRet,F,VARIABLE_ARGS_DECL> *>(&ev2);
@@ -141,13 +125,10 @@ namespace mel
 					return false;
 			}
 		};
-		template <class TRet,class F,VARIABLE_ARGS>
-		MEL_CORE_OBJECT_TYPEINFO_IMPL(FunctorCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >,CallbackInterface<TRet coma VARIABLE_ARGS_DECL>);
 
 		template<class TRet, class F,VARIABLE_ARGS>
 		class  FunctorCallbackInterface<TRet,F,VARIABLE_ARGS_DECL,void> : public FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>
 		{
-			MEL_CORE_OBJECT_TYPEINFO;
 		public:
 			FunctorCallbackInterface( F& function) : FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>( function ){}
 			FunctorCallbackInterface( F&& function) : FunctorCallbackInterface_Base<TRet, F, VARIABLE_ARGS_DECL>( ::std::forward<F>(function)) {}
@@ -166,8 +147,6 @@ namespace mel
 				return new FunctorCallbackInterface<TRet, F, VARIABLE_ARGS_DECL>(*(FunctorCallbackInterface<TRet, F, VARIABLE_ARGS_DECL>*)this);
 			}	
 		};
-		template <class TRet,class F, VARIABLE_ARGS>
-		MEL_CORE_OBJECT_TYPEINFO_IMPL(FunctorCallbackInterface <TRet coma F coma VARIABLE_ARGS_DECL>,FunctorCallbackInterface_Base <TRet coma F coma VARIABLE_ARGS_DECL >);
 
 
 	#endif

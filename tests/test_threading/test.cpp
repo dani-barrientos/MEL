@@ -435,7 +435,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 	constexpr int NUM_PRODUCERS = 50;
 	{
 	Runnable::RunnableCreationOptions opts;
-	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2};
+	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2}; //provoca pete
 	//opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
 	auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
 	std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
@@ -481,7 +481,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 	}
 */
 	mel::text::info("Esperando...");
-	//Thread::sleep(5000);  //no tengo que hacerlo, pero peta con el lockfree, lo quitaré cuando esté bien todo
+	Thread::sleep(50000);
 	}
 	
 	if ( sCount == NUM_PRODUCERS*NUM_POSTS )

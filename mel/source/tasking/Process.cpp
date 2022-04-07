@@ -12,7 +12,6 @@ using mel::tasking::MThreadAttributtes;
 #include <limits>
 #include <assert.h>
 
-MEL_CORE_OBJECT_TYPEINFO_IMPL_ROOT( Process );
 
 Process::Process( unsigned short capacity  )
 	: 

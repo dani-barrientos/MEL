@@ -154,7 +154,6 @@ namespace mel
 		*/
 		class MEL_API Runnable
 		{
-			MEL_CORE_OBJECT_TYPEINFO_ROOT;
 		private:
 			struct RunnableInfo
 			{
