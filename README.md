@@ -1,7 +1,7 @@
 # MEL
 See ENLACE A DOC for MEL documentation
 # vcpkg
- If cmake variable **USE_SPDLOG** is set to *true*. code is compiled using spdlog as the logging library. In this case vcpkg need to be installed. As a summary:
+ If CMake variable **USE_SPDLOG** is set to *true*. code is compiled using spdlog as the logging library. In this case vcpkg need to be installed. As a summary:
    - Follow installacion instructions in https://vcpkg.io/en/getting-started.html. It consists basically on cloning the vcpkg github repository and execute a couple of scripts
    - In order for cmake to be able to find packages,set environment variable VCPKG_ROOT pointing to vcpkg root
 # build

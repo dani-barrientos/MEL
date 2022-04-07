@@ -106,11 +106,12 @@ int TestCallbacks::onExecuteTest()
     sCurrentTest->checkOccurrences("f1",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
     sCurrentTest->checkOccurrences("lambda1",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
     pp.unsubscribe1(s1);
-    pp.unsubscribe1( std::function<::mel::core::ECallbackResult(float&)>(
+   /* pp.unsubscribe1( std::function<::mel::core::ECallbackResult(float&)>(
         [](float)
         {
             return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
-        }));
+        }));   shouldn't compile becuase operator == issue
+        */
     sCurrentTest->clearTextBuffer();
     pp.trigger1(5);
     sCurrentTest->checkOccurrences("f1",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
