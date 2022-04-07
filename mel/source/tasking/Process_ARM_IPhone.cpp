@@ -84,7 +84,7 @@ volatile void fakeFunction( )
 	asm volatile( "sub r1,r1,sp");
 
 	asm volatile( "stmfd sp!,{r0}" );
-	asm volatile( "bl _resizeStack" );
+	asm volatile( "bl _mel_tasking_resizeStack" );
 	asm volatile( "ldmfd sp!,{r0}"); 
 
 	asm volatile ("ldr r2,[r0,%[v]]"::[v] "i" (mStackOFF) ); //inicio pila

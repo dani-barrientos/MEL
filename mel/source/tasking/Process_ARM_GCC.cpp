@@ -65,7 +65,7 @@ volatile void fakeFunction( )
 	//asm volatile ( "add r1,r1,#4" ); //tama�o de pila
 	//call recrece pila
 	asm volatile( "stmfd sp!,{r0}" );
-	asm volatile( "bl resizeStack" ); 
+	asm volatile( "bl mel_tasking_resizeStack" ); 
 	asm volatile( "ldmfd sp!,{r0}"); //restauro R0 = MThread
 	//ahora copia la pila
 	asm volatile ("ldr r2,[r0,%[v]]"::[v] "J" (mStackOFF) ); //inicio pila

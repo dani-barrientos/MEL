@@ -126,7 +126,7 @@ volatile void fakeFunction( )
     asm volatile( "mov x19,sp"); //temporary because sp can not be used in sub
     asm volatile( "sub x1,x1,x19");
     asm volatile( "mov x19,x0"); //save temporary
-	asm volatile( "bl _resizeStack" );
+	asm volatile( "bl _mel_tasking_resizeStack" );
 	asm volatile( "mov x0,x19"); //restore x0 (=this)
     //save stack
     //inisp is in x20

@@ -2,14 +2,6 @@
 
 namespace mel
 {
-	namespace tasking
-	{
-		struct MThreadAttributtes;
-	}
-	using mel::tasking::MThreadAttributtes;
-
-	extern "C" volatile void __attribute__ ((noinline)) resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
-
 	///@cond HIDDEN_SYMBOLS
 	namespace tasking
 	{
@@ -41,3 +33,4 @@ namespace mel
 	}
 	///@endcond
 }
+extern "C" volatile void __attribute__ ((noinline)) mel_tasking_resizeStack(  ::mel::tasking::MThreadAttributtes* process,  unsigned int newSize );

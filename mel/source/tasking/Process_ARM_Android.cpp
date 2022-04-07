@@ -84,7 +84,7 @@ volatile void fakeFunction( )
 	asm volatile( "sub r1,r1,sp");
 
 	asm volatile( "stmfd sp!,{r0}" );
-	asm volatile( "bl resizeStack" );
+	asm volatile( "bl mel_tasking_resizeStack" );
 	asm volatile( "ldmfd sp!,{r0}"); 
 
 	asm volatile ("ldr r2,[r0,%[v]]"::[v] "i" (mStackOFF) ); //inicio pila
@@ -223,7 +223,7 @@ volatile void fakeFunction()
 	asm volatile("mov x19,sp"); //temporary because sp can not be used in sub
 	asm volatile("sub x1,x1,x19");
 	asm volatile("mov x19,x0"); //save temporary
-	asm volatile("bl resizeStack");
+	asm volatile("bl mel_tasking_resizeStack");
 	asm volatile("mov x0,x19"); //restore x0 (=this)
 								//save stack
 								//inisp is in x20
