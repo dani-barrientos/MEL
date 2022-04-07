@@ -130,7 +130,7 @@ unsigned int Process::getElapsedTime() const
 //}
 
 
-void resizeStack(   MThreadAttributtes* process,  unsigned int newSize )
+void mel_tasking_resizeStack(   MThreadAttributtes* process,  unsigned int newSize )
 {
 	if (process->mCapacity< newSize )
 	{

@@ -1,15 +1,8 @@
 #pragma once
+#include <xmmintrin.h>
+///@cond HIDDEN_SYMBOLS
 namespace mel
 {
-    namespace tasking
-    {
-        struct MThreadAttributtes;
-    }
-    using mel::tasking::MThreadAttributtes;
-    extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSize ) ;
-    #include <xmmintrin.h>
-
-    ///@cond HIDDEN_SYMBOLS
     namespace tasking
     {
         struct MThreadAttributtes 
@@ -32,6 +25,7 @@ namespace mel
             volatile unsigned int mCapacity;                
         };
     }
-    ///@endcond
 }
+extern "C"  void mel_tasking_resizeStack(  mel::tasking::MThreadAttributtes* process,  unsigned int newSize ) ;
+///@endcond
 

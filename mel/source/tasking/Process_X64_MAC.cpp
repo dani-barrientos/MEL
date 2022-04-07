@@ -109,7 +109,7 @@ static volatile void _switchMT(MThreadAttributtes*)
     asm volatile("mov $8,%r15");
     asm volatile("sub $8,%rsp") ;
     asm volatile("callresize:");
-    asm volatile( "call _resizeStack");
+    asm volatile( "call _mel_tasking_resizeStack");
     asm volatile("add %r15,%rsp");
     asm volatile("mov %r13,%rcx");
     asm volatile("mov %r14,%rsi");

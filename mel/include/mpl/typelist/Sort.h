@@ -14,12 +14,6 @@ namespace mel
     {
         namespace typelist
         {
-    /*
-    algoritmo:
-
-    */
-
-
             //Sort result:
             // Indexes: TypeList of Int2Type<n> indicating new index for original element
             // Sorted: Sorted TypeList

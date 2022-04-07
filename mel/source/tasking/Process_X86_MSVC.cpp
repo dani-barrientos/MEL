@@ -90,7 +90,7 @@ void _declspec( naked ) switchHelper( MThreadAttributtes* mt )
 	cld;
 	push ecx;
 	push eax;
-	call resizeStack;
+	call mel_tasking_resizeStack;
 	pop eax;
 	pop ecx;		
     std;

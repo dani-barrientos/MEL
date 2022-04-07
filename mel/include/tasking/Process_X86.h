@@ -1,17 +1,7 @@
 #pragma once
+///@cond HIDDEN_SYMBOLS
 namespace mel
-{
-    namespace tasking
-    {
-        struct MThreadAttributtes;
-    }
-    using mel::tasking::MThreadAttributtes;
-    #ifdef _MSC_VER
-        extern "C"   void resizeStack(  MThreadAttributtes* process,  unsigned int newSize ) ;
-    #else
-        extern "C"   void  resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
-    #endif
-    ///@cond HIDDEN_SYMBOLS
+{        
     namespace tasking
     {
         struct MThreadAttributtes
@@ -26,6 +16,7 @@ namespace mel
             volatile void* mIniBP; 
             volatile unsigned int mCapacity;
         };
-    }
-    ///@endcond
+    }    
 }
+extern "C"  void mel_tasking_resizeStack( ::mel::tasking::MThreadAttributtes* process,  unsigned int newSize ) ;
+///@endcond

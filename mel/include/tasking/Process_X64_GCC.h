@@ -29,4 +29,4 @@ namespace mel
     }
     ///@endcond
 }
-extern "C"  void resizeStack(  mel::tasking::MThreadAttributtes* process,  unsigned int newSize );
+extern "C"  void mel_tasking_resizeStack(  mel::tasking::MThreadAttributtes* process,  unsigned int newSize );

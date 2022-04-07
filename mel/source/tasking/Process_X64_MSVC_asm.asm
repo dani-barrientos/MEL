@@ -29,7 +29,7 @@
         RegMXCSR DWORD ?;
         StackSize DWORD ?;
     Attributes ENDS
-    EXTERN resizeStack:PROC
+    EXTERN mel_tasking_resizeStack:PROC
     ;EXTERN Process_execute:PROC
 
 ;void _checkMicrothread(MThreadAttributtes*,uint64_t msegs,void* executePtr);
@@ -160,7 +160,7 @@ _switchMT PROC
     mov r15,8
     sub rsp,8  ;if not aligned to 16, at least is aligned to 8 (sure??)
 callfunction:
-    call resizeStack
+    call mel_tasking_resizeStack
     mov rcx,r13
     mov rsi,r14
     add rsp,32

@@ -101,7 +101,7 @@ volatile void fakeFunction()
 		"cld\n"
 		"push ecx\n"
 		"push eax\n"
-		"call _resizeStack\n":::"ecx","eax");
+		"call _mel_tasking_resizeStack\n":::"ecx","eax");
     asm volatile(
 		//add esp,8
 		//REcupero valores de ecx y eax
