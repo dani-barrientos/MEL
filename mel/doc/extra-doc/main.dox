@@ -1,0 +1,42 @@
+
+/**
+\mainpage Introduction
+\a \b mel is a library  for cooperative multitasking and generic execution system. Also it includes some quite simple but useful parallelism functionalities. 
+For a powerful parallelism engine there are some good options as https://oneapi-src.github.io/oneTBB/index.html. Those kind of libraries could be integrated in the 
+\ref execution_system  "the execution system" as a new engine.
+
+The base piece of the system es de so called \ref ::mel::tasking::Process "microthread",
+which can be seen as lightweight threads for cooperative multitasking (similar, but not equal, in concept as Windows fibers o coroutines).
+From now on, we will use *Process* instead of *microthread* for readability and to capture de idea that we are talking about processes (tasks), but without forgetting their *microthread* capabilities,
+which are almost the same as a usually a thread has: \ref ::mel::tasking::Process::wait "wait", \ref ::mel::tasking::Process::sleep "sleep", \ref ::mel::tasking::Process::switchProcess "switchProcess" (usually known as *yield*)
+
+\ref ::mel::tasking::Process "Processes", \ref ::mel::tasking::ProcessScheduler "schedulers" and \ref ::mel::tasking::Runnable "runnables" together form the basic task system: a \ref ::rasking::Runnable "Runnable" is an object
+with a \ref ::mel::tasking::ProcessScheduler "ProcessScheduler" and this is an aggregate of \ref ::mel::tasking::Process "Process".
+
+Also, we have \ref ::mel::core::ThreadRunnable "ThreadRunnable" which is a \ref ::mel::core::Thread "Thread" specialization to behave as a \ref ::mel::tasking::Runnable "Runnable", so being able to be posted \ref ::mel::tasking::Process "processes" (remember, microthreads, so with *microthreading* capabilities)
+On top of this basic tasking system. we have some constructs that allows to apply modern idioms to our code, specifically asynchronous programming
+
+We will talk more about each of this points in detail
+
+The library also has a lot of helper functionalities. Although the code use C++17 features, because the main pieces of this library dates back to the begining of year 2000, a lot of template metaprogramming 
+was done to be able to resolve things like \ref ::mel::core::Callback "callbacks" \ref::mel::mpl::linkFunctor "binding args", etc.. Most of this features are *now* (since C++11) resolved with bind, function, etc..
+So, some functionalities could be removed and used the "new" C++11 equivalents, specifically those in \ref::mel::mpl namespace.
+
+
+And on top of this, achieving more genericity and flexibility, we have the \ref execution_system "Execution System". This is a fully template module that allows to express in a very easy, understable and efficient way,
+sequences os tasks and where to execute them, in a way independent of the underliying execution system. More on this in \ef execution_system.
+<ul>
+	<li>\ref tasking_system "Tasking System"<br/>
+		The base support for the rest of the system.
+	</li>
+	<li>\ref tasking_constructs "Higher level constructs" <br/>
+		Elements built on top of the tasking system.
+	futures,parallelismo,event_mthread, criticasection_mthrea, barrier..
+	</li>
+	<li>\ref execution_system "Execution system"<br/>
+		High level tasking execution system
+	</li>
+		
+</ul>
+
+*/

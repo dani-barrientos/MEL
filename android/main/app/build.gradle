@@ -6,7 +6,7 @@ android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.dabal.main"
+        applicationId "com.mel.main"
         minSdk 21
         targetSdk 32
         versionCode 1
@@ -15,7 +15,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                arguments '-DANDROID_STL=c++_shared', '-DDABAL_OS=DABAL_ANDROID' , '-DANDROID_ARM_MODE=arm','-DUSE_SPDLOG=true' ,
+                arguments '-DANDROID_STL=c++_shared', '-DMEL_OS=MEL_ANDROID' , '-DANDROID_ARM_MODE=arm','-DUSE_SPDLOG=true' ,
                         '-DCMAKE_TOOLCHAIN_FILE='+System.getenv("VCPKG_ROOT")+'/scripts/buildsystems/vcpkg.cmake',
                         '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+System.getenv("ANDROID_NDK_HOME")+'/build/cmake/android.toolchain.cmake'
                 //arguments += '-DVCPKG_TARGET_TRIPLET=arm64-android'

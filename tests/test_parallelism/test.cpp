@@ -8,7 +8,7 @@ using namespace parallelism;
 
 #include <array>
 #include <core/Timer.h>
-using core::Timer;
+using mel::core::Timer;
 #include <vector>
 #include <list>
 #include <random>
@@ -69,7 +69,7 @@ class TestResult
 int TestParallelism::onExecuteTest()
 {
 	int result = 0;
-    text::set_level(text::level::info);    
+    mel::text::set_level(text::level::info);    
     Timer timer;
     constexpr int n = 100000;
     constexpr int tries = 50;
@@ -96,8 +96,8 @@ int TestParallelism::onExecuteTest()
     constexpr const char* PARALLEL_ARRAY_ITERATOR = "Parallel array iterator";
     constexpr const char* PARALLEL_VECTOR_ITERATOR = "Parallel vector iterator";
     constexpr const char* PARALLEL_LIST_ITERATOR = "Parallel list iterator";
-    auto numCores = ::core::getNumProcessors();
-    text::info("Running test from 1 thread to {}. Number of cores is {}",maxThreads,numCores);
+    auto numCores = ::mel::core::getNumProcessors();
+    mel::text::info("Running test from 1 thread to {}. Number of cores is {}",maxThreads,numCores);
     //go through the diferent collections, in the straight way (monothread)    
     auto t0 = timer.getMilliseconds();
     decltype(t0) elapsed;
@@ -108,7 +108,7 @@ int TestParallelism::onExecuteTest()
             obj->f();
         }
     elapsed = timer.getMilliseconds()-t0;
-    text::info("Straight method (array). Time: {}",elapsed);
+    mel::text::info("Straight method (array). Time: {}",elapsed);
     auto test = std::make_unique<TestResult>(PARALLEL_ARRAY_INDEXED,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
     test = std::make_unique<TestResult>(PARALLEL_ARRAY_ITERATOR,maxThreads,elapsed);
@@ -120,7 +120,7 @@ int TestParallelism::onExecuteTest()
             obj->f();
         }
     elapsed = timer.getMilliseconds()-t0;
-    text::info("Straight method (vector). Time: {}",elapsed);
+    mel::text::info("Straight method (vector). Time: {}",elapsed);
     test = std::make_unique<TestResult>(PARALLEL_VECTOR_INDEXED,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
     test = std::make_unique<TestResult>(PARALLEL_VECTOR_ITERATOR,maxThreads,elapsed);
@@ -132,7 +132,7 @@ int TestParallelism::onExecuteTest()
             obj->f();
         }
     elapsed = timer.getMilliseconds()-t0;
-    text::info("Straight method (list). Time: {}",elapsed);    
+    mel::text::info("Straight method (list). Time: {}",elapsed);    
     test = std::make_unique<TestResult>(PARALLEL_LIST_ITERATOR,maxThreads,elapsed);
     results[test->getName()]=std::move(test);
 
@@ -140,9 +140,9 @@ int TestParallelism::onExecuteTest()
          
     for(int i = 1; i <= maxThreads;++i)
     {
-        text::info("Using {} threads",i);
+        mel::text::info("Using {} threads",i);
         if ( i == numCores)
-            text::info("Same number of CPU cores"); 
+            mel::text::info("Same number of CPU cores"); 
         opts.nThreads = i;    
         ThreadPool myPool(opts);
         ThreadPool::ExecutionOpts exopts;
@@ -158,54 +158,54 @@ int TestParallelism::onExecuteTest()
             v=0.f;
         t0 = timer.getMilliseconds();    
         for(int i = 0; i < tries; ++i )
-            ::core::waitForBarrierThread(::parallelism::_for(&myPool,exopts,begin,end,[&objs](int idx)
+            ::mel::core::waitForBarrierThread(::parallelism::_for(&myPool,exopts,begin,end,[&objs](int idx)
                 {
                     objs[idx]->f();
-                //  text::debug("it {}",idx);
+                //  mel::text::debug("it {}",idx);
                 })
             );
            
         elapsed = timer.getMilliseconds()-t0;
-        text::info("Parallel method indexing (array). Time: {}",elapsed);
+        mel::text::info("Parallel method indexing (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_INDEXED]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
-            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,begin,end,[&objs2](int idx)
+            ::mel::core::waitForBarrierThread( ::mel::parallelism::_for(&myPool,exopts,begin,end,[&objs2](int idx)
                 {
                     objs2[idx]->f();
-                //  text::debug("it {}",idx);
+                //  mel::text::debug("it {}",idx);
                 }));            
         elapsed = timer.getMilliseconds()-t0;
-        text::info("Parallel method indexing (vector). Time: {}",elapsed);
+        mel::text::info("Parallel method indexing (vector). Time: {}",elapsed);
         results[PARALLEL_VECTOR_INDEXED]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();        
         for(int i = 0; i < tries; ++i )
-            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs.begin(),objs.end(),[](decltype(objs)::iterator i  )
+            ::mel::core::waitForBarrierThread( ::mel::parallelism::_for(&myPool,exopts,objs.begin(),objs.end(),[](decltype(objs)::iterator i  )
                 {
                     (*i)->f();
-                //  text::debug("it {}",idx);
+                //  mel::text::debug("it {}",idx);
                 }));        
         elapsed = timer.getMilliseconds()-t0;
-        text::info("Parallel method with iterators (array). Time: {}",elapsed);
+        mel::text::info("Parallel method with iterators (array). Time: {}",elapsed);
         results[PARALLEL_ARRAY_ITERATOR]->addTime(i,elapsed);
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
-            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs2.begin(),objs2.end(),[](decltype(objs2)::iterator i  )
+            ::mel::core::waitForBarrierThread( ::mel::parallelism::_for(&myPool,exopts,objs2.begin(),objs2.end(),[](decltype(objs2)::iterator i  )
                 {
                     (*i)->f();
                 }));
         elapsed = timer.getMilliseconds()-t0;
-        text::info("Parallel method with iterators (vector). Time: {}",elapsed);
+        mel::text::info("Parallel method with iterators (vector). Time: {}",elapsed);
         results[PARALLEL_VECTOR_ITERATOR]->addTime(i,elapsed);
         
         t0 = timer.getMilliseconds();
         for(int i = 0; i < tries; ++i )
-            ::core::waitForBarrierThread( ::parallelism::_for(&myPool,exopts,objs3.begin(),objs3.end(),[](decltype(objs3)::iterator i  )
+            ::mel::core::waitForBarrierThread( ::mel::parallelism::_for(&myPool,exopts,objs3.begin(),objs3.end(),[](decltype(objs3)::iterator i  )
                 {
                     (*i)->f();
                 }));
         elapsed = timer.getMilliseconds()-t0;
-        text::info("Parallel method with iterators (list). Time: {}",elapsed);
+        mel::text::info("Parallel method with iterators (list). Time: {}",elapsed);
         results[PARALLEL_LIST_ITERATOR]->addTime(i,elapsed);
         
        
@@ -221,11 +221,11 @@ int TestParallelism::onExecuteTest()
         
     }
     //show results
-    text::info("Results:");
+    mel::text::info("Results:");
     for(const auto& result:results)
     {
         const auto& test = result.second;
-        text::info("  Test: {}",test->getName());
+        mel::text::info("  Test: {}",test->getName());
         const auto& data = test->getData();
         unsigned int min = std::numeric_limits<unsigned int>::max();
         unsigned int max = 0;
@@ -259,9 +259,9 @@ int TestParallelism::onExecuteTest()
         {
             str<< element.second*100.f/test->getBaseTime() << "% ("<<element.first+1<<") ";  //number of threads is plus 1
         }
-        text::info(str.str());
-        text::info("      Best time = {}% for {} threads",min*100.f/test->getBaseTime(),minIdx+1);
-        text::info("      Worst time = {}% for {} threads",max*100.f/test->getBaseTime(),maxIdx+1);
+        mel::text::info(str.str());
+        mel::text::info("      Best time = {}% for {} threads",min*100.f/test->getBaseTime(),minIdx+1);
+        mel::text::info("      Worst time = {}% for {} threads",max*100.f/test->getBaseTime(),maxIdx+1);
 		
     }
 

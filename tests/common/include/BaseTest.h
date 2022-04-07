@@ -62,6 +62,6 @@ namespace tests
         private:
             string mName;
             std::stringstream mTextBuffer;
-            core::CriticalSection mCS;
+            mel::core::CriticalSection mCS;
     };
 }

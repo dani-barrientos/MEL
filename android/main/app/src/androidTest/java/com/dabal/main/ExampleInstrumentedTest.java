@@ -1,4 +1,4 @@
-package com.dabal.main;
+package com.mel.main;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.dabal.main", appContext.getPackageName());
+        assertEquals("com.mel.main", appContext.getPackageName());
     }
 }

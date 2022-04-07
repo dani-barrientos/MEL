@@ -11,9 +11,9 @@ using std::unique_ptr;
 namespace tests
 {    
     using namespace std::string_literals;
-    class TestManager : public ::core::Singleton<TestManager,false,false>
+    class TestManager : public ::mel::core::Singleton<TestManager,false,false>
     {
-        friend class ::core::Singleton<TestManager,false,false>;
+        friend class ::mel::core::Singleton<TestManager,false,false>;
         public:
             typedef unordered_map<std::string,std::pair<std::string,unique_ptr<BaseTest>>> TestsMap;
             template <class Key,class Val> void registerTest(Key&& testName,Val&& doc,unique_ptr<BaseTest>&& testObj);

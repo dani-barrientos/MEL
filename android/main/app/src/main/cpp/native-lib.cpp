@@ -10,23 +10,23 @@
 #endif
 #include "tests/tests_main.h"
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_dabal_main_MainActivity_stringFromJNI(
+Java_com_mel_main_MainActivity_stringFromJNI(
         JNIEnv* env,
         jobject /* this */,
         jstring commandLine) {
-    std::string hello = "dabal tests";
+    std::string hello = "mel tests";
     std::cout << hello; //@todo no vale con el NDK
     return env->NewStringUTF(hello.c_str());
 }
 #define TEST_OPTION "t"
 extern "C" JNIEXPORT void JNICALL
-Java_com_dabal_main_MainActivity_mainJNI(
+Java_com_mel_main_MainActivity_mainJNI(
         JNIEnv* env,
 jobject /* this */,jobjectArray commands) {
 
 #ifdef USE_SPDLOG
     std::string tag = "spdlog-android";
-    auto android_logger = spdlog::android_logger_mt("dabal", tag);
+    auto android_logger = spdlog::android_logger_mt("mel", tag);
     //need to change logger to be shown in logcat
     spdlog::set_default_logger(android_logger);
 #endif
@@ -63,13 +63,13 @@ jobject /* this */,jobjectArray commands) {
 
 }
 extern "C" JNIEXPORT void JNICALL
-Java_com_dabal_main_MainActivity_allTestsJNI(
+Java_com_mel_main_MainActivity_allTestsJNI(
         JNIEnv* env,
         jobject /* this */)
 {
 #ifdef USE_SPDLOG
     std::string tag = "spdlog-android";
-    auto android_logger = spdlog::android_logger_mt("dabal", tag);
+    auto android_logger = spdlog::android_logger_mt("mel", tag);
     //need to change logger to be shown in logcat
     spdlog::set_default_logger(android_logger);
 #endif

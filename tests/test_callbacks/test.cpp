@@ -2,9 +2,9 @@
 using test_callbacks::TestCallbacks;
 #include <iostream>
 #include <core/CallbackSubscriptor.h>
-using core::CallbackSubscriptor;
+using mel::core::CallbackSubscriptor;
 #include <mpl/Int2Type.h>
-using mpl::Int2Type;
+using mel::mpl::Int2Type;
 #include <TestManager.h>
 using tests::TestManager;
 
@@ -13,12 +13,12 @@ const std::string TestCallbacks::TEST_NAME = "callbacks";
 ::core::ECallbackResult f1(float a)
 {
     std::cout << "f1 "<< a << '\n';
-    return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+    return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 ::core::ECallbackResult f2(float& a)
 {
     std::cout << "f2 "<< a << '\n';
-    return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+    return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 
 
@@ -69,27 +69,27 @@ int TestCallbacks::onExecuteTest()
 
     const std::function<::core::ECallbackResult(float)> f = [](float v)
     {
-        return ::core::ECallbackResult::UNSUBSCRIBE;
+        return ::mel::core::ECallbackResult::UNSUBSCRIBE;
     };
     pp.subscribe1(f);
     pp.subscribe1(std::function<::core::ECallbackResult(float)>(f1));
     pp.subscribe2(std::function<::core::ECallbackResult(float&)>(
         [](float)
         {
-            return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+            return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
         }
     ));
     pp.subscribe2(std::function<::core::ECallbackResult(float&)>(f2));
     _subscribe(pp,std::function<::core::ECallbackResult(float&)>(
         [](float)
         {
-            return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+            return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
         }
     ));
     // pp.subscribe2(
     //     [](float) 
     //     {
-    //         return ::core::ECallbackResult::NO_UNSUBSCRIBE;
+    //         return ::mel::core::ECallbackResult::NO_UNSUBSCRIBE;
     //     }
     // );
     //pp.unsubscribe1(f1);
@@ -101,19 +101,19 @@ int TestCallbacks::onExecuteTest()
 /*
 core::ECallbackResult f1(int )
 {
-    return core::ECallbackResult::NO_UNSUBSCRIBE;
+    return mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 core::ECallbackResult f2(int,float )
 {
-    return core::ECallbackResult::NO_UNSUBSCRIBE;
+    return mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 core::ECallbackResult f3()
 {
-    return core::ECallbackResult::NO_UNSUBSCRIBE;
+    return mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 core::ECallbackResult f4(int,float,float,int,int,float,int )
 {
-    return core::ECallbackResult::NO_UNSUBSCRIBE;
+    return mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 
 int test_callbacks::test()
@@ -128,8 +128,8 @@ int test_callbacks::test()
     cs.triggerCallbacks(1);
     cs2.subscribeCallback(f2);    
     cs2.unsubscribeCallback(f2);
-    cs2.subscribeCallback( std::function< core::ECallbackResult(int,float)>(f2));
-  //  cs2.unsubscribeCallback( std::function< core::ECallbackResult(int,float)>(f2));
+    cs2.subscribeCallback( std::function< mel::core::ECallbackResult(int,float)>(f2));
+  //  cs2.unsubscribeCallback( std::function< mel::core::ECallbackResult(int,float)>(f2));
     cs2.triggerCallbacks(2,4.5f);
     cs2.triggerCallbacks(2,4.5f);
 

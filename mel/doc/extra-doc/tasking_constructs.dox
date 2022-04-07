@@ -1,0 +1,148 @@
+/**
+\page tasking_constructs Higher level constructs for the tasking system
+Although the tasking system shown if \ref tasking_system "this section" by itself is a powerful tool, we can provide higher constructs to provide
+more flexibility.
+###Futures
+The very first abstraction is the \ref ::mel::core::Future "Future" class. Actually, this is not an abstraction related directly with the tasking system, 
+but it's natural to be used by it. Because this type represent a *value that maybe is not present yet*, it's the perfect element to use as a way to communicate
+tasks between them.
+
+The first function to stop in is \ref ::mel::tasking::Runnable::execute. This function allows to execute a *calllable* with no input arguments, and returns a future.
+\code
+auto th1 = ThreadRunnable::create();
+    th1->fireAndForget( []()
+        {
+            auto th = ThreadRunnable::getCurrentThreadRunnable();
+            Future<int> fut = th->execute<int>( 
+                [](){
+                    Process::wait(100);
+                    return 10;
+                }
+            );
+            try
+            {
+                auto res = waitForFutureMThread(fut);
+                mel::text::info("Result = {}",res.value());
+            }catch( mel::core::WaitException& e)
+            {
+                mel::text::error("Error waiting. Reason = {}",e.what());
+            }
+            catch(...)
+            {
+                mel::text::error("Error waiting. Unknown Reason");
+            }
+
+        }
+        ,0,Runnable::killFalse
+    );
+\endcode
+Explanation: a \ref ::mel::tasking::ThreadRunnable "ThreadRunnable" is posted a task, which execute a task that returns an *int* in some Runnable, in this case, the same ThreadRunnable to show one more timeout
+the cooperative multitasking power of the microthread system. The **Process::wait** is inserted only to be clear that the caller will have to have some timeout
+for the function to be executed.
+
+A future holds its value as a shared value such that Futures can be assigned between them, so pointing to the same internal data. This alows using value semantics for Futures.
+So, assigning or copy-construct Futures, makes them to hold the same value.
+For example:
+\code
+    Future<int> v;
+    Future<int> v2(v); //points to the same internal variable as v
+    v.setValue( 6 );//set value. So v2 gets same value.
+\endcode
+With this in mind, we can do things as in the next example:
+\code
+void _sample2()
+{
+    auto th1 = ThreadRunnable::create();
+    Future<string> result;
+    th1->fireAndForget( [result]() mutable
+        {
+            auto th = ThreadRunnable::getCurrentThreadRunnable();
+            auto fut = th->execute<string>( 
+                []() noexcept
+                {
+                    Process::wait(100);
+                    return "Hello";
+                }
+            );
+            try
+            {
+                auto res = waitForFutureMThread(fut,20);
+                result.setValue(res.value());
+                mel::text::info("Result = {}",res.value());
+            }catch( mel::core::WaitException& e)
+            {
+                result.setValue(std::current_exception());
+                mel::text::error("Error waiting. Reason = {}",e.what());
+            }
+            catch(...)
+            {
+                result.setValue(std::current_exception());
+                mel::text::error("Error waiting. Unknown Reason");
+            }
+        }
+        ,0,Runnable::killFalse
+    );
+    //pause current thread waiting for future ready
+    try
+    {
+        auto res = mel::core::waitForFutureThread(result);
+        mel::text::info("Result after waiting in currrent thread= {}",res.value());
+    }catch( mel::core::WaitException& e)
+    {
+        mel::text::error("Error waiting in currrent thread. Reason = {}",e.what());
+    }
+    catch(...)
+    {
+        mel::text::error("Error waiting in currrent thread. Unknown Reason");
+    }    
+
+\endcode
+This example is a modification of the first one. Here, a Future is created as local to the function and passed to the task in order for this to return a result there.
+In turn, the task execute another function in the same ThreadRunnable (of course, any other agent could be used).
+It's important to note, in the line doing `auto fut = th->execute<string>...` we don't assign directly to `result`. The reason is that,the internal data where `result`
+is pointing, will be changed and the wait that is being done in the function (the line `auto res = mel::core::waitForFutureThread(result)`) is waiting for a different
+data. 
+
+###Synchronization mechanisms
+The usual mechanisms for in-thread communication are avaiable: \ref ::mel::core::event and \ref ::mel::core::CriticalSection. The *microthread* system has equivalent ones:
+\ref ::mel::tasking::Event_mthread and ::mel::tasking::CriticalSection_mthread. 
+Now an example with I think is self-explained
+\code
+void _sample3()
+{
+    Event_mthread event;  
+    CriticalSection_mthread cs;
+    auto th1 = ThreadRunnable::create(); //order is important here to respect reverse order of destruction
+    th1->fireAndForget( [&cs,&event]() mutable
+        {
+            ::mel::text::info("Task1 Waiting before entering critical section");
+            ::mel::tasking::Process::wait(1000);
+            Lock_mthread lck(cs);
+            ::mel::text::info("Task1 Entering critical section and set event");
+            event.set();    
+        }
+        ,0,Runnable::killFalse
+    );
+    th1->fireAndForget([&cs]() mutable
+        {
+            Lock_mthread lck(cs);
+            ::mel::text::info("Task2 Waiting inside critical section");
+            ::mel::tasking::Process::wait(5000);
+            ::mel::text::info("Task2 is going to release critical section");
+        }
+        ,0,Runnable::killFalse
+    );
+    th1->fireAndForget( [&event]() mutable
+        {
+            mel::text::info("Task3 Waiting for event..");
+            event.wait();
+            mel::text::info("Task3 Event was signaled!");
+        }
+        ,0,Runnable::killFalse
+    );
+}
+\endcode
+
+MEER EJEMPLOS DE ESPERAS FOR FUTURES UN TIEMPO CORTO Y QUE SE LANCE EXEPCEION. LO MISMO CON Event_mthread
+
+*/

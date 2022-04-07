@@ -1,4 +1,4 @@
-package com.dabal.main;
+package com.mel.main;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,7 +8,7 @@ import android.widget.AdapterView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.dabal.main.databinding.ActivityMainBinding;
+import com.mel.main.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 

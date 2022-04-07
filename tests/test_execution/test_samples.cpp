@@ -13,33 +13,33 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
         th->fireAndForget(
             [ex]() mutable {
               try {
-                auto res = ::tasking::waitForFutureMThread(
-                    execution::launch(
+                auto res = ::mel::tasking::waitForFutureMThread(
+                    mel::execution::launch(
                         ex, [](float param) noexcept { return param + 6.f; },
                         10.5f) |
-                    execution::next([](float &param) noexcept {
+                    mel::execution::next([](float &param) noexcept {
                       return std::to_string(param);
                     }) |
-                    execution::parallel(
+                    mel::execution::parallel(
                         [](string &str) {
-                          text::info("Parallel 1. {}", str + " hello!");
+                          mel::text::info("Parallel 1. {}", str + " hello!");
                         },
                         [](string &str) {
-                          text::info("Parallel 2. {}", str + " hi!");
+                          mel::text::info("Parallel 2. {}", str + " hi!");
                         },
                         [](string &str) {
-                          text::info("Parallel 2. {}", str + " whats up!");
+                          mel::text::info("Parallel 2. {}", str + " whats up!");
                         }));
                 if (res.isValid()) {
-                  ::text::info("Result value = {}", res.value());
+                  ::mel::text::info("Result value = {}", res.value());
                 }
               } catch (core::WaitException &e) {
-                ::text::error("Error while waiting: Reason={}", e.what());
+                ::mel::text::error("Error while waiting: Reason={}", e.what());
               } catch (...) {
-                ::text::error("Error while waiting: Unknown reason={}");
+                ::mel::text::error("Error while waiting: Unknown reason={}");
               }
             },
-            0, ::tasking::Runnable::killFalse);
+            0, ::mel::tasking::Runnable::killFalse);
 }
 template <class ExecutorType> void _sampleReference(ExecutorType ex)
 {	
@@ -47,26 +47,26 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 	auto th = ThreadRunnable::create();
 	/*th->fireAndForget([ex,&str] () mutable
 	{
-		auto res = ::tasking::waitForFutureMThread(
+		auto res = ::mel::tasking::waitForFutureMThread(
 			execution::launch(ex,[](string& str) noexcept ->string&
 			{	
 				//First job
 				str += " Dani.";
 				return str;
 			},std::ref(str))
-			| execution::next( [](string& str) noexcept -> string&
+			| mel::execution::next( [](string& str) noexcept -> string&
 			{
 				//Second job 
 				str+= " How are you?";
 				return str;
 			})
-			| execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string& str ) noexcept
 			{
 				//Third job
 				str += "Bye!";
 				return str;
 			})
-			| execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string& str ) noexcept
 			{
 				//Fourth job
 				str += "See you!";
@@ -82,28 +82,28 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 	*/
 	th->fireAndForget([ex,&str] () mutable
 	{
-		auto res = ::tasking::waitForFutureMThread(
+		auto res = ::mel::tasking::waitForFutureMThread(
 			execution::start(ex)
-			| execution::inmediate(std::ref(str))
-			| execution::next([](string& str) noexcept ->string&
+			| mel::execution::inmediate(std::ref(str))
+			| mel::execution::next([](string& str) noexcept ->string&
 			{	
 				//First job
 				str += " Dani.";
 				return str;
 			})
-			| execution::next( [](string& str) noexcept -> string&
+			| mel::execution::next( [](string& str) noexcept -> string&
 			{
 				//Second job 
 				str+= " How are you?";
 				return str;
 			})
-			| execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string& str ) noexcept
 			{
 				//Third job
 				str += "Bye!";
 				return str;
 			})
-			| execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string& str ) noexcept
 			{
 				//Fourth job
 				str += "See you!";
@@ -126,29 +126,29 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 	{
 		try
 		{
-		auto res = ::tasking::waitForFutureMThread(
+		auto res = ::mel::tasking::waitForFutureMThread(
 			execution::launch(ex,[](string& str) noexcept ->string&
 			{	
 				//First job
 				str += " Dani.";
 				return str;
 			},std::ref(str))
-			| execution::next( [](string& str) -> string&
+			| mel::execution::next( [](string& str) -> string&
 			{
 				//Second job 
-				/*if ( ::tasking::Process::wait(1000) != ::tasking::Process::ESwitchResult::ESWITCH_OK)
+				/*if ( ::mel::tasking::Process::wait(1000) != ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 					return str;*/
 				str+= " How are you?";
 				throw std::runtime_error("This is an error");
 				//return str;
 			})
-			| execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string& str ) noexcept
 			{
 				//Third job. Will never be executed!!!
 				str += "Bye!";
 				return str;
 			})
-			| execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string& str ) noexcept
 			{
 				//Fourth job. Will never be executed
 				str += "See you!";
@@ -177,31 +177,31 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 	{
 		try
 		{
-			auto res = ::tasking::waitForFutureMThread(
+			auto res = ::mel::tasking::waitForFutureMThread(
 				execution::launch(ex,[](string& str) noexcept ->string&
 				{	
 					//First job
 					str += " Dani.";
 					return str;
 				},std::ref(str))
-				| execution::next( [](string& str) -> string&
+				| mel::execution::next( [](string& str) -> string&
 				{
 					//Second job 
 					str+= " How are you?";
 					throw std::runtime_error("This is an error");
 					//return str;
 				})
-				| execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](string& str ) noexcept
 				{
 					//Third job. Will never be executed!!!
 					str += "Bye!";
 					return str;
 				})
-				| execution::catchError( [](std::exception_ptr err)
+				| mel::execution::catchError( [](std::exception_ptr err)
 				{
 					return "Error caught!! ";
 				})
-				| execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](string& str ) noexcept
 				{
 					//Fourth job. 
 					str += "See you!";
@@ -234,22 +234,22 @@ void _sampleTransfer()
 	{		
 		try
 		{
-			auto res = ::tasking::waitForFutureMThread(
+			auto res = ::mel::tasking::waitForFutureMThread(
 
 				execution::start(exr)
-				| execution::inmediate("Hello "s)
-				| execution::next( [](string& str) noexcept
+				| mel::execution::inmediate("Hello "s)
+				| mel::execution::next( [](string& str) noexcept
 				{
 					//Second job 
 					text::info("NEXT: {}",str);
 					return str + ". How are you?";
 				})
-				| execution::transfer(extp)
-				| execution::loop(0,10, [](int idx, string& str) noexcept
+				| mel::execution::transfer(extp)
+				| mel::execution::loop(0,10, [](int idx, string& str) noexcept
 				{
 					text::info("Iteration {}", str + std::to_string(idx));
 				})
-				| execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](string& str ) noexcept
 				{
 					//Fourth job. 
 					str += "See you!";
@@ -273,55 +273,55 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 	th->fireAndForget([ex1,ex2] () mutable
 	{
         //first flow in one of the executors
-        auto job1 = execution::start(ex1)
-        | execution::next( []()
+        auto job1 = mel::execution::start(ex1)
+        | mel::execution::next( []()
         {
-            ::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
-            text::info("First job");
+            ::mel::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
+            mel::text::info("First job");
             return "First Job";
         });
 
         //second job in the other executor
-        auto job2 = execution::start(ex1)
-        | execution::parallel( []() noexcept
+        auto job2 = mel::execution::start(ex1)
+        | mel::execution::parallel( []() noexcept
         {
-            ::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
-            text::info("second job, t1");
+            ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
+            mel::text::info("second job, t1");
         },
         []() noexcept
         {
-            ::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
-            text::info("second job, t2");
+            ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
+            mel::text::info("second job, t2");
 
         })
-        | execution::next( []() noexcept
+        | mel::execution::next( []() noexcept
         {
             return 10;
         });
         //third job in the same executor as before
         //second job in the other executor
-        auto job3 = execution::start(ex1)
-        | execution::parallel_convert<std::tuple<int,float>>(
+        auto job3 = mel::execution::start(ex1)
+        | mel::execution::parallel_convert<std::tuple<int,float>>(
          []() noexcept
         {
-            ::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
-            text::info("second job, t1");
+            ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
+            mel::text::info("second job, t1");
             return 5;
         },
         []() noexcept
         {
-            ::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
-            text::info("second job, t2");
+            ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
+            mel::text::info("second job, t2");
             return 8.7f;
         });
        
 		try
 		{
             //on_all need to be executed in a context of some excutor, so one of them is given
-            auto res = ::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
+            auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
             //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
             auto& val = res.value();
-            ::text::info("Result value = [{},{},({},{})]",std::get<0>(val),std::get<1>(val),std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val)));
+            ::mel::text::info("Result value = [{},{},({},{})]",std::get<0>(val),std::get<1>(val),std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val)));
         }
 		catch(core::WaitException& e)
 		{
@@ -354,12 +354,12 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 	th->fireAndForget([ex,&obj] () mutable
 	{
 
-		auto res = ::tasking::waitForFutureMThread(
+		auto res = ::mel::tasking::waitForFutureMThread(
 			execution::launch(ex,
 				std::bind(&MyClass::f1,&obj,6.7f,_1),10.5f)
-			| execution::next(std::bind(&MyClass::f2,&obj,_1))
+			| mel::execution::next(std::bind(&MyClass::f2,&obj,_1))
 	
-			| execution::parallel( 
+			| mel::execution::parallel( 
 				MyClass(),
 				[](string& str)
 				{

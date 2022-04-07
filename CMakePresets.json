@@ -10,8 +10,8 @@
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "DABAL_OS": "DABAL_WINDOWS",
-                "DABAL_ARQ": "DABAL_X86_MSVC",
+                "MEL_OS": "MEL_WINDOWS",
+                "MEL_ARQ": "MEL_X86_MSVC",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "USE_SPDLOG": true
             },
@@ -32,8 +32,8 @@
             "hidden": true,
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
-                "DABAL_OS": "DABAL_WINDOWS",
-                "DABAL_ARQ": "DABAL_X64_MSVC",
+                "MEL_OS": "MEL_WINDOWS",
+                "MEL_ARQ": "MEL_X64_MSVC",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "USE_SPDLOG": true
@@ -48,7 +48,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "DABAL_OS": "DABAL_LINUX",
+                "MEL_OS": "MEL_LINUX",
                 "USE_SPDLOG": true
             },
             "vendor": {
@@ -66,7 +66,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "DABAL_ARQ": "DABAL_X64_CLANG"
+                "MEL_ARQ": "MEL_X64_CLANG"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -83,7 +83,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "DABAL_ARQ": "DABAL_X64_CLANG"
+                "MEL_ARQ": "MEL_X64_CLANG"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -100,7 +100,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "DABAL_ARQ": "DABAL_X64_GCC"
+                "MEL_ARQ": "MEL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -118,7 +118,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "DABAL_ARQ": "DABAL_X64_GCC"
+                "MEL_ARQ": "MEL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -135,7 +135,7 @@
             "inherits": "Linux Base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "DABAL_ARQ": "DABAL_X64_GCC"
+                "MEL_ARQ": "MEL_X64_GCC"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -153,8 +153,8 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "DABAL_OS": "DABAL_MACOSX",
-                "DABAL_ARQ": "DABAL_X64_CLANG",
+                "MEL_OS": "MEL_MACOSX",
+                "MEL_ARQ": "MEL_X64_CLANG",
                 "USE_SPDLOG": true
             }
         },
@@ -166,8 +166,8 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "DABAL_OS": "DABAL_MACOSX",
-                "DABAL_ARQ": "DABAL_X64_CLANG",
+                "MEL_OS": "MEL_MACOSX",
+                "MEL_ARQ": "MEL_X64_CLANG",
                 "USE_SPDLOG": true
             }
         }

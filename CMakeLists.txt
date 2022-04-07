@@ -12,7 +12,7 @@ set(CMAKE_CXX_CLANG_TIDY
   -header-filter=.;
   -checks=*;)
 ]]
-message("Building for " ${DABAL_OS})
+message("Building for " ${MEL_OS})
 message("Supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 if(NOT DEFINED ENV{VCPKG_ROOT})
   message("vcpkg root not defined!.Missing?")
@@ -23,26 +23,25 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 message( "Toolchain " ${CMAKE_TOOLCHAIN_FILE})
 
-project ("dabal")
+project ("mel")
 
-
-add_compile_definitions(${DABAL_OS})
-add_compile_definitions(${DABAL_ARQ})
+add_compile_definitions(${MEL_OS})
+add_compile_definitions(${MEL_ARQ})
 if(USE_SPDLOG)
     add_compile_definitions(USE_SPDLOG)
 endif()
 # Include sub-projects.
-add_subdirectory("dabal")
+add_subdirectory("mel")
 add_subdirectory ("tests")
 add_executable (main "main.cpp")
-target_link_libraries(main "dabal")
+target_link_libraries(main "mel")
 target_link_libraries(main "tests")
 
 #copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
-if(DABAL_OS STREQUAL "DABAL_WINDOWS")
+if(MEL_OS STREQUAL "MEL_WINDOWS")
 add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to MyTest
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        $<TARGET_FILE_DIR:dabal>"/dabal.dll"      # <--this is in-file
+        $<TARGET_FILE_DIR:mel>"/mel.dll"      # <--this is in-file
         $<TARGET_FILE_DIR:main>)                 # <--this is out-file path
 endif()
 #seguramente lo mejor sea tener los test en otro archivo y hacer un include

@@ -3,7 +3,7 @@
 using namespace test_threading;
 #include <iostream>
 #include <tasking/ThreadRunnable.h>
-using tasking::ThreadRunnable;
+using mel::tasking::ThreadRunnable;
 using namespace std;
 #include <TestManager.h>
 using tests::TestManager;
@@ -14,7 +14,7 @@ using tests::TestManager;
 #include <mpl/Ref.h>
 #include <string>
 #include <tasking/Process.h>
-using tasking::Process;
+using mel::tasking::Process;
 #include "future_tests.h"
 #include <tasking/utilities.h>
 #include <array>
@@ -98,7 +98,7 @@ class MyTask
 		tasking::Process::wait(213);
 		if ( mTarget )
 			mTarget->wakeUp();
-		return ::tasking::EGenericProcessResult::CONTINUE;
+		return ::mel::tasking::EGenericProcessResult::CONTINUE;
 	}
 	private:
 	Process* mTarget;
@@ -108,7 +108,7 @@ class MyTask
 {
 	++var;
 	text::debug("staticFuncTask");
-	return ::tasking::EGenericProcessResult::CONTINUE;
+	return ::mel::tasking::EGenericProcessResult::CONTINUE;
 }
 static Timer sTimer;
 /**
@@ -153,8 +153,8 @@ static int _testsDebug(tests::BaseTest* test)
 			//fut.setValue(10);
 			//fut.setError(std::make_exception_ptr(std::runtime_error("Prueba error")));;
 			fut.setError( "error infame");
-			//return ::tasking::EGenericProcessResult::KILL;
-			return ::tasking::EGenericProcessResult::CONTINUE;
+			//return ::mel::tasking::EGenericProcessResult::KILL;
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::killTrue,1000);
 		th1->post([](RUNNABLE_TASK_PARAMS)
 		{
@@ -162,11 +162,11 @@ static int _testsDebug(tests::BaseTest* test)
 			text::debug("CUATRO");
 			tasking::Process::wait(2200);
 			text::debug("CINCO");
-			return ::tasking::EGenericProcessResult::CONTINUE;
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::killTrue,700);
 		try
 		{
-			auto res = core::waitForFutureThread(fut);
+			auto res = mel::core::waitForFutureThread(fut);
 			text::info("Valor = {}",res.value());
 		}catch(std::exception& e)
 		{
@@ -183,7 +183,7 @@ static int _testsDebug(tests::BaseTest* test)
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
 	text::set_level(text::level::info);
-	auto lvl = text::get_level();
+	auto lvl = mel::text::get_level();
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);
 	size_t s2 = sizeof(GenericProcess);
@@ -195,7 +195,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		text::debug("Request execution");
 		auto fut = th1->execute<int>([th = th1.get()]{
 			text::debug("Start function execution...");
-			if ( ::tasking::Process::wait(2000) != tasking::Process::ESwitchResult::ESWITCH_OK )
+			if ( ::mel::tasking::Process::wait(2000) != mel::tasking::Process::ESwitchResult::ESWITCH_OK )
 			{
 				text::error("Task killed!!");
 				Timer t;				
@@ -217,14 +217,14 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 					});
 				try
 				{
-					auto fr = ::tasking::waitForFutureMThread(fut);
+					auto fr = ::mel::tasking::waitForFutureMThread(fut);
 					text::info("OK, execution was't done because process is killed");
 				}catch(...)
 				{
 					text::error("Execution should have recieved a kill signal");
 				}				
 				/*
-				if ( !fr.isValid() && fr.error().error == ::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
+				if ( !fr.isValid() && fr.error().error == ::mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL)
 					text::info("OK, execution was't done because process is killed");
 				else
 					text::error("Execution should have recieved a kill signal");
@@ -235,8 +235,8 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 			return 6;},Runnable::killTrue);
 			
 		text::debug("Start Waiting for result");
-		// auto fr = ::core::waitForFutureThread(fut,2000);
-		// text::debug("Wait done");
+		// auto fr = ::mel::core::waitForFutureThread(fut,2000);
+		// mel::text::debug("Wait done");
 		// if ( !fr.isValid())
 		// 	text::error(fr.error().errorMsg);
 		// else
@@ -270,31 +270,31 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 
 				try
 				{
-					auto fr = ::tasking::waitForFutureMThread(fut,2000);
+					auto fr = ::mel::tasking::waitForFutureMThread(fut,2000);
 					text::debug("{}",fr.value());
 				}catch(std::exception& e)
 				{
 					text::error(e.what());
 				}
 			
-				// if ( fr != ::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
+				// if ( fr != ::mel::core::FutureData_Base::EWaitResult::FUTURE_WAIT_OK)
 				// {
 				// 	spdlog::error(fut.getValue().error().errorMsg);
 				// }
 				text::debug("espero en p1");
-				auto wr = tasking::Process::wait(10000);			
+				auto wr = mel::tasking::Process::wait(10000);			
 				text::debug("vuelvo a esperar en p1");
 
 				// esto tengo que arreglarlo para que, si soy autokill, no vuelva a esperar si está en trying_tokill
 				// meditar sobre estos temas, no me convence demasiado la forma en que está planteado
-				//wr = tasking::Process::wait(10000);
-				wr = tasking::Process::switchProcess(true);
-				wr = tasking::Process::sleep();
+				//wr = mel::tasking::Process::wait(10000);
+				wr = mel::tasking::Process::switchProcess(true);
+				wr = mel::tasking::Process::sleep();
 				text::debug("fin espera en p1");				 
 			
 			}
 			text::debug("Continuo");
-			return ::tasking::EGenericProcessResult::CONTINUE;
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},autokill,2000,000);
 		th2->fireAndForget(
 			[p1]()
@@ -318,7 +318,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		);
 
 		text::debug("execution done");
-		return ::tasking::EGenericProcessResult::KILL;
+		return ::mel::tasking::EGenericProcessResult::KILL;
 	}
 	,Runnable::killTrue,3000);
 	
@@ -344,7 +344,7 @@ static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 		t1 = sTimer.getMilliseconds();
 		spdlog::debug("Elapsed {}",t1-t0);
 		sharedVar = aux;
-		return ::tasking::EGenericProcessResult::CONTINUE;
+		return ::mel::tasking::EGenericProcessResult::CONTINUE;
 	},true,2000,000);
 	*/
 	// th1->post<CustomProcessType,MyAllocator>(
@@ -392,7 +392,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 				++count;
 				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
-					return ::tasking::EGenericProcessResult::KILL;
+					return ::mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse,1000,0);		
 			}
 			::Thread::sleep(1) ;//to wait for taks
@@ -415,7 +415,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 				th1->post( [count](RUNNABLE_TASK_PARAMS)
 				{
 					//spdlog::debug("Lambda {}",count);
-					return ::tasking::EGenericProcessResult::KILL;
+					return ::mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse,1000,0);
 			}	
 			::Thread::sleep(1) ;//wait for tasks finished
@@ -451,7 +451,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 			for(auto i = 0; i < NUM_POSTS; ++i)
 			{
 				//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-				//if (::tasking::Process::wait(1000) == ::tasking::Process::ESwitchResult::ESWITCH_OK)
+				//if (::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 				{
 					consumer->fireAndForget(
 						[]()
@@ -461,7 +461,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 					);
 				}
 			}
-			return tasking::EGenericProcessResult::KILL;
+			return mel::tasking::EGenericProcessResult::KILL;
 		},Runnable::killFalse);
 	}
 /*
@@ -469,7 +469,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 	for(auto i = 0; i < NUM_POSTS; ++i)
 	{
 		//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-		//if (::tasking::Process::wait(1000) == ::tasking::Process::ESwitchResult::ESWITCH_OK)
+		//if (::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 		{
 			consumer->fireAndForget(
 				[]()
@@ -541,7 +541,7 @@ int _testExceptions( tests::BaseTest* test)
 				tasking::Process::wait(5000);
 			}			
 			
-			 return ::tasking::EGenericProcessResult::CONTINUE;
+			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		 }
 	);
 	th1->post(
@@ -566,7 +566,7 @@ int _testExceptions( tests::BaseTest* test)
 					text::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
 			}			
 			
-			 return ::tasking::EGenericProcessResult::CONTINUE;
+			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		 }
 	);
 	Thread::sleep(15000);

@@ -1,4 +1,4 @@
-package com.dabal.main;
+package com.mel.main;
 
 import org.junit.Test;
 

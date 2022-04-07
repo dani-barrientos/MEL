@@ -41,23 +41,23 @@ void BaseTest::addTextToBuffer(string str,LogLevel ll)
     switch (ll)
     {
         case LogLevel::Debug:
-            text::debug(str);
+            mel::text::debug(str);
             break;
         case LogLevel::Info:
-            text::info(str);
+            mel::text::info(str);
             break;
         case LogLevel::Warn:
-            text::warn(str);
+            mel::text::warn(str);
             break;
         case LogLevel::Error:
-            text::error(str);
+            mel::text::error(str);
             break;
         case LogLevel::Critical:
-            text::critical(str);
+            mel::text::critical(str);
             break;
         default:break;
     }
-    auto lck = core::Lock(mCS);
+    auto lck = mel::core::Lock(mCS);
     mTextBuffer << str;//std::move(str);    
 }
 string BaseTest::getBuffer() const
@@ -95,29 +95,29 @@ bool BaseTest::checkOccurrences(string str,size_t n,const char* fileName,int lin
         switch (ll)
         {
             case LogLevel::Debug:
-                text::debug(">>>>>");
-                text::debug(mTextBuffer.str());
-                text::debug("<<<<<");
+                mel::text::debug(">>>>>");
+                mel::text::debug(mTextBuffer.str());
+                mel::text::debug("<<<<<");
                 break;
             case LogLevel::Info:
-                text::info(">>>>>");
-                text::info(mTextBuffer.str());
-                text::info("<<<<<");
+                mel::text::info(">>>>>");
+                mel::text::info(mTextBuffer.str());
+                mel::text::info("<<<<<");
                 break;
             case LogLevel::Warn:
-                text::warn(">>>>>");
-                text::warn(mTextBuffer.str());
-                text::warn("<<<<<");
+                mel::text::warn(">>>>>");
+                mel::text::warn(mTextBuffer.str());
+                mel::text::warn("<<<<<");
                 break;
             case LogLevel::Error:
-                text::error(">>>>>");
-                text::error(mTextBuffer.str());
-                text::error("<<<<<");
+                mel::text::error(">>>>>");
+                mel::text::error(mTextBuffer.str());
+                mel::text::error("<<<<<");
                 break;
             case LogLevel::Critical:
-                text::critical(">>>>>");
-                text::critical(mTextBuffer.str());
-                text::critical("<<<<<");
+                mel::text::critical(">>>>>");
+                mel::text::critical(mTextBuffer.str());
+                mel::text::critical("<<<<<");
                 break;
             default:break;
         }

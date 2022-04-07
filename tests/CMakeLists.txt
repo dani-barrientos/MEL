@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # Add source to this project's executable.
-add_compile_definitions(DABAL_IMPORTS)
+add_compile_definitions(MEL_IMPORTS)
 if ( MSVC )
 #with /permissive- should be sufficient, but since version  19.28 to 19.31 is neccesary to add /Zx:lambda 
 #see https://docs.microsoft.com/en-us/cpp/build/reference/permissive-standards-conformance?view=msvc-170 for details
@@ -21,12 +21,12 @@ add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "comm
 "test_threading/future_tests.cpp" "test_parallelism/test.cpp" "test_execution/test.cpp" "test_execution/test_samples.cpp")
 
 target_include_directories(tests PUBLIC "common/include")
-if(DABAL_OS STREQUAL "DABAL_WINDOWS")
+if(MEL_OS STREQUAL "MEL_WINDOWS")
     # target_compile_options(tests PRIVATE /permissive-)    
 endif()
 
-target_link_libraries(tests "dabal")
-if(DABAL_OS STREQUAL "DABAL_LINUX")
+target_link_libraries(tests "mel")
+if(MEL_OS STREQUAL "MEL_LINUX")
     target_link_libraries(tests "pthread")
 endif()
 

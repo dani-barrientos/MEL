@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.8)
 # Declares and names the project.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-message("Building for " ${DABAL_OS})
+message("Building for " ${MEL_OS})
 message( ${CMAKE_ANDROID_ARCH_ABI})
 if( ${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
     set(VCPKG_TARGET_TRIPLET "arm64-android" CACHE STRING "")
@@ -26,8 +26,8 @@ message( "Toolchain " ${CMAKE_TOOLCHAIN_FILE})
 message( "Toolchain2 " ${VCPKG_CHAINLOAD_TOOLCHAIN_FILE})
 project("main")
 
-add_compile_definitions(${DABAL_OS})
-add_compile_definitions(${DABAL_ARQ})
+add_compile_definitions(${MEL_OS})
+add_compile_definitions(${MEL_ARQ})
 if(USE_SPDLOG)
     add_compile_definitions(USE_SPDLOG)
 endif()
@@ -36,7 +36,7 @@ endif()
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
-add_subdirectory("dabal")
+add_subdirectory("mel")
 add_subdirectory("tests")
 
 add_library( # Sets the name of the library.
@@ -47,7 +47,7 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         native-lib.cpp)
-target_link_libraries(main "dabal")
+target_link_libraries(main "mel")
 target_link_libraries(main "tests")
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

@@ -1,6 +1,6 @@
 #include "future_tests.h"
 #include <tasking/ThreadRunnable.h>
-using tasking::ThreadRunnable;
+using mel::tasking::ThreadRunnable;
 using namespace std;
 #include <text/logger.h>
 #include <mpl/LinkArgs.h>
@@ -8,7 +8,7 @@ using namespace std;
 #include <string>
 #include <tasking/utilities.h>
 #include <parallelism/Barrier.h>
-using ::parallelism::Barrier;
+using ::mel::parallelism::Barrier;
 #include <array>
 #include <CommandLine.h>
 #include <vector>
@@ -122,7 +122,7 @@ class MasterThread : public ThreadRunnable
 			auto msecs = this->getTimer()->getMilliseconds();
 			mStartTime = msecs;
 			srand((unsigned)msecs);
-			post( ::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));					
+			post(::mel::mpl::makeMemberEncapsulate(&MasterThread::_masterTask,this));					
 		}
 		::tasking::EGenericProcessResult _masterTask(uint64_t msecs,Process* p) 
 		{	
@@ -205,14 +205,14 @@ class MasterThread : public ThreadRunnable
 							{
 								try
 								{
-									auto wr = ::tasking::waitForFutureMThread(result);
+									auto wr = ::mel::tasking::waitForFutureMThread(result);
 									auto val = channel.getValue().value() + mValueToAdd;									
 									if ( val != wr.value())
 										text::error("Result value is not the expected one!!. Get {}, expected {}",result.getValue().value(),val);
 								}catch(...){}
 							
 								mBarrier.set();	
-								return ::tasking::EGenericProcessResult::KILL;
+								return ::mel::tasking::EGenericProcessResult::KILL;
 							}
 						);
 					}while(rand()< (int)(RAND_MAX*newTaskProb) && nTasks < maxTasks);
@@ -241,12 +241,12 @@ class MasterThread : public ThreadRunnable
 				th->resume();
 			auto t0 = getTimer()->getMilliseconds();
             constexpr unsigned MAX_TIME = 5500;
-			auto r = ::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
-			if ( r != ::tasking::EEventMTWaitCode::EVENTMT_WAIT_OK )
+			auto r = ::mel::tasking::waitForBarrierMThread(mBarrier,MAX_TIME);
+			if ( r != ::mel::tasking::EEventMTWaitCode::EVENTMT_WAIT_OK )
 			{
 				text::error("Wait for responses failed!!!!. {} workers remaining",mBarrier.getActiveWorkers());
 				this->finish();  
-				return ::tasking::EGenericProcessResult::KILL; 
+				return ::mel::tasking::EGenericProcessResult::KILL; 
 			}
 			else if ( (msecs - mLastDebugTime) >= 5000 )
 				{
@@ -259,9 +259,9 @@ class MasterThread : public ThreadRunnable
 			{
 				text::info("Maximum test time reached. Finishing");
 				this->finish();  
-				return ::tasking::EGenericProcessResult::KILL; 
+				return ::mel::tasking::EGenericProcessResult::KILL; 
 			}else			
-				return ::tasking::EGenericProcessResult::CONTINUE;
+				return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		}
 		void _producerTask(FutureType output) 
 		{			
@@ -275,15 +275,15 @@ class MasterThread : public ThreadRunnable
 			Process::wait(waitTime);
             if ( value >= max*errProb )
             {
-			    text::debug("Genero valor = {}",value);
+			    mel::text::debug("Genero valor = {}",value);
                 output.setValue(value);
             }else
             {
                 output.setError(MyErrorInfo(0,"PRUEBA ERROR"));
-                text::debug("Genero error");
+                mel::text::debug("Genero error");
             }			
 		}
-		template <int N> ::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
+		template <int N> ::mel::tasking::EGenericProcessResult _consumerTask(uint64_t,Process*, FutureType input,FutureType output,int taskId ) 
 		{						
 			int arr[N];	
 			//fill arr with random numbers
@@ -299,7 +299,7 @@ class MasterThread : public ThreadRunnable
 			Process::wait(waitTime); //random wait
 			try
 			{
-				auto wr = ::tasking::waitForFutureMThread(input);
+				auto wr = ::mel::tasking::waitForFutureMThread(input);
 					output.setValue(wr.value() + mValueToAdd);
 				text::debug("Task {} gets value {}",taskId,input.getValue().value());
 			}catch(std::exception& e)
@@ -328,7 +328,7 @@ class MasterThread : public ThreadRunnable
 			mBarrier.set();
 			CHECK_STACK_VERIFY((uint8_t*)&(arr[0]),(uint8_t*)&(arr[N-1]),mTest)
 			//CHECK_STACK_VERIFY((uint8_t*)&(arr[N-4]),(uint8_t*)&(arr[0]),mTest)
-			return ::tasking::EGenericProcessResult::KILL;
+			return ::mel::tasking::EGenericProcessResult::KILL;
 		}
 		void _consumerTaskAsThread(FutureType input,int taskId ) 
 		{
@@ -336,7 +336,7 @@ class MasterThread : public ThreadRunnable
 			Process::wait(waitTime); //random wait
 			try
 			{
-				auto wr = ::core::waitForFutureThread(input);
+				auto wr = ::mel::core::waitForFutureThread(input);
 				text::debug("Thread {} gets value {}",taskId,wr.value());		
 			}
 			catch(const std::exception& e)

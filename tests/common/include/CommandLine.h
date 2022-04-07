@@ -6,9 +6,9 @@ using std::string;
 #include <optional>
 namespace tests
 {
-    class CommandLine : public ::core::Singleton<CommandLine,true,false>
+    class CommandLine : public ::mel::core::Singleton<CommandLine,true,false>
     {
-        friend class ::core::Singleton<CommandLine,true,false>;
+        friend class ::mel::core::Singleton<CommandLine,true,false>;
         public:
             typedef unordered_map<std::string,std::string> OptionsMap;
             inline const OptionsMap& getOptions() const{ return mOptions;}
