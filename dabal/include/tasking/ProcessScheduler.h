@@ -28,6 +28,7 @@ using ::mpl::Int2Type;
 #include <memory>
 #include <deque>
 #include <variant>
+#include <vector>
 
 namespace tasking
 {
