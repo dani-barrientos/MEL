@@ -472,56 +472,55 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
 		{		
-		auto th2 = ThreadRunnable::create();
-		execution::Executor<Runnable> ex2(th2);		
-		auto res1_1 = 
-			execution::start(ex)
-			| mel::execution::inmediate(TestClass(initVal,ll)) 				
-			| mel::execution::parallel(
-				[](TestClass& v)
+			auto th2 = ThreadRunnable::create();
+			execution::Executor<Runnable> ex2(th2);		
+			auto res1_1 = 
+				execution::start(ex)
+				| mel::execution::inmediate(TestClass(initVal,ll)) 				
+				| mel::execution::parallel(
+					[](TestClass& v)
+					{
+						text::debug("Bulk 1");					
+						auto prevVal = v.val;
+						v.val = 1;  //race condition
+						tasking::Process::wait(1000);
+						v.val = prevVal + 5;
+					},
+					[](TestClass& v)
+					{
+						text::debug("Bulk 2");
+						tasking::Process::wait(300);
+						v.val = 12; //Bulk 1 should be the last to execute its assignment 
+					})  
+			//	| mel::execution::transfer(ex2)  //transfer execution to a different executor
+				| mel::execution::next([test,ll](TestClass& v)
 				{
-					text::debug("Bulk 1");					
-					auto prevVal = v.val;
-					v.val = 1;  //race condition
-					tasking::Process::wait(1000);
-					v.val = prevVal + 5;
-				},
-				[](TestClass& v)
-				{
-					text::debug("Bulk 2");
-					tasking::Process::wait(300);
-					v.val = 12; //Bulk 1 should be the last to execute its assignment 
-				})  
-		//	| mel::execution::transfer(ex2)  //transfer execution to a different executor
-			| mel::execution::next([test,ll](TestClass& v)
+					//text::info("Val = {}",v.value().val);
+					v.val+= 3;
+					return std::move(v); //avoid copy constructor			
+				});
+			//very simple second job
+			auto res1_2 = mel::execution::launch(ex,[]()
 			{
-				//text::info("Val = {}",v.value().val);
-				v.val+= 3;
-				return std::move(v); //avoid copy constructor			
+				return "pepe";
 			});
-		//very simple second job
-		auto res1_2 = mel::execution::launch(ex,[]()
-		{
-			return "pepe";
-		});
-		//use on_all to launch two "simultaneus" jobs and wait for both
-		try
-		{
-			auto res1 = mel::tasking::waitForFutureMThread( mel::execution::on_all(ex,res1_1,res1_2) );
-			int finalVal = std::get<0>(res1.value()).val;
-			int expectedVal = initVal + 5+3;
-			text::debug("Finish Val = {}",finalVal);
-			if (finalVal != expectedVal)
+			//use on_all to launch two "simultaneus" jobs and wait for both
+			try
 			{
-				std::stringstream ss;
-				ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
-				test->setFailed(ss.str());
+				auto res1 = mel::tasking::waitForFutureMThread( mel::execution::on_all(ex,res1_1,res1_2) );
+				int finalVal = std::get<0>(res1.value()).val;
+				int expectedVal = initVal + 5+3;
+				text::debug("Finish Val = {}",finalVal);
+				if (finalVal != expectedVal)
+				{
+					std::stringstream ss;
+					ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
+					test->setFailed(ss.str());
+				}
+			}catch(std::exception& e)
+			{
+				text::info("Error = {}",e.what());
 			}
-		}catch(std::exception& e)
-		{
-			text::info("Error = {}",e.what());
-		}
-
 		}		
 		test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
 		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
@@ -568,40 +567,42 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		//now using reference
 		test->clearTextBuffer();
 		pp.setLogLevel(ll);
-		text::info("Simple functor chaining using reference");
-		try
-		{
-			auto res2 = mel::tasking::waitForFutureMThread(
-				execution::launch(ex,[](TestClass& tc) -> TestClass&
-				{
-					tc.val = 7;
-					tasking::Process::wait(1000);
-					return tc;
-					//throw std::runtime_error("chiquilin");
-				},std::ref(pp)) 
-				| mel::execution::next([test,ll](TestClass& v) -> TestClass&
-				{
-					v.val += 10;
-					return v;
-				}));
-			int finalVal = res2.value().val;
-			int expectedVal = 17;
-			text::debug("Finish Val = {}",finalVal);
-			if (finalVal != expectedVal)
+		{		
+			text::info("Simple functor chaining using reference");
+			try
 			{
-				std::stringstream ss;
-				ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
-				test->setFailed(ss.str());
-			}
-			if ( finalVal != pp.val)
+				auto res2 = mel::tasking::waitForFutureMThread(
+					execution::launch(ex,[](TestClass& tc) -> TestClass&
+					{
+						tc.val = 7;
+						tasking::Process::wait(1000);
+						return tc;
+						//throw std::runtime_error("chiquilin");
+					},std::ref(pp)) 
+					| mel::execution::next([test,ll](TestClass& v) -> TestClass&
+					{
+						v.val += 10;
+						return v;
+					}));
+				int finalVal = res2.value().val;
+				int expectedVal = 17;
+				text::debug("Finish Val = {}",finalVal);
+				if (finalVal != expectedVal)
+				{
+					std::stringstream ss;
+					ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
+					test->setFailed(ss.str());
+				}
+				if ( finalVal != pp.val)
+				{
+					std::stringstream ss;
+					ss << " final value is diferent than original value. ";
+					test->setFailed(ss.str());
+				}
+			}catch(std::exception& e)
 			{
-				std::stringstream ss;
-				ss << " final value is diferent than original value. ";
-				test->setFailed(ss.str());
+				text::info("Error = {}",e.what());
 			}
-		}catch(std::exception& e)
-		{
-			text::info("Error = {}",e.what());
 		}
 		
 		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);

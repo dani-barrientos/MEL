@@ -69,7 +69,6 @@ void ProcessScheduler::LockFreeTasksContainer::add(std::shared_ptr<Process>& pro
 			auto newSize = currSize + mChunkSize;
 			mPool.emplace_back(mChunkSize);
 			mSize.store(newSize,std::memory_order_release);
-	//		spdlog::info("añado chunk. New size= {}",newSize);
 		}
 	}
 	ElementType& element = operator[](idx);
@@ -204,8 +203,7 @@ void ProcessScheduler::executeProcesses()
 						element->valid.store(false,std::memory_order_release);				
 						empty = false;
 					}
-					/*else
-						spdlog::info("VACIO");*/
+										
 				}while(empty);
 			}
 			mLastIdx = endIdx;
@@ -222,7 +220,7 @@ void ProcessScheduler::executeProcesses()
 		{
 			mLockFreeTasks->exchangeIdx(0,std::memory_order_acquire);
 			mLastIdx = 0;
-			mLockFreeTasks->clear();
+			mLockFreeTasks->clear();			
 			mLockFreeTasks->setInvalidate(false);
 			//text::info("Buffer reseteado");
 		}	

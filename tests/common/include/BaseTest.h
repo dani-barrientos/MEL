@@ -61,7 +61,7 @@ namespace tests
             virtual int onExecuteAllTests() = 0;
         private:
             string mName;
-            std::stringstream mTextBuffer;
+            std::ostringstream mTextBuffer;
             mel::core::CriticalSection mCS;
     };
 }

@@ -432,7 +432,8 @@ std::atomic<int> sCount(0);
 int _test_concurrent_post( ::tests::BaseTest* test)
 {	
 	constexpr int NUM_POSTS = 100000;
-	constexpr int NUM_PRODUCERS = 50;
+	//constexpr int NUM_PRODUCERS = 50;
+	constexpr int NUM_PRODUCERS = 1;
 	{
 	Runnable::RunnableCreationOptions opts;
 	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2}; //provoca pete

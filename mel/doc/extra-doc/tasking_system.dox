@@ -1,9 +1,106 @@
 
 /**
 \page tasking_system Tasking System
-BLA;BLA;BLA
+As it was said in the \ref mainpage, the core pieces of the tasking system are:
+<ul>
+	<li>\ref ::mel::tasking::Process : 
+	Represents a task with *microthread* capabilities. We will explain this capabilities later in the text
+	</li>
+    <li>\ref ::mel::tasking::ProcessScheduler : 
+    Simple scheduler executing processes sequentially. It's designed for performance in mnind, so no priority considerations, and only execute processes and evict them when finished.
+    The idea is posting new tasks to be as fast as possible.
+    </li>
+    <li> \ref ::mel::tasking::Runnable : 
+    Abstract class serving as interface between final user a the internal ProcessSchduler it has.
+    </li>
+    <li>\ref ::mel::tasking::ThreadRunnable : 
+    A \ref ::core::Thread "Thread" with \ref ::mel::tasking::Runnable "Runnable" behaviour. This will be the most common tool to spread new threads and work with tasks.
+    </li>
+</ul>
+Here a very simple class diagram showing their relationships.
+\image html tasking.jpg
+## Posting tasks to runnables
+\ref mel::tasking::Runnable "Runnables" are only a wrapper around \ref mel::tasking::ProcessScheduler "ProcessScheduler" to facilitate tasks managemente. Becasue is an abstract class, you will need to implement your custom
+runnable, which usually consits only in executing the tasks in the internal scheduler in an infinite loop. 
+Usually it's enough to use a \ref mel::tasking::ThreadRunnable "ThreadRunnable", which is an specialization executing the tasks in a thread. 
 
-meter diagrama
-explicar bien que la destruir un threadrunnable se ahce join y tal..
-por atnto mejor meter los threadrunnable aqui
+Now, better let's shown an example and explain the different parts:
+\code
+void _sampleTasking1()
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killTrue;
+    th1->post([](uint64_t msecs,Process* p)
+		{
+            mel::text::info( "execute task. Time={}",msecs);
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+    ::mel::core::Thread::sleep(5000);
+}
+\endcode
+The result of the code is, simply, to execute a task given by the lambda (any callable can be used for posting tasks. Lambdas are used throughout the documentation for simplicity) 
+every 450 msecs during 5000 msecs.
+Now let's explain the important parts:
+- A task always receive the scheduler time (*msecs* parameter) and the process which is executing the function. Keep in mind that this post method is only a helper for posting tasks.
+The very basic method is, really, \ref mel::tasking::Runnable::postTask. but this need to create you own process and implementing the neccesary interface. 
+- A task will finish in two situations:
+    - returning ::mel::tasking::EGenericProcessResult::KILL
+    - calling \ref mel::tasking::Process::kill on the process. A ThreadRunnable, when destroyed, will try to kill all its processes, and waits until all process are finished. If a posted task
+    use de *killPolicy* mel::tasking::Runnable::killTrue "killTrue", it will be automatically killed when it receives a kill request. In case of using mel::tasking::Runnable::killFalse "killFalse"
+    the kill will always be rejected. Really, the *killPolicy* argument is a callable which will be evaluated when the process receives a kill signal, so allowing to acept or reject the kill according to 
+    other things; *killTrue* and *killFalse* are only helpers for these common behaviours.
+
+If we hav removed the line with the *sleep* at the end of the function, *th1* would be destroyed inmediately after the *post*, and so, the posted task would be killed inmediately.
+
+If we had have the next code:
+\code
+void _sampleTasking1()
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killFalse;
+    th1->post([](uint64_t msecs,Process* p)
+		{
+            mel::text::info( "execute task. Time={}",msecs);
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+}
+\endcode
+In this case the function will never end: *th1* will be waiting for its taks (only one task in this case!) sending them a kill request. But, because that task is using *Runnable::killFalse*
+it will always reject this kill request.
+Also, the *posted* task could be used and killed directly:
+\code
+void _sampleTasking1()
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killFalse;
+    std::shared_ptr<mel::tasking::Process> task = th1->post([](uint64_t msecs,Process* p)
+		{
+            mel::text::info( "execute task. Time={}",msecs);
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+    task->kill(true); //the *true* parameter force killing of the task, ignoring the *killPolicy*
+}
+\endcode
+
+
+## Microthreading
+A *microthread*, implemented in class \ref mel::tasking::Process "Process", is a task that can be interrupted at any point and, when resumed, continue executing from that point. This allows to be able to execute a huge number of tasks with *cooperative multitasking*
+with very litlle penalty. If a task doesn't make any context switch, the penalty is almost 0. The cost only occurs when a context switch is done and when recovering later. Actually is very little cost, but of course it exists.
+The functions which control context switches are: \ref mel::tasking::Process::switchProcess "switchProcess", \ref mel::tasking::Process::wait "wait" and \ref mel::tasking::Process::sleep "sleep" (and its counterpart \ref mel::tasking::Process::wakeUp "wakeUp").
+Those functions are *static*. This means that calling any of they, the *current process* (in the current threads) is affected. This is exactly the same as with threads: you call a "sleep", event waits... inside the current thread, but no passing them a thread as a parameter.
+The exception, as is natural, is the function *wakeUp* which need to know what process to wakeup.
+EJEMPLO BASICO SWITCH ENTRE DOS TAREAS
+
+COSAS A EXPLICAR:
+ - customizacion tipo de proceso en el post
+ - 
+ - que significa el microhilismo->poner seccion a aparte
+ - ejemplo de posteo de tareas. Lo del execute queda para la seccion que ya hice
+ - que al destruir un threadrunnable se ahce join y tal..
+por tanto mejor meter los threadrunnable aqui
+
+
 */

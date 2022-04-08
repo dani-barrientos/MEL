@@ -122,10 +122,24 @@ void _sample3()
         ,0,Runnable::killFalse
     );
 }
-
+void _sampleTasking1()
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killTrue;
+    std::shared_ptr<mel::tasking::Process> task = th1->post([](uint64_t msecs,Process* p)
+		{
+            mel::text::info( "execute task. Time={}",msecs);
+			//return ::mel::tasking::EGenericProcessResult::KILL;
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+    ::mel::core::Thread::sleep(5000);
+    task->kill(true);
+}
 void test_threading::samples()
 {
     //_sample1();
     //_sample2();
-    _sample3();
+    //_sample3();
+    _sampleTasking1();
 }

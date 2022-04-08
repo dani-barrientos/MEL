@@ -245,7 +245,9 @@ namespace mel
 			virtual bool finished() = 0;
 
 			//helper functions to use as the "killFunctor" parameter in post(),fireAndForget(), and execute()
+			//!helper function to automatically kill process when receiving kill signal
 			static std::function<bool()> killTrue;
+			//!helper function to reject kill when receiving kill signal
 			static std::function<bool()> killFalse;
 			/**
 			* Posts a new execution request over a functor
