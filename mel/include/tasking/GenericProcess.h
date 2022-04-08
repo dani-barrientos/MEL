@@ -1,5 +1,9 @@
 #pragma once
-
+/*
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <tasking/GenericProcessDefs.h>
 #include <tasking/Process.h>
 using mel::tasking::Process;

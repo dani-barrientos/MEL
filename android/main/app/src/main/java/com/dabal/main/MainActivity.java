@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
         //forma muy cutre, lo sé
         switch (text)
         {
+            case "execution":
+                commandLine = new String[]{"-t","execution","-n","0"};
+                break;
             case "threading":
                 commandLine = new String[]{"-t","threading"};
                 break;
@@ -61,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case "callbacks":
                 commandLine = new String[]{"-t","threading"};
+                break;
+            case "all":
+                commandLine = new String[]{"-a"};
                 break;
         }
         //String[] commandLine = {"-t",text};

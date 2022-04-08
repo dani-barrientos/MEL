@@ -15,7 +15,11 @@ using mel::tasking::Process;
 
 #include <utility>
 
-
+/*
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <core/CriticalSection.h>
 using mel::core::CriticalSection;
 

@@ -1,4 +1,9 @@
 #ifdef _WINDOWS
+/*
+ * SPDX-FileCopyrightText: 2010,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 //#include <Windows.h>
 namespace mel
 {

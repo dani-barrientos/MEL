@@ -1,4 +1,9 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2013,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 namespace mel
 {	
 	///@cond HIDDEN_SYMBOLS

@@ -1,4 +1,9 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 /**
  * @file utilities.h
  * @brief Utilities on tasking, because lack of a better place...Some funcions are intended to be put in a custom file/class..

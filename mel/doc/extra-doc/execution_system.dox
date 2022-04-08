@@ -92,7 +92,7 @@ Instead, with the execution system, built on top of those functionalities, we co
 \endcode
 As can be seen in the example code, the expresiveness and flexibility of this mechanism is far superior. The used executor can be any executor type, the *only thing* to do 
 (of course, it can be difficult) is to implement the neccesary parts of a new execution system when neccesary (for example, an execution system based on GPU processing).
-Dabal provides two types of executors, the ones used in this example: an executor based on \ref mel::tasking::Runnable "runnables" and an executor based on \ref ::mel::core::ThreadPool "a thread pool".
+Mel provides two types of executors, the ones used in this example: an executor based on \ref mel::tasking::Runnable "runnables" and an executor based on \ref ::mel::core::ThreadPool "a thread pool".
 Both has microthread capabilities, meaning that the tasks executed in any of then can take advange of cooperative multitasking (see ::Tasking::Process).
 Some examples will be provided in the next sections trying to describe al the functionalities with simple cases, and showing all the power of this system.
 ## Usage samples

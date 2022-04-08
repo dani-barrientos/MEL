@@ -1,4 +1,8 @@
-
+/*
+ * SPDX-FileCopyrightText: 2017,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 ///@cond HIDDEN_SYMBOLS
 namespace mel
 {

@@ -1,4 +1,9 @@
  #pragma once
+ /*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
  #include <core/Future.h>
 namespace mel
 {

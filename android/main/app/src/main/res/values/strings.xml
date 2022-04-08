@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">main</string>
     <string-array name="test_array">
+        <item>all</item>
         <item>execution</item>
         <item>callbacks</item>
         <item>threading</item>
