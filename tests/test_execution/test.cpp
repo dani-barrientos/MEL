@@ -1066,6 +1066,7 @@ int _testFor(tests::BaseTest* test)
 		loopSize = std::stol(opt.value());
 	}
 	Runnable::RunnableCreationOptions blockingOpts;
+	blockingOpts.schedulerOpts = mel::tasking::ProcessScheduler::BlockingOptions{};
 	Runnable::RunnableCreationOptions lockFreeOpts;
 	lockFreeOpts.schedulerOpts = mel::tasking::ProcessScheduler::LockFreeOptions{10000,4}; //big initial buffer
 	_measureTest("Runnable executor with independent tasks",
@@ -1126,6 +1127,7 @@ int _testFor(tests::BaseTest* test)
 		[loopSize]()
 		{
 			parallelism::ThreadPool::ThreadPoolOpts opts;
+			opts.threadOpts.schedulerOpts = ProcessScheduler::BlockingOptions{};
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			execution::ThreadPoolExecutorOpts exopts;
