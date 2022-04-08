@@ -1,5 +1,9 @@
 #pragma once
-//#include <execution/Continuation.h>
+/*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <execution/CommonDefs.h>
 #include <type_traits>
 #include <string>

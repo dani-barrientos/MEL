@@ -1,5 +1,5 @@
 #pragma once
-#include <DabalLibType.h>
+#include <MelLibType.h>
 #include <stdint.h>
 #ifdef WIN32
 #elif defined (MEL_IOS) || defined(MEL_MACOSX)

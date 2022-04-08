@@ -1,6 +1,10 @@
 #pragma once
-
-#include <DabalLibType.h>
+/*
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
+#include <MelLibType.h>
 #if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
 #include <pthread.h>
 #endif

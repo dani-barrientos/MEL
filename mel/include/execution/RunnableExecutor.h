@@ -1,7 +1,12 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <tasking/Runnable.h>
 #include <execution/Executor.h>
-//#include <execution/Continuation.h>
+
 #include <parallelism/Barrier.h>
 #include <mpl/TypeTraits.h>
 namespace mel

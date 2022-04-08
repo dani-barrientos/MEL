@@ -24,8 +24,7 @@ tests/Makefile
 Testing
 .vs/slnx.sqlite
 .vs/slnx.sqlite-journal
-mel/include/execution/Continuation_COPY.h
-mel/include/execution/ThreadPoolExecutor_COPY.h
+
 tests/Makefile
 Makefile
 mel/cmake_install.cmake

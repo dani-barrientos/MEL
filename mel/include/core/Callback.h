@@ -1,4 +1,9 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <core/FunctorCallbackInterface.h>
 #include <core/FunctionCallbackInterface.h>
 #include <mpl/Conversion.h>

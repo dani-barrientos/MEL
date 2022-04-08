@@ -1,5 +1,9 @@
 #pragma once
-
+/*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <core/Thread.h>
 using mel::core::Thread;
 #include <tasking/Runnable.h>

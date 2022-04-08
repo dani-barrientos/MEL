@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <DabalLibType.h>
+#include <MelLibType.h>
 
 #include <mpl/binary.h>
 using mel::mpl::binary;
@@ -28,7 +28,7 @@ using mel::core::Callback;
     #include <tasking/Process_ARM64_IPhone.h>
 #elif defined (_ARM_GCC) && (!defined(MEL_IOS))
 #include <tasking/Process_ARM_GCC.h>
-#elif defined(DABAl_IOS)
+#elif defined(MEL_IOS)
 	#if !TARGET_IPHONE_SIMULATOR
         #if defined(__arm__)
             #include <tasking/Process_ARM_IPhone.h>
@@ -47,7 +47,7 @@ using mel::core::Callback;
 #elif defined (MEL_WINDOWS) && defined (MEL_X64_MSVC)
 	#include <tasking/Process_X64_MSVC.h>
 #endif
-#if defined(DABAl_IOS) || defined(MEL_MACOSX) 
+#if defined(MEL_IOS) || defined(MEL_MACOSX) 
     #define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
 #elif defined(MEL_ANDROID) 
 	#define OPTIMIZE_FLAGS
