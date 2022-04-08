@@ -176,8 +176,8 @@ void ProcessScheduler::executeProcesses()
 			size_t endIdx = mLockFreeTasks->getCurrIdx(std::memory_order_acquire); 
 			/*
 			intentar mejoras:
-			- lo de las iteraciones para ver si cambia el indice y el sleep es un ful. como mucho un yield
-			- es curiosi porque no se cumpló nunca que cambiase el indice
+			- lo de las iteraciones para ver si cambia el indice y el yield es un ful
+			- es curioso porque no se cumpló nunca que cambiase el indice :-/
 			- no me gusta lo del element->valid->especialmente no me gusta tener tantos atomic
 			*/
 		

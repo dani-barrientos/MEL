@@ -1027,10 +1027,15 @@ int _testLaunch( tests::BaseTest* test)
 #else
 #define DEFAULT_LOOPSIZE 100'000
 #endif
-template <class F> void _measureTest(string txt,F f, size_t loopSize)
+//don't want to optimize this function because i want to measure in same conditions
+//for MSVC
+#ifdef _MSC_VER
+#pragma optimize("",off)   
+#endif
+template <class F> void _measureTest(string txt,F f, size_t iters,size_t loopSize) OPTIMIZE_FLAGS;
+template <class F> void _measureTest(string txt,F f, size_t iters,size_t loopSize) 
 {
-	int mean = 0;
-	constexpr size_t iters = 20;
+	int mean = 0;	
 	Timer timer;
 	text::info("Doing {} iterations using {}",loopSize,txt);	
 	for(size_t i = 0; i < iters;i++)
@@ -1048,29 +1053,68 @@ template <class F> void _measureTest(string txt,F f, size_t loopSize)
 	tests::BaseTest::addMeasurement(txt+" time:",mean);
 	text::info("Finished. Time: {}",mean);
 }
-auto gTestFunc=[](int idx)
+
+auto gTestFunc=[](int idx) OPTIMIZE_FLAGS
 	{
-		text::debug("iteracion pre {}",idx);
+		//text::debug("iteracion pre {}",idx);
 		::tasking::Process::switchProcess(true);
-		text::debug("iteracion post {}",idx);
+		//text::debug("iteracion post {}",idx);
 	};
+#ifdef _MSC_VER
+#pragma optimize("",on)   
+#endif	
 // loop test to measure performance
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
 	// mel::text::set_level(text::level::info);	
     int loopSize = DEFAULT_LOOPSIZE;
+	constexpr int iters = 20;
     //check for loopsize options, if given
 	auto opt = tests::CommandLine::getSingleton().getOption("ls");
 	if ( opt != nullopt) {
 		loopSize = std::stol(opt.value());
 	}
+
+	std::stringstream cpuinfo;
+	cpuinfo<<"NumCores:"<< ::mel::core::getNumProcessors();
+	tests::BaseTest::addMeasurement("CPU Info",cpuinfo.str());
+
+	//basic test with a plain Thread to get a base reference
+	/*qué probar?
+	una prueba fijo es con el measurement test para ver la creacion
+	otra un bucle a pelo */
+
+	_measureTest("Plain thread, only one",[]
+	{	
+		auto plainThread = std::make_unique<Thread>(
+			[] () OPTIMIZE_FLAGS
+			{
+				for(volatile int i = 0; i < 100000000;++i);					
+				//text::info("Finish plain thread");
+			}
+		);
+		plainThread = nullptr;
+	},1,0);
+	_measureTest("Plain thread, create/destroy ",[]
+	{	
+		auto plainThread = std::make_unique<Thread>(
+			[]() OPTIMIZE_FLAGS
+			{
+				for(volatile int i = 0; i < 100000000;++i);
+					//text::debug("Plain Thread");
+				//text::info("Finish plain thread");
+			}
+		);
+		plainThread = nullptr;
+	},iters,0);
+
 	Runnable::RunnableCreationOptions blockingOpts;
 	blockingOpts.schedulerOpts = mel::tasking::ProcessScheduler::BlockingOptions{};
 	Runnable::RunnableCreationOptions lockFreeOpts;
 	lockFreeOpts.schedulerOpts = mel::tasking::ProcessScheduler::LockFreeOptions{10000,4}; //big initial buffer
 	_measureTest("Runnable executor with independent tasks",
-		[loopSize,opts = blockingOpts]()
+		[loopSize,opts = blockingOpts]
 		{	
 			auto th1 = ThreadRunnable::create(true,opts);
 			execution::Executor<Runnable> ex(th1);			
@@ -1081,7 +1125,7 @@ int _testFor(tests::BaseTest* test)
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 			//text::debug("hecho");
 			
-		},loopSize
+		},iters,loopSize
 	);
 	_measureTest("Runnable executor with independent tasks, Lock-free",
 		[loopSize,opts = lockFreeOpts]()
@@ -1095,7 +1139,7 @@ int _testFor(tests::BaseTest* test)
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 			//text::debug("hecho");
 			
-		},loopSize
+		},iters,loopSize
 	);
 
 	_measureTest("Runnable executor with independent tasks pausing thread",
@@ -1110,7 +1154,7 @@ int _testFor(tests::BaseTest* test)
 			th1->resume();
 			core::waitForFutureThread(r);
 			th1->suspend();
-		},loopSize
+		},iters,loopSize
 	);	
 	_measureTest("Runnable executor WITHOUT independent tasks",
 		[loopSize,opts = blockingOpts]()
@@ -1121,7 +1165,7 @@ int _testFor(tests::BaseTest* test)
 			exopts.independentTasks = false;
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
-		},loopSize
+		},iters,loopSize
 	);
 	_measureTest("ThreadPool executor, grouped tasks",
 		[loopSize]()
@@ -1135,7 +1179,7 @@ int _testFor(tests::BaseTest* test)
 			extp.setOpts(exopts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
-		},loopSize
+		},iters,loopSize
 	);
 	_measureTest("ThreadPool executor, grouped tasks, lock-free",
 		[loopSize]()
@@ -1149,7 +1193,7 @@ int _testFor(tests::BaseTest* test)
 			extp.setOpts(exopts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
-		},loopSize
+		},iters,loopSize
 	);
 	/*
 	lo quito por ahora porque es mucho más lento y es bobada
