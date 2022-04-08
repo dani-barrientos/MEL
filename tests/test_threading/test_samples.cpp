@@ -134,12 +134,38 @@ void _sampleTasking1()
 			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},killPolicy,period);
     ::mel::core::Thread::sleep(5000);
-    task->kill(true);
+}
+void _sampleTasking2()
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killTrue;
+    auto t1 = th1->fireAndForget([]
+		{
+            mel::text::info( "Task 1, Step1" );
+            ::mel::tasking::Process::switchProcess(true);
+            mel::text::info( "Task 1, Step2" );
+            ::mel::tasking::Process::wait(2000);
+            mel::text::info( "Task 1, Step3. Going to sleep.." );
+            ::mel::tasking::Process::sleep();
+            mel::text::info( "Task 1, Awaken!!" );
+
+		},0,Runnable::killFalse);
+    th1->fireAndForget([t1]
+		{
+            mel::text::info( "Task 2, Step1" );
+            ::mel::tasking::Process::wait(2500);
+            mel::text::info( "Task 2, Step2" );
+            ::mel::tasking::Process::wait(5000);
+            mel::text::info( "Task 2, Going to wake up task1" );
+            t1->wakeUp();
+		},0,Runnable::killFalse);
 }
 void test_threading::samples()
 {
     //_sample1();
     //_sample2();
     //_sample3();
-    _sampleTasking1();
+    //_sampleTasking1();
+    _sampleTasking2();
 }

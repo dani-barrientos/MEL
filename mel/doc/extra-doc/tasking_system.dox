@@ -69,7 +69,7 @@ void _sampleTasking1()
 \endcode
 In this case the function will never end: *th1* will be waiting for its taks (only one task in this case!) sending them a kill request. But, because that task is using *Runnable::killFalse*
 it will always reject this kill request.
-Also, the *posted* task could be used and killed directly:
+Also, the *posted* task could be taken and killed directly:
 \code
 void _sampleTasking1()
 {
@@ -84,6 +84,19 @@ void _sampleTasking1()
     task->kill(true); //the *true* parameter force killing of the task, ignoring the *killPolicy*
 }
 \endcode
+A very common case is posting task that only need to be executed *once*, so the interface could be simplified. Thsi is accompmplished by \ref ::mel::tasking::Process::fireAndForget "fireAndForget".
+In this case the task iput parameters are removed and the function automatically returns ::mel::tasking::EGenericProcessResult::KILL
+\code
+th1->fireAndForget( []()
+auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    constexpr unsigned int startTime = 50; //the task will be executed 50 mecs being posted
+    th1->fireAndForget( []()
+    {
+        mel::text::info( "Done!");
+    },startTime,Runnable::killFalse);
+\endcode
+
 
 
 ## Microthreading
@@ -92,14 +105,54 @@ with very litlle penalty. If a task doesn't make any context switch, the penalty
 The functions which control context switches are: \ref mel::tasking::Process::switchProcess "switchProcess", \ref mel::tasking::Process::wait "wait" and \ref mel::tasking::Process::sleep "sleep" (and its counterpart \ref mel::tasking::Process::wakeUp "wakeUp").
 Those functions are *static*. This means that calling any of they, the *current process* (in the current threads) is affected. This is exactly the same as with threads: you call a "sleep", event waits... inside the current thread, but no passing them a thread as a parameter.
 The exception, as is natural, is the function *wakeUp* which need to know what process to wakeup.
-EJEMPLO BASICO SWITCH ENTRE DOS TAREAS
+
+In the next code, two tasks are executing code in an interleaved way, showing an example of cooperative multitasking.
+
+\code
+void _sampleTasking2()
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killTrue;
+    auto t1 = th1->fireAndForget([]
+		{
+            mel::text::info( "Task 1, Step1" );
+            ::mel::tasking::Process::switchProcess(true);
+            mel::text::info( "Task 1, Step2" );
+            ::mel::tasking::Process::wait(2000);
+            mel::text::info( "Task 1, Step3. Going to sleep.." );
+            ::mel::tasking::Process::sleep();
+            mel::text::info( "Task 1, Awaken!!" );
+
+		},0,Runnable::killFalse);
+    th1->fireAndForget([t1]
+		{
+            mel::text::info( "Task 2, Step1" );
+            ::mel::tasking::Process::wait(2500);
+            mel::text::info( "Task 2, Step2" );
+            ::mel::tasking::Process::wait(5000);
+            mel::text::info( "Task 2, Going to wake up task1" );
+            t1->wakeUp();
+		},0,Runnable::killFalse);
+}
+\endcode
+
+And the output will be:
+\code
+[2022-04-08 18:59:13.404] [info] Task 1, Step1
+[2022-04-08 18:59:15.705] [info] Task 2, Step1
+[2022-04-08 18:59:15.705] [info] Task 1, Step2
+[2022-04-08 18:59:15.705] [info] Task 1, Step3. Going to sleep..
+[2022-04-08 18:59:15.904] [info] Task 2, Step2
+[2022-04-08 18:59:20.904] [info] Task 2, Going to wake up task1
+[2022-04-08 18:59:20.904] [info] Task 1, Awaken!!
+\endcode
+
 
 COSAS A EXPLICAR:
  - customizacion tipo de proceso en el post
  - 
- - que significa el microhilismo->poner seccion a aparte
- - ejemplo de posteo de tareas. Lo del execute queda para la seccion que ya hice
- - que al destruir un threadrunnable se ahce join y tal..
+  - lo que devuelven las funciones microhililes cuando hay un kill
 por tanto mejor meter los threadrunnable aqui
 
 
