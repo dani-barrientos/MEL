@@ -12,7 +12,11 @@
  * @brief The only sense of this file is as a wrapper to spdlog in order t avoid its use if no installed in any concrete platform
  */
 namespace mel
-{    
+{  
+    /**
+     * @brief Basic text functionalities
+     * 
+     */
     namespace text
     {
         namespace level

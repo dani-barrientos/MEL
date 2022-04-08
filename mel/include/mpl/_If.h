@@ -1,7 +1,7 @@
 #pragma once
 
 /**
-* @namespace mpl
+* @namespace mel::mpl
 * @brief metaprogramming library
 * @remarks This library dates back to the early 2000s, when no C++11 existed, and so all its metaprogramming stuff. Most of this library can be replaced by equivalent
 * C++11 functionalities, but because it's heavily used in the code, it's not removed. Slowly, its use is being replaced with the C++ facilities with the hope to be

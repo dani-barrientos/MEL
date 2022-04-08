@@ -13,11 +13,11 @@ namespace mel
 {
     namespace tasking
     {
-    /**
+        /**
         * @brief Waits for future completion, returning a wapper around the internal vale
         * @throws mel::core::WaitException if some error occured while waiting of the internal future exception if it has any error
         */
-    template<class T> ::mel::core::WaitResult<T> waitForFutureMThread(  const mel::core::Future<T>& f,unsigned int msecs = EVENTMT_WAIT_INFINITE)
+        template<class T> ::mel::core::WaitResult<T> waitForFutureMThread(  const mel::core::Future<T>& f,unsigned int msecs = EVENTMT_WAIT_INFINITE)
         {
             using ::mel::tasking::Event_mthread;
             struct _Receiver
@@ -81,7 +81,9 @@ namespace mel
                 break;
             }
         }  
-        
+        /**
+         * @brief Wait for a \ref ::mel::parallelism::Barrier "barrier" to activated in the context of a \ref ::mel::tasking::Process "microthread"
+         */
         MEL_API ::mel::tasking::EEventMTWaitCode waitForBarrierMThread(const ::mel::parallelism::Barrier& b,unsigned int msecs = ::mel::tasking::EVENTMT_WAIT_INFINITE );
 
     }

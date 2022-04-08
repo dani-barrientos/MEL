@@ -3,9 +3,6 @@
 #include <core/Event.h>  
 #include <core/ThreadDefs.h>
 
-
-// #include <core/CallbackSubscriptor.h>
-// using mel::core::CallbackSubscriptor;
 #include <memory>
 #include <parallelism/Barrier.h>
 #include <core/Future.h>
@@ -13,10 +10,17 @@
 #include <pthread.h>
 #endif
 #include <functional>
+
 namespace mel
-{
+{	
+	/**
+	 * @brief base functionalities
+	 */
 	namespace core 
 	{
+		/**
+		* @brief Get the number of logical processors
+		*/
 		MEL_API unsigned int getNumProcessors();
 		MEL_API uint64_t getProcessAffinity();
 		//!Set affinity for current thread.
@@ -25,10 +29,7 @@ namespace mel
 		
 		/**
 		 * @class Thread
-		 * @brief Platform-independent thread implementation.
-		 * Provides generic methods for performing common thread-based tasks like
-		 * handling priorities, sleeping, joining, and exposes additional methods for 
-		 * queuing external tasks to be executed within the main thread loop (see Thread::post).<br>
+		 * @brief Platform-independent thread implementation.		
 		 * @note Threads are always created as _suspended_, and once starte are not suspended again by default
 		 * when there are no any task to execute. This can be changed at will via setSuspendWhenNoTasks.
 		 * @warning Some of these features may not be present on certain platforms, or may have
@@ -41,13 +42,14 @@ namespace mel
 		class MEL_API Thread
 		{
 
-	#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			friend DWORD WINAPI _threadProc(void* /*__in LPVOID*/);
-	#else
+		#else
 			friend void* _threadProc(void* param);
-	#endif
+		#endif
 
 			public:
+				//@brief policy for yield() function
 				enum YieldPolicy {
 					YP_ANY_THREAD_ANY_PROCESSOR=0,
 					YP_ANY_THREAD_SAME_PROCESSOR
@@ -173,10 +175,10 @@ namespace mel
 			private:
 				Thread(const char* name);
 				enum class EJoinResult{JOINED_NONE,JOINED_OK,JOINED_ERROR} mJoinResult;
-	#ifdef MEL_WINDOWS
+		#ifdef MEL_WINDOWS
 				HANDLE mHandle = 0;
 				DWORD mID;
-	#elif defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
+		#elif defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
 			ThreadId mHandle = 0;
 			#if !defined (MEL_MACOSX) && !defined(MEL_IOS)
 			pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc
@@ -184,10 +186,10 @@ namespace mel
 				int	mPriorityMin;
 				int mPriorityMax;
 				uint64_t mAffinity = 0; //affinity to set on start. if 0, is ignored
-	#endif
-	#if defined (MEL_MACOSX) || defined(MEL_IOS)
+		#endif
+		#if defined (MEL_MACOSX) || defined(MEL_IOS)
 				void* mARP; //The autorelease pool as an opaque-type
-	#endif
+		#endif
 				unsigned int mExitCode;
 				ThreadPriority mPriority;
 
@@ -200,12 +202,6 @@ namespace mel
 			_initialize();
 			_start();
 		}
-		// bool Thread::getTerminateRequest() const
-		// {
-		// 	return mEnd;
-		// }
-
-
 		ThreadId Thread::getThreadId() const
 		{
 	#ifdef _WINDOWS
@@ -215,23 +211,13 @@ namespace mel
 	#endif
 		}
 		
-		
 		ThreadPriority Thread::getPriority() const {
 			return mPriority;
-		}
-		/*bool Thread::getSuspendenWhenNoTasks() const
-		{
-			return mSuspenOnNoTasks;
-		}*/
-
-
-
+		}	
 
 		/**
-		* waiting for a Future from a Thread
-		* @see mel::tasking::waitForFutureMThread
+		* @brief Wait for a Future from a Thread		
 		*/
-
 		template<class T> ::mel::core::WaitResult<T> waitForFutureThread(  const mel::core::Future<T>& f,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE)
 		{
 			using ::mel::core::Event;
@@ -292,6 +278,9 @@ namespace mel
 				break;
 			}
 		}	
+		/**
+         * @brief Wait for a \ref ::mel::parallelism::Barrier "barrier" to activated in the context of a thread
+         */
 		MEL_API ::mel::core::Event::EWaitCode waitForBarrierThread(const ::mel::parallelism::Barrier& b,unsigned int msecs = Event::EVENT_WAIT_INFINITE);
 	}
 }

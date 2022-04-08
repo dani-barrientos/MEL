@@ -17,7 +17,7 @@ using mel::mpl::addParam;
 #include <limits>
 #include <tasking/GenericProcessDefs.h>
 /**
-* @namespace parallelism
+* @namespace mel::parallelism
 * @brief parallelism support
 */
 namespace mel

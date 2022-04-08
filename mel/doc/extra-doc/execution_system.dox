@@ -52,8 +52,7 @@ system, which is described in another sections. These tools are enough for simpl
 As can be seen, mel already provides high level tools to facilitate task execution. But, despite of that, it can be hard to manage a complex execution sequence. Think, for example, how to manage error
 in any point of the chain. And, of course, think how to resolve the same problem only with plain C++ threads...
 
-Instead, with the execution system, built on top of those functionalities, we could write:
-
+Instead, with the execution system, built on top of those functionalities, we could write something like:
 \code{.cpp}
     auto th1 = ThreadRunnable::create(true);	
 	execution::Executor<Runnable> exr(th1); //Create executor based on ThreadRunnable
@@ -95,6 +94,41 @@ As can be seen in the example code, the expresiveness and flexibility of this me
 Dabal provides two types of executors, the ones used in this example: an executor based on \ref mel::tasking::Runnable "runnables" and an executor based on \ref ::mel::core::ThreadPool "a thread pool".
 Both has microthread capabilities, meaning that the tasks executed in any of then can take advange of cooperative multitasking (see ::Tasking::Process).
 Some examples will be provided in the next sections trying to describe al the functionalities with simple cases, and showing all the power of this system.
+As a note, the examples will be shown using de pipe ('|') operator, but the *classic* form could be used, althoguh is less expresive and hard to read:
+\code
+	[...same as previous example..]
+    try
+    {
+        auto res = mel::tasking::waitForFutureThread(
+			mel::execution::parallel(
+				transfer(
+					mel::execution::next( 
+							mel::execution::launch(ex, []()
+							{
+								//...task t1...
+							}),
+						[]()
+						{
+							//...task t2...
+						}
+					),extp),
+				[]()
+				{
+					//... taks t3...
+				},
+				[]()
+				{
+					//... taks t4...
+				}				
+            )
+		);
+
+
+    }catch(...)
+    {
+
+    }
+\endcode
 ## Usage samples
 The following samples are for educational purposes only. This means that the tasks acomplished may not make any sense or that they aren't done in the best possible way. The goal
 is to show the different functionalities and its power.
@@ -116,11 +150,10 @@ This functions could be used as:
 	_sampleBasic(extp); //use same sample with this new executor
 	
 \endcode
-[comment]<> pongo los dos tipos de enlaces:propios de markdown y de doxygen
  - [Basic sample](#basic_sample)
- - \ref using_references "Using references"
- - \ref error_management "Error management"
- - \ref chaging_executor "Changing executor"
+ - [Using references](#using_references)
+ - [Error management](#error_management)
+ - [Changing executor](#chaging_executor)
  - [Converging jobs](#converging_jobs)
 
 ### Basic sample	{#basic_sample}
