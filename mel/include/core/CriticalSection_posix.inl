@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
+#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS) || defined(MEL_EMSCRIPTEN)
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>

@@ -1,8 +1,8 @@
-#if defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS)
+#if defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined(MEL_EMSCRIPTEN)
 #include <core/Event.h>
 #include <pthread.h>
 #include <sys/time.h>
-#include <sys/errno.h>
+#include <errno.h>
 namespace mel
 {
 namespace core {

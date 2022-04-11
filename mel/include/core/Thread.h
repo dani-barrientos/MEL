@@ -6,7 +6,7 @@
 #include <memory>
 #include <parallelism/Barrier.h>
 #include <core/Future.h>
-#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
+#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS) || defined(MEL_EMSCRIPTEN)
 #include <pthread.h>
 #endif
 #include <functional>
@@ -178,7 +178,7 @@ namespace mel
 		#ifdef MEL_WINDOWS
 				HANDLE mHandle = 0;
 				DWORD mID;
-		#elif defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
+		#elif defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS) || defined(MEL_EMSCRIPTEN)
 			ThreadId mHandle = 0;
 			#if !defined (MEL_MACOSX) && !defined(MEL_IOS)
 			pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc

@@ -20,7 +20,7 @@ namespace mel
 		public:
 	#ifdef _WINDOWS 
 		typedef DWORD TLSKey;
-	#elif defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS)
+	#elif defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined(MEL_EMSCRIPTEN)
 		typedef pthread_key_t TLSKey;
 	#endif
 

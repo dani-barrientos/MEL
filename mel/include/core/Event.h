@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 #include <MelLibType.h>
-#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
+#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS) || defined(MEL_EMSCRIPTEN)
 #include <pthread.h>
 #endif
 namespace mel
@@ -28,7 +28,7 @@ namespace mel
 					EVENT_WAIT_TIMEOUT, //!< time out while waiting
 					EVENT_WAIT_ERROR //!< unknown error
 				}; 
-	#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
+	#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS) || defined(MEL_EMSCRIPTEN)
 				static const int EVENT_WAIT_INFINITE = -1;
 	#elif defined(_WIN32)		
 				static const int EVENT_WAIT_INFINITE = INFINITE;
@@ -69,7 +69,7 @@ namespace mel
 
 			private:
 				Event( const Event& ev2 ){}
-	#if defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS)
+	#if defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined(MEL_EMSCRIPTEN)
 				mutable bool mSignaled;
 				bool mAutoRelease;
 				mutable pthread_mutex_t _mutex;

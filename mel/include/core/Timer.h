@@ -4,7 +4,7 @@
 #ifdef WIN32
 #elif defined (MEL_IOS) || defined(MEL_MACOSX)
 #include <mach/mach_time.h>
-#elif defined (MEL_LINUX)
+#elif defined (MEL_LINUX) || defined (MEL_EMSCRIPTEN)
 #include <time.h>
 #endif
 #include <core/CriticalSection.h>	
@@ -76,7 +76,7 @@ namespace mel
 	#elif defined (MEL_IOS) || defined(MEL_MACOSX) 
 			mach_timebase_info_data_t mTimeBase;
 			mutable uint64_t mLastTime;
-	#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
+	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_EMSCRIPTEN)
 			mutable uint64_t mLastTime;
 	#endif
 			uint64_t   mMsActive; //! active time in milliseconds
@@ -96,7 +96,7 @@ namespace mel
 				uint64_t tmp=mach_absolute_time();
 				uint64_t elapsed=tmp-mReference;
 				result = (elapsed * mTimeBase.numer )/mTimeBase.denom;
-			#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
+			#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined (MEL_EMSCRIPTEN)
 				timespec ts;
 				uint64_t tmp;
 				int chk(clock_gettime(CLOCK_MONOTONIC, &ts));

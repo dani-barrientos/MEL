@@ -40,23 +40,28 @@ using mel::core::Callback;
 	#else
 		#include <core/Process_X86.h>
 	#endif
-#elif defined (MEL_ANDROID)
+#elif defined(MEL_EMSCRIPTEN)
+	#include <tasking/Process_emsdk.h>
+#elif defined(MEL_ANDROID)
 	#include <tasking/Process_ARM_Android.h>
-#elif defined (MEL_X64_GCC) ||defined (MEL_X64_CLANG)
+#elif defined(MEL_X64_GCC) || defined(MEL_X64_CLANG)
 	#include <tasking/Process_X64_GCC.h>
 #elif defined (MEL_WINDOWS) && defined (MEL_X64_MSVC)
+hola 3
 	#include <tasking/Process_X64_MSVC.h>
 #endif
 #if defined(MEL_IOS) || defined(MEL_MACOSX) 
     #define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
+#elif defined(MEL_EMSCRIPTEN) 
+	#define OPTIMIZE_FLAGS
 #elif defined(MEL_ANDROID) 
 	#define OPTIMIZE_FLAGS
-#elif defined(_ARM_GCC) || defined(MEL_X86_GCC) ||defined(MEL_X64_GCC) 
+#elif defined(_ARM_GCC) || defined(MEL_X86_GCC) || defined(MEL_X64_GCC) 
 	#define OPTIMIZE_FLAGS __attribute__ ((optimize(0)))
 #elif defined(MEL_X64_CLANG)
 	#define OPTIMIZE_FLAGS __attribute__ ((optnone)) 
 #elif defined(MEL_WINDOWS)
-	#define OPTIMIZE_FLAGS
+	#define OPTIMIZE_FLAGS	
 #endif
 namespace mel
 {

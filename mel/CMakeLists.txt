@@ -6,7 +6,8 @@ add_compile_definitions(MEL_EXPORTS)
 if ( MSVC )
     add_compile_options(/permissive- /Zc:lambda)
 endif()
-add_library(mel SHARED  "source/tasking/CriticalSection_mthread.cpp"
+#cambiado SHARED a STATIC por temas de emscripten
+add_library(mel STATIC  "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/tasking/ThreadRunnable.cpp" 
 "source/core/Timer.cpp" "source/core/Type.cpp" "source/core/Thread.cpp"  "source/core/TLS.cpp" 
@@ -35,6 +36,9 @@ elseif(MEL_OS STREQUAL "MEL_LINUX" AND (MEL_ARQ STREQUAL "MEL_X64_CLANG" OR MEL_
     target_sources(mel PRIVATE "source/tasking/Process_X64_GCC.cpp")
 elseif(MEL_OS STREQUAL "MEL_ANDROID")
     target_sources(mel PRIVATE "source/tasking/Process_ARM_Android.cpp")
+elseif(MEL_OS STREQUAL "MEL_EMSCRIPTEN")
+        message("Building mel for emscripten")
+        target_sources(mel PRIVATE "source/tasking/Process_emsdk.cpp")
 elseif(MEL_ARQ STREQUAL "MEL_X86_CLANG" OR MEL_ARQ STREQUAL "MEL_X86_GCC")
     message("Building mel 32 bits")
    # target_sources(mel PRIVATE "source/tasking/Process_X86_GCC.cpp")

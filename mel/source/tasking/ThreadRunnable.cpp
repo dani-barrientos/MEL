@@ -97,19 +97,10 @@ unsigned int ThreadRunnable::resume() {
 	if ( mState == THREAD_SUSPENDED )
 	{
 		mState = THREAD_RUNNING;
-#ifdef _WINDOWS
-		//DWORD sc=ResumeThread(mHandle);
 		mPauseEV.set();
-	}
-	//return mHandle?sc:0;
-	return 1;
-#endif
-#if defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
-		mPauseEV.set();
+		
 	}
 	return 1;
-
-#endif
 }
 ThreadRunnable::~ThreadRunnable()
 {

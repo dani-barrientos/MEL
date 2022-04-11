@@ -151,7 +151,7 @@ And the output will be:
 
 COSAS A EXPLICAR:
  - customizacion tipo de proceso en el post
- - 
+ - restricciones microhilos (referencia variables locales, ejecucion desde mismo punto, ¿excepciones?)
   - lo que devuelven las funciones microhililes cuando hay un kill
 por tanto mejor meter los threadrunnable aqui
 

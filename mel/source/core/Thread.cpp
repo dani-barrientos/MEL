@@ -51,10 +51,12 @@ namespace mel
 		if (sysctlbyname("hw.ncpu", &result, &size, NULL, 0))
 			result = 1;
 		return result;
-	#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
+	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) 
 		unsigned int count = 1;
 		count = sysconf(_SC_NPROCESSORS_ONLN);
 		return count;
+	#elif defined(MEL_EMSCRIPTEN)
+		return 1;  //@todo 
 	#endif
 	}
 	uint64_t getProcessAffinity()
@@ -99,7 +101,7 @@ namespace mel
 	#define HANDLETYPE HANDLE
 	#elif defined(MEL_MACOSX) || defined(MEL_IOS)
 	#define HANDLETYPE mel::core::ThreadId
-	#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
+	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_EMSCRIPTEN)
 	#define HANDLETYPE pid_t
 	#endif
 	//!helper
@@ -132,7 +134,7 @@ namespace mel
 		}
 		*/
 		return true;
-	#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
+	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_EMSCRIPTEN)
 		cpu_set_t cpuset;
 		CPU_ZERO(&cpuset);
 		for (size_t i = 0; i < sizeof(affinity) * 8; ++i)
@@ -163,6 +165,8 @@ namespace mel
 		return _setAffinity(affinity,h);
 	#elif defined(MEL_MACOSX) || defined(MEL_IOS)
 		return _setAffinity(affinity,0);  //i don't know how to get current thread id on macos, but it doesn't matter because affinity in this sense can't be modified
+	#elif defined(MEL_EMSCRIPTEN)
+		return _setAffinity(affinity,0);  //seems to no exist gettid 
 	#else
 		return _setAffinity(affinity,gettid());
 	#endif
@@ -179,7 +183,7 @@ namespace mel
 			return result;
 		}
 	#endif
-	#if defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
+	#if defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX) || defined(MEL_EMSCRIPTEN)
 		void* _threadProc(void* param) {
 			Thread* t=(Thread*)param;
 			assert(t && "NULL Thread!");
@@ -289,7 +293,7 @@ namespace mel
 	#endif
 	}
 
-	#if defined(MEL_MACOSX) || defined(MEL_LINUX) ||defined(MEL_IOS) || defined(MEL_ANDROID)
+	#if defined(MEL_MACOSX) || defined(MEL_LINUX) ||defined(MEL_IOS) || defined(MEL_ANDROID) || defined(MEL_EMSCRIPTEN)
 	int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
 		switch (tp) {
 			case TP_HIGHEST:
@@ -420,7 +424,7 @@ namespace mel
 		else {
 			SwitchToThread();
 		}
-	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
+	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX) || defined(MEL_EMSCRIPTEN)
 		if (yp==YP_ANY_THREAD_ANY_PROCESSOR) {
 			Thread::sleep(0);
 		}
@@ -501,8 +505,9 @@ namespace mel
 		{
 			_setAffinity(affinity, mHandle);
 		}else
-			return true; //@todo
-	#elif defined(MEL_LINUX)
+			return true; 
+		//@todo android??
+	#elif defined(MEL_LINUX) || defined(MEL_EMSCRIPTEN)
 		mAffinity = affinity;
 		cpu_set_t cpuset;
 		CPU_ZERO(&cpuset);
