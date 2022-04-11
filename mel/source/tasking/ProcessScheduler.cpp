@@ -83,10 +83,14 @@ void ProcessScheduler::LockFreeTasksContainer::clear()
 	mSize = mChunkSize;
 }
 
-// void ProcessScheduler::LockFreeTasksContainer::lock()
-// {
-// 	Lock lck(mSC);
-// }
+void ProcessScheduler::LockFreeTasksContainer::lock()
+{
+	mSC.enter();
+}
+void ProcessScheduler::LockFreeTasksContainer::unlock()
+{
+	mSC.leave();
+}
 
 
 
@@ -160,19 +164,32 @@ void ProcessScheduler::executeProcesses()
 		bool invalidate = false;
 		bool resetBuffer = false;	
 		size_t currSize = mLockFreeTasks->size();
-		if ( currSize > mLockFreeTasks->getMaxSize())
-		{
-			//need to reset buffer, too big
-			//spdlog::info("Muy grande: {}",currSize);
-			mLockFreeTasks->setInvalidate(true); //yo creo que en esto está lo que no furrula
-			invalidate = true;
-		}
+		//TODO quitado par apruebas. Peta auqnue no se ejecute este codigo, a´s ique el reseteo del buffer no es
+		// if ( currSize > mLockFreeTasks->getMaxSize())
+		// {
+		// 	//need to reset buffer, too big
+		// 	//spdlog::info("Muy grande: {}",currSize);
+		// 	mLockFreeTasks->setInvalidate(true); //yo creo que en esto está lo que no furrula
+		// 	invalidate = true;
+		// }
 		int count = 0;
-		constexpr int maxCount = 10; //number of iterations to check for new task and give time for possible posting threads to finish their operation
+		constexpr int maxCount = 100; //number of iterations to check for new task and give time for possible posting threads to finish their operation
+		bool locked = false;
 		do
 		{
 			bool empty;
 			size_t endIdx = mLockFreeTasks->getCurrIdx(std::memory_order_acquire); 
+			if ( endIdx > currSize )
+			{
+				//podria ocurrir que lo bloquea pero ya se incrementó el indice. ¿doble check?
+		//		@todo ojo, no es correcto del todo, mirarlo bien. La idea es que se quede bloqueado si se está redimensionando en ese momento
+				//text::info("waiting for resize..");
+				while(endIdx > mLockFreeTasks->size(std::memory_order_seq_cst));
+		
+				// text::info("hago lock");
+				// mLockFreeTasks->lock();
+				// locked = true;
+			}
 			/*
 			intentar mejoras:
 			- lo de las iteraciones para ver si cambia el indice y el yield es un ful
@@ -216,6 +233,12 @@ void ProcessScheduler::executeProcesses()
 				resetBuffer = true;
 			}
 		}while(invalidate);
+		if ( locked )
+		{
+			// mLockFreeTasks->unlock();
+			// text::info("hago unlock");
+			// locked = false;
+		}
 		if ( resetBuffer )
 		{
 			mLockFreeTasks->exchangeIdx(0,std::memory_order_acquire);

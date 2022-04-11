@@ -123,9 +123,73 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 	if ( elapsed > TIME_MARGIN)
 		mel::text::warn("Margin time overcome {}. Info: {}",elapsed,text);
 }
+//@note para pruebas lock free
+std::atomic<int> sCount(0);
 //test for debuggin stuff
 static int _testsDebug(tests::BaseTest* test)
 {
+	{
+	constexpr int NUM_POSTS = 100'000;
+	//constexpr int NUM_PRODUCERS = 50;
+	constexpr int NUM_PRODUCERS = 1;
+	{
+	Runnable::RunnableCreationOptions opts;
+	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2}; //provoca pete
+	//opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+	auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
+	std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
+	for(size_t i=0;i<producers.size();++i)
+	{
+		producers[i] = ThreadRunnable::create(true);
+	}
+	for(size_t i=0;i<producers.size();++i)
+	{		
+		producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
+		{
+			mel::tasking::Process::wait(50);//to wait for all producer posts done
+			for(auto i = 0; i < NUM_POSTS; ++i)
+			{
+				//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+				//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+				{
+					consumer->fireAndForget(
+						[]()
+						{
+							++sCount;
+						},0,Runnable::killFalse
+					);
+				}
+			//	::mel::tasking::Process::wait(1);
+			}
+			return mel::tasking::EGenericProcessResult::KILL;
+		},Runnable::killFalse);
+	}
+/*
+//prueba sin usar producers, desde aqui directamente
+	for(auto i = 0; i < NUM_POSTS; ++i)
+	{
+		//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+		//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+		{
+			consumer->fireAndForget(
+				[]()
+				{
+					++sCount;
+				},0,Runnable::killFalse
+			);
+		}
+	}
+*/
+	mel::text::info("Esperando...");
+	Thread::sleep(20000);
+	}
+	
+	if ( sCount == NUM_PRODUCERS*NUM_POSTS )
+		mel::text::info("_test_concurrent_post OK. {} Posts",sCount.load());
+	else
+		mel::text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",NUM_PRODUCERS*NUM_POSTS,sCount.load());
+	return 0;
+	}
 	mel::text::set_level(mel::text::level::debug);
 	{
 
@@ -427,68 +491,115 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 	//Thread::sleep(45000);	
 	return result;
 }
-//@note para pruebas lock free
-std::atomic<int> sCount(0);
+//test for concurrent post in lock-free scheduler
 int _test_concurrent_post( ::tests::BaseTest* test)
 {	
-	constexpr int NUM_POSTS = 100000;
-	//constexpr int NUM_PRODUCERS = 50;
-	constexpr int NUM_PRODUCERS = 1;
 	{
-	Runnable::RunnableCreationOptions opts;
-	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2}; //provoca pete
-	//opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
-	auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
-	std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
-	for(size_t i=0;i<producers.size();++i)
-	{
-		producers[i] = ThreadRunnable::create(true);
-	}
-	for(size_t i=0;i<producers.size();++i)
-	{		
-		producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
-		{
-			mel::tasking::Process::wait(50);//to wait for all producer posts done
-			for(auto i = 0; i < NUM_POSTS; ++i)
+		//meter test bueno como si furrulase
+		constexpr int NUM_POSTS = 100'000;
+		constexpr int NUM_PRODUCERS = 50;
+		//constexpr int NUM_PRODUCERS = 1;
+		sCount = 0;
+		mel::text::info("Concurrent posts with normal sized buffer. Num producers={}, num_posts={}",NUM_PRODUCERS,NUM_POSTS);
+
+		Runnable::RunnableCreationOptions opts;
+		opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+		{		
+			auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
+			std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
+			for(size_t i=0;i<producers.size();++i)
 			{
-				//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-				//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
-				{
-					consumer->fireAndForget(
-						[]()
-						{
-							++sCount;
-						},0,Runnable::killFalse
-					);
-				}
+				producers[i] = ThreadRunnable::create(true);
 			}
-			return mel::tasking::EGenericProcessResult::KILL;
-		},Runnable::killFalse);
-	}
-/*
-//prueba sin usar producers, desde aqui directamente
-	for(auto i = 0; i < NUM_POSTS; ++i)
-	{
-		//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-		//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
-		{
-			consumer->fireAndForget(
-				[]()
+			for(size_t i=0;i<producers.size();++i)
+			{		
+				producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
 				{
-					++sCount;
-				},0,Runnable::killFalse
-			);
+				//	mel::tasking::Process::wait(50);//to wait for all producer posts done
+					for(auto i = 0; i < NUM_POSTS; ++i)
+					{
+						//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+						//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+						{
+							consumer->fireAndForget(
+								[]()
+								{
+									++sCount;
+								},0,Runnable::killFalse
+							);
+						}
+					//	::mel::tasking::Process::wait(1);
+					}
+					return mel::tasking::EGenericProcessResult::KILL;
+				},Runnable::killFalse);
+			}
+			//mel::text::info("Esperando...");
+			//Thread::sleep(10000);
+		}
+		auto numPosts = NUM_PRODUCERS*NUM_POSTS;
+		if ( sCount != numPosts )
+		{
+			std::stringstream ss;
+			ss<<"Test concurrent posts KO!!. Some tasks were not executed. Posts: "<<numPosts<<" Count: "<<sCount.load();
+			test->setFailed(ss.str());
+		}else
+		{
+			mel::text::info("Test concurrent posts OK!!");
 		}
 	}
-*/
-	mel::text::info("Esperando...");
-	Thread::sleep(50000);
+	{
+		//meter test bueno como si furrulase
+		constexpr int NUM_POSTS = 100'000;
+		//constexpr int NUM_PRODUCERS = 50;
+		constexpr int NUM_PRODUCERS = 1;
+		sCount = 0;
+		mel::text::info("Concurrent posts with very small sized buffer. Num producers={}, num_posts={}",NUM_PRODUCERS,NUM_POSTS);
+
+		Runnable::RunnableCreationOptions opts;
+		opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2}; //provoca pete
+		{		
+			auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
+			std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
+			for(size_t i=0;i<producers.size();++i)
+			{
+				producers[i] = ThreadRunnable::create(true);
+			}
+			for(size_t i=0;i<producers.size();++i)
+			{		
+				producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
+				{
+				//	mel::tasking::Process::wait(50);//to wait for all producer posts done
+					for(auto i = 0; i < NUM_POSTS; ++i)
+					{
+						//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
+						//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+						{
+							consumer->fireAndForget(
+								[]()
+								{
+									++sCount;
+								},0,Runnable::killFalse
+							);
+						}
+					//	::mel::tasking::Process::wait(1);
+					}
+					return mel::tasking::EGenericProcessResult::KILL;
+				},Runnable::killFalse);
+			}
+			//mel::text::info("Esperando...");
+			//Thread::sleep(10000);
+		}
+		auto numPosts = NUM_PRODUCERS*NUM_POSTS;
+		if ( sCount != numPosts )
+		{
+			std::stringstream ss;
+			ss<<"Test concurrent posts KO!!. Some tasks were not executed. Posts: "<<numPosts<<" Count: "<<sCount.load();
+			test->setFailed(ss.str());
+		}else
+		{
+			mel::text::info("Test concurrent posts OK!!");
+		}
 	}
-	
-	if ( sCount == NUM_PRODUCERS*NUM_POSTS )
-		mel::text::info("_test_concurrent_post OK. {} Posts",sCount.load());
-	else
-		mel::text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",NUM_PRODUCERS*NUM_POSTS,sCount.load());
 	return 0;
 }
 int _throwExc(int& v)
@@ -650,7 +761,7 @@ int TestThreading::onExecuteAllTests()
 	//_testMicroThreadingMonoThread( this );
 	//_testPerformanceLotTasks(this);
 	::test_threading::test_futures(this);
-	 //_test_concurrent_post(this);	
+	 _test_concurrent_post(this);	
 	 //_testExceptions(this);
 	 return 0;
 }

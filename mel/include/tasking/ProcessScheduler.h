@@ -79,10 +79,12 @@ namespace mel
 						return mCurrIdx.load(mo);
 					}
 					void clear();
-					size_t size() const{return mSize.load(std::memory_order_acquire);}  //pruebas memoryorder
+					size_t size(std::memory_order memOrder = std::memory_order_acquire) const{return mSize.load(memOrder);}  //pruebas memoryorder
 					//return previous value
 					size_t exchangeIdx(size_t v,std::memory_order order = std::memory_order_seq_cst);
-					//void lock();
+					//@todo lock y unlock de pruebas
+					void lock();
+					void unlock();
 					bool isInvalidate() const{ return mInvalidate;}
 					void setInvalidate(bool v){ mInvalidate = v;}
 					size_t getMaxSize() const{ return mMaxSize;}
