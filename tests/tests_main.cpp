@@ -34,13 +34,13 @@ static void _initialize()
 	test_execution::TestExecution::registerTest();
 }
 int testsMain(int argc,const char* argv[])
-{
+{	
 	_initialize();
 	
   	std::cout << "Running main with "<<argc<<" arguments:\n";
 	for(int i =0;i<argc;++i)	
 	{
-		text::debug("\t{}\n",argv[i]);
+		text::info("\t{}\n",argv[i]);
 	}
 	CommandLine::createSingleton(argc,argv);
 	// const char* arg[] = {"kk","-list","-t","callbacks"};	

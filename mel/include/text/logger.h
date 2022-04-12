@@ -37,8 +37,10 @@ namespace mel
             spdlog::debug(std::move(s),std::forward<Args>(args)...);
             #else
             if ( mel::text::level::_private::sLevel <= level::ELevel::debug )
-                //por poner algo por ahora
-                std::cout <<"[debug] " << s << std::endl;
+            {
+                std::cout <<"[debug] "  << s;
+                (std::cout <<...<< args) << std::endl;
+            }
             #endif
             //@todo use format for C++20
         }
@@ -48,8 +50,12 @@ namespace mel
             spdlog::info(std::move(s),std::forward<Args>(args)...);
             #else
             if ( mel::text::level::_private::sLevel <= level::ELevel::info )
+            {
                 //por poner algo por ahora
-                std::cout <<"[info] "  << s << std::endl;
+                //std::cout <<"[info] "  << s << std::endl;
+                std::cout <<"[info] "  << s;
+                (std::cout <<...<< args) << std::endl;
+            }
             #endif
             //@todo use format for C++20
         }
@@ -59,8 +65,10 @@ namespace mel
             spdlog::error(std::move(s),std::forward<Args>(args)...);
             #else
             if ( mel::text::level::_private::sLevel <= level::ELevel::err )
-                //por poner algo por ahora
-                std::cout <<"[error] "  << s << std::endl;
+            {
+                std::cout <<"[error] "  << s;
+                (std::cout <<...<< args) << std::endl;
+            }
             #endif
             //@todo use format for C++20
         }
@@ -70,8 +78,10 @@ namespace mel
             spdlog::warn(std::move(s),std::forward<Args>(args)...);
             #else
             if ( mel::text::level::_private::sLevel <= level::ELevel::warn )
-                //por poner algo por ahora
-                std::cout <<"[warn] "  << s << std::endl;
+            {
+                std::cout <<"[warn] "  << s;
+                (std::cout <<...<< args) << std::endl;
+            }
             #endif
 
             //@todo use format for C++20
@@ -82,8 +92,10 @@ namespace mel
             spdlog::critical(std::move(s),std::forward<Args>(args)...);
             #else
             if ( mel::text::level::_private::sLevel <= level::ELevel::critical )
-                //por poner algo por ahora
-                std::cout <<"[critical] "  << s << std::endl;
+            {
+                std::cout <<"[critical] "  << s;
+                (std::cout <<...<< args) << std::endl;
+            }
             #endif
             //@todo use format for C++20
         }

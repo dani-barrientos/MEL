@@ -7,6 +7,7 @@ See ENLACE A DOC for MEL documentation
 # build
 Very brief guide on how to build.
 
+This project use cmake as the build system, and so should be compatible with any environment supporting it. The used option by the author is by using Visual Studio Code with CMakeTools extension.
 *CMakePresets.json* file includes the base configuration for builds in Windows, MacOsX and Linux, but you need to provide your *CMakeUserPresets* for your concrete case. A *CMakeUserPresets_EXAMPLE.json* is included as a guide toi crete your custom configuration.
 There are 2 diferent macros that guide compilation based on target platform.
 - **MEL_OS** : target operating system. Available OS are: *MEL_WINDOWS*, *MEL_LINUX*,*MEL_MACOSX*,*MEL_ANDROID* (iOS platform is working progress), *MEL_EMSCRIPTEN*

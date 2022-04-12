@@ -163,6 +163,7 @@ void _sampleTasking2()
 }
 void test_threading::samples()
 {
+    mel::text::set_level(mel::text::level::ELevel::debug);
     //_sample1();
     //_sample2();
     //_sample3();

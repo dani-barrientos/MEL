@@ -246,7 +246,7 @@ static int _testsDebug(tests::BaseTest* test)
 }
 static int _testMicroThreadingMonoThread(tests::BaseTest* test)
 {
-	mel::text::set_level(mel::text::level::info);
+	mel::text::set_level(mel::text::level::debug);
 	auto lvl = mel::text::get_level();
 	using namespace std::string_literals;
 	size_t s1 = sizeof(Process);

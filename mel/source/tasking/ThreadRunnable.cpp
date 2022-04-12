@@ -23,9 +23,7 @@ ThreadRunnable::ThreadRunnable( Runnable::RunnableCreationOptions opts):Runnable
 }
 void ThreadRunnable::_execute()	
 {
-	
-	//TLS::setValue( gCurrentThreadKey,new ThreadInfo{shared_from_this()} );
-	TLS::setValue( gCurrentThreadKey,this );
+	TLS::setValue( gCurrentThreadKey,this );	
     onThreadStart();
     while ( mState != THREAD_FINISHING_DONE )
     {

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <iostream>  //for debug purposes
 #include <core/Thread.h>
 #include <mpl/MemberEncapsulate.h>
 
@@ -16,13 +17,10 @@ using mel::mpl::makeMemberEncapsulate;
 #include <pthread.h>
 //#import <mach/thread_act.h>
 #include <mach/thread_act.h>
-#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
+#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_EMSCRIPTEN)
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
-	/*#ifdef MEL_ANDROID
-	#import <sys/syscall.h>
-	#endif*/
 #endif
 
 namespace mel
@@ -134,7 +132,7 @@ namespace mel
 		}
 		*/
 		return true;
-	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_EMSCRIPTEN)
+	#elif defined(MEL_LINUX) || defined(MEL_ANDROID) 
 		cpu_set_t cpuset;
 		CPU_ZERO(&cpuset);
 		for (size_t i = 0; i < sizeof(affinity) * 8; ++i)
@@ -150,10 +148,10 @@ namespace mel
 		if (!result)
 		{
 			int err = errno;
-
 			text::error("Error setting thread affinity. {}", err);
 		}
-		
+	#elif defined(MEL_EMSCRIPTEN)
+		//@todo no pilla el sched, pero se supone que está soportado
 	#endif
 		return result;
 	}
@@ -335,19 +333,16 @@ namespace mel
 			pthread_attr_destroy(&attr);
 			throw std::runtime_error("Unable to set detached state!");
 		}
-
 		sched_param sp;
 		sp.sched_priority=priority2pthread(mPriority,mPriorityMin,mPriorityMax);
 		if (pthread_attr_setschedparam(&attr,&sp)) {
 			pthread_attr_destroy(&attr);
 			throw std::runtime_error("Unable to set thread priority!");
 		}
-
 		err = pthread_create(&mHandle, &attr, _threadProc, this);
 		if (err != 0) {
 			throw std::runtime_error("Unable to spawn new thread: err="s+ std::to_string(err));
 		}
-		
 		if ((err=pthread_attr_destroy(&attr))) {
 			#ifndef MEL_ANDROID
 			pthread_cancel(mHandle);
@@ -492,6 +487,7 @@ namespace mel
 		//@todo  uff, en Windows es mortal esto
 		return 0;
 	}
+	//@todo incompleto
 	bool Thread::setAffinity(uint64_t affinity)
 	{
 		bool result = false;
@@ -508,29 +504,7 @@ namespace mel
 			return true; 
 		//@todo android??
 	#elif defined(MEL_LINUX) || defined(MEL_EMSCRIPTEN)
-		mAffinity = affinity;
-		cpu_set_t cpuset;
-		CPU_ZERO(&cpuset);
-		for (size_t i = 0; i < sizeof(affinity) * 8; ++i)
-		{
-			if (affinity & 1)
-				CPU_SET(i, &cpuset);
-			affinity = affinity >> 1;
-		}
-		//pthread_setaffinity_np(mHandle, sizeof(cpuset), &cpuset); ->no existe en android
-		//int ok = syscall(__NR_sched_setaffinity, mHandle, sizeof(affinity), &affinity);
-		if (mThHandle != 0)
-		{
-			int ok = sched_setaffinity(mThHandle, sizeof(cpuset), &cpuset);
-			result = (ok == 0);
-			if (!result)
-			{
-				int err = errno;
-				//text::error("Error setting thread affinity. {}", err);
-			}
-		}
-		else
-			return true;
+		_setAffinity(affinity,mThHandle);			
 	#endif
 		return result;
 	}

@@ -6,7 +6,7 @@ bool TLS::createKey(TLSKey& key ) {
 	key = result;
 	return (result!=TLS_OUT_OF_INDEXES);
 
-#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
+#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX) || defined(MEL_EMSCRIPTEN)
 	int ok=pthread_key_create(&key,NULL);
 	return ok==0;
 #endif
@@ -17,7 +17,7 @@ bool TLS::deleteKey(mpl::TypeTraits<TLSKey>::ParameterType key) {
 	BOOL ok= TlsFree(key);
 	return ok!=0;
 
-#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
+#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX) || defined(MEL_EMSCRIPTEN)
 	int ok=pthread_key_delete(key);
 	return ok==0;
 #endif
@@ -28,7 +28,7 @@ bool TLS::setValue(mpl::TypeTraits<TLSKey>::ParameterType key, const void* value
 	BOOL ok=TlsSetValue( key, (LPVOID)value );
 	return ok!=0;
 
-#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
+#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX) || defined(MEL_EMSCRIPTEN)
 	int ok=pthread_setspecific(key,value);
 	return ok==0;
 #endif
@@ -38,7 +38,7 @@ void* TLS::getValue(mpl::TypeTraits<TLSKey>::ParameterType key) {
 #ifdef _WINDOWS
 	return TlsGetValue( key );
 
-#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
+#elif defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX) || defined(MEL_EMSCRIPTEN)
 	return pthread_getspecific(key);
 #endif
 }

@@ -25,8 +25,11 @@ if(MEL_OS STREQUAL "MEL_WINDOWS")
 endif()
 
 target_link_libraries(tests "mel")
-if(MEL_OS STREQUAL "MEL_LINUX")
+if(MEL_OS STREQUAL "MEL_LINUX" )
     target_link_libraries(tests "pthread")
+elseif( MEL_OS STREQUAL "MEL_EMSCRIPTEN" )
+     target_compile_options(tests PRIVATE "-pthread")    
+     #target_link_options(tests PRIVATE "-pthread")    
 endif()
 
 if (USE_SPDLOG)    
