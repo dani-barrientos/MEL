@@ -384,7 +384,7 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 
 void test_execution::samples()
 {
-	text::set_level(text::level::info);
+	text::set_level(text::level::debug);
 	auto th = ThreadRunnable::create(true);			
 	execution::Executor<Runnable> exr(th);
 	exr.setOpts({true,false});

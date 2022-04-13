@@ -865,6 +865,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 //basic test for launching task in execution agents
 int _testLaunch( tests::BaseTest* test)
 {
+	mel::text::set_level(mel::text::level::ELevel::debug);
 	int result = 0;		
 	{
 		{

@@ -23,5 +23,15 @@ Issues/facts:
   
  # testing
  if using Visual Studio Code, execute *Run CTest*,or execute ctest from commandline in out/build/[required configuration]/tests
- 
+ # emscripten support
+
+This is experimental. To compile for emscripten set MEL_OS to EMSCRIPTEN, and leave empty MEL_ARQ.
+## Build
+cd out/build 
+emcmake cmake ../.. -DCMAKE_BUILD_TYPE=Debug -DMEL_OS=MEL_EMSCRIPTEN  -DUSE_SPDLOG=false   
+emcmake make
+## Execution
+
+The generated `main.wasm.js` file can be execute with Node.js as usual. Because the uso of threads is kind of experimental in emscripten, you need to add the options `--experimental-wasm-threads","--experimental-wasm-bulk-memory`. Example command line:
+`node --experimental-wasm-threads main.wasm.js -t threading -n 0` 
  

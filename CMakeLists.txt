@@ -49,7 +49,7 @@ if(MEL_OS STREQUAL "MEL_EMSCRIPTEN")
     message(STATUS "Setting compilation target to WASM")
     set(CMAKE_EXECUTABLE_SUFFIX ".wasm.js")
     #set_target_properties(main PROPERTIES LINK_FLAGS "-s WASM=1 -s EXPORTED_FUNCTIONS='[_main]' -s NO_DISABLE_EXCEPTION_CATCHING -s USE_PTHREADS")
-    set_target_properties(main PROPERTIES LINK_FLAGS "-s WASM=1 -s EXPORTED_FUNCTIONS='[_main]' -s NO_DISABLE_EXCEPTION_CATCHING -s USE_PTHREADS -s PTHREAD_POOL_SIZE=1")
+    set_target_properties(main PROPERTIES LINK_FLAGS "-s WASM=1 -s EXPORTED_FUNCTIONS='[_main]' -s NO_DISABLE_EXCEPTION_CATCHING -s USE_PTHREADS -s PTHREAD_POOL_SIZE=10 -s ASYNCIFY")
   endif()
   #I think that this options are superseded using -s USE_PTHREADS
   #target_compile_options(main PRIVATE "-pthread")    

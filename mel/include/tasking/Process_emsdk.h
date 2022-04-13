@@ -1,4 +1,5 @@
 #pragma once
+#include <emscripten.h>
 namespace mel
 {
     namespace tasking
@@ -12,11 +13,14 @@ namespace mel
         //for compatibility, but don't do any job
         struct MThreadAttributtes 
         {
+            //@TODO QUITAR ESTOS ATRIBUTOS QUE AQUI NO VALEN
             volatile unsigned char* mStack;        
             volatile void* mStackEnd;
             volatile bool mSwitched;
             volatile unsigned int mStackSize;
-            volatile unsigned int mCapacity;                
+            volatile unsigned int mCapacity;
+          //  bool mFiberInited = false;
+           // emscripten_fiber_t mFiberData;
         };
     }
     ///@endcond
