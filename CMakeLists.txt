@@ -23,7 +23,7 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 message( "Toolchain " ${CMAKE_TOOLCHAIN_FILE})
 
-project ("mel")
+project ("mel" VERSION 1.0.0)
 
 add_compile_definitions(${MEL_OS})
 add_compile_definitions(${MEL_ARQ})

@@ -14,10 +14,9 @@ add_library(mel SHARED  "source/tasking/CriticalSection_mthread.cpp"
  "source/parallelism/Barrier.cpp" "source/tasking/utilities.cpp" "source/text/logger.cpp"
 "source/parallelism/ThreadPool.cpp" "include/parallelism/For.h" "include/execution/Executor.h"  "include/execution/RunnableExecutor.h"
 )
-#set_target_properties(mel PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
-
+set_target_properties( mel PROPERTIES 
+                        VERSION 1.0 SOVERSION 1)
 if(MEL_OS STREQUAL "MEL_WINDOWS")
-    #target_compile_options(mel PUBLIC "/permissive-")
     if(MEL_ARQ STREQUAL "MEL_X86_MSVC")
         target_sources(mel PRIVATE "source/tasking/Process_X86_MSVC.cpp")
     else()
@@ -53,7 +52,3 @@ else()
     message ("MEL is NOT using spdlog")
 endif()
 
-
-
-#parece que no hay version 32 bits de spdlog meter un define -> hacer funcion cmake para devovler true si arquitectura 32 bits
-#tratar de unificar con el find_packe
