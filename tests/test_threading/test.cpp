@@ -622,25 +622,33 @@ int _testExceptions( tests::BaseTest* test)
 {
 	auto th1 = ThreadRunnable::create(true);
 	th1->post(
-		 [](RUNNABLE_TASK_PARAMS)
+		 [test](RUNNABLE_TASK_PARAMS)
 		 {
 			int val;
 		//	tasking::Process::wait(2000);
 			try
 			{
 				mel::text::info("Task1: Context switch");
-				mel::tasking::Process::wait(2000);
-				mel::text::info("Task1: Throw exception");
+				if ( mel::tasking::Process::wait(2000) == Process::ESwitchResult::ESWITCH_OK)
+				{
+					mel::text::info("Task1: Throw exception");
+					_throwMyException(val);
+					test->setFailed("Task1: After throw exception. Shouldn't occur");
+				}
 				//_throwExc(val);
 
-				_throwMyException(val);
-				mel::text::error("Task1: After throw exception. Shouldn't occur");
 			}catch(int v)
 			{
 				if ( v == val)
 					mel::text::info("Task1: Captured exception ok");
 				else
-					mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+				{
+					stringstream ss;
+					ss<<"Task1: Invalid 'int' Captured exception. Thrown "<<val<<" Catched "<<v;
+					test->setFailed(ss.str());
+//
+					//mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+				}
 				mel::tasking::Process::wait(5000);
 			}catch(MyException& exc)
 			{
@@ -649,39 +657,49 @@ int _testExceptions( tests::BaseTest* test)
 					mel::text::info("Task1: Captured exception ok. msg ={}",exc.msg);
 				}
 				else
-					mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
+				{
+					stringstream ss;
+					ss<<"Task1: Invalid 'MyException' Captured exception. Thrown "<<val<<" Catched "<<exc.code;
+					test->setFailed(ss.str());
+//					mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
+				}
 				mel::tasking::Process::wait(5000);
 			}			
 			
 			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
-		 }
+		 },Runnable::killTrue
 	);
 	th1->post(
-		 [](RUNNABLE_TASK_PARAMS)
+		 [test](RUNNABLE_TASK_PARAMS)
 		 {
 			 int val;
 			try
 			{
 
 				mel::text::info("Task2: Context switch");
-				mel::tasking::Process::wait(3000);
-				mel::text::info("Task2: Throw exception");
-				_throwExc(val);
-			#if USE_SPDLOG
-				spdlog::error("Task2: After throw exception. Shouldn't occur");
-		#endif
+				if (mel::tasking::Process::wait(3000)  == Process::ESwitchResult::ESWITCH_OK)
+				{
+					mel::text::info("Task2: Throw exception");
+					_throwExc(val);
+					test->setFailed("Task2: After throw exception. Shouldn't occur");
+					//mel::text::error("Task2: After throw exception. Shouldn't occur");
+				}
 			}catch( int v)
 			{
 				if ( v == val)
 					mel::text::info("Task2: Captured exception ok");
 				else
-					mel::text::error("Task2: Captured exception Invalid,. Thrown {}, Catched {}",val,v);
+				{
+					stringstream ss;
+					ss<<"Task2: Invalid Captured exception. Thrown "<<val<<" Catched "<<v;
+					test->setFailed(ss.str());
+				}
 			}			
 			
 			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
-		 }
+		 },Runnable::killTrue
 	);
-	Thread::sleep(15000);
+	Thread::sleep(45000);
 	return 0;
 }
 
@@ -730,25 +748,7 @@ int TestThreading::onExecuteTest()
 	}else
 		result = defaultTest(this); //by default
 		
-	
-	// th1->post( std::function<bool(uint64_t ,Process*)>([](RUNNABLE_TASK_PARAMS)
-	// {
-	// 	spdlog::info("Tas1");
-	// 	return false;
-	// }),true,2000);
-	/*
-	Future<int> result = th1->execute<int>(::std::function<int()>(
-		[]() {
-			return 15;
-		})
-		);
-	result.wait();
-	if (result.getValid())
-		cout << result.getValue() << endl;
-	else
-		cout << result.getError()->errorMsg << endl;
-		*/
-	
+		
 	return 0;
 }
 void TestThreading::registerTest()
@@ -762,6 +762,6 @@ int TestThreading::onExecuteAllTests()
 	//_testPerformanceLotTasks(this);
 	::test_threading::test_futures(this);
 	 _test_concurrent_post(this);	
-	 //_testExceptions(this);
+	 _testExceptions(this);
 	 return 0;
 }

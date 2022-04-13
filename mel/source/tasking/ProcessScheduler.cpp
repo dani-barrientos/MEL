@@ -164,14 +164,14 @@ void ProcessScheduler::executeProcesses()
 		bool invalidate = false;
 		bool resetBuffer = false;	
 		size_t currSize = mLockFreeTasks->size();
-		//TODO quitado par apruebas. Peta auqnue no se ejecute este codigo, a´s ique el reseteo del buffer no es
-		// if ( currSize > mLockFreeTasks->getMaxSize())
-		// {
-		// 	//need to reset buffer, too big
-		// 	//spdlog::info("Muy grande: {}",currSize);
-		// 	mLockFreeTasks->setInvalidate(true); //yo creo que en esto está lo que no furrula
-		// 	invalidate = true;
-		// }
+		//TODO quitado para pruebas. Peta auqnue no se ejecute este codigo, a´s ique el reseteo del buffer no es
+		if ( currSize > mLockFreeTasks->getMaxSize())
+		{
+			//need to reset buffer, too big
+			//spdlog::info("Muy grande: {}",currSize);
+			mLockFreeTasks->setInvalidate(true); //yo creo que en esto está lo que no furrula
+			invalidate = true;
+		}
 		int count = 0;
 		constexpr int maxCount = 100; //number of iterations to check for new task and give time for possible posting threads to finish their operation
 		bool locked = false;
