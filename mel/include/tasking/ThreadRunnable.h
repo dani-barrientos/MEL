@@ -65,6 +65,10 @@ namespace mel
             void start();
             void finish() override { terminate(0); }
             bool finished()	override {return getState() == THREAD_FINISHED;	}
+            /**
+             * @brief Does a join on the underlying Thread
+             * @details when join is done, the function \ref onJoined is called, as a way to notify children
+             */
             bool join(unsigned int millis=0xFFFFFFFF);
             bool setAffinity(uint64_t aff){return mThread->setAffinity(aff);}
 
@@ -139,7 +143,10 @@ namespace mel
              * 
              */
             virtual void onThreadEnd(){}
-            //called after join is done
+            /**
+             * @brief Called by \ref join() when done. 
+             * @details Intended for specializaations to be notified
+             */
             virtual void onJoined(){}
             void onCycleEnd();
 

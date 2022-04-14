@@ -101,7 +101,7 @@ namespace mel
 				KILLING_WAITING_FOR_SCHEDULED , //!< switched and no shceduled yet
 				DEAD  //!< process is out of process manager
 			};
-			//! Reason why the process returns from context switch
+			//! @brief Reason why the process returns from context switch
 			enum class ESwitchResult{
 				ESWITCH_OK,  //!< return from context switch was ok
 				ESWITCH_WAKEUP,  //!<return from context switch was because a wakeup
@@ -126,13 +126,12 @@ namespace mel
 			void pause( );
 			
 			/**
-			* @brief mark this process to be eliminated by the process manager.
-			* Internally, kill calls virtual onKill, which returns true if kill can be acomplished or not.
+			* @brief Mark this process to be eliminated by the process manager.
+			* @details Internally, kill calls virtual function  Process::onKill, which returns true if kill can be acomplished or not.
 			* In case of true, then process is put in PREPARED_TO_DIE state, so the scheduler can remove it.
 			* In case of false, process is put in a TRYING_TO_KILL state so scheduler will continue to trying to
 			* kill it in next iterations.
 			* You can know if a process is die checking getDead
-			* If no Smart pointers link to the process, it is deleted
 			* @remarks if process is not already inited (state == PREPARED) then onKill is not called @todo CAMBIAR ESTO?
 			*
 			* @param[in] force if true, then killing is without regarding previous explained process, so

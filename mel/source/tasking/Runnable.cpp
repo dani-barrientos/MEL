@@ -5,7 +5,7 @@ using mel::tasking::Runnable;
 using ::mel::tasking::_private::RTMemPool;
 using ::mel::tasking::_private::RTMemBlock;
 using ::mel::tasking::_private::MemZoneList;
-
+using ::mel::tasking::ProcessFactory;
 
 #include <core/Timer.h>
 using mel::core::Timer;
@@ -23,6 +23,14 @@ static TLS::TLSKey gCurrentRunnableKey;
 static bool gCurrentRunnableKeyCreated = false;
 static CriticalSection gCurrrentRunnableCS;
 
+GenericProcess* mel::tasking::DefaultAllocator::allocate(Runnable* _this)
+{
+	return _this->getDefaultFactory()->create(_this);
+}
+GenericProcess* ProcessFactory::onCreate(Runnable* owner) const
+{
+	return new (owner)::mel::tasking::_private::RunnableTask();
+}
 void* ::mel::tasking::_private::RunnableTask::operator new( size_t s,Runnable* owner ) 
 {
 	return ::operator new(s);
@@ -173,6 +181,7 @@ Runnable::Runnable(RunnableCreationOptions options ):
 	//_addNewPool(); quitado hasta tener todo claro, pero parece que incluso inicializar el pool cuesta mucho cuando es grande
 	//Create default timer. Can be overriden by calling
 	setTimer(std::make_shared<Timer>());
+	mDefaultFactory = std::make_unique<ProcessFactory>();
 }
 
 Runnable::~Runnable() {

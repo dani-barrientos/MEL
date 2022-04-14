@@ -58,10 +58,33 @@ namespace mel
 	//useful macro to declare task parameters
 	#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p
 		class Runnable; //predeclaration
+		/**
+		 * @brief Base factory class for tasks
+		*/
+		class MEL_API ProcessFactory
+		{
+			public:
+				//!\brief Create new process for given Runnable
+				inline GenericProcess* create(Runnable* owner)const {return onCreate(owner);};
+			protected:
+				/**
+				 * @brief Reimplement in children to change default behaviour
+				 * @details default factory behaviour is to create a _private::RunnableTask. Users can create their own Process type or use their own allocation method
+				 * by inheriting from this class and use \ref Runnable::setDefaultFactory, or by providing the custom factorytype in \ref Runnable::post
+				 * 
+				 */
+				virtual GenericProcess* onCreate(Runnable* owner) const;
+				
+		};
+		//!@brief Default allocator for new tasks (through \ref Runnable::post) using the runnable default factory \ref Runnable::getDefaultFactory
+		struct MEL_API DefaultAllocator
+		{
+			//! @brief Allocation function
+			static GenericProcess* allocate(Runnable* _this);
+		};
 		///@cond HIDDEN_SYMBOLS
 		namespace _private
 		{
-
 			class MEL_API RunnableTask final: public GenericProcess
 			{
 			public:		
@@ -72,6 +95,7 @@ namespace mel
 				RunnableTask(){}
 			private:
 			};
+			/*
 			//default allocator for new tasks (through post) doing a simple new 	
 			template <class T>
 			struct Allocator
@@ -81,7 +105,7 @@ namespace mel
 					return new T();
 				}
 			};
-				//special allocator for RunnableTask using internal pool
+			//special allocator for RunnableTask using internal pool
 			template <>
 			struct Allocator<RunnableTask>
 			{
@@ -90,6 +114,8 @@ namespace mel
 					return new (_this)RunnableTask();
 				}
 			};
+			*/
+			
 			struct RTMemPool; //predeclaration
 			struct RTMemBlock
 			{
@@ -181,14 +207,20 @@ namespace mel
 			*/
 			inline void setOwnerThreadId(mel::core::ThreadId tid) {mOwnerThread=tid;}
 			static Runnable* getCurrentRunnable();
+			/**
+			 * @brief Change default factory used to create task through \ref post and \ref fireAndForget
+			 * @warning not multithread-safe. If tasks are being posted while this function is changed, it will reach to unpredictable results
+			 */			  
+			void setDefaultFactory(ProcessFactory* factory){mDefaultFactory.reset(factory);}
+			//! Retrieves the current default factory for tasks
+			inline const ProcessFactory* getDefaultFactory() const{return mDefaultFactory.get();}	
 		protected:
-		public:  //por temas de depuracion
-
 		private:
 		//get info on currently executing Runnable in current thread
 			static RunnableInfo* _getCurrentRunnableInfo();
 			friend class ::mel::tasking::_private:: RunnableTask;
 			RunnableInfo* mCurrentInfo;
+			std::unique_ptr<ProcessFactory>	mDefaultFactory; //factory to use for allocating tasks if no other given
 			ProcessScheduler	mTasks;
 			RunnableCreationOptions mOpts;
 			mel::tasking::_private::MemZoneList mRTZone;
@@ -252,27 +284,27 @@ namespace mel
 			/**
 			* Posts a new execution request over a functor
 			* The execution is NOT guaranteed to be taken into account inmediatly.
-			* By default, a ::mel::core::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons.wich also can
-			* be changed with template parameter AllocatorType. Users can provide their own ProcessType class (which must inherit from Process o, better, GenericProcess -this is not mandatory, but for simplicity-)
-			* This way, user can provide its custom Process class holding custom attributes and/or provide its custom memory manager. @see RTMemPool @see ::mel::core::_private::Allocator for interfaz needed to your custom allocator
+			* By default, a ::mel::tasking::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons. Users can provide their own 
+			* AllocatorType class to change the way the underlying Process is created, either by creating a custom specialization of \ref GenericProcess or/and using a custom memory pool
+			@see RTMemPool
 			* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*)
 			* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 			* @param[in] period Milliseconds
 			* @param[in] startTime milliseconds to begin task
 			* @return the process created for this task
 			*/
-			template <class ProcessType = ::mel::tasking::_private::RunnableTask,class AllocatorType = ::mel::tasking::_private::Allocator<ProcessType>, class F,class KF = const std::function<bool()>&>
+			template <class AllocatorType = ::mel::tasking::DefaultAllocator, class F,class KF = const std::function<bool()>&>
 			std::shared_ptr<Process> post(
 				F&& task_proc,
-				KF&& killFunction=killFalse,
-				/*ETaskPriority priority = NORMAL_PRIORITY_TASK, @todo aqui meter un struct de opciones con las que crear el proceso*/
+				KF&& killFunction=killFalse,			
 				unsigned int period = 0,unsigned int startTime = 0);
 			/**
 			 * @brief Convenient function to post no periodic task with signature void f()
+			 * @details see \ref post for considerations con template parameter AllocatorType
 			 * @param[in] task_proc functor with signature void f(void)
 			 * @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
-			 */
-			template <class ProcessType = ::mel::tasking::_private::RunnableTask,class AllocatorType = ::mel::tasking::_private::Allocator<ProcessType>, class F,class KF = const std::function<bool()>&>		
+			 */			
+			template <class AllocatorType = ::mel::tasking::DefaultAllocator, class F,class KF = const std::function<bool()>&>
 			std::shared_ptr<Process> fireAndForget(
 				F&& task_proc,
 				unsigned int startTime = 0,
@@ -324,44 +356,34 @@ namespace mel
 
 		};
 		
-		template <class ProcessType,class AllocatorType,class F,class KF>
+		template <class AllocatorType, class F,class KF>
 		std::shared_ptr<Process> Runnable::post(
 			F&& task_proc,
 			KF&& killFunction,
 			unsigned int period,unsigned int startTime )
 		{
-			::std::shared_ptr<ProcessType> p(AllocatorType::allocate(this));
+			::std::shared_ptr<GenericProcess> p(AllocatorType::allocate(this));			
 			p->setProcessCallback( ::std::forward<F>(task_proc) );
 			p->setPeriod( period );
 			p->setKillCallback( ::std::forward<KF>(killFunction) );
 			postTask(p,startTime);
 			return p;	
 		}
-		template <class ProcessType ,class AllocatorType, class F,class KF>		
-		std::shared_ptr<Process> Runnable::fireAndForget(
-				F&& f,
+		template <class AllocatorType, class F,class KF>
+			std::shared_ptr<Process> Runnable::fireAndForget(
+				F&& task_proc,
 				unsigned int startTime,
 				KF&& killFunction)
-		{
-			// return post<ProcessType,AllocatorType>(
-			// 	RUNNABLE_CREATETASK
-			// 		(
-			// 			returnAdaptor<void>
-			// 			(
-			// 				std::forward<F>(f)
-			// 				, ::mel::tasking::EGenericProcessResult::KILL
-			// 			)
-			// 		),true,0,startTime
-			// );
-			
-			return post<ProcessType,AllocatorType>(
-				[f=std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
+		{	
+			return post<AllocatorType>(
+				[f=std::forward<F>(task_proc)](RUNNABLE_TASK_PARAMS) mutable
 				{
 					f();
 					return ::mel::tasking::EGenericProcessResult::KILL;
 				}
 				,std::forward<KF>(killFunction),0,startTime
 			);
+			
 		}
 
 		const ProcessScheduler& Runnable::getScheduler() const
@@ -468,71 +490,6 @@ namespace mel
 			
 		
 			return output;
-		}
-		
-			
-		///@cond HIDDEN_SYMBOLS
-		/*//helper class por request task to Runnable
-		template <class TRet,class ErrorType, class F> struct ExecuteTask
-		{
-			F mFunction;
-			ExecuteTask(F&&f):mFunction(std::forward<F>(f))
-			{			
-			}
-			ExecuteTask(const ExecuteTask& t):mFunction(t.mFunction)
-			{			
-			}
-			ExecuteTask(ExecuteTask&& t):mFunction(std::move(t.mFunction))
-			{			
-			}
-			void operator()(  Future<TRet,ErrorType> f )
-			{
-				try
-				{
-					f.setValue(mFunction());
-				}
-				//check chances of Exception
-				catch( std::exception& e )
-				{
-					f.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
-				}
-				catch(...)
-				{
-					
-					f.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
-
-				}
-
-			}
-			bool operator ==( const ExecuteTask& ) const{ return true;} //for compliance
-		};*/
-		//specialization for void TRet
-	/*	template <class ErrorType,class F> struct ExecuteTask<void,ErrorType,F>
-		{
-			F mFunction;
-			ExecuteTask(F&&f) :mFunction(std::forward<F>(f))
-			{
-			}
-			void operator()( Future<void> f )
-			{
-				try
-				{
-					mFunction();
-					f.setValue( );
-				}
-				//check chances of Exception
-				catch( std::exception& e )
-				{
-					f.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );	
-				}
-				catch(...)
-				{
-					f.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,"Unknown exception") );	
-				}
-			}
-			bool operator ==( const ExecuteTask& )const { return true;} //for compliance
-		};*/
-		///@endcond
-
+		}						
 	}
 }

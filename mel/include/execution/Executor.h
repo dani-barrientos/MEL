@@ -16,9 +16,6 @@ namespace mel
      * @details This namespace contains class, functions..to give a consistent execution interface independent of the underliying execution system
      * See \ref execution_system for detailed explanations and examples
      */
-
- //TODO  hcae rtraits o algo. es que no tiene mucho sentido que exista esto pero en realidad no se hereda en los otros.
- //  POSIBLIADES: 
     namespace execution
     {       
         template <class ExecutorAgent> class Executor    
@@ -30,7 +27,11 @@ namespace mel
             template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<ExecutorAgent,TArg> fut, FTypes&&... functions);
             template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg> fut,ReturnTuple& result, FTypes&&... functions);
         };
-            
+        template <class ExecutorAgent> struct ExecutorTraits
+        {
+            enum {has_microthreading = false};  //support microthreading?
+            enum {has_parallelism = false}; ////support true parallelism?
+        };
         /**
          * @brief Launch given functor in given executor
          * @return ExFuture with return type of function

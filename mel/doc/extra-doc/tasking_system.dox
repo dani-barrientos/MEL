@@ -1,7 +1,17 @@
 
 /**
 \page tasking_system Tasking System
-As it was said in the \ref mainpage, the core pieces of the tasking system are:
+Contents of this section:
+- [Introduction] (#introduction)
+- [Posting tasks] (#posting_tasks)
+- [Microthreading] (#microthreading)
+- [Terminating tasks] (#terminating_tasks)
+- [Custom tasks] (#custom_tasks)
+- [Known limitations] (#limitations)
+- [Runnable specialization] (#runnable_specialization)
+
+## Introduction {#introduction}
+As it was said in the \ref index "main page", the core pieces of the tasking system are:
 <ul>
 	<li>\ref ::mel::tasking::Process : 
 	Represents a task with *microthread* capabilities. We will explain this capabilities later in the text
@@ -19,7 +29,7 @@ As it was said in the \ref mainpage, the core pieces of the tasking system are:
 </ul>
 Here a very simple class diagram showing their relationships.
 \image html tasking.jpg
-## Posting tasks to runnables
+## Posting tasks to runnables {#posting_tasks}
 \ref mel::tasking::Runnable "Runnables" are only a wrapper around \ref mel::tasking::ProcessScheduler "ProcessScheduler" to facilitate tasks managemente. Becasue is an abstract class, you will need to implement your custom
 runnable, which usually consits only in executing the tasks in the internal scheduler in an infinite loop. 
 Usually it's enough to use a \ref mel::tasking::ThreadRunnable "ThreadRunnable", which is an specialization executing the tasks in a thread. 
@@ -44,14 +54,14 @@ every 450 msecs during 5000 msecs.
 Now let's explain the important parts:
 - A task always receive the scheduler time (*msecs* parameter) and the process which is executing the function. Keep in mind that this post method is only a helper for posting tasks.
 The very basic method is, really, \ref mel::tasking::Runnable::postTask. but this need to create you own process and implementing the neccesary interface. 
-- A task will finish in two situations:
+- \anchor kill_situations A task will finish in two situations:
     - returning ::mel::tasking::EGenericProcessResult::KILL
     - calling \ref mel::tasking::Process::kill on the process. A ThreadRunnable, when destroyed, will try to kill all its processes, and waits until all process are finished. If a posted task
-    use de *killPolicy* mel::tasking::Runnable::killTrue "killTrue", it will be automatically killed when it receives a kill request. In case of using mel::tasking::Runnable::killFalse "killFalse"
+    use de *killPolicy* \ref mel::tasking::Runnable::killTrue "killTrue", it will be automatically killed when it receives a kill request. In case of using \ref mel::tasking::Runnable::killFalse "killFalse"
     the kill will always be rejected. Really, the *killPolicy* argument is a callable which will be evaluated when the process receives a kill signal, so allowing to acept or reject the kill according to 
     other things; *killTrue* and *killFalse* are only helpers for these common behaviours.
 
-If we hav removed the line with the *sleep* at the end of the function, *th1* would be destroyed inmediately after the *post*, and so, the posted task would be killed inmediately.
+If we had removed the line with the *sleep* at the end of the function, *th1* would be destroyed inmediately after the *post*, and so, the posted task would be killed inmediately.
 
 If we had have the next code:
 \code
@@ -99,7 +109,7 @@ auto th1 = ThreadRunnable::create(true);
 
 
 
-## Microthreading
+## Microthreading {#microthreading}
 A *microthread*, implemented in class \ref mel::tasking::Process "Process", is a task that can be interrupted at any point and, when resumed, continue executing from that point. This allows to be able to execute a huge number of tasks with *cooperative multitasking*
 with very litlle penalty. If a task doesn't make any context switch, the penalty is almost 0. The cost only occurs when a context switch is done and when recovering later. Actually is very little cost, but of course it exists.
 The functions which control context switches are: \ref mel::tasking::Process::switchProcess "switchProcess", \ref mel::tasking::Process::wait "wait" and \ref mel::tasking::Process::sleep "sleep" (and its counterpart \ref mel::tasking::Process::wakeUp "wakeUp").
@@ -112,8 +122,6 @@ In the next code, two tasks are executing code in an interleaved way, showing an
 void _sampleTasking2()
 {
     auto th1 = ThreadRunnable::create(true);
-    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
-    auto& killPolicy = Runnable::killTrue;
     auto t1 = th1->fireAndForget([]
 		{
             mel::text::info( "Task 1, Step1" );
@@ -148,12 +156,269 @@ And the output will be:
 [2022-04-08 18:59:20.904] [info] Task 1, Awaken!!
 \endcode
 
+The "context-switch" functions return a value of type \ref ::mel::tasking::Process::ESwitchResult "Process::ESwitchResult" reporting the success or not of the call. 
+This result code is very important in case of *process killing*: when a process is notified a *kill* (\ref mel::tasking::Process::kill), if this process is in a "context-switched state", 
+it won't be finished \anchor kill_switched_task, but it will return from this state with the code \ref ::mel::tasking::Process::ESwitchResult::ESWITCH_KILL. The user should therefore check this code and, when killed, not continue
+executing.
+In the previous example, because the use of the \ref mel::tasking::Process::fireAndForget "fireAndForget" and \ref mel::tasking::Runnable::killFalse "killFalse", it's not really neccesary to do those checks 
+(although is convenient for consistency). In the next section we will go deeper in task management and this will become clearer.
 
-COSAS A EXPLICAR:
- - customizacion tipo de proceso en el post
- - 
-  - lo que devuelven las funciones microhililes cuando hay un kill
-por tanto mejor meter los threadrunnable aqui
+## Terminating tasks {#terminating_tasks}
+The way a task is killed was mentioned \ref kill_situations "before". Although users could need to directly call \ref mel::tasking::Process::kill "kill" in some situations, usually this will be done automatically when using ::mel::tasking::ThreadRunnable
+: when an instance is destroyed, **it tries to kill all of its tasks and wait** (\ref mel::tasking::ThreadRunnable::join) for it.
+Let's see the following code:
+\code
+{
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killFalse;
+    std::shared_ptr<mel::tasking::Process> task = th1->post([](uint64_t msecs,Process* p)
+		{            
+      mel::text::info( "First Wait. {}" );
+      Process::wait(1000);
+      mel::text::info( "Context switch:{}");
+			Process::switchProcess(true);
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+    Thread::sleep(5000);
+  }
+\endcode
+Here, a task is thrown, and, after 5 seconds, *th1* it's destroyed because the scope is left. In this destruction, *th1* send kill signal to all of its processes 
+(only one in this case) and wait for its termination. But that process never ends for two reasons:
+  - it's always returning \ref ::mel::tasking::EGenericProcessResult::CONTINUE "CONTINUE"
+  - *killPolicy* is set to *killFalse* , which means that this process won't be automatically killed when receiving kill signal
+
+So, in order the task to be killed, we could set the killPolicy to *true* as in the next code:
+\code
+void _sampleTasking4()
+{
+    struct MyString
+    {
+        MyString()
+        {
+            data = new char[10];
+            strcpy(data,"Hello!");
+        }
+        ~MyString()
+        {
+            mel::text::info("Destroying MyString");
+            delete []data;
+        }
+        char* data;
+    };
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killTrue;
+    MyString str;
+    std::shared_ptr<mel::tasking::Process> task = th1->post([&str](uint64_t msecs,Process* p)
+		{            
+            mel::text::info( "Before Wait. {}",str.data );
+            Process::wait(10000);
+            mel::text::info( "After Wait. {}",str.data );            
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+    Thread::sleep(5000);
+}
+\endcode
+
+Now, the code finishes ok, with output:
+\code
+[info] Before Wait. Hello!
+[info] Sleep done
+[info] Destroying MyString
+[info] After Wait. ¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+\endcode
+But that log is weird..the issue is that that task returns from the *wait* because the kill, but, as was explained \ref kill_switched_task "here", the task continue executing until the function 
+finishes. So, this is what is happening:
+  - the task is *switched* in the *wait* line for **10 seconds**
+  - in the meanwhile, the calling thread sleeps or **5 seconds**
+  - once the thread sleep time has elapsed, the current scope ends and all inner objects are destroyed, **in the reverse order of their creation*. This means that *str* object is 
+  destroyed before *th1*. 
+  - In its destruction, th1 send kill signal to the task, which inmediately return from its wait. And, after that, the *str* object is accessed, so accesing invalid/corrupter memory.
+The solucion here is, therefore, check the return code in the *wait* function and not continue executing if returns from a kill signal:
+\code
+void _sampleTasking4_ok()
+{
+    struct MyString
+    {
+        MyString()
+        {
+            data = new char[10];
+            strcpy(data,"Hello!");
+        }
+        ~MyString()
+        {
+            mel::text::info("Destroying MyString");
+            delete []data;
+        }
+        char* data;
+    };
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killTrue;
+    MyString str;
+    std::shared_ptr<mel::tasking::Process> task = th1->post([&str](uint64_t msecs,Process* p)
+		{            
+            mel::text::info( "Before Wait. {}",str.data );
+            if ( Process::wait(10000) == Process::ESwitchResult::ESWITCH_OK)
+                mel::text::info( "After Wait. {}",str.data );            
+			return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		},killPolicy,period);
+    Thread::sleep(5000);
+}
+\endcode
+
+## Custom task types {#custom_tasks}
+Although posting tasks to runnables using callables (\ref ::mel::tasking::Runnable::post "post") is very flexible and enoguh in the vast majority of the cases, sometimes more control is needed.
+With the use of \ref mel::tasking::Runnable::postTask "postTask" we can post directly an instance of a  \ref mel::tasking::Process "Process" specialization. In this case, we will need to implemente
+some pure virtual member functions:
+\code
+{
+    struct MyProcess : public Process
+    {
+        //optional, no pure
+        void onInit(uint64_t msecs) override
+        {
+            mel::text::info("MyProcess::oninit");
+            count = 0;
+        };
+        //mandatory, pure virtual
+        void onUpdate(uint64_t msecs) override
+        {
+            mel::text::info("MyProcess::onUpdate");
+            ++count;
+        }
+        //optional, no pure
+        virtual bool onKill() override
+        {
+            return count == 10;
+        }
+        private:
+            int count;
+
+    };
+    auto th1 = ThreadRunnable::create(true);
+    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
+    auto& killPolicy = Runnable::killFalse;
+    auto task = std::make_shared<MyProcess>();
+    task->setPeriod(1000); //1 second period
+    th1->postTask(task);
+}
+\endcode
+In this example, a custom class with a custom behaviour, such that the process will be killed after 10 iterations (so, 10 seconds because period is set to 1 second).
+
+Another way to customize the task type is by providing the *allocator* to use when posting a callable. There are two diferent ways of doing it:
+ 1. Changing the default factory used when creating task through \ref mel::tasking::Runnable::post "Runnable::post": when a callable is posted to a Runnable, by default the 
+ underlying task is created using the \ref mel::tasking::DefaultAllocator "DefaultAllocator", which uses de default factory set for this Runnable. Users can change this default factory
+ by calling \ref mel::tasking::Runnable::setDefaultFactory
+ 2. Providing a custom *Allocator* as template parameter: the function \ref mel::tasking::Runnable::post is templatized, receiving the *AllocatorType* as its first template parameter.
+ The only requirement for this allocator is to have an *allocate* static function, as in \ref mel::tasking::DefaultAllocator::allocate
+
+Let's see an example for the method in 1.
+\code
+    class CustomProcessType : public GenericProcess
+    {
+        public:	
+        CustomProcessType()
+        {
+            ::mel::text::info("CustomProcessType constructor");
+        }
+    };
+    //custom factory to replace Runnable default factory
+    class CustomProcessFactory : public mel::tasking::ProcessFactory
+    {
+        public:
+            GenericProcess* onCreate(Runnable* owner) const override
+            {
+                return new CustomProcessType();
+            }
+    };
+    auto th1 = ThreadRunnable::create(true);
+    th1->setDefaultFactory( new CustomProcessFactory );
+    th1->fireAndForget( []
+    {
+        mel::text::info("execute");
+    },0,Runnable::killTrue);
+\endcode
+One the factory is set, all the tasks posted to that Runnable will be created through it.
+
+And now, an example for the method in 2.
+\code
+//custom factory 
+class CustomProcessFactory
+{
+    public:
+        GenericProcess* create(Runnable* owner) const
+        {
+            return new GenericProcess();
+        }
+};
+//setting factory in post
+struct MyAllocator
+{
+    static GenericProcess* allocate(Runnable* _this)
+    {
+        return factory.create(_this);
+    }
+    static CustomProcessFactory factory;
+};
+void _sampleTasking7()
+{
+    //custom allocator which will use out CustomProcessFactory, not inheriting from ProcessFactory, so best performance
+    auto th1 = ThreadRunnable::create(true);
+    th1->fireAndForget<MyAllocator>( []
+    {
+        mel::text::info("execute");
+    },0,Runnable::killFalse);
+}
+\endcode
+With this last method, given allocator is only used for this concrete case, any other post on that Runnable will use the \ref mel::tasking::DefaultAllocator "DefaultAllocator" (or its own if given as in this example).
+As can be seen, the given factory for this case doesn't need to inherit from \ref ::mel::tasking::ProcessFactory "ProcessFactory", so saving the cost of a virtual function call, which could
+be very important if used in an environment where performance is critical.
+
+##Known limitations {#limitations}
+ The *stackless* nature of the microthreads (in the sense that, by default, the don't use it's own stack) implies a confusing limitation, that can be overcame very easily. this techniques have been in use since 2005
+ and this limitation is not really important, but is neccesary to explain it. let's see an example:
+ \code
+    void _sampleLimitation()
+    {
+        auto th1 = ThreadRunnable::create(true);
+        th1->fireAndForget([th = th1.get()]
+		{
+            int a = 5;
+            mel::text::info("Set 'a' = {}",a);
+            th->fireAndForget([&a]
+                {
+                    mel::text::info("'a' = {}",a);
+                    a = 10;
+                }
+            ,0,Runnable::killFalse);
+            Process::wait(5000);
+            mel::text::info("At end 'a' = {}",a);
+		},0,Runnable::killFalse);     
+    }
+ \endcode
+This code does the following: a task launched in *th1* launch another task to the same ThreadRunnable (but any other ThreadRunnable would be valid) passing it *a reference to a local variable*.
+After that, the first task waits for 5 seconds, so the second task is executed and change the reference variable to a new value.
+The expected result should be:
+\code
+Set 'a' = 5
+'a' = 327675
+At end 'a' = 10
+\endcode
+But the output is the following:
+\code
+Set 'a' = 5
+'a' = 32767
+At end 'a' = 5
+\endcode
+The reason is that, when first task does the *wait*, the stack has ben unwund, so the reference to variabl `a`is no more valid.So, careful have to be taken when passing local variables
+to a function and a context switch is done. 
+
+
+## Runnable specialization {#runnable_specialization}
+
+ - customizacion de runanbles. Hace run mainloo y que personaliza su tipo de proceso
 
 
 */

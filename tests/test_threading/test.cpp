@@ -52,23 +52,37 @@ class CustomProcessType : public GenericProcess
 		//spdlog::debug("CustomProcessType destructor");
 	}
 	private:
-	int tema;
-	/*
-	no es necesario sobreescribirla
-	virtual void onUpdate(uint64_t msecs) override
-	{
-		GenericProcess::onUpdate(msecs);
-	}
-	*/
+	int tema;	
 };
+//custom factory to replace Runnable default factory
+class CustomProcessFactory : public mel::tasking::ProcessFactory
+{
+	public:
+		GenericProcess* onCreate(Runnable* owner) const override
+		{
+			return new (owner)CustomProcessType();
+		}
+};
+//custom factory not inheriting from ProcessFactory
+class CustomProcessFactory2
+{
+	public:
+		GenericProcess* create(Runnable* owner) const
+		{
+			return new (owner)CustomProcessType();
+		}
+};
+static CustomProcessFactory sMyfactory;
+static CustomProcessFactory2 sMyfactory2;
 //custom allocator for CustomProcessType
 struct MyAllocator
 {
 	static CustomProcessType* allocate(Runnable* _this)
 	{
-		return new (_this)CustomProcessType();
+		return static_cast<CustomProcessType*>(sMyfactory2.create(_this));
 	}
 };
+
 class MyProcess : public Process
 {
 	public:
@@ -454,7 +468,8 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 			for(int i = 0; i < th1->getMaxPoolSize(); ++i)
 			{
 				++count;
-				th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
+				//th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)				
+				th1->post<MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
 					return ::mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse,1000,0);		

@@ -24,7 +24,7 @@ So, some functionalities could be removed and used the "new" C++11 equivalents, 
 
 
 And on top of this, achieving more genericity and flexibility, we have the \ref execution_system "Execution System". This is a fully template module that allows to express in a very easy, understable and efficient way,
-sequences os tasks and where to execute them, in a way independent of the underliying execution system. More on this in \ref execution_system.
+sequences of tasks and where to execute them, in a way independent of the underliying execution system. More on this in \ref execution_system.
 <ul>
 	<li>\ref tasking_system "Tasking System"<br/>
 		The base support for the rest of the system.
