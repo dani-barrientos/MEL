@@ -4,9 +4,9 @@
  *
  * SPDX-License-Identifier: MIT
  */
+///@cond HIDDEN_SYMBOLS
 namespace mel
 {
-	///@cond HIDDEN_SYMBOLS
 	namespace tasking
 	{
 		struct MThreadAttributtes
@@ -35,6 +35,6 @@ namespace mel
 			unsigned int mRealPeriod;
 		};
 	}
-	///@endcond
 }
 extern "C" volatile void __attribute__ ((noinline)) mel_tasking_resizeStack(  ::mel::tasking::MThreadAttributtes* process,  unsigned int newSize );
+///@endcond

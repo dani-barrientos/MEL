@@ -16,6 +16,7 @@ namespace mel
 {
 	namespace parallelism
 	{
+		///@cond HIDDEN_SYMBOLS
 		template <bool>
 		struct Distance
 		{
@@ -48,7 +49,7 @@ namespace mel
 				it += increment;
 			}
 		};
-		
+		///@endcond
 		template <bool>
 		struct BulkExecute
 		{
@@ -126,111 +127,7 @@ namespace mel
 				}
 			}
 		};
-		/**
-		* parallelized iteration, begin:end (end not included)
-		*/
-	/*
-		class For
-		{
-		private:
-			
-			Barrier mBarrier;		
-		//! @note internal use
-		template <class I, class F>	 For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int increment, int loopSize)
-		{
-			typedef typename std::decay<I>::type DecayedIt;
-			constexpr bool isArithIterator =::mel::mpl::TypeTraits<DecayedIt>::isArith;
-			int nElements = (loopSize + increment - 1) / increment;  //"manual" ceil, because ceil function fails somtimes in fast floating mode
-			size_t nThreads = tp->getNumThreads()+(opts.useCallingThread?1:0);
-			if (begin == end)
-				return;
-			DecayedIt i(begin);
-
-			if (nElements <= (int)nThreads || opts.groupTasks == false || nThreads == 0 )  //more or equal threads than tasks
-			{
-				mBarrier = Barrier(nElements);
-				int cont = 0;
-				if (opts.useCallingThread)
-				{
-					++cont;
-					if (nElements > 1)
-					{
-						Advance<isArithIterator>::get(i, increment);
-					}
-				}
-				ThreadPool::ExecutionOpts newOpts(opts);
-				newOpts.useCallingThread = false;  //only one iteration in calling thread
-				bool finish = ((i == end) || (cont >= nElements));
-				while (!finish)
-				{
-					//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(GetElement<isArithIterator>::get(i)))); //@todo notengo claro que deba usar ref???
-					tp->execute(newOpts, mBarrier, std::bind(typename std::decay<F>::type(functor),i)); 
-					if (++cont < nElements)
-					{
-						Advance<isArithIterator >::get(i, increment);
-					}
-					else
-						finish = true;
-				}
-				if (opts.useCallingThread && nElements > 0)
-				{
-					functor(begin);
-					mBarrier.set();
-				}
-			}
-			else  //less threads than elements to process
-			{
-				int divisionSize = nElements / nThreads;
-				int nIterations = nThreads;  //number of parallel iterations
-				int leftOver = nElements % nIterations;
-				mBarrier = Barrier(nIterations);
-				int cont = 1;
-				if (opts.useCallingThread)
-				{
-					if (nIterations > 1)
-					{
-						Advance<isArithIterator>::get(i, divisionSize*increment);
-					}
-					++cont;
-				}
-				//BulkExecute<_ITERATOR_DEBUG_LEVEL != 0 && !isArithIterator >::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, mBarrier);
-				//@todo arreglar metodo sin iteradores
-				BulkExecute<false>::execute(cont, nIterations, i,std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), divisionSize, leftOver, increment, loopSize, tp, opts, mBarrier);
-			
-				if (opts.useCallingThread && nIterations > 0)
-				{
-					int size = divisionSize;
-					typename std::decay<I>::type j = begin;
-					for (int n = 0; n < size/;)
-					{
-						functor(j);
-						if (++n < size)
-							Advance<isArithIterator>::get(j, increment);
-					}
-					mBarrier.set();
-				}
-			}
-		}
-		public:
-			//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor,int inc = 1) : For(tp, opts, std::forward<I>(begin), std::forward<I>(end), std::forward<F>(functor), inc, Distance<::mel::mpl::TypeTraits<I>::isArith>::get(begin,end) )
-			template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, Distance<::mel::mpl::TypeTraits<I>::isArith>::get(begin, end))
-			//template <class I, class F> For(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int inc = 1) : For(tp, opts, begin, end, std::forward<F>(functor), inc, ::mel::parallelism::Distance<::mel::mpl::TypeTraits<std::decay<I>::type>::isArith>::get(begin, end))
-			{
-			}
-			For() {}
-			const Barrier& getBarrier() const{ return mBarrier;}
-
-		};*/
-		/*//helper functions to wait for a For loop
-		MEL_API auto wait(const For& _for,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE )
-		{
-			return ::mel::core::waitForBarrierThread(_for.getBarrier(),msecs);
-		}
-		//@todo quitar esto que no me gusta. Aislarlo como para barreras y futures
-		MEL_API inline auto waitAsMThread(const For& _for,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE)
-		{
-			::tasking::waitForBarrierMThread(_for.getBarrier(),msecs);
-		}*/	
+	///@cond HIDDEN_SYMBOLS
 		namespace _private
 		{
 			template <class I, class F>	 Barrier _for(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I&& begin, I&& end, F&& functor, int increment, int loopSize)
@@ -312,9 +209,14 @@ namespace mel
 				return result;
 			}	
 		}	
+		///@endcond
+		/**
+		 * @brief Parallel for
+		 **/
 		template <class I, class F>	 Barrier _for(ThreadPool* tp, const ThreadPool::ExecutionOpts& opts, I begin, I end, F&& functor, int increment = 1)
 		{
 			return _private::_for(tp,opts,begin,end,std::forward<F>(functor),increment,Distance<::mel::mpl::TypeTraits<I>::isArith>::get(begin, end));
 		}
 	};
+	
 }

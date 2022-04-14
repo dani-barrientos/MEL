@@ -150,5 +150,6 @@ void _sample3()
 \endcode
 
 MEER EJEMPLOS DE ESPERAS FOR FUTURES UN TIEMPO CORTO Y QUE SE LANCE EXEPCEION. LO MISMO CON Event_mthread
+hablar tambien de Barrier, ThreadPool... ¿o esto para la seccion de tasking o propia de paralelismo? creo que mejor esto ultimo
 
 */

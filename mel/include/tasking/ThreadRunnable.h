@@ -20,6 +20,7 @@ namespace mel
         /**
         * @class ThreadRunnable
         * @brief Thread with Runnable behaviour. 
+        * @details
         * An instance of this class allow to receive task via Runnable available functions. The thread will be paused if no active tasks in its scheduler, that means:
         * there isn't any task or the tasks are in sleep state. One a task is posted or a task is awake, the thread continues processing
         * Destruction of a ThreadRunnable implies a join, waiting for the tasks to be completed. A kill signal is sent to all the tasks, but *not forced*, so is user's responsability

@@ -12,9 +12,16 @@
 namespace mel
 {
     namespace execution
-    {   
-        
+    {           
         using mel::tasking::Runnable;
+        /**
+         * @brief Executor Traits for Runnable Executor
+         */
+        template <> struct ExecutorTraits<Runnable>
+        {
+            enum {has_microthreading = true};  //support microthreading?
+            enum {has_parallelism = false}; ////support true parallelism?
+        };
         /**
          * @brief Concrete options for this type of executor
          */
@@ -25,7 +32,7 @@ namespace mel
         };
         /**
          * @brief Executor specialization using Runnable as execution agent
-         */
+         */        
         template <> class Executor<Runnable>
         {
             public:

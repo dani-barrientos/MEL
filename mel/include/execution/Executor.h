@@ -70,10 +70,7 @@ namespace mel
          */
         template <class ExecutorAgent> ExFuture<ExecutorAgent,void> start( Executor<ExecutorAgent> ex)
         {
-            return launch(ex,[]{});
-            //it's wrong, need to be executed in executor's context        
-            // ExFuture<ExecutorAgent,void> result(ex,0);  //using an int to fool and construct it already as valid
-            // return result;
+            return launch(ex,[]{});           
         }   
         /**
          * @brief Produces an inmediate value in the context of the given ExFuture executor as a response to input fut completion
@@ -152,6 +149,7 @@ namespace mel
             );
             return result;
         }
+        ///@cond HIDDEN_SYMBOLS
         //overload for void arg
         template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>> 
             next(ExFuture<ExecutorAgent,void> source, F&& f)
@@ -194,7 +192,7 @@ namespace mel
             );
             return result;
         }
-        
+        ///@endcond
         /**
          * @brief Transfer given ExFuture to a different executor 
          * This way, continuations can be chained but executed in diferent executors
@@ -631,7 +629,7 @@ namespace mel
 
         /**
          * @brief Excepcion thrown by \ref ::mel::execution::on_all "on_all" when some of the futures raise error
-         * It contains a reference to the causing exception and the element in the tuple which caused de exception
+         * @details It contains a reference to the causing exception and the element in the tuple which caused de exception
          * 
          */
         class OnAllException : public std::runtime_error

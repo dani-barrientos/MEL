@@ -36,8 +36,6 @@ namespace mel
 			virtual TRet operator()( VARIABLE_ARGS_IMPL ) =0;
 		};
 
-
-		///@cond HIDDEN_SYMBOLS
 		//specialization for void arguments
 		template<class TRet >
 		class   CallbackInterface<TRet> : public CallbackInterface_Base<TRet,void>
@@ -61,7 +59,6 @@ namespace mel
 
 
 		};
-		///@endcond
 		template<class TRet, VARIABLE_ARGS>
 		class   CallbackInterface<TRet,VARIABLE_ARGS_DECL,void> : public CallbackInterface_Base<TRet,VARIABLE_ARGS_DECL>
 		{
@@ -73,5 +70,5 @@ namespace mel
 	#endif
 
 	}
-	///@endcond
 }
+	///@endcond

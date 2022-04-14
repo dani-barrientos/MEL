@@ -15,7 +15,7 @@ namespace mel
 	{
 		/**
 		* @brief A Process constructed from a functor with signature *EGenericProcessResult(uint64_t,Process*)*
-		* This process it's executed until given functor returns \ref EGenericProcessResult::KILL.
+		* @details This process it's executed until given functor returns \ref EGenericProcessResult::KILL.
 		*/
 		class MEL_API GenericProcess : public Process
 		{

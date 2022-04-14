@@ -2,14 +2,15 @@
 #include <MelLibType.h>
 #include <core/CriticalSection.h>
 
-/**
-* policy for thread-safe access to singleton
-* @todo review, no complete
-*/
+
 namespace mel
 {
 	namespace core
 	{
+		/**
+		* policy for thread-safe access to singleton
+		* @todo review, no complete
+		*/
 		template <class T> class Singleton_Multithread_Policy
 		{
 		private:

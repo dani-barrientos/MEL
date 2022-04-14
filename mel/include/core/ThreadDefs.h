@@ -7,7 +7,7 @@ using mel::mpl::binary;
 #else
 	#include <pthread.h>
 #endif 
-/**
+/*
 * common definitions used by threads 
 */
 namespace mel

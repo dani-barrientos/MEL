@@ -33,4 +33,6 @@ namespace mel
     }
     ///@endcond
 }
+///@cond HIDDEN_SYMBOLS
 extern "C"  void mel_tasking_resizeStack(  mel::tasking::MThreadAttributtes* process,  unsigned int newSize );
+///@endcond

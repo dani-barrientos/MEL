@@ -14,6 +14,14 @@ namespace mel
         using ::mel::parallelism::ThreadPool;
     
         /**
+         * @brief Executor Traits for ThreadPool Executor
+         */
+        template <> struct ExecutorTraits<ThreadPool>
+        {
+            enum {has_microthreading = true};  //support microthreading?
+            enum {has_parallelism = false}; ////support true parallelism?
+        };
+        /**
          * @brief Concrete options for this type of executor
          */
         struct ThreadPoolExecutorOpts
@@ -22,7 +30,7 @@ namespace mel
             //opcion temporal, espero poder quitarla
             bool autoKill = true; //!<if true, launched tasks will be autokilled if the Runnable receives a kill signal, else, Runanble won't finish until tasks finished
         };
-            /**
+        /**
          * @brief Executor specialization using a ThreadPool as execution agent
          */
         template <> class Executor<ThreadPool>

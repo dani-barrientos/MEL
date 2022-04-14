@@ -20,7 +20,7 @@ system, which is described in another sections. These tools are enough for simpl
  \code{.cpp}
   auto th1 = ThreadRunnable::create();
 
-  auto fut = th1->excute<void>([]()
+  auto fut = th1->execute<void>([]()
   {
      //...task t1... 
   }); 
@@ -28,7 +28,7 @@ system, which is described in another sections. These tools are enough for simpl
   {
     auto res = mel::core::waitForFutureThread(fut); //depending on the concrete situation where this code is running, maybe use some other mechanism as mel::tasking::waitForFutureMThread or ::mel::core::Future::subscribeCallback
     //now execute task t2
-    auto fut2 = th1->excute<void>([]()
+    auto fut2 = th1->execute<void>([]()
     {
         //...task t2... 
     }); 
@@ -57,7 +57,7 @@ system, which is described in another sections. These tools are enough for simpl
 As can be seen, mel already provides high level tools to facilitate task execution. But, despite of that, it can be hard to manage a complex execution sequence. Think, for example, how to manage error
 in any point of the chain. And, of course, think how to resolve the same problem only with plain C++ threads...
 
-Instead, with the execution system, built on top of those functionalities, we could write something like:
+Instead, with the \ref ::mel::execution "execution system", built on top of those functionalities, we could write something like:
 \code{.cpp}
     auto th1 = ThreadRunnable::create(true);	
 	execution::Executor<Runnable> exr(th1); //Create executor based on ThreadRunnable

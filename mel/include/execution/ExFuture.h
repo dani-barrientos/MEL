@@ -13,7 +13,7 @@ namespace mel
         template <class ExecutorAgent> class Executor; //predeclarationj
         /**
          * @brief Extension of \ref mel::core::Future to apply to executors
-         * Any executor function will return an ExFuture, allowing this way to chain functions
+         * @details Any executor function will return an ExFuture, allowing this way to chain functions
          */
         template <typename ExecutorAgent,typename ResultType>
         class ExFuture : public Future<ResultType>

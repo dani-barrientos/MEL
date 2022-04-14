@@ -12,9 +12,9 @@ namespace mel
 	}
 	using mel::core::MThreadAttributtes;
 
+	///@cond HIDDEN_SYMBOLS
 	extern "C"  void __attribute__ ((noinline)) resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 
-	///@cond HIDDEN_SYMBOLS
 	namespace tasking
 	{
 		struct MThreadAttributtes

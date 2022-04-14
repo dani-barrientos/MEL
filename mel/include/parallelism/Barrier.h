@@ -7,6 +7,7 @@ namespace mel
 	namespace parallelism
 	{
 		class Barrier;
+		///@cond HIDDEN_SYMBOLS
 		class MEL_API BarrierData : private mel::core::CallbackSubscriptor<mel::core::CSNoMultithreadPolicy,const BarrierData&>,
 			public std::enable_shared_from_this<BarrierData>
 		{
@@ -34,6 +35,7 @@ namespace mel
 			mel::core::CriticalSection mCS;
 
 		};
+		///@endcond
 		/**
 		 * @brief Multithread barrier
 		 * 
