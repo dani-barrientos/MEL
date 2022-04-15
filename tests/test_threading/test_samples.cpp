@@ -7,7 +7,7 @@ using namespace mel::tasking;
 #include <functional>
 #include <string>
 using std::string;
-
+#include <string.h>
 void _sample1()
 {
     auto th1 = ThreadRunnable::create();
@@ -366,6 +366,8 @@ void _sampleCustomRunnable()
     });
     while(true)
     {    
+        //hacer algo aqui decented, con microhilismo
+        //y mostra rejemplo de aserto si no ejecutado en mismo sitio
         r.processTasks();
     }
 }

@@ -16,8 +16,8 @@ Issues/facts:
 - MacOSX:
    - I was unable to set VCPKG_ROOT environment variable in my machine. So I set the **CMAKE_TOOLCHAIN_FILE** variable in section *chacheVariables in CMakeUserPresets.json pointing to the vcpkg path (in my case /Users/dani/vcpkg/scripts/buildsystems/vcpkg.cmake)
 - Android:
-   - Android Studio project in folder [android](/android).
-   - Because Android Studio is based on cmake, integration is quite straigh, but symbolic links to source code need to be because proyect structure requirement in Adnroid Studio
+   - Android Studio project in folder [android](/android/main).
+   - Because Android Studio is based on cmake, integration is quite straight, but symbolic links to source code need to be because proyect structure requirement in Adnroid Studio
    - If you want to use *spdlog*, concrete android triplet need to be installed (https://vcpkg.readthedocs.io/en/latest/users/android/#android-build-requirements)
   
  # testing
