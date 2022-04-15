@@ -64,8 +64,8 @@ namespace mel
              * 
              */
             void start();
-            void finish() override { terminate(0); }
-            bool finished()	override {return getState() == THREAD_FINISHED;	}
+            // void finish() override { terminate(0); }
+            // bool finished()	override {return getState() == THREAD_FINISHED;	}
             /**
              * @brief Does a join on the underlying Thread
              * @details when join is done, the function \ref onJoined is called, as a way to notify children
@@ -94,7 +94,7 @@ namespace mel
              */
             unsigned int resume();
             EThreadState getState() const{return mState;}
-            void terminate(unsigned int exitCode);
+            void terminate();
             bool getTerminateRequest(){ return mEnd; }
             /**
             * return current executing ThreadRunnable. nullptr if any.

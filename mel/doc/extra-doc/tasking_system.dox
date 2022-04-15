@@ -21,7 +21,7 @@ As it was said in the \ref index "main page", the core pieces of the tasking sys
     The idea is posting new tasks to be as fast as possible.
     </li>
     <li> \ref ::mel::tasking::Runnable : 
-    Abstract class serving as interface between final user a the internal ProcessSchduler it has.
+    Base class serving as interface between final user a the internal ProcessScheduler it has.
     </li>
     <li>\ref ::mel::tasking::ThreadRunnable : 
     A \ref ::core::Thread "Thread" with \ref ::mel::tasking::Runnable "Runnable" behaviour. This will be the most common tool to spread new threads and work with tasks.
@@ -30,8 +30,8 @@ As it was said in the \ref index "main page", the core pieces of the tasking sys
 Here a very simple class diagram showing their relationships.
 \image html tasking.jpg
 ## Posting tasks to runnables {#posting_tasks}
-\ref mel::tasking::Runnable "Runnables" are only a wrapper around \ref mel::tasking::ProcessScheduler "ProcessScheduler" to facilitate tasks management. Because it's an abstract class, you will need to implement your custom
-runnable, which usually consits only in executing the tasks in the internal scheduler in an infinite loop. 
+\ref mel::tasking::Runnable "Runnables" are only a wrapper around \ref mel::tasking::ProcessScheduler "ProcessScheduler" to facilitate tasks management. A Runnable usually consists
+only in executing the tasks in the internal scheduler in an infinite loop. 
 Usually it's enough to use a \ref mel::tasking::ThreadRunnable "ThreadRunnable", which is an specialization executing the tasks in a thread. 
 
 Now, better let's shown an example and explain the different parts:

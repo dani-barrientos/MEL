@@ -59,7 +59,7 @@ ThreadPool::~ThreadPool()
 {
 	unsigned int i;
 	for ( i = 0; i < mNThreads; ++i )
-		mPool[i]->finish();
+		mPool[i]->terminate(); 
 	for ( i = 0; i < mNThreads; ++i )
 	{
 		mPool[i]->join();

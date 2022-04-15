@@ -245,7 +245,7 @@ class MasterThread : public ThreadRunnable
 			if ( r != ::mel::tasking::EEventMTWaitCode::EVENTMT_WAIT_OK )
 			{
 				text::error("Wait for responses failed!!!!. {} workers remaining",mBarrier.getActiveWorkers());
-				this->finish();  
+				this->terminate();  
 				return ::mel::tasking::EGenericProcessResult::KILL; 
 			}
 			else if ( (msecs - mLastDebugTime) >= 5000 )
@@ -258,7 +258,7 @@ class MasterThread : public ThreadRunnable
 			if ( msecs - mStartTime > mMaxTime)
 			{
 				text::info("Maximum test time reached. Finishing");
-				this->finish();  
+				this->terminate();  
 				return ::mel::tasking::EGenericProcessResult::KILL; 
 			}else			
 				return ::mel::tasking::EGenericProcessResult::CONTINUE;
@@ -365,10 +365,10 @@ class MasterThread : public ThreadRunnable
 		}
 		void onThreadEnd() override{
 			//finalizar el resto
-            mProducer->finish();
+            mProducer->terminate();
 			for(auto th:mConsumers)
 			{
-				th->finish();				
+				th->terminate();				
 				//@todo qué pasa con el join? quiero esperar antes por los demas, ¿virtual?
 			}			
 		}		
@@ -388,7 +388,7 @@ struct ThreadRunnableProxy
 	ThreadRunnableProxy(std::shared_ptr<ThreadRunnable> ptr ):mPtr(ptr){}
 	~ThreadRunnableProxy()
 	{
-		mPtr->finish();
+		mPtr->terminate();
 		mPtr->join(); 
 	}
 

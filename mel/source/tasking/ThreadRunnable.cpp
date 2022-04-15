@@ -113,7 +113,7 @@ unsigned int ThreadRunnable::resume() {
 }
 ThreadRunnable::~ThreadRunnable()
 {
-    finish();
+    terminate();
     join();
 }
 /*
@@ -156,7 +156,7 @@ void ThreadRunnable::onCycleEnd()
 #endif
     }
 }
-void ThreadRunnable::terminate(unsigned int exitCode)
+void ThreadRunnable::terminate()
 {
 	if ( mState == THREAD_SUSPENDED )
 	{
@@ -171,7 +171,6 @@ void ThreadRunnable::terminate(unsigned int exitCode)
 	}
     mEnd = true;
 	_signalWakeup();
-	//??mExitCode = exitCode;
 }
 void ThreadRunnable::_signalWakeup()
 {

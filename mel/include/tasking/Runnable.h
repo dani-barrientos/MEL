@@ -237,7 +237,7 @@ namespace mel
 			/**
 			* @brief Performs a controlled loop over the internal queue, executing
 			* pending tasks.
-			* This function must be called always from same place, without alterng the stack
+			* This function must be called always from same place, without altering the stack
 			*/
 			void processTasks();
 			
@@ -269,13 +269,7 @@ namespace mel
 			Runnable(RunnableCreationOptions opts);
 			virtual ~Runnable();
 
-			/**
-			* sends Runnable finish signal
-			* you must check for finished() to make sure
-			*/ 
-			virtual void finish() = 0;
-			virtual bool finished() = 0;
-
+	
 			//helper functions to use as the "killFunctor" parameter in post(),fireAndForget(), and execute()
 			//!helper function to automatically kill process when receiving kill signal
 			static std::function<bool()> killTrue;

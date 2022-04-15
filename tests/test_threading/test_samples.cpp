@@ -339,7 +339,36 @@ void _sampleLimitation()
             mel::text::info("At end 'a' = {}",a);
 		},0,Runnable::killFalse);    
 }
+void _sampleCustomRunnable()
+{
+    class MyRunnable : public Runnable
+    {
+        public:
+        //create a Runnable with default options
+            MyRunnable():Runnable( Runnable::RunnableCreationOptions())
+            {
 
+            }
+            //needed because Runnable::processTasks is protected
+            void processTasks()
+            {
+                Runnable::processTasks();
+            }
+    };
+    MyRunnable r;
+    r.fireAndForget([]
+    {
+        mel::text::info("Task 1");
+    });
+    r.fireAndForget([]
+    {
+        mel::text::info("Task 2");
+    });
+    while(true)
+    {    
+        r.processTasks();
+    }
+}
 void test_threading::samples()
 {
     //_sample1();
@@ -353,5 +382,6 @@ void test_threading::samples()
     // _sampleTasking5();
     //_sampleTasking6();
  //   _sampleTasking7();
-    _sampleLimitation();
+ //   _sampleLimitation();
+    _sampleCustomRunnable();
 }
