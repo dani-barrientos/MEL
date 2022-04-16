@@ -179,16 +179,16 @@ void _testEMS()
            return mel::tasking::EGenericProcessResult::CONTINUE;
 
 		},Runnable::killFalse,2000);
-    th1->post([t1](RUNNABLE_TASK_PARAMS)
-		{
-            mel::text::info( "Task 2, Step1" );
-          /*  ::mel::tasking::Process::wait(2500);
-            mel::text::info( "Task 2, Step2" );
-            ::mel::tasking::Process::wait(5000);
-            mel::text::info( "Task 2, Going to wake up task1" );
-            t1->wakeUp();*/
-            return mel::tasking::EGenericProcessResult::CONTINUE;
-		},Runnable::killFalse,4000);
+    // th1->post([t1](RUNNABLE_TASK_PARAMS)
+	// 	{
+    //         mel::text::info( "Task 2, Step1" );
+    //       /*  ::mel::tasking::Process::wait(2500);
+    //         mel::text::info( "Task 2, Step2" );
+    //         ::mel::tasking::Process::wait(5000);
+    //         mel::text::info( "Task 2, Going to wake up task1" );
+    //         t1->wakeUp();*/
+    //         return mel::tasking::EGenericProcessResult::CONTINUE;
+	// 	},Runnable::killFalse,4000);
     Thread::sleep(10000); //sin espera, el microhilismo peta en JS
     mel::text::info("FINISH");
 }

@@ -7,7 +7,7 @@ EMSCRIPTEN_KEEPALIVE
 extern "C" bool _sExecute( int msegs) //parece que tengo que devolver algo
 {
 	mel::text::info("_sExecute {}",msegs);
-	auto p = mel::tasking::ProcessScheduler::getCurrentProcess();
+	auto p = mel::tasking::ProcessScheduler::getCurrentProcess(); no vale, porque al ser async ya el p no tiene por qué estar
 	p->_execute(msegs);
 	return true;
 }
@@ -16,17 +16,19 @@ extern "C" bool _sExecute( int msegs) //parece que tengo que devolver algo
 EM_ASYNC_JS(void, doExecute, (int msegs), {
  
  	out("doExecute "+msegs);
+	//await Module.ccall("_sExecute",'boolean',['number'],[msegs]); //@todo use cwrap
 	await Module.ccall("_sExecute",'boolean',['number'],[msegs]); //@todo use cwrap
+});
+EM_JS(void, doExecute2, (int msegs), {
+ 
+ 	out("doExecute "+msegs);
+	//await Module.ccall("_sExecute",'boolean',['number'],[msegs]); //@todo use cwrap
+	Module.ccall("_sExecute",'boolean',['number'],[msegs]); //@todo use cwrap
 });
 volatile void Process::checkMicrothread( uint64_t msegs )
 {	
-	// if ( !mFiberInited )
-	// {
-	// 	mFiberInited = true;
-	// 	emscripten_fiber_init( &mFiberData,nullptr,nullptr,mStack,)
-	// }
 	text::info("Process::checkMicrothread");
-	doExecute((int)msegs); 
+	doExecute2((int)msegs); 
 	//_execute(msegs);
 	text::info("Process::checkMicrothread  after");
 }
