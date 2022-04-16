@@ -138,7 +138,6 @@ void _sampleTasking1()
 void _sampleTasking2()
 {
     auto th1 = ThreadRunnable::create(true);
-    constexpr unsigned int period = 450; //how often, msecs, the tasks is executed
     auto& killPolicy = Runnable::killTrue;
     auto t1 = th1->fireAndForget([]
 		{
@@ -149,6 +148,7 @@ void _sampleTasking2()
             mel::text::info( "Task 1, Step3. Going to sleep.." );
             ::mel::tasking::Process::sleep();
             mel::text::info( "Task 1, Awaken!!" );
+            
 
 		},0,Runnable::killFalse);
     th1->fireAndForget([t1]
@@ -161,6 +161,36 @@ void _sampleTasking2()
             t1->wakeUp();
 		},0,Runnable::killFalse);
 }
+//test emscripten
+void _testEMS()
+{
+    auto th1 = ThreadRunnable::create(true);
+    auto& killPolicy = Runnable::killTrue;
+    auto t1 = th1->post([](RUNNABLE_TASK_PARAMS)
+		{
+            mel::text::info( "Task 1, Step1" );            
+            ::mel::tasking::Process::switchProcess(true);            
+            mel::text::info( "Task 1, Step2" );
+        /*    ::mel::tasking::Process::wait(2000);
+            mel::text::info( "Task 1, Step3. Going to sleep.." );
+            ::mel::tasking::Process::sleep();
+            mel::text::info( "Task 1, Awaken!!" );
+            */
+           return mel::tasking::EGenericProcessResult::KILL;
+
+		},Runnable::killFalse,2000);
+    th1->post([t1](RUNNABLE_TASK_PARAMS)
+		{
+            mel::text::info( "Task 2, Step1" );
+          /*  ::mel::tasking::Process::wait(2500);
+            mel::text::info( "Task 2, Step2" );
+            ::mel::tasking::Process::wait(5000);
+            mel::text::info( "Task 2, Going to wake up task1" );
+            t1->wakeUp();*/
+            return mel::tasking::EGenericProcessResult::CONTINUE;
+		},Runnable::killFalse,4000);
+    Thread::sleep(10000); //sin espera, el microhilismo peta en JS
+}
 void test_threading::samples()
 {
     mel::text::set_level(mel::text::level::ELevel::debug);
@@ -168,5 +198,6 @@ void test_threading::samples()
     //_sample2();
     //_sample3();
     //_sampleTasking1();
-    _sampleTasking2();
+    //_sampleTasking2();
+    _testEMS();
 }
