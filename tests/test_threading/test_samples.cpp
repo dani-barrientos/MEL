@@ -176,7 +176,7 @@ void _testEMS()
             ::mel::tasking::Process::sleep();
             mel::text::info( "Task 1, Awaken!!" );
             */
-           return mel::tasking::EGenericProcessResult::KILL;
+           return mel::tasking::EGenericProcessResult::CONTINUE;
 
 		},Runnable::killFalse,2000);
     th1->post([t1](RUNNABLE_TASK_PARAMS)
@@ -190,6 +190,7 @@ void _testEMS()
             return mel::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::killFalse,4000);
     Thread::sleep(10000); //sin espera, el microhilismo peta en JS
+    mel::text::info("FINISH");
 }
 void test_threading::samples()
 {

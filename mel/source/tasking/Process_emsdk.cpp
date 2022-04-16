@@ -27,8 +27,8 @@ volatile void Process::checkMicrothread( uint64_t msegs )
 	// }
 	text::info("Process::checkMicrothread");
 	doExecute((int)msegs); 
-	text::info("Process::checkMicrothread  after");
 	//_execute(msegs);
+	text::info("Process::checkMicrothread  after");
 }
 
 EM_ASYNC_JS(int, doSwitch, (), {
@@ -62,7 +62,7 @@ void Process::_switchProcess( ) OPTIMIZE_FLAGS
 	//lo que no me cuadra del uso de fibras es que al hacer el switch hay que decirle la fibra destino...así que imposible cuadrarlo
 	//@todo
 	mel::text::debug("Process::_switchProcess");		
-	doSwitch();	
+//	doSwitch();	
 	//test();
 	mel::text::debug("After Process::_switchProcess");
 }

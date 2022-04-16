@@ -19,8 +19,6 @@ namespace mel
             volatile bool mSwitched;
             volatile unsigned int mStackSize;
             volatile unsigned int mCapacity;
-          //  bool mFiberInited = false;
-           // emscripten_fiber_t mFiberData;
         };
     }
     ///@endcond
