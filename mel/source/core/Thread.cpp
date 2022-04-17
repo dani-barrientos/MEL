@@ -1,11 +1,7 @@
 #include <assert.h>
 #include <core/Thread.h>
-#include <mpl/MemberEncapsulate.h>
-
-using mel::mpl::makeMemberEncapsulate;
 
 #include <text/logger.h>
-
 
 /*#if defined(MEL_MACOSX) || defined(MEL_IOS)
 #import <Foundation/Foundation.h>
