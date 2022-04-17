@@ -5,7 +5,8 @@ See ENLACE A DOC for MEL documentation
  If CMake variable **USE_SPDLOG** is set to *true*. code is compiled using spdlog as the logging library. In this case vcpkg need to be installed. As a summary:
    - Follow installacion instructions in https://vcpkg.io/en/getting-started.html. It consists basically on cloning the vcpkg github repository and execute a couple of scripts
    - In order for cmake to be able to find packages,set environment variable VCPKG_ROOT pointing to vcpkg root
-# build
+   - 
+# Build
 Very brief guide on how to build.
 
 *CMakePresets.json* file includes the base configuration for builds in Windows, MacOsX and Linux, but you need to provide your *CMakeUserPresets* for your concrete case. A *CMakeUserPresets_EXAMPLE.json* is included as a guide toi crete your custom configuration.
@@ -21,7 +22,7 @@ Issues/facts:
    - Because Android Studio is based on cmake, integration is quite straight, but symbolic links to source code need to be because proyect structure requirement in Adnroid Studio
    - If you want to use *spdlog*, concrete android triplet need to be installed (https://vcpkg.readthedocs.io/en/latest/users/android/#android-build-requirements)
   
- # testing
+ # Testing
  if using Visual Studio Code, execute *Run CTest*,or execute ctest from commandline in out/build/[required configuration]/tests
  
  
