@@ -3,6 +3,9 @@ name: CMake
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**.cpp'
+      - '**.h'
   pull_request:
     branches: [ main ]
 
