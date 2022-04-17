@@ -12,7 +12,6 @@ which are almost the same as usually a thread has: \ref ::mel::tasking::Process:
 
 \ref ::mel::tasking::Process "Processes", \ref ::mel::tasking::ProcessScheduler "schedulers" and \ref ::mel::tasking::Runnable "runnables" together form the basic task system: a \ref mel::tasking::Runnable "Runnable" is an object
 with a \ref ::mel::tasking::ProcessScheduler "ProcessScheduler" and this is an aggregate of \ref ::mel::tasking::Process "Process".
-
 Also, we have \ref ::mel::tasking::ThreadRunnable "ThreadRunnable" which is a \ref ::mel::core::Thread "Thread" specialization to behave as a \ref ::mel::tasking::Runnable "Runnable", so being able to be posted \ref ::mel::tasking::Process "processes" (remember, microthreads, so with *microthreading* capabilities)
 On top of this basic tasking system. we have some constructs that allows to apply modern idioms to our code, specifically asynchronous programming
 
