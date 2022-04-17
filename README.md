@@ -1,3 +1,4 @@
+[![CMake](https://github.com/dani-barrientos/MEL/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/dani-barrientos/MEL/actions/workflows/cmake.yml)
 # MEL
 See ENLACE A DOC for MEL documentation
 # vcpkg
