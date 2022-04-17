@@ -396,6 +396,7 @@ struct ThreadRunnableProxy
 int test_threading::test_futures( tests::BaseTest* test)
 {
 	int result = 0;
+	mel::text::info("Test Futures");
 	//@todo hasta que no haga bien lo del autodestroy, esto no está bien del todo. Deberia pasar los consumidores como shared_ptr
 	
 	auto producer = ThreadRunnable::create(true);

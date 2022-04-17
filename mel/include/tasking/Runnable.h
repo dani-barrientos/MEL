@@ -53,8 +53,6 @@ namespace mel
 	#define RUNNABLE_CREATETASK( f ) \
 		addParam< ::mel::tasking::EGenericProcessResult,Process*,uint64_t,void > \
 		(addParam< ::mel::tasking::EGenericProcessResult,uint64_t,void >( f ) ) 
-	//macro to simplify task creation from lambda expression
-	#define RUNNABLE_CREATELAMBDA_TASK( lambda ) std::function<::mel::tasking::EGenericProcessResult (uint64_t, Process*)>(lambda)
 	//useful macro to declare task parameters
 	#define RUNNABLE_TASK_PARAMS uint64_t t,Process* p
 		class Runnable; //predeclaration

@@ -24,7 +24,8 @@ endif()
 message( "Toolchain " ${CMAKE_TOOLCHAIN_FILE})
 
 project ("mel" VERSION 1.0.0)
-
+#by default, use shared libraris. Yo can change this behaviour in CMakePresets by defininf cache variable "BUILD_SHARED_LIBS" as true or false
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 add_compile_definitions(${MEL_OS})
 add_compile_definitions(${MEL_ARQ})
 if(USE_SPDLOG)
@@ -38,7 +39,7 @@ target_link_libraries(main "mel")
 target_link_libraries(main "tests")
 
 #copy dll on Windows @todo se haraá lo mismo cuando tenga el formato shared
-if(MEL_OS STREQUAL "MEL_WINDOWS")
+if(MEL_OS STREQUAL "MEL_WINDOWS" AND BUILD_SHARED_LIBS)
 add_custom_command(TARGET main POST_BUILD        # Adds a post-build event to MyTest
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
         $<TARGET_FILE_DIR:mel>"/mel.dll"      # <--this is in-file

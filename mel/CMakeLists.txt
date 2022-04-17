@@ -6,7 +6,8 @@ add_compile_definitions(MEL_EXPORTS)
 if ( MSVC )
     add_compile_options(/permissive- /Zc:lambda)
 endif()
-add_library(mel SHARED  "source/tasking/CriticalSection_mthread.cpp"
+
+add_library(mel  "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/tasking/ThreadRunnable.cpp" 
 "source/core/Timer.cpp" "source/core/Type.cpp" "source/core/Thread.cpp"  "source/core/TLS.cpp" 

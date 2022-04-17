@@ -866,6 +866,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 int _testLaunch( tests::BaseTest* test)
 {
 	int result = 0;		
+	mel::text::info("Test execution: launch");
 	{
 		{
 			auto th1 = ThreadRunnable::create(true);			
@@ -1068,6 +1069,7 @@ auto gTestFunc=[](int idx) OPTIMIZE_FLAGS
 int _testFor(tests::BaseTest* test)
 {
 	int result = 0;
+	mel::text::info("Test execution: loop");
 	// mel::text::set_level(text::level::info);	
     int loopSize = DEFAULT_LOOPSIZE;
 	constexpr int iters = 20;

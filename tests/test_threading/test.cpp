@@ -635,6 +635,7 @@ void _throwMyException(int& v)
 }
 int _testExceptions( tests::BaseTest* test)
 {
+	mel::text::info("Test Exceptions");
 	auto th1 = ThreadRunnable::create(true);
 	th1->post(
 		 [test](RUNNABLE_TASK_PARAMS)

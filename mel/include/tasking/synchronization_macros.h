@@ -8,13 +8,9 @@ using mel::mpl::linkFunctor;
 
 
 #include <mpl/ReturnAdaptor.h>
-#include <core/Future.h>
-using mel::core::Future;
-
-#include <core/Runnable.h>
-using mel::core::Runnable;
-#include <core/UnknownException.h>
-using mel::core::UnknownException;
+#include <tasking/utilities.h>
+#include <tasking/Runnable.h>
+using mel::tasking::Runnable;
 
 namespace mel
 {
@@ -62,13 +58,12 @@ namespace mel
 
 
 		/**
-		* define a method synchronized with a given runnable.
+		* @define Define a method synchronized with a given runnable.
 		* @params[in] TRet. Return type
 		* @params[in] function_name. funtion to create
 		* @params[in] runnable: Runnable (pointer) in which function is executed
-		* @return function return. Throws Exception* if some error ocurred.If The error causing
-		* exception is a known exception, then this is thrown else it returns an UnknownException
-		
+		* @return function return. Throws std::exception* if some error ocurred. If The error causing
+		* exception is a known exception, then this is thrown else it returns a std::runtime_error		
 		*/
 	#define SYNCHRONIZED( TRet, function_name,args,runnable) \
 		TRet function_name##_sync args ; \

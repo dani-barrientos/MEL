@@ -8,6 +8,7 @@ using namespace mel::tasking;
 #include <string>
 using std::string;
 #include <string.h>
+#include <tasking/synchronization_macros.h>
 void _sample1()
 {
     auto th1 = ThreadRunnable::create();
@@ -356,20 +357,78 @@ void _sampleCustomRunnable()
             }
     };
     MyRunnable r;
-    r.fireAndForget([]
+    r.post([](RUNNABLE_TASK_PARAMS)
     {
         mel::text::info("Task 1");
+        Process::wait(1000);
+        mel::text::info("Task 1 - end");
+        return  ::mel::tasking::EGenericProcessResult::CONTINUE;
     });
     r.fireAndForget([]
     {
         mel::text::info("Task 2");
+        Process::wait(1000);
+        mel::text::info("Task 2 - end");
     });
     while(true)
     {    
-        //hacer algo aqui decented, con microhilismo
-        //y mostra rejemplo de aserto si no ejecutado en mismo sitio
         r.processTasks();
     }
+}
+void _sampleCustomRunnableBad()
+{
+    class MyRunnable : public Runnable
+    {
+        public:
+        //create a Runnable with default options
+            MyRunnable():Runnable( Runnable::RunnableCreationOptions())
+            {
+
+            }
+            //needed because Runnable::processTasks is protected
+            void processTasks()
+            {
+                Runnable::processTasks();
+            }
+    };
+    MyRunnable r;
+    r.post([](RUNNABLE_TASK_PARAMS)
+    {
+        mel::text::info("Task 1");
+        Process::wait(1000);
+        mel::text::info("Task 1 - end");
+        return  ::mel::tasking::EGenericProcessResult::CONTINUE;
+    });
+    r.fireAndForget([]
+    {
+        mel::text::info("Task 2");
+        Process::wait(1000);
+        mel::text::info("Task 2 - end");
+    });
+    auto f1 = [&r]
+    {
+        r.processTasks();
+    };
+    auto f2 = [&r]
+    {
+        int a[100];
+        r.processTasks();
+    };
+    while(true)
+    {           
+        f1();
+        f2();
+    }
+}
+// std::shared_ptr<Runnable> sRunnable;
+// SYNCHRONIZED( int, f1,(int),sRunnable);    
+void _sampleSyncMacros()
+{
+    //@TODO TENGO QUE PENSAR BIEN LAS MACROS DE SINCRONIZACION, YA QUE HACEN ESPERA. QUIERO ALGO GENERICO, ¿TIENE SENTIDO?
+ //custom allocator which will use out CustomProcessFactory, not inheriting from ProcessFactory, so best performance
+    //sRunnable = ThreadRunnable::create(true);
+
+    
 }
 void test_threading::samples()
 {
@@ -385,5 +444,7 @@ void test_threading::samples()
     //_sampleTasking6();
  //   _sampleTasking7();
  //   _sampleLimitation();
-    _sampleCustomRunnable();
+    //_sampleCustomRunnable();
+    //_sampleCustomRunnableBad();
+    _sampleSyncMacros();
 }
