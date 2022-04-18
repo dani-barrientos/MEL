@@ -24,5 +24,6 @@ Issues/facts:
   
  # Testing
  if using Visual Studio Code, execute *Run CTest*,or execute ctest from commandline in out/build/[required configuration]/tests
+ Tests runs automatically when build action runs (whenever a change in source code is done) and sent to: https://my.cdash.org/index.php?project=mel
  
  
