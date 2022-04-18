@@ -13,7 +13,7 @@ namespace mel
 	using mel::core::MThreadAttributtes;
 
 	///@cond HIDDEN_SYMBOLS
-	extern "C"  void __attribute__ ((noinline)) resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
+	extern "C"  void __attribute__ ((noinline)) mel_tasking_resizeStack(  MThreadAttributtes* process,  unsigned int newSize );
 
 	namespace tasking
 	{

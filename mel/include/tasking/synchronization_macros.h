@@ -1,7 +1,9 @@
-/**
-* some useful macros for multithreading problems
-*/
 #pragma once
+/**
+* @file 
+* @brief Some useful macros for function synchronization
+*/
+///@cond HIDDEN_SYMBOLS
 #include <preprocessor/params.h>
 #include <mpl/LinkArgs.h>
 using mel::mpl::linkFunctor;
@@ -11,12 +13,10 @@ using mel::mpl::linkFunctor;
 #include <tasking/utilities.h>
 #include <tasking/Runnable.h>
 using mel::tasking::Runnable;
-
 namespace mel
 {
 	namespace core
 	{
-	#define GET_ARGS( args ) args
 	#define GET_ARG_1( _1,... ) _1
 	#define GET_ARG_2( _1,_2,... ) _2
 	#define GET_ARG_3( _1,_2,_3,... ) _3
@@ -53,109 +53,47 @@ namespace mel
 	#define CREATE_LINKER_7(TRet,function_name,args ) \
 		linkFunctor<TRet,TYPELIST(),GET_ARG_1 args,GET_ARG_2 args,GET_ARG_3 args,GET_ARG_4 args,GET_ARG_5 args,GET_ARG_6 args,GET_ARG_7 args>( function_name,_1,_2,_3,_4,_5,_6,_7 )
 
-
-
-
-
-		/**
-		* @define Define a method synchronized with a given runnable.
-		* @params[in] TRet. Return type
-		* @params[in] function_name. funtion to create
-		* @params[in] runnable: Runnable (pointer) in which function is executed
-		* @return function return. Throws std::exception* if some error ocurred. If The error causing
-		* exception is a known exception, then this is thrown else it returns a std::runtime_error		
-		*/
-	#define SYNCHRONIZED( TRet, function_name,args,runnable) \
-		TRet function_name##_sync args ; \
-		TRet function_name( MAKE_PARAMS args  ){ \
-			Future<TRet> result = runnable->execute<TRet>(  CREATE_LINKER( TRet,function_name##_sync,args ) ); \
-			result.wait();\
-			if ( !result.getValid() ){\
-			if ( result.getError()->error == Runnable::ERRORCODE_EXCEPTION ){\
-					Runnable::ExecuteErrorInfo* ei = (Runnable::ExecuteErrorInfo*)result.getError();\
-					if ( ei->isPointer ) \
-					throw ei->exc;\
-					else{ ei->exc->throwSame();return result.getValue();} /*this is only to avoid compiler warning. It will nevere be executed */ \
-				}else \
-					throw ::mel::core::UnknownException();\
-			}else return result.getValue();}
-	//@todo lo que viene es �apa por que lo necesito ya,para funciones static. Lo pensar� mejor m�s adelante
-	#define SYNCHRONIZED_STATIC( TRet, function_name,args,runnable) \
-		static TRet function_name##_sync args ; \
-		static TRet function_name( MAKE_PARAMS args  ){ \
-		Future<TRet> result = runnable->execute<TRet>(  CREATE_LINKER( TRet,function_name##_sync,args ) ); \
-		result.wait();\
-		if ( !result.getValid() ){\
-		if ( result.getError()->error == Runnable::ERRORCODE_EXCEPTION ){\
-		Runnable::ExecuteErrorInfo* ei = (Runnable::ExecuteErrorInfo*)result.getError();\
-				if ( ei->isPointer ) \
-					throw ei->exc; \
-				else{ ei->exc->throwSame();return result.getValue();} /*this is only to avoid compiler warning. It will nevere be executed */ \
-			}else \
-			throw ::mel::core::UnknownException();\
-		}else return result.getValue();}
-
-		/**
-		* similar to SYNCHRONIZED_METHOD but doesn't wait for execution, only post it. So return value is returned by default
-		* this posted method won't return any value, so internally is void and it will return a default value before being posted
-		* @warning this way OF definig functions is dangerous. Function is posted, so arguments maybe are not yet valid
-		* @todo no estoy nada seguro de esto
-		*/
-	/*#define POSTED( TRet, function_name,args,runnable,defaultvalue) \
-		void function_name##_sync args ; \
-		TRet function_name( MAKE_PARAMS args  ){ \
-		runnable->post( RUNNABLE_CREATETASK(::mel::mpl::returnAdaptor<void>( CREATE_LINKER( void,function_name##_sync,args ),true ) ); \
-		return defaultvalue;}
+/*
+old mpl functions/classes haven't any noexcept considerations (not existed at all in C++98), so changed in favor of a labmda based mechanism
+	#define SYNCHRONIZED_STATIC( TRet, function_name,args,runnable,qualifiers) \
+		static TRet function_name##_sync args qualifiers; \
+		static Future<TRet> function_name( MAKE_PARAMS args  ) qualifiers{ \
+		return runnable->execute<TRet>(  CREATE_LINKER( TRet,function_name##_sync,args ) );}
+	#define SYNCHRONIZED_METHOD( TRet, function_name,args,runnable,qualifiers) \
+		TRet function_name##_sync args qualifiers; \
+		Future<TRet> function_name( MAKE_PARAMS args  ) qualifiers{ \
+		return runnable->execute<TRet>(  CREATE_LINKER( TRet,makeMemberEncapsulate( &std::remove_reference_t<decltype(*this)>::function_name##_sync,this),args ) );}
+*/
+///@endcond
+	/**
+	* @brief Define a static function synchronized with a given runnable.
+	* @param[in] TRet. Return type
+	* @param[in] function_name. funtion to create
+	* @param[in] qualifiers: extra function qualifiers. Can be left empty
+	* @param[in] runnable: Runnable (pointer) in which function is executed
+	* @return \ref mel::core::Future<TRet>
 	*/
-	#define POSTED( TRet, function_name,args,runnable,defaultvalue) \
-		void function_name##_sync args ; \
-		TRet function_name( MAKE_PARAMS args  ){ \
-		runnable->post( RUNNABLE_CREATETASK((::mel::mpl::returnAdaptor< void>( CREATE_LINKER( void,function_name##_sync,args ),true ) )) ); \
-		return defaultvalue;}
-
-	#define POSTED_STATIC( TRet, function_name,args,runnable,defaultvalue) \
-		static void function_name##_sync args ; \
-		static TRet function_name( MAKE_PARAMS args  ){ \
-		runnable->post( RUNNABLE_CREATETASK((::mel::mpl::returnAdaptor< void>( CREATE_LINKER( void,function_name##_sync,args ),true ) )) ); \
-		return defaultvalue;}	
-	//same for class member functions
-
-	//SACAR LA CLASE DEL THIS! Por ahora cutre obligando a tener definido MyType de la forma: typedef Clase MyType
-	//define a method synchronized with a Runnable. Wait for execution completed
-	#define SYNCHRONIZED_METHOD( TRet, function_name,args,runnable) \
-		TRet function_name##_sync args ; \
-		TRet function_name( MAKE_PARAMS args  ){ \
-		Future<TRet> result = runnable->execute<TRet>(  CREATE_LINKER( TRet,makeMemberEncapsulate( &MyType::function_name##_sync,this),args ) ); \
-		result.wait();\
-		if ( !result.getValid() ){\
-		if ( result.getError()->error == Runnable::ERRORCODE_EXCEPTION ){\
-			Runnable::ExecuteErrorInfo* ei = (Runnable::ExecuteErrorInfo*)result.getError();\
-			if ( ei->isPointer ) \
-				throw ei->exc; \
-			else{ ei->exc->throwSame();return result.getValue();} /*this is only to avoid compiler warning. It will nevere be executed */ \
-		}else \
-			throw ::mel::core::UnknownException();\
-		}else return result.getValue();}
-
-	#define SYNCHRONIZED_METHOD_OVERRIDE( TRet, function_name,args,runnable) \
-		TRet function_name##_sync args ; \
-		TRet function_name( MAKE_PARAMS args  ) override { \
-		Future<TRet> result = runnable->execute<TRet>(  CREATE_LINKER( TRet,makeMemberEncapsulate( &MyType::function_name##_sync,this),args ) ); \
-		result.wait();\
-		if ( !result.getValid() ){\
-		if ( result.getError()->error == Runnable::ERRORCODE_EXCEPTION ){\
-			Runnable::ExecuteErrorInfo* ei = (Runnable::ExecuteErrorInfo*)result.getError();\
-			if ( ei->isPointer ) \
-				throw ei->exc; \
-			else{ ei->exc->throwSame();return result.getValue();} /*this is only to avoid compiler warning. It will nevere be executed */ \
-		}else \
-			throw ::mel::core::UnknownException();\
-		}else return result.getValue();}
-
-	#define POSTED_METHOD( TRet, function_name,args,runnable,defaultvalue) \
-		void function_name##_sync args ; \
-		TRet function_name( MAKE_PARAMS args  ){ \
-		runnable->post( RUNNABLE_CREATETASK( (::mel::mpl::returnAdaptor<void>( CREATE_LINKER( void, makeMemberEncapsulate(&MyType::function_name##_sync,this),args),true ) )) ); \
-		return defaultvalue;}
-	}
+	#define SYNCHRONIZED_STATIC( function_name,TRet,args,qualifiers,runnable) \
+		static TRet function_name##_sync args qualifiers; \
+		static Future<TRet> function_name( MAKE_PARAMS args  ) qualifiers{ \
+		return runnable->execute<TRet>( [CALL_PARAMS args]() qualifiers{ \
+            return function_name##_sync(CALL_PARAMS args);\
+        });}
+	/**	
+	* @brief Define a method synchronized with a given runnable.
+	* @param[in] TRet. Return type
+	* @param[in] function_name. funtion to create
+	* @param[in] qualifiers: extra function qualifiers. Can be left empty
+	* @param[in] runnable: Runnable (pointer) in which function is executed
+	* @return \ref mel::core::Future<TRet>
+	*/
+	#define SYNCHRONIZED_METHOD( function_name,TRet,args,qualifiers,runnable) \
+		TRet function_name##_sync args qualifiers; \
+		Future<TRet> function_name( MAKE_PARAMS args  ) qualifiers{ \
+        return runnable->execute<TRet>( [this, CALL_PARAMS args]() qualifiers{ \
+            return function_name##_sync(CALL_PARAMS args);\
+        });}
+///@cond HIDDEN_SYMBOLS		
+	}	
 }
+///@endcond

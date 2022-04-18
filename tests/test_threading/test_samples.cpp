@@ -420,15 +420,111 @@ void _sampleCustomRunnableBad()
         f2();
     }
 }
-// std::shared_ptr<Runnable> sRunnable;
-// SYNCHRONIZED( int, f1,(int),sRunnable);    
+
+std::shared_ptr<Runnable> sRunnable;
+
+/**
+ * @brief Test synchronized callables with templates
+ * 
+ * @details Comparing with macros.
+ * Disadvantages:
+ *  - more memory footprint: because use internally en function, it has a fixed size more than a simple function pointer
+ *  - construction is more complex: you need to constructor the member passing a callable adn a runnable
+ * Advantages:
+ *  - No need to set runnable in header, which can be disturbing when using macros
+ *  - more understable: syntax more clean and (I think) more significant
+ */
+/*
+//PRUEBAS
+//TODO EL RUNNABLE NO PUEDE PASARSE POR CONSTRUCTOR, YA QUE CAMBIARÁ. POSIBILIDADES PARA PASAR EL RUNNABLE: 
+template <class TRet, class ...TArgs> class SyncCallable
+{
+    public:
+    problema gordo, necesitaría algo que haga referencia a un runnable, no guardar el runnable en sí
+        template <class F> 
+        SyncCallable(F&& callable,Runnable* runnable):mRunnable(runnable),mCallable(std::forward<F>(callable)){}
+        Future<TRet> operator()(TArgs&&...args)
+        {
+            //return mCallable(std::forward<TArgs>(args)...);
+            return mRunnable->execute<TRet>( std::bind(mCallable,std::forward<TArgs>(args)...)); \
+        }
+    private:
+        Runnable* mRunnable;
+        std::function< TRet(TArgs...)> mCallable;        
+};
+template <class TRet, class ...TArgs> class SyncCallable<TRet (TArgs...)>
+{
+
+};
+*/
+string f0_sync(int a,float b)
+{
+    return "hola";
+}
+SYNCHRONIZED_STATIC( f1,int,(int),,sRunnable ) ; 
+
+
+static int f1_sync(int v)  
+{
+    throw std::runtime_error("ERROR in f1!!!!");
+    return v + 5;
+}
+
+class MyClass
+{
+    public:
+        //MyClass();
+        SYNCHRONIZED_METHOD( f2,string,(int,float),noexcept,sRunnable) ;   
+        //SyncCallable<string, int,float> f3; 
+    private:
+        string f3_sync(int,float);
+};
+using namespace std::placeholders;
+/*MyClass::MyClass():f3(std::bind(&MyClass::f3_sync,this,_1,_2),sRunnable.get())
+{
+
+}*/
+string MyClass::f2_sync(int v1,float v2) noexcept
+{
+    return "f2_sync "+std::to_string(v1)+" "+std::to_string(v2);
+}
+// string MyClass::f3_sync(int v1,float v2) 
+// {
+//     return "f3_sync "+std::to_string(v1)+" "+std::to_string(v2);
+// }
 void _sampleSyncMacros()
 {
-    //@TODO TENGO QUE PENSAR BIEN LAS MACROS DE SINCRONIZACION, YA QUE HACEN ESPERA. QUIERO ALGO GENERICO, ¿TIENE SENTIDO?
- //custom allocator which will use out CustomProcessFactory, not inheriting from ProcessFactory, so best performance
-    //sRunnable = ThreadRunnable::create(true);
-
-    
+    sRunnable = ThreadRunnable::create(true);
+    {
+        mel::text::info("Calling static function f1 syncronized with a Runnable");
+        auto r = f1(6);
+        try
+        {
+            auto res = mel::core::waitForFutureThread(r);
+            mel::text::info("Result = {}",res.value());
+        }
+        catch(std::exception& e)
+        {
+            mel::text::error("Exception!!. {}",e.what());
+        }
+       
+    }
+    {
+        MyClass obj;
+        mel::text::info("Calling static function f2 syncronized with a Runnable");
+        auto r2 = obj.f2(6,9.1f);
+        //auto r2 = obj.f3(6,9.1f);
+        //mel::text::info("Sizeof f3 = {}",sizeof(MyClass::f3));
+        try
+        {
+            auto res = mel::core::waitForFutureThread(r2);
+            mel::text::info("Result = {}",res.value());
+        }
+        catch(std::exception& e)
+        {
+            mel::text::error("Exception!!. {}",e.what());
+        }       
+    }  
 }
 void test_threading::samples()
 {
