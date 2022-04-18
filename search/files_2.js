@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['typetraits_2eh_667',['TypeTraits.h',['../_type_traits_8h.html',1,'']]]
+  ['synchronization_5fmacros_2eh_670',['synchronization_macros.h',['../synchronization__macros_8h.html',1,'']]]
 ];

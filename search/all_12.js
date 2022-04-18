@@ -20,12 +20,15 @@ var searchData=
   ['small_336',['Small',['../classmel_1_1mpl_1_1_small.html',1,'mel::mpl']]],
   ['sort_337',['Sort',['../structmel_1_1mpl_1_1typelist_1_1_sort.html',1,'mel::mpl::typelist']]],
   ['sortresult_338',['SortResult',['../structmel_1_1mpl_1_1typelist_1_1_sort_result.html',1,'mel::mpl::typelist']]],
-  ['start_339',['start',['../classmel_1_1tasking_1_1_thread_runnable.html#a0ac804f2130b3895f16a2dda96be560b',1,'mel::tasking::ThreadRunnable::start()'],['../namespacemel_1_1execution.html#a200611bdc3f3201ce07114f06347f3e0',1,'mel::execution::start()']]],
+  ['start_339',['start',['../namespacemel_1_1execution.html#a200611bdc3f3201ce07114f06347f3e0',1,'mel::execution::start()'],['../classmel_1_1tasking_1_1_thread_runnable.html#a0ac804f2130b3895f16a2dda96be560b',1,'mel::tasking::ThreadRunnable::start()']]],
   ['staticassert_340',['StaticAssert',['../structmel_1_1mpl_1_1_static_assert.html',1,'mel::mpl']]],
   ['staticassert_3c_20false_20_3e_341',['StaticAssert&lt; false &gt;',['../structmel_1_1mpl_1_1_static_assert_3_01false_01_4.html',1,'mel::mpl']]],
   ['subscribecallback_342',['subscribeCallback',['../classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b',1,'mel::core::Future_Common']]],
   ['subscribecreatedcallback_343',['subscribeCreatedCallback',['../classmel_1_1core_1_1_callback_subscriptor___base.html#a99150bf3b3cddb587179bb8c2ad57f89',1,'mel::core::CallbackSubscriptor_Base']]],
   ['susbcribesleepevent_344',['susbcribeSleepEvent',['../classmel_1_1tasking_1_1_process_scheduler.html#ac1288a6c5ec2a2f132c141ad851b67eb',1,'mel::tasking::ProcessScheduler']]],
   ['suspend_345',['suspend',['../classmel_1_1tasking_1_1_thread_runnable.html#a655983125608fea8480cc1a8d515d97d',1,'mel::tasking::ThreadRunnable']]],
-  ['switchprocess_346',['switchProcess',['../classmel_1_1tasking_1_1_process.html#a31bcb7b51959dabec561a1ed4b3de4d7',1,'mel::tasking::Process']]]
+  ['switchprocess_346',['switchProcess',['../classmel_1_1tasking_1_1_process.html#a31bcb7b51959dabec561a1ed4b3de4d7',1,'mel::tasking::Process']]],
+  ['synchronization_5fmacros_2eh_347',['synchronization_macros.h',['../synchronization__macros_8h.html',1,'']]],
+  ['synchronized_5fmethod_348',['SYNCHRONIZED_METHOD',['../synchronization__macros_8h.html#af1d9511834b9e945980e6c1f223fe07b',1,'synchronization_macros.h']]],
+  ['synchronized_5fstatic_349',['SYNCHRONIZED_STATIC',['../synchronization__macros_8h.html#acf032ec40ae26021883725e4b66a6423',1,'synchronization_macros.h']]]
 ];
