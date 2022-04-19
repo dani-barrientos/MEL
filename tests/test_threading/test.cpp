@@ -777,7 +777,7 @@ int TestThreading::onExecuteAllTests()
 	//_testMicroThreadingMonoThread( this );
 	//_testPerformanceLotTasks(this);
 	::test_threading::test_futures(this);
-	 _test_concurrent_post(this);	
+	// _test_concurrent_post(this);	
 	 //_testExceptions(this);
 	 return 0;
 }
