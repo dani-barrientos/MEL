@@ -601,7 +601,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 					return mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse);
 			}
-			mel::text::info("Waiting for tasks finished
+			mel::text::info("Waiting for tasks finished");
 			//Thread::sleep(10000);
 		}
 		auto numPosts = NUM_PRODUCERS*NUM_POSTS;
