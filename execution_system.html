@@ -233,7 +233,9 @@ Basic sample</h3>
 <p>A simple execution chain. This code consists of three execution steps:</p><ul>
 <li>first task generating a float, from another float given as argument</li>
 <li>second task converting this float to string, a passing it to the next step</li>
-<li>third step launch three <em>parallel</em> tasks. This doesn't mean neccesarily that that task will be executed in parallel, is just a hint so that the executor will do it in that way if it hast the capacity. <div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleBasic(ExecutorType ex)</div>
+<li>third step launch three <em>parallel</em> tasks. This doesn't mean neccesarily that that task will be executed in parallel, is just a hint so that the executor will do it in that way if it hast the capacity. To check for the kind of parallelism supported, a previous <a class="el" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a> is inserted in order to inform the user. This step, in this concrete example, wouldn't be neccesary because we have the ExecutorType as function template parameter, but in a real example the job couldn't know anything about the underlying executor.</li>
+</ul>
+<div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleBasic(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line">    th-&gt;fireAndForget([ex] () <span class="keyword">mutable</span></div>
@@ -247,16 +249,23 @@ Basic sample</h3>
 <div class="line">            {</div>
 <div class="line">                <span class="keywordflow">return</span> std::to_string(param);</div>
 <div class="line">            })</div>
-<div class="line">            | <a class="code" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">mel::execution::parallel</a>( </div>
-<div class="line">                [](<span class="keywordtype">string</span>&amp; str)</div>
+<div class="line">            |</div>
+<div class="line">                <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">mel::execution::getExecutor</a>([](<span class="keyword">auto</span> ex) noexcept {</div>
+<div class="line">                    <span class="keywordflow">if</span> constexpr(execution::ExecutorTraits&lt;decltype(ex)&gt;::has_parallelism)</div>
+<div class="line">                        mel::text::info(<span class="stringliteral">&quot;Current executor supports true parallelism. Next job will be executed parallelized&quot;</span>);</div>
+<div class="line">                    <span class="keywordflow">else</span></div>
+<div class="line">                        mel::text::info(<span class="stringliteral">&quot;Current executor doesn&#39;t support true parallelism. Next job will be executed sequentially&quot;</span>);</div>
+<div class="line">                })</div>
+<div class="line">            | <a class="code" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">mel::execution::parallel</a>() </div>
+<div class="line">                [](<span class="keywordtype">string</span>&amp; str) noexcept</div>
 <div class="line">                {                   </div>
 <div class="line">                    text::info(<span class="stringliteral">&quot;Parallel 1. {}&quot;</span>,str+<span class="stringliteral">&quot; hello!&quot;</span>);</div>
 <div class="line">                },</div>
-<div class="line">                [](<span class="keywordtype">string</span>&amp; str)</div>
+<div class="line">                [](<span class="keywordtype">string</span>&amp; str) noexcept</div>
 <div class="line">                {</div>
 <div class="line">                    text::info(<span class="stringliteral">&quot;Parallel 2. {}&quot;</span>,str+<span class="stringliteral">&quot; hi!&quot;</span>);</div>
 <div class="line">                },</div>
-<div class="line">                [](<span class="keywordtype">string</span>&amp; str)</div>
+<div class="line">                [](<span class="keywordtype">string</span>&amp; str) noexcept</div>
 <div class="line">                {</div>
 <div class="line">                    text::info(<span class="stringliteral">&quot;Parallel 2. {}&quot;</span>,str+<span class="stringliteral">&quot; whats up!&quot;</span>);</div>
 <div class="line">                }</div>
@@ -268,14 +277,14 @@ Basic sample</h3>
 <div class="line">        }</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
+<div class="ttc" id="anamespacemel_1_1execution_html_adb3e0d12579dd9c19d462ded948ccb68"><div class="ttname"><a href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">mel::execution::getExecutor</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; getExecutor(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Get the Executor used in the chaing of execution.</div><div class="ttdef"><b>Definition:</b> Executor.h:458</div></div>
 <div class="ttc" id="anamespacemel_1_1tasking_html_a980262925f312c4b3cfbadc7a2882eca"><div class="ttname"><a href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">mel::tasking::waitForFutureMThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureMThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=EVENTMT_WAIT_INFINITE)</div><div class="ttdoc">Waits for future completion, returning a wapper around the internal vale.</div><div class="ttdef"><b>Definition:</b> utilities.h:25</div></div>
-</div><!-- fragment --> Output will be: <div class="fragment"><div class="line">Parallel 1. 16.500000 hello!</div>
+</div><!-- fragment --><p> Output will be: </p><div class="fragment"><div class="line">Current executor supports <span class="keyword">true</span> parallelism. Next job will be executed parallelized</div>
+<div class="line">Parallel 1. 16.500000 hello!</div>
 <div class="line">Parallel 2. 16.500000 hi!</div>
 <div class="line">Parallel 2. 16.500000 whats up!</div>
 <div class="line">Result value = 16.500000</div>
-</div><!-- fragment --></li>
-</ul>
-<p>Although the samples are shown using <em>lambdas</em> for clarity, any other callable can be used:</p>
+</div><!-- fragment --><p>Although the samples are shown using <em>lambdas</em> for clarity, any other callable can be used:</p>
 <div class="fragment"><div class="line"><span class="keyword">class </span>MyClass</div>
 <div class="line">{</div>
 <div class="line">    <span class="keyword">public</span>:</div>
