@@ -11,8 +11,7 @@ if ( MSVC )
 #with /permissive- should be sufficient, but since version  19.28 to 19.31 is neccesary to add /Zx:lambda 
 #see https://docs.microsoft.com/en-us/cpp/build/reference/permissive-standards-conformance?view=msvc-170 for details
 #/bigobj options is needed when there is a strong use of templates with lead to big .obj
-    add_compile_options(/permissive- /Zc:lambda /bigobj)
-    
+    add_compile_options(/permissive- /Zc:lambda /bigobj)    
 endif()
 
 add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "common/source/BaseTest.cpp" "common/source/TestManager.cpp"  "test_callbacks/test.cpp" 
@@ -21,7 +20,7 @@ add_library(tests STATIC  "tests_main.cpp" "common/source/CommandLine.cpp" "comm
 
 target_include_directories(tests PUBLIC "common/include")
 if(MEL_OS STREQUAL "MEL_WINDOWS")
-    # target_compile_options(tests PRIVATE /permissive-)    
+    # set_source_files_properties( test_threading/test_samples.cpp PROPERTIES COKMPILE_FLAGS /P )  
 endif()
 
 target_link_libraries(tests "mel")

@@ -464,7 +464,7 @@ string f0_sync(int a,float b)
 SYNCHRONIZED_STATIC( f1,int,(int),,sRunnable ) ; 
 
 
-static int f1_sync(int v)  
+static int f1_sync(int v) 
 {
     throw std::runtime_error("ERROR in f1!!!!");
     return v + 5;

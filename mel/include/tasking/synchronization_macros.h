@@ -66,9 +66,19 @@ old mpl functions/classes haven't any noexcept considerations (not existed at al
 */
 ///@endcond
 	/**
-	* @brief Define a static function synchronized with a given runnable.
+	* @brief Declare a static function synchronized with a given runnable.
+	* @details The code need to implement that *no sync* funcion (so, a normal funcion) which its call is managed by this macro. For example, if 
+	* we declare a synchronized function as \verbatim SYNCHRONIZED_STATIC( f1,string,(int),noexcept,sRunnable ) \endverbatim, we have to implement the neccesary code for `f1_sync`, as:
+	* \code
+	* 
+	static string f1_sync(int v) noexcept
+	{
+		return std::to_string(v);		
+	}
+	* \endcode
 	* @param[in] TRet. Return type
 	* @param[in] function_name. funtion to create
+	* @param[in] args parameter types (without parameter names), in the form (T1,T2,...) [0..10] number of parameters
 	* @param[in] qualifiers: extra function qualifiers. Can be left empty
 	* @param[in] runnable: Runnable (pointer) in which function is executed
 	* @return \ref mel::core::Future<TRet>
@@ -80,9 +90,19 @@ old mpl functions/classes haven't any noexcept considerations (not existed at al
             return function_name##_sync(CALL_PARAMS args);\
         });}
 	/**	
-	* @brief Define a method synchronized with a given runnable.
-	* @param[in] TRet. Return type
+	* @brief Declare a method synchronized with a given runnable.
+	* @details The code need to implement that *no sync* funcion (so, a normal funcion) which its call is managed by this macro. For example, if 
+	* we declare a synchronized function as \verbatim SYNCHRONIZED_METHOD( f1,string,(int,float),,sRunnable ) \endverbatim, we have to implement the neccesary code for `f1_sync`, as:
+	* \code
+	* 
+	static string f1_sync(int a,float b )
+	{
+		return std::to_string(a) + std::to:string(b);		
+	}
+	* \endcode
 	* @param[in] function_name. funtion to create
+	* @param[in] TRet. Return type
+	* @param[in] args parameter types (without parameter names), in the form (T1,T2,...) [0..10] number of parameters
 	* @param[in] qualifiers: extra function qualifiers. Can be left empty
 	* @param[in] runnable: Runnable (pointer) in which function is executed
 	* @return \ref mel::core::Future<TRet>
