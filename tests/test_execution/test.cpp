@@ -195,6 +195,32 @@ int _testDebug(tests::BaseTest* test)
 	extp.setOpts({true,true});   
 	sCurrentTest = test;
 	{		
+		{
+			auto f = execution::launch(exr,
+				[test](int arg) noexcept
+				{
+					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
+					return TestClass(8);
+				},7) | 
+			execution::catchError([](std::exception_ptr err) 
+			{
+				text::info("catchError");
+				return TestClass(9);
+			})|
+			execution::getExecutor([](auto ex)
+			{
+				text::info("getExecutor");
+				text::info("Executor support microthreading={}",execution::ExecutorTraits<decltype(ex)>::has_microthreading);
+				text::info("Executor support parallelism={}",execution::ExecutorTraits<decltype(ex)>::has_parallelism);
+			}) | 
+			execution::next([](TestClass& v) 
+			{
+				//throw std::runtime_error("ERR EN NEXT");
+				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
+				text::info("Next tras getExecutor. {}",v.val);				
+			});
+			Thread::sleep(10000);
+		}
 		{	
 
 			auto idc = std::is_default_constructible<TestClass>::value;

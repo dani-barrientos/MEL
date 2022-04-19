@@ -27,10 +27,16 @@ namespace mel
             template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<ExecutorAgent,TArg> fut, FTypes&&... functions);
             template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg> fut,ReturnTuple& result, FTypes&&... functions);
         };
-        template <class ExecutorAgent> struct ExecutorTraits
+        /**
+         * @brief Default traits for any executor
+         * @details Concrete executor must set its own values when changed
+         */
+        template <class ExecutorType> struct ExecutorTraits
         {
-            enum {has_microthreading = false};  //support microthreading?
-            enum {has_parallelism = false}; ////support true parallelism?
+            //! Support microthreading?
+            enum {has_microthreading = false};  
+            //! Support true parallelism?
+            enum {has_parallelism = false}; //!< support true parallelism?
         };
         /**
          * @brief Launch given functor in given executor
@@ -204,7 +210,7 @@ namespace mel
             fut.subscribeCallback(
                 std::function<::mel::core::ECallbackResult( ValueType&)>([result](ValueType& input) mutable
                 {
-                    result.assign(input);
+                    result.assign(std::move(input));
                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 })
             );
@@ -262,7 +268,6 @@ namespace mel
                                         result.setError(*except);
                                     else
                                         result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
-                                        //result.assign(source.getValue());
                                     delete except;
                                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                                 }));
@@ -393,42 +398,13 @@ namespace mel
                             return f(arg.getValue().error());
                         },source,result);
                     }else
-                        result.assign(source.getValue());
+                        result.assign(std::move(input));
                     
                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 })
             );
             return result;
-        }
-        
-    /*
-    no lo tengo claro. necesito poder hacer cosas sobre el executor, pero no lo tengo en ningún lado.
-    mi idea es que tal vez con un algoritmo que lo capture...igual es una idiotez
-    igual no tiene mucho sentido y 
-        template <class F,class TArg,class ExecutorAgent,class ErrorType = ::mel::core::ErrorInfo> ExFuture<ExecutorAgent,TArg,ErrorType> 
-            getExecutor(ExFuture<ExecutorAgent,TArg,ErrorType> source, F&& f)
-        {                
-            typedef typename ExFuture<ExecutorAgent,TArg,ErrorType>::ValueType  ValueType;
-            ExFuture<ExecutorAgent,TArg,ErrorType> result(source.agent);
-            source.subscribeCallback(
-                //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
-                {       
-                    if ( !input.isValid() )
-                    {                                       
-                        source.agent. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg,ErrorType> arg)
-                        {                                          
-                            return f(arg.getValue().error());                         
-                        },source,result);
-                    }else
-                        result.assign(source.getValue());
-                    
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
-                })
-            );
-            return result;
-        }
-    */  
+        }           
         /**
          * @brief Same as @ref parallel but returning a tuple with the values for each functor
          * So, these functors must return a value, return void is not allowed
@@ -471,6 +447,33 @@ namespace mel
             ));
             return result;
         }
+        /**
+         * @brief Get the Executor used in the chaing of execution
+         * @details It returns an ExFuture moved from source, so transferring previous value to the next element in chain.
+         * The intent of function is to be able to check executor traits or change some option in it
+         * @param[in] f Callable with signature void (auto executor)
+         * @see ExecutorTraits
+         */
+        template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TArg> 
+            getExecutor(ExFuture<ExecutorAgent,TArg> source, F&& f)
+        {                
+            static_assert(std::is_same<std::invoke_result_t<F,Executor<ExecutorAgent>>,void>::value,
+                          "return value for callbable in 'getExecutor' must be void");
+            typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
+            ExFuture<ExecutorAgent,TArg> result(source.agent);            
+            source.subscribeCallback(
+                //need to bind de source future to not get lost and input pointing to unknown place                
+                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
+                {       
+                    f(source.agent);
+                    result.assign(std::move(input));
+                    
+                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
+                })
+            );
+            return result;
+        }
+      
         ///@cond HIDDEN_SYMBOLS
         namespace _private
         {
@@ -538,6 +541,16 @@ namespace mel
                     return ::mel::execution::catchError(inputFut,std::forward<F>(mFunc));
                 }
             };
+            template <class F> struct ApplyGetExecutor
+            {
+                ApplyGetExecutor(F&& f):mFunc(std::forward<F>(f)){}
+                ApplyGetExecutor(const F& f):mFunc(f){}
+                F mFunc;
+                template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
+                {
+                    return ::mel::execution::getExecutor(inputFut,std::forward<F>(mFunc));
+                }
+            };            
             template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::mel::parallelism::Barrier& barrier, FType fut)
             {
                 fut.subscribeCallback(
@@ -616,6 +629,11 @@ namespace mel
         template <class ReturnTuple,class ...FTypes> _private::ApplyParallelConvert<ReturnTuple,FTypes...> parallel_convert(FTypes&&... functions)
         {
             return _private::ApplyParallelConvert<ReturnTuple,FTypes...>(std::forward<FTypes>(functions)...);
+        }
+        ///@brief version for use with operator |
+        template <class F> _private::ApplyGetExecutor<F> getExecutor(F&& f)
+        {
+            return _private::ApplyGetExecutor<F>(std::forward<F>(f));
         }
         ///@endcond
 

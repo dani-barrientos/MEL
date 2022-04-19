@@ -548,7 +548,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 					return mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse);
 			}
-			//mel::text::info("Esperando...");
+			mel::text::info("Waiting for tasks finished...");
 			//Thread::sleep(10000);
 		}
 		auto numPosts = NUM_PRODUCERS*NUM_POSTS;
@@ -601,7 +601,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 					return mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse);
 			}
-			//mel::text::info("Esperando...");
+			mel::text::info("Waiting for tasks finished
 			//Thread::sleep(10000);
 		}
 		auto numPosts = NUM_PRODUCERS*NUM_POSTS;
@@ -777,7 +777,7 @@ int TestThreading::onExecuteAllTests()
 	//_testMicroThreadingMonoThread( this );
 	//_testPerformanceLotTasks(this);
 	::test_threading::test_futures(this);
-	// _test_concurrent_post(this);	
-	 //_testExceptions(this);
+	 _test_concurrent_post(this);	
+	 _testExceptions(this);
 	 return 0;
 }

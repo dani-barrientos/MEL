@@ -12,15 +12,7 @@ namespace mel
     namespace execution
     {   
         using ::mel::parallelism::ThreadPool;
-    
-        /**
-         * @brief Executor Traits for ThreadPool Executor
-         */
-        template <> struct ExecutorTraits<ThreadPool>
-        {
-            enum {has_microthreading = true};  //support microthreading?
-            enum {has_parallelism = false}; ////support true parallelism?
-        };
+            
         /**
          * @brief Concrete options for this type of executor
          */
@@ -137,6 +129,14 @@ namespace mel
             exopts.groupTasks = !getOpts().independentTasks;    
             return getPool().lock()->executeWithResult(exopts,except,result,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);
         }
+        /**
+         * @brief Executor Traits for ThreadPool Executor
+         */
+        template <> struct ExecutorTraits<Executor<ThreadPool>>
+        {
+            enum {has_microthreading = true};  //support microthreading?
+            enum {has_parallelism = false}; ////support true parallelism?
+        };
         typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
     }
 }
