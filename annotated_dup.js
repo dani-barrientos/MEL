@@ -33,12 +33,12 @@ var annotated_dup =
         [ "ExecutorTraits", "structmel_1_1execution_1_1_executor_traits.html", null ],
         [ "OnAllException", "classmel_1_1execution_1_1_on_all_exception.html", "classmel_1_1execution_1_1_on_all_exception" ],
         [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html", "classmel_1_1execution_1_1_ex_future" ],
-        [ "ExecutorTraits< Runnable >", "structmel_1_1execution_1_1_executor_traits_3_01_runnable_01_4.html", null ],
         [ "RunnableExecutorOpts", "structmel_1_1execution_1_1_runnable_executor_opts.html", "structmel_1_1execution_1_1_runnable_executor_opts" ],
         [ "Executor< Runnable >", "classmel_1_1execution_1_1_executor_3_01_runnable_01_4.html", "classmel_1_1execution_1_1_executor_3_01_runnable_01_4" ],
-        [ "ExecutorTraits< ThreadPool >", "structmel_1_1execution_1_1_executor_traits_3_01_thread_pool_01_4.html", null ],
+        [ "ExecutorTraits< Executor< Runnable > >", "structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_runnable_01_4_01_4.html", null ],
         [ "ThreadPoolExecutorOpts", "structmel_1_1execution_1_1_thread_pool_executor_opts.html", "structmel_1_1execution_1_1_thread_pool_executor_opts" ],
-        [ "Executor< ThreadPool >", "classmel_1_1execution_1_1_executor_3_01_thread_pool_01_4.html", "classmel_1_1execution_1_1_executor_3_01_thread_pool_01_4" ]
+        [ "Executor< ThreadPool >", "classmel_1_1execution_1_1_executor_3_01_thread_pool_01_4.html", "classmel_1_1execution_1_1_executor_3_01_thread_pool_01_4" ],
+        [ "ExecutorTraits< Executor< ThreadPool > >", "structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_thread_pool_01_4_01_4.html", null ]
       ] ],
       [ "mpl", "namespacemel_1_1mpl.html", [
         [ "_private", null, [

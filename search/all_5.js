@@ -36,7 +36,7 @@ var searchData=
   ['executor_3c_20runnable_20_3e_120',['Executor&lt; Runnable &gt;',['../classmel_1_1execution_1_1_executor_3_01_runnable_01_4.html',1,'mel::execution']]],
   ['executor_3c_20threadpool_20_3e_121',['Executor&lt; ThreadPool &gt;',['../classmel_1_1execution_1_1_executor_3_01_thread_pool_01_4.html',1,'mel::execution']]],
   ['executortraits_122',['ExecutorTraits',['../structmel_1_1execution_1_1_executor_traits.html',1,'mel::execution']]],
-  ['executortraits_3c_20runnable_20_3e_123',['ExecutorTraits&lt; Runnable &gt;',['../structmel_1_1execution_1_1_executor_traits_3_01_runnable_01_4.html',1,'mel::execution']]],
-  ['executortraits_3c_20threadpool_20_3e_124',['ExecutorTraits&lt; ThreadPool &gt;',['../structmel_1_1execution_1_1_executor_traits_3_01_thread_pool_01_4.html',1,'mel::execution']]],
+  ['executortraits_3c_20executor_3c_20runnable_20_3e_20_3e_123',['ExecutorTraits&lt; Executor&lt; Runnable &gt; &gt;',['../structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_runnable_01_4_01_4.html',1,'mel::execution']]],
+  ['executortraits_3c_20executor_3c_20threadpool_20_3e_20_3e_124',['ExecutorTraits&lt; Executor&lt; ThreadPool &gt; &gt;',['../structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_thread_pool_01_4_01_4.html',1,'mel::execution']]],
   ['exfuture_125',['ExFuture',['../classmel_1_1execution_1_1_ex_future.html',1,'mel::execution']]]
 ];

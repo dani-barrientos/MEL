@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MEL: mel::execution::ExecutorTraits&lt; ExecutorAgent &gt; Struct Template Reference</title>
+<title>MEL: mel::execution::ExecutorTraits&lt; ExecutorType &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -86,20 +86,33 @@ $(document).ready(function(){initNavTree('structmel_1_1execution_1_1_executor_tr
 <a href="#pub-types">Public Types</a> &#124;
 <a href="structmel_1_1execution_1_1_executor_traits-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">mel::execution::ExecutorTraits&lt; ExecutorAgent &gt; Struct Template Reference</div>  </div>
+<div class="title">mel::execution::ExecutorTraits&lt; ExecutorType &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Default traits for any executor.  
+ <a href="structmel_1_1execution_1_1_executor_traits.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_executor_8h_source.html">Executor.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:a120fd0b71a8e2fad6f52e9fd268b0388"><td class="memItemLeft" align="right" valign="top"><a id="a120fd0b71a8e2fad6f52e9fd268b0388"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>has_microthreading</b> = false
  }</td></tr>
+<tr class="memdesc:a120fd0b71a8e2fad6f52e9fd268b0388"><td class="mdescLeft">&#160;</td><td class="mdescRight">Support microthreading? <br /></td></tr>
 <tr class="separator:a120fd0b71a8e2fad6f52e9fd268b0388"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7114f80e42302814d1cbe41e922b34ce"><td class="memItemLeft" align="right" valign="top"><a id="a7114f80e42302814d1cbe41e922b34ce"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>has_parallelism</b> = false
  }</td></tr>
+<tr class="memdesc:a7114f80e42302814d1cbe41e922b34ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Support true parallelism? <br /></td></tr>
 <tr class="separator:a7114f80e42302814d1cbe41e922b34ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><h3>template&lt;class ExecutorType&gt;<br />
+struct mel::execution::ExecutorTraits&lt; ExecutorType &gt;</h3>
+
+<p>Default traits for any executor. </p>
+<p>Concrete executor must set its own values when changed </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>/github/workspace/mel/include/execution/<a class="el" href="_executor_8h_source.html">Executor.h</a></li>
 </ul>
 </div><!-- contents -->
