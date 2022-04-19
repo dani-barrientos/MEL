@@ -135,7 +135,7 @@ namespace mel
         template <> struct ExecutorTraits<Executor<ThreadPool>>
         {
             enum {has_microthreading = true};  //support microthreading?
-            enum {has_parallelism = false}; ////support true parallelism?
+            enum {has_parallelism = true}; ////support true parallelism?
         };
         typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
     }

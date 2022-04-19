@@ -21,14 +21,20 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
                     mel::execution::next([](float &param) noexcept {
                       return std::to_string(param);
                     }) |
+					mel::execution::getExecutor([](auto ex) noexcept {
+						if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
+							mel::text::info("Current executor supports true parallelism. Next job will be executed parallelized");
+						else
+							mel::text::info("Current executor doesn't support true parallelism. Next job will be executed sequentially");
+                    }) |
                     mel::execution::parallel(
-                        [](string &str) {
+                        [](string &str) noexcept{
                           mel::text::info("Parallel 1. {}", str + " hello!");
                         },
-                        [](string &str) {
+                        [](string &str) noexcept{
                           mel::text::info("Parallel 2. {}", str + " hi!");
                         },
-                        [](string &str) {
+                        [](string &str) noexcept{
                           mel::text::info("Parallel 2. {}", str + " whats up!");
                         }));
                 if (res.isValid()) {
@@ -395,7 +401,7 @@ void test_execution::samples()
 	extp.setOpts({true,true});
     
 	_sampleBasic(exr);	
-//	_sampleBasic(extp);
+	//_sampleBasic(extp);
 //	_sampleReference(exr);
 	//_sampleError1(exr);
 	//_sampleError2(extp);

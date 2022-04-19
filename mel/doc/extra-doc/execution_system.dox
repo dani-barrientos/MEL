@@ -166,7 +166,11 @@ A simple execution chain. This code consists of three execution steps:
 	- first task generating a float, from another float given as argument
 	- second task converting this float to string, a passing it to the next step
 	- third step launch three *parallel* tasks. This doesn't mean neccesarily that that task will be executed in parallel,
-	is just a hint so that the executor will do it in that way if it hast the capacity.
+	is just a hint so that the executor will do it in that way if it hast the capacity. To check for the kind of parallelism supported,
+a previous \ref mel::execution::getExecutor "getExecutor" is inserted in order to inform the user. This step, in this concrete example, wouldn't be neccesary because we have the ExecutorType 
+as function template parameter, but in a real example the job couldn't know anything about the underlying executor.
+
+	 
 \code{.cpp}
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
@@ -182,16 +186,23 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 			{
 				return std::to_string(param);
 			})
-			| mel::execution::parallel( 
-				[](string& str)
+			|
+				mel::execution::getExecutor([](auto ex) noexcept {
+					if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
+						mel::text::info("Current executor supports true parallelism. Next job will be executed parallelized");
+					else
+						mel::text::info("Current executor doesn't support true parallelism. Next job will be executed sequentially");
+				})
+			| mel::execution::parallel() 
+				[](string& str) noexcept
 				{					
 					text::info("Parallel 1. {}",str+" hello!");
 				},
-				[](string& str)
+				[](string& str) noexcept
 				{
 					text::info("Parallel 2. {}",str+" hi!");
 				},
-				[](string& str)
+				[](string& str) noexcept
 				{
 					text::info("Parallel 2. {}",str+" whats up!");
 				}
@@ -206,6 +217,7 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 \endcode
 Output will be:
 \code{.cpp}
+Current executor supports true parallelism. Next job will be executed parallelized
 Parallel 1. 16.500000 hello!
 Parallel 2. 16.500000 hi!
 Parallel 2. 16.500000 whats up!
