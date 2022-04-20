@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <execution/ExFuture.h>
 #include <functional>
+#include <optional>
 namespace mel
 {
     /**
