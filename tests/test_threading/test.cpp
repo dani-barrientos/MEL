@@ -129,7 +129,6 @@ static Timer sTimer;
  * objetivo: muchas tareas concurrentes pero que al final un resultado no debe ser modificado, por lo que el test
  * se pasará si el valor sigue manteniendose
  */
-
 uint64_t constexpr TIME_MARGIN = 10;
 void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 {
@@ -141,69 +140,26 @@ void CHECK_TIME(uint64_t t0, uint64_t t1, std::string text )
 std::atomic<int> sCount(0);
 //test for debuggin stuff
 static int _testsDebug(tests::BaseTest* test)
-{
+{	
 	{
-	constexpr int NUM_POSTS = 100'000;
-	//constexpr int NUM_PRODUCERS = 50;
-	constexpr int NUM_PRODUCERS = 1;
-	{
-	Runnable::RunnableCreationOptions opts;
-	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{10,2}; //provoca pete
-	//opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
-	auto consumer =ThreadRunnable::create(true,opts); //en realidad en free lock el maxSize es el chunksize. Cuando l otenga como opciones ya lo haré conherente
-	std::array< std::shared_ptr<ThreadRunnable>,NUM_PRODUCERS> producers;
-	for(size_t i=0;i<producers.size();++i)
-	{
-		producers[i] = ThreadRunnable::create(true);
-	}
-	for(size_t i=0;i<producers.size();++i)
-	{		
-		producers[i]->post([consumer,NUM_POSTS](uint64_t,Process*)
+		//auto th1 = ThreadRunnable::create();
+		Future<int> fut1;
+		Future<int> fut2;
+		fut1.subscribeCallback( [](Future<int>::ValueType& vt)
 		{
-			mel::tasking::Process::wait(50);//to wait for all producer posts done
-			for(auto i = 0; i < NUM_POSTS; ++i)
-			{
-				//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-				//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
-				{
-					consumer->fireAndForget(
-						[]()
-						{
-							++sCount;
-						},0,Runnable::killFalse
-					);
-				}
-			//	::mel::tasking::Process::wait(1);
-			}
-			return mel::tasking::EGenericProcessResult::KILL;
-		},Runnable::killFalse);
-	}
-/*
-//prueba sin usar producers, desde aqui directamente
-	for(auto i = 0; i < NUM_POSTS; ++i)
-	{
-		//@todo así peta. Es algo de destruiccion del hilo, ya que esto hará que tarde mś que la espera a fin
-		//if (mel::tasking::Process::wait(1000) == ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
+			mel::text::info("Fut1 set!");
+		});
+		fut2.subscribeCallback( [](Future<int>::ValueType& vt)
 		{
-			consumer->fireAndForget(
-				[]()
-				{
-					++sCount;
-				},0,Runnable::killFalse
-			);
-		}
+			mel::text::info("Fut2 set!");
+		});
+		fut2.assignData(fut1);
+		fut1.setValue(6);
+		
+		//asignacion del data
+		Thread::sleep(1000);
 	}
-*/
-	mel::text::info("Esperando...");
-	Thread::sleep(20000);
-	}
-	
-	if ( sCount == NUM_PRODUCERS*NUM_POSTS )
-		mel::text::info("_test_concurrent_post OK. {} Posts",sCount.load());
-	else
-		mel::text::error("_test_concurrent_post KO!! Some tasks were not executed. Posts: {} Count: {}",NUM_PRODUCERS*NUM_POSTS,sCount.load());
-	return 0;
-	}
+
 	mel::text::set_level(mel::text::level::debug);
 	{
 

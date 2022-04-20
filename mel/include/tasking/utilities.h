@@ -36,11 +36,11 @@ namespace mel
                     eventResult = mEvent.waitAndDo([this,f,&evId]()
                     {
                         evId = f.subscribeCallback(
-                        std::function<::mel::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
-                        {
-                            mEvent.set();
-                            return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
-                        }));
+                            [this](typename futT::ValueType& ) 
+                            {
+                                mEvent.set();                        
+                            }
+                        );
                     },msecs); 
                     f.unsubscribeCallback(evId); //maybe timeout, so callback won't be unsubscribed automatically       
                     switch( eventResult )

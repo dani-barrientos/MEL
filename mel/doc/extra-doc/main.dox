@@ -17,7 +17,7 @@ On top of this basic tasking system. we have some constructs that allows to appl
 We will talk more about each of this points in detail
 
 The library also has a lot of helper functionalities. Although the code use C++17 features, because the main pieces of this library dates back to the begining of year 2000, a lot of template metaprogramming 
-was done to be able to resolve things like \ref ::mel::core::Callback "callbacks" \ref ::mel::mpl::linkFunctor "binding arguments to callables", etc.. Most of this features are *now* (since C++11) resolved with bind, function, etc..
+was done to be able to resolve things like \ref ::mel::core::Callback "callbacks" \ref ::mel::mpl::linkFunctor "binding arguments to callables", etc.. Most of this features are *now* (since C++11) resolved with [bind](https://en.cppreference.com/w/cpp/utility/functional/bind), [function](https://en.cppreference.com/w/cpp/utility/functional/function), etc..
 So, some functionalities could be removed and used the "new" C++11 equivalents, specifically those in \ref ::mel::mpl namespace.
 
 

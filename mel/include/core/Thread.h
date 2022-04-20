@@ -228,12 +228,10 @@ namespace mel
 				mel::core::EWaitError wait( const futT& f,unsigned int msecs)
 				{
 					Event::EWaitCode eventresult;				
-					int evId = f.subscribeCallback(
-						std::function<::mel::core::ECallbackResult( typename futT::ValueType&)>([this](typename futT::ValueType& ) 
+					int evId = f.subscribeCallback([this](typename futT::ValueType& ) 
 						{
 							mEvent.set();
-							return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
-						}));				
+						});				
 					eventresult = mEvent.wait(msecs); 
 					f.unsubscribeCallback(evId);            
 					switch( eventresult )

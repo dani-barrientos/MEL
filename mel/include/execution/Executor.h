@@ -9,6 +9,7 @@
 #include <string>
 #include <stdexcept>
 #include <execution/ExFuture.h>
+#include <functional>
 namespace mel
 {
     /**
@@ -91,7 +92,7 @@ namespace mel
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             ExFuture<ExecutorAgent,NewType> result(fut.agent);
             fut.subscribeCallback(
-                std::function<::mel::core::ECallbackResult( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
+                std::function<void( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
                 {                                 
                     //launch tasks as response for callback for two reasons: manage the case when Future is already available when checked, so callback is trigered
                     //on calling thread and to decouple tasks and no staturate execution resoruce and independence tasks
@@ -110,8 +111,7 @@ namespace mel
                         {
                         result.setError(std::move(err));
                         });
-                    }
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
+                    }   
                 })
             );
             return result;  
@@ -131,7 +131,7 @@ namespace mel
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
+                std::function<void( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
                 {       
 
                     if ( input.isValid() )
@@ -148,9 +148,7 @@ namespace mel
                         {
                         result.setError(std::move(err));
                         });
-                    }
-                    
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
+                    }                                        
                 })
             );
             return result;
@@ -165,7 +163,7 @@ namespace mel
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
+                std::function<void(ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
                 {       
 
                     if ( input.isValid() )
@@ -192,8 +190,6 @@ namespace mel
                         result.setError(std::move(err));
                         });
                     }
-                    
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 })
             );
             return result;
@@ -208,10 +204,9 @@ namespace mel
             ExFuture<NewExecutorAgent,TRet> result(newAgent);
             typedef typename ExFuture<OldExecutorAgent,TRet>::ValueType  ValueType;
             fut.subscribeCallback(
-                std::function<::mel::core::ECallbackResult( ValueType&)>([result](ValueType& input) mutable
+                std::function<void( ValueType&)>([result](ValueType& input) mutable
                 {
                     result.assign(std::move(input));
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 })
             );
             return result;
@@ -226,7 +221,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
+                std::function<void( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
                 {
                     try
                     {   
@@ -284,7 +279,6 @@ namespace mel
                     {
                         result.setError( std::current_exception() );	
                     }
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 }));
             return result;
         }
@@ -296,7 +290,7 @@ namespace mel
             ExFuture<ExecutorAgent,void> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             source.subscribeCallback(
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
+                std::function<void(ValueType&)>([source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
                 {
                     try
                     {   
@@ -330,7 +324,6 @@ namespace mel
                     {
                         result.setError( std::current_exception() );	
                     }
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 }));
             return result;
         }
@@ -346,7 +339,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
                     {
@@ -370,7 +363,6 @@ namespace mel
                         result.setError(std::move(err));
                         });
                     }
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 }
             ));
             return result;
@@ -389,7 +381,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
+                std::function<void( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
                 {       
                     if ( !input.isValid() )
                     {                
@@ -400,7 +392,6 @@ namespace mel
                     }else
                         result.assign(std::move(input));
                     
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 })
             );
             return result;
@@ -416,7 +407,7 @@ namespace mel
             ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
                     {                       
@@ -442,7 +433,6 @@ namespace mel
                         result.setError(std::move(err));
                         });
                     }
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 }
             ));
             return result;
@@ -463,12 +453,10 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);            
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<::mel::core::ECallbackResult( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
+                std::function<void( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
                 {       
                     f(source.agent);
                     result.assign(std::move(input));
-                    
-                    return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                 })
             );
             return result;
@@ -554,11 +542,10 @@ namespace mel
             template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::mel::parallelism::Barrier& barrier, FType fut)
             {
                 fut.subscribeCallback(
-                    std::function<::mel::core::ECallbackResult( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
+                    std::function<void( typename FType::ValueType&)>([tup,barrier](typename FType::ValueType& input)  mutable
                     {
                         std::get<n>(*tup) = std::move(input);
                         barrier.set();
-                        return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                     }));
             }
 

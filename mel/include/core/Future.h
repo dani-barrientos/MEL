@@ -12,8 +12,8 @@
 #include <memory>
 #include <core/CallbackSubscriptor.h>
 #include <variant>
-#include <optional>
 #include <exception>
+#include <functional>
 namespace mel
 {
 	namespace core
@@ -287,12 +287,13 @@ namespace mel
 					}else
 						mState = NOTAVAILABLE;
 				}
+				
 				/**
 				 * @brief Subscribe to future available
 				 * 
-				 * @tparam F functor with signature 
+				 * @tparam F functor with signature void (Future::ValueType&)
 				 * @param f 
-				 * @return ubscription id. -1 if not subscribed, which can occur when function is executed directly if future is valid and
+				 * @return unsubscription id. -1 if not subscribed, which can occur when function is executed directly if future is valid and
 				 * returns an unsubsscription
 				 * @warning callback receiver shoudn't wait or do context switch and MUST NOT block
 				 * 
@@ -300,14 +301,19 @@ namespace mel
 				template <class F> int subscribeCallback(F&& f)
 				{
 					Lock lck(FutureData_Base::mSC);
-					bool continueSubscription = true;
 					int result = -1;
 					if ( mState != NOTAVAILABLE)
 					{
-						continueSubscription = (f(mValue) != ::mel::core::ECallbackResult::UNSUBSCRIBE );
-					}
-					if ( continueSubscription)
-						result = Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency				
+						f(mValue);
+					}else
+					{
+						result = Subscriptor::subscribeCallback( std::function<::mel::core::ECallbackResult (ValueType&)>([f = std::forward<F>(f)](ValueType& vt)
+							{
+								f(vt);
+								return ::mel::core::ECallbackResult::UNSUBSCRIBE;
+							})
+						);
+					}					
 					return result;
 				}
 				template <class F> auto unsubscribeCallback(F&& f)
@@ -349,12 +355,17 @@ namespace mel
 					int result = -1;
 					if ( mState != NOTAVAILABLE)
 					{
-						//in reality, this shouldn't be necessary and all callbacks should be unsubscribed always, because the Future only can trigger it
-						//once
-						continueSubscription = (f(mValue) != ::mel::core::ECallbackResult::UNSUBSCRIBE );
+						f(mValue);					
+					}else
+					{
+						result = Subscriptor::subscribeCallback( std::function<::mel::core::ECallbackResult(ValueType&)>(
+							[f = std::forward<F>(f)](ValueType& vt)
+							{
+								f(vt);
+								return ::mel::core::ECallbackResult::UNSUBSCRIBE;
+							})
+						);				
 					}
-					if ( continueSubscription)
-						result = Subscriptor::subscribeCallback(std::forward<F>(f)); //shoudn't be neccesary if mstate already available, but for consistency				
 					return result;
 				}
 				template <class F> auto unsubscribeCallback(F&& f)
@@ -396,17 +407,17 @@ namespace mel
 				void setError( ET&& ei )
 				{
 					volatile auto protectMe=FutureData<void>::shared_from_this();
-					FutureData_Base::mSC.enter();
+					core::Lock lck(FutureData_Base::mSC);
 					if ( mState == NOTAVAILABLE)
 					{
 						mValue = std::make_exception_ptr(std::forward<ET>(ei));
 						mState = INVALID;
 						Subscriptor::triggerCallbacks(mValue);
 					}			
-					FutureData_Base::mSC.leave();
 				};
 				void assign(const ValueType& val)
 				{
+					volatile auto protectMe=FutureData<void>::shared_from_this();
 					core::Lock lck(FutureData_Base::mSC);
 					mValue = val;
 					if (mValue.isAvailable())
@@ -418,6 +429,7 @@ namespace mel
 				}
 				void assign(ValueType&& val)
 				{
+					volatile auto protectMe=FutureData<void>::shared_from_this();
 					core::Lock lck(FutureData_Base::mSC);
 					mValue = std::move(val);
 					if (mValue.isAvailable())
@@ -525,9 +537,34 @@ namespace mel
 			{
 				getData().assign(std::move(val));
 			}
+			void assignData( Future_Common<T>& val)
+			{
+				//getData().assignData(val.getData());
+				//sets the same data as the other Future
+				/*	joer, ya no estoy tan seguro de esto, porque si tengo dos futures que vienen del mismo, esot no vale, ¿o no aplica??
+					core::Lock lck(getData().FutureData_Base::mSC);
+					core::Lock lck2(val.FutureData_Base::mSC);
+					//copiar los callbacks al destino
+					auto& callbacks = Subscriptor::getCallbacks();
+					// no puedo tal cual mover los callbacks por el tema del id.EN REALIDAD NO IMPORTA YA QUE ES PARA DESUSCRIBICION, PERO POR CONSISTENCIA
+					// ADEMAS, PODRIA USARSE EL ID EN LA SUSCRIPCION->ASÍ QUE CUIDADO....
+					//  POSIBILIDADES:
+					//  - VOVLER A SUSCRIBIR->TENGO QUE COGER EL CB del CallbackInfo e insertarlo
+					for(auto& i:callbacks)
+					{
+						Subscriptor::subscribeCreatedCallback(i.cb.get());
+					}
+					estoy haciendo una mierda, esto hay que hacerlo a Future, no aqui
+					if ( mState != NOTAVAILABLE)
+					{
+						mValue = 
+						Subscriptor::triggerCallbacks(mValue);
+					}*/
+				
+			}
 			/**
 			 * @brief Subscribe callback to be executed when future is ready (valid or error)
-			 * @param[in] F Callable wit signature \ref::core::ECallbackResult( \ref ::mel::core::FutureValue&);
+			 * @param[in] F Callable with signature `void( \ref ::mel::core::FutureValue& )`
 			 * @warning Usually callback is executed in the context of the thread doing setValue, but if Future is already ready
 			 * callback will be executed in the context of the thread doing subscription. In general, for this and more reasons, callbacks responses 
 			 * should be done buy launchin a task, so decoupliing totally the diferent tasks

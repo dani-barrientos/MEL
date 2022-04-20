@@ -215,7 +215,8 @@ namespace mel
 				}
 				return result;
 			}
-
+			inline CallbackListType& getCallbacks(){return mCallbacks;}
+			inline const CallbackListType& getCallbacks() const{return mCallbacks;}
 		protected:
 			CallbackListType mCallbacks;
 			_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy,mel::core::CSMultithreadPolicy>::result> mSC;
@@ -550,8 +551,8 @@ namespace mel
 				}
 				return result;
 			}
-
-
+			inline CallbackListType& getCallbacks(){return mCallbacks;}
+			inline const CallbackListType& getCallbacks() const{return mCallbacks;}
 		protected:
 			CallbackListType mCallbacks;
 			_private::_CriticalSectionWrapper<mpl::isSame<ThreadingPolicy, ::mel::core::CSMultithreadPolicy>::result> mSC;
