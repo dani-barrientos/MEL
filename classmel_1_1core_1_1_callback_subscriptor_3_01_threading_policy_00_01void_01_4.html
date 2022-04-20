@@ -87,6 +87,7 @@ $(document).ready(function(){initNavTree('classmel_1_1core_1_1_callback_subscrip
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="#pro-static-attribs">Static Protected Attributes</a> &#124;
 <a href="classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">mel::core::CallbackSubscriptor&lt; ThreadingPolicy, void &gt; Class Template Reference</div>  </div>
@@ -163,6 +164,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>subscribeCallback</b> 
 <tr class="separator:a99150bf3b3cddb587179bb8c2ad57f89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9818181d4e36cc3dd3b2391fd1f9d916"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_callback_subscriptor___base.html#a9818181d4e36cc3dd3b2391fd1f9d916">unsubscribeCreatedCallback</a> (std::shared_ptr&lt; <a class="el" href="classmel_1_1core_1_1_callback.html">CallbackType</a> &gt; cb)</td></tr>
 <tr class="separator:a9818181d4e36cc3dd3b2391fd1f9d916"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c5dab946fa70ce2af6db3c562d57460"><td class="memItemLeft" align="right" valign="top"><a id="a8c5dab946fa70ce2af6db3c562d57460"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>append</b> (const <a class="el" href="classmel_1_1core_1_1_callback_subscriptor___base.html">CallbackSubscriptor_Base</a>&lt; ThreadingPolicy, VARIABLE_ARGS_DECL &gt; &amp;ob2)</td></tr>
+<tr class="separator:a8c5dab946fa70ce2af6db3c562d57460"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a70b862993f743ad152a17e2e07be42"><td class="memItemLeft" align="right" valign="top"><a id="a8a70b862993f743ad152a17e2e07be42"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>append</b> (<a class="el" href="classmel_1_1core_1_1_callback_subscriptor___base.html">CallbackSubscriptor_Base</a>&lt; ThreadingPolicy, VARIABLE_ARGS_DECL &gt; &amp;&amp;ob2)</td></tr>
+<tr class="separator:a8a70b862993f743ad152a17e2e07be42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac554c7723ee7beb1bfb8b77d6a26958a"><td class="memItemLeft" align="right" valign="top"><a id="ac554c7723ee7beb1bfb8b77d6a26958a"></a>
 CallbackListType &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getCallbacks</b> ()</td></tr>
 <tr class="separator:ac554c7723ee7beb1bfb8b77d6a26958a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,9 +185,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>_applyPendingOperatio
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a5e89ae2063c6c5f49ee0a45d1d644274"><td class="memItemLeft" align="right" valign="top"><a id="a5e89ae2063c6c5f49ee0a45d1d644274"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>mCurrId</b></td></tr>
-<tr class="separator:a5e89ae2063c6c5f49ee0a45d1d644274"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3220997a32f6bce51c352921ed9d7c7"><td class="memItemLeft" align="right" valign="top"><a id="af3220997a32f6bce51c352921ed9d7c7"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>mTriggering</b></td></tr>
 <tr class="separator:af3220997a32f6bce51c352921ed9d7c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,6 +197,12 @@ CallbackListType&#160;</td><td class="memItemRight" valign="bottom"><b>mCallback
 <tr class="memitem:ad3095b94e1e2a2be2b56a8a458b5f394"><td class="memItemLeft" align="right" valign="top"><a id="ad3095b94e1e2a2be2b56a8a458b5f394"></a>
 _private::_CriticalSectionWrapper&lt; <a class="el" href="structmel_1_1mpl_1_1is_same.html">mpl::isSame</a>&lt; ThreadingPolicy, <a class="el" href="structmel_1_1core_1_1_c_s_multithread_policy.html">mel::core::CSMultithreadPolicy</a> &gt;::result &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mSC</b></td></tr>
 <tr class="separator:ad3095b94e1e2a2be2b56a8a458b5f394"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-attribs"></a>
+Static Protected Attributes</h2></td></tr>
+<tr class="memitem:a164af7f18d63012d25a3f64e82f00e51"><td class="memItemLeft" align="right" valign="top"><a id="a164af7f18d63012d25a3f64e82f00e51"></a>
+static int&#160;</td><td class="memItemRight" valign="bottom"><b>mCurrId</b></td></tr>
+<tr class="separator:a164af7f18d63012d25a3f64e82f00e51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a99150bf3b3cddb587179bb8c2ad57f89"></a>

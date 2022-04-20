@@ -121,9 +121,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (const typ
 <tr class="memitem:a87864cadc54dec7a1579ee6748487755"><td class="memItemLeft" align="right" valign="top"><a id="a87864cadc54dec7a1579ee6748487755"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (typename _private::FutureData&lt; T &gt;::ValueType &amp;&amp;val)</td></tr>
 <tr class="separator:a87864cadc54dec7a1579ee6748487755"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac30f09d49484ac50eb26d891a44d499b"><td class="memItemLeft" align="right" valign="top"><a id="ac30f09d49484ac50eb26d891a44d499b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>assignData</b> (<a class="el" href="classmel_1_1core_1_1_future___common.html">Future_Common</a>&lt; T &gt; &amp;val)</td></tr>
-<tr class="separator:ac30f09d49484ac50eb26d891a44d499b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8743050a81a09d25ab3e62201bb3ba41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future___common.html#a8743050a81a09d25ab3e62201bb3ba41">assign</a> (<a class="el" href="classmel_1_1core_1_1_future___common.html">Future_Common</a>&lt; T &gt; &amp;val)</td></tr>
+<tr class="memdesc:a8743050a81a09d25ab3e62201bb3ba41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes this <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> to point to the same value as the given <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>.  <a href="classmel_1_1core_1_1_future___common.html#a8743050a81a09d25ab3e62201bb3ba41">More...</a><br /></td></tr>
+<tr class="separator:a8743050a81a09d25ab3e62201bb3ba41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="memTemplParams" colspan="2">template&lt;class F &gt; </td></tr>
 <tr class="memitem:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="memTemplItemLeft" align="right" valign="top">int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a> (F &amp;&amp;f) const</td></tr>
 <tr class="memdesc:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe callback to be executed when future is ready (valid or error)  <a href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">More...</a><br /></td></tr>
@@ -162,6 +162,37 @@ class mel::core::Future_Common&lt; T &gt;</h3>
   </dd>
 </dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a8743050a81a09d25ab3e62201bb3ba41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8743050a81a09d25ab3e62201bb3ba41">&#9670;&nbsp;</a></span>assign()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classmel_1_1core_1_1_future___common.html">mel::core::Future_Common</a>&lt; T &gt;::assign </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classmel_1_1core_1_1_future___common.html">Future_Common</a>&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>val</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Makes this <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> to point to the same value as the given <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>. </p>
+<p>This ways, both futures will share the same value/error. If input <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> is already set at that moment, callbacks are triggeres as usual. It's improtante to note that <em>all futures</em> sharing same data will change </p>
+
+</div>
+</div>
 <a id="aba2dbf5844e243c0a3d8bbf738df11d2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aba2dbf5844e243c0a3d8bbf738df11d2">&#9670;&nbsp;</a></span>getValue() <span class="overload">[1/2]</span></h2>
 

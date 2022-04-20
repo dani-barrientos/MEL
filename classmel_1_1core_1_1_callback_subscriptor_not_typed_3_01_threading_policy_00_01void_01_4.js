@@ -5,6 +5,8 @@ var classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00
     [ "CallbackSubscriptorNotTyped", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a5775b7662a80523824cc72cd1c7508fe", null ],
     [ "CallbackSubscriptorNotTyped", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a57660e55363804bd35631416720512d4", null ],
     [ "_applyPendingOperations", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a88e42f96ce147143962e621b09432145", null ],
+    [ "append", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a8a70b862993f743ad152a17e2e07be42", null ],
+    [ "append", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a8c5dab946fa70ce2af6db3c562d57460", null ],
     [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#ac554c7723ee7beb1bfb8b77d6a26958a", null ],
     [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#abda321c8e82e897f68f57c119aea69ad", null ],
     [ "getNumCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#aea4f4d29b9bb0c5b8b900651ef244407", null ],
@@ -20,7 +22,7 @@ var classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00
     [ "unsubscribeCallback", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a3dfb95c705371d713b212cb0de71737b", null ],
     [ "unsubscribeCreatedCallback", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a9818181d4e36cc3dd3b2391fd1f9d916", null ],
     [ "mCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a06682d1efde890e7becdfba22ee1f571", null ],
-    [ "mCurrId", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a5e89ae2063c6c5f49ee0a45d1d644274", null ],
+    [ "mCurrId", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a164af7f18d63012d25a3f64e82f00e51", null ],
     [ "mPendingOperation", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#a66d014c1d7a959d0bdae47c72a78d5e7", null ],
     [ "mSC", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#ad3095b94e1e2a2be2b56a8a458b5f394", null ],
     [ "mTriggering", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#af3220997a32f6bce51c352921ed9d7c7", null ]
