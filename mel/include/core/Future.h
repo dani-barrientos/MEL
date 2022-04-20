@@ -187,6 +187,8 @@ namespace mel
 				{
 					return mState;
 				}
+				//! use carefully, only for very special cases
+				CriticalSection& getMutex(){ return mSC;}
 			protected:
 				mutable CriticalSection	mSC; 
 				EFutureState		mState;
@@ -194,7 +196,7 @@ namespace mel
 			};
 			template <typename T>
 			class FutureData : public FutureData_Base,
-							private CallbackSubscriptor<::mel::core::CSMultithreadPolicy,
+							public CallbackSubscriptor<::mel::core::CSMultithreadPolicy,
 							FutureValue<typename 
 								std::conditional<
 									std::is_lvalue_reference<T>::value,
@@ -331,7 +333,7 @@ namespace mel
 			//so user need to know when it finish
 			template <>
 			class FutureData<void> : public FutureData_Base,
-				private CallbackSubscriptor<::mel::core::CSMultithreadPolicy,FutureValue<void>&>,
+				public CallbackSubscriptor<::mel::core::CSMultithreadPolicy,FutureValue<void>&>,
 				public std::enable_shared_from_this<FutureData<void>>
 			{
 				typedef CallbackSubscriptor<::mel::core::CSMultithreadPolicy,FutureValue<void>&> Subscriptor;
@@ -442,13 +444,24 @@ namespace mel
 				private:
 					ValueType mValue;
 			};
+
+			class FutureDataContainer
+			{
+				public:
+					FutureDataContainer(std::shared_ptr<FutureData_Base> ptr):mPtr(ptr){}
+					inline const std::shared_ptr<FutureData_Base>& getPtr() const{ return mPtr;}
+					inline std::shared_ptr<FutureData_Base>& getPtr(){ return mPtr;}
+					inline void setPtr(const std::shared_ptr<FutureData_Base>& ptr){mPtr = ptr;}
+				private:
+					std::shared_ptr<FutureData_Base> mPtr;
+			};
 			/**
 			* no templated common data.
 			*/
 			class Future_Base
 			{
 			protected:
-				std::shared_ptr<FutureData_Base> mData;
+				std::shared_ptr<FutureDataContainer> mData;
 				Future_Base():mData(nullptr){};
 
 			public:
@@ -477,11 +490,11 @@ namespace mel
 				*/
 				inline bool getValid() const
 				{
-					return mData->getValid();
+					return mData->getPtr()->getValid();
 				}
 				inline EFutureState getState() const
 				{
-					return mData->getState();
+					return mData->getPtr()->getState();
 				}
 				//Check if given future points to same data
 				inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
@@ -504,7 +517,7 @@ namespace mel
 		protected:
 			Future_Common()
 			{
-				mData = std::make_shared<_private::FutureData<T>>();
+				mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>());
 			};
 			Future_Common( const Future_Common& f ): _private::Future_Base( f ){}
 			Future_Common( Future_Common&& f ): _private::Future_Base( std::move(f) ){}
@@ -523,12 +536,12 @@ namespace mel
 			 * @brief Get the Value object
 			 * @return const ::mel::core::FutureValue
 			 */
-			inline  const typename _private::FutureData<T>::ValueType& getValue() const{ return ((_private::FutureData<T>*)mData.get())->getValue();}		
+			inline  const typename _private::FutureData<T>::ValueType& getValue() const{ return static_cast<_private::FutureData<T>*>(mData->getPtr().get())->getValue();}
 			/**
 			 * @brief Get the Value object
 			 * @return const ::mel::core::FutureValue
 			 */
-			inline  typename _private::FutureData<T>::ValueType& getValue() { return ((_private::FutureData<T>*)mData.get())->getValue();}					
+			inline  typename _private::FutureData<T>::ValueType& getValue() { return static_cast<_private::FutureData<T>*>(mData->getPtr().get())->getValue();}
 			void assign( const typename _private::FutureData<T>::ValueType& val)
 			{
 				getData().assign(val);
@@ -537,30 +550,20 @@ namespace mel
 			{
 				getData().assign(std::move(val));
 			}
-			void assignData( Future_Common<T>& val)
+			/**
+			 * @brief Makes this Future to point to the same value as the given Future
+			 * @details This ways, both futures will share the same value/error. If input Future is already set at that moment, 
+			 * callbacks are triggeres as usual. It's improtante to note that *all futures* sharing same data will change
+			 */
+			void assign( Future_Common<T>& val)
 			{
-				//getData().assignData(val.getData());
-				//sets the same data as the other Future
-				/*	joer, ya no estoy tan seguro de esto, porque si tengo dos futures que vienen del mismo, esot no vale, ¿o no aplica??
-					core::Lock lck(getData().FutureData_Base::mSC);
-					core::Lock lck2(val.FutureData_Base::mSC);
-					//copiar los callbacks al destino
-					auto& callbacks = Subscriptor::getCallbacks();
-					// no puedo tal cual mover los callbacks por el tema del id.EN REALIDAD NO IMPORTA YA QUE ES PARA DESUSCRIBICION, PERO POR CONSISTENCIA
-					// ADEMAS, PODRIA USARSE EL ID EN LA SUSCRIPCION->ASÍ QUE CUIDADO....
-					//  POSIBILIDADES:
-					//  - VOVLER A SUSCRIBIR->TENGO QUE COGER EL CB del CallbackInfo e insertarlo
-					for(auto& i:callbacks)
-					{
-						Subscriptor::subscribeCreatedCallback(i.cb.get());
-					}
-					estoy haciendo una mierda, esto hay que hacerlo a Future, no aqui
-					if ( mState != NOTAVAILABLE)
-					{
-						mValue = 
-						Subscriptor::triggerCallbacks(mValue);
-					}*/
-				
+				core::Lock lck(val.getData().getMutex()); 
+				auto ptr = mData->getPtr(); //to avoid destruction before unlock
+				core::Lock lck2(getData().getMutex()); 								
+				val.getData().append(std::move(getData()));
+				setData(val.mData->getPtr());
+				if (val.getValue().isAvailable())
+					getData().triggerCallbacks(getData().getValue());
 			}
 			/**
 			 * @brief Subscribe callback to be executed when future is ready (valid or error)
@@ -583,8 +586,12 @@ namespace mel
 				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
 			}
 		private:
-			inline const _private::FutureData<T>& getData() const{ return *(_private::FutureData<T>*)mData; }
-			inline _private::FutureData<T>& getData(){ return *(_private::FutureData<T>*)mData.get(); }
+			inline const _private::FutureData<T>& getData() const{ return *static_cast<_private::FutureData<T>*>(mData->getPtr().get()); }
+			inline _private::FutureData<T>& getData(){ return *static_cast<_private::FutureData<T>*>(mData->getPtr().get()); }
+			inline void setData(const std::shared_ptr<_private::FutureData_Base	>& ptr)
+			{
+				mData->setPtr(ptr);
+			}
 		};
 		/**
 		* @brief Represents a value that *maybe* is not present at the current moment.
@@ -623,12 +630,12 @@ namespace mel
 			template <class F>
 			void setValue( F&& value )
 			{
-				((_private::FutureData<T>*)Future_Common<T>::mData.get())->setValue( std::forward<F>(value) ); 
+				static_cast<_private::FutureData<T>*>(Future_Common<T>::mData->getPtr().get())->setValue( std::forward<F>(value) );
 			}	
 			template <class F>
 			void setError( F&& ei )
 			{
-				((_private::FutureData<T>*)Future_Common<T>::mData.get())->setError( std::forward<F>(ei) ); 
+				static_cast<_private::FutureData<T>*>(Future_Common<T>::mData->getPtr().get())->setError( std::forward<F>(ei) ); 
 			}
 		};
 		///@cond HIDDEN_SYMBOLS	
@@ -658,13 +665,13 @@ namespace mel
 			};
 			template <class F>
 			void setValue( F&& value )
-			{
-				((_private::FutureData<T&>*)Future_Common<T&>::mData.get())->setValue( std::forward<F>(value) ); 
+			{				
+				static_cast<_private::FutureData<T&>*>(Future_Common<T&>::mData->getPtr().get())->setValue( std::forward<F>(value) );
 			}	
 			template <class F>
 			void setError( F&& ei )
 			{
-				((_private::FutureData<T&>*)Future_Common<T&>::mData.get())->setError( std::forward<F>(ei) ); 
+				static_cast<_private::FutureData<T&>*>(Future_Common<T&>::mData->getPtr().get())->setError( std::forward<F>(ei) ); 
 			}
 		};
 
@@ -678,7 +685,8 @@ namespace mel
 			//fake initializacion to indicate we want to initialize as valid
 			Future(int a)
 			{
-				_private::Future_Base::mData = std::make_shared<_private::FutureData<void>>(a);
+//				_private::Future_Base::mData = std::make_shared<_private::FutureData<void>>(a);
+				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<void>>(a));
 			};
 			Future(const Future& f):Future_Common<void>(f){};	
 			Future(Future&& f):Future_Common<void>(std::move(f)){};	
@@ -693,11 +701,13 @@ namespace mel
 				return *this;
 			};
 			
-			inline void setValue( void ){ ((_private::FutureData<void>*)_private::Future_Base::mData.get())->setValue( ); }		
+			inline void setValue( void ){ 
+				static_cast<_private::FutureData<void>*>(Future_Common<void>::mData->getPtr().get())->setValue( );
+				}		
 			template <class F>
 			void setError( F&& ei )
 			{
-				((_private::FutureData<void>*)_private::Future_Base::mData.get())->setError( std::forward<F>(ei) ); 
+				static_cast<_private::FutureData<void>*>(Future_Common<void>::mData->getPtr().get())->setError( std::forward<F>(ei) ); 
 			}		
 		};
 		///@endcond

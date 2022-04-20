@@ -48,7 +48,7 @@ namespace mel
 				CallbackInfo(std::shared_ptr<CallbackType> acb, int aId) :cb(acb), id(aId) {}
 				CallbackInfo() :cb(nullptr), id(-1) {}
 			};
-			int mCurrId;
+			static int mCurrId;
 			bool mTriggering; //to detect subscription/unsubscription while triggering
 			struct PendingOperation
 			{
@@ -57,9 +57,9 @@ namespace mel
 				CallbackInfo info;
 			};
 			std::deque <PendingOperation> mPendingOperation;
-
+			
 		public:
-			CallbackSubscriptor_Base() :mCurrId(0), mTriggering(false){};
+			CallbackSubscriptor_Base() :/*mCurrId(0),*/ mTriggering(false){};
 			typedef list< CallbackInfo > CallbackListType;
 			virtual ~CallbackSubscriptor_Base()
 			{
@@ -215,6 +215,16 @@ namespace mel
 				}
 				return result;
 			}
+			void append(const CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL>& ob2)
+			{
+				for(auto& cb:ob2.mCallbacks)
+					mCallbacks.push_back( cb);
+			}
+			void append(CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL>&& ob2)
+			{
+				for(auto& cb:ob2.mCallbacks)
+					mCallbacks.push_back( std::move(cb));
+			}
 			inline CallbackListType& getCallbacks(){return mCallbacks;}
 			inline const CallbackListType& getCallbacks() const{return mCallbacks;}
 		protected:
@@ -256,6 +266,9 @@ namespace mel
 			}
 
 		};
+		template <class ThreadingPolicy, VARIABLE_ARGS_NODEFAULT >
+		int CallbackSubscriptor_Base<ThreadingPolicy,VARIABLE_ARGS_DECL>::mCurrId = 0;
+
 
 		template <class ThreadingPolicy, VARIABLE_ARGS >
 		class CallbackSubscriptorNotTyped: public CallbackSubscriptor_Base<ThreadingPolicy,VARIABLE_ARGS_DECL>
@@ -397,7 +410,7 @@ namespace mel
 				CallbackInfo(std::shared_ptr<CallbackType> acb, int aId) :cb(acb), id(aId) {}
 				CallbackInfo() :cb(nullptr), id(-1) {}
 			};
-			int mCurrId;
+			static int mCurrId;
 			bool mTriggering; //to detect subscription/unsubscription while triggering
 			struct PendingOperation
 			{
@@ -408,7 +421,7 @@ namespace mel
 			std::deque <PendingOperation> mPendingOperation;
 		public:
 			typedef list< CallbackInfo > CallbackListType;
-			CallbackSubscriptor_Base():mCurrId(0), mTriggering(false){};
+			CallbackSubscriptor_Base():/*mCurrId(0),*/ mTriggering(false){};
 			virtual ~CallbackSubscriptor_Base()
 			{
 				removeCallbacks();
@@ -551,6 +564,16 @@ namespace mel
 				}
 				return result;
 			}
+			void append(const CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL>& ob2)
+			{
+				for(auto& cb:ob2.mCallbacks)
+					mCallbacks.push_back( cb);
+			}
+			void append(CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL>&& ob2)
+			{				
+				for(auto& cb:ob2.mCallbacks)
+					mCallbacks.push_back( std::move(cb));
+			}
 			inline CallbackListType& getCallbacks(){return mCallbacks;}
 			inline const CallbackListType& getCallbacks() const{return mCallbacks;}
 		protected:
@@ -592,6 +615,9 @@ namespace mel
 				mPendingOperation.clear();
 			}
 		};
+		template <class ThreadingPolicy, VARIABLE_ARGS >
+		int CallbackSubscriptor_Base<ThreadingPolicy,VARIABLE_ARGS_DECL>::mCurrId = 0;
+
 		template < class ThreadingPolicy, VARIABLE_ARGS >
 		class CallbackSubscriptorNotTyped<ThreadingPolicy,VARIABLE_ARGS_DECL> : public CallbackSubscriptor_Base<ThreadingPolicy, VARIABLE_ARGS_DECL>
 		{

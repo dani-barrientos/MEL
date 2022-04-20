@@ -18,6 +18,7 @@ using mel::tasking::Process;
 #include "future_tests.h"
 #include <tasking/utilities.h>
 #include <array>
+#include <core/Future2.h>
 
 const std::string TestThreading::TEST_NAME = "threading";
 /**
@@ -142,20 +143,56 @@ std::atomic<int> sCount(0);
 static int _testsDebug(tests::BaseTest* test)
 {	
 	{
+		using mel::core::Future2;
 		//auto th1 = ThreadRunnable::create();
 		Future<int> fut1;
 		Future<int> fut2;
+		Future<int> fut3(fut2);
 		fut1.subscribeCallback( [](Future<int>::ValueType& vt)
 		{
-			mel::text::info("Fut1 set!");
+			mel::text::info("Fut1 set! {}",vt.value());
 		});
 		fut2.subscribeCallback( [](Future<int>::ValueType& vt)
 		{
+			mel::text::info("Fut2 set! {}",vt.value());
+		});
+		fut3.subscribeCallback( [](Future<int>::ValueType& vt)
+		{
+			mel::text::info("Fut3 set! {}",vt.value());
+		});
+/*		 meditar sobre esto. Funciona bien pero tengo que dejarlo bien hilvanado: igual tengo que ponerle otro nombre, ya que 
+		 	viendo eso uno pensaría que sólo cambia el fut2, cuando en realidad cambia el data por lo que afecta a todos
+			 POSIBILDIADES:
+			  - llamarlo change		*/
+ 		fut2.assign(fut1);
+		fut1.setValue(6);
+		//asignacion del data
+		Thread::sleep(1000);
+	}
+	{
+		using mel::core::Future2;
+		//auto th1 = ThreadRunnable::create();
+		Future<void> fut1;
+		Future<void> fut2;
+		Future<void> fut3(fut2);
+		fut1.subscribeCallback( [](Future<void>::ValueType& vt)
+		{
+			mel::text::info("Fut1 set!");
+		});
+		fut2.subscribeCallback( [](Future<void>::ValueType& vt)
+		{
 			mel::text::info("Fut2 set!");
 		});
-		fut2.assignData(fut1);
-		fut1.setValue(6);
-		
+		fut3.subscribeCallback( [](Future<void>::ValueType& vt)
+		{
+			mel::text::info("Fut3 set!");
+		});
+/*		 meditar sobre esto. Funciona bien pero tengo que dejarlo bien hilvanado: igual tengo que ponerle otro nombre, ya que 
+		 	viendo eso uno pensaría que sólo cambia el fut2, cuando en realidad cambia el data por lo que afecta a todos
+			 POSIBILDIADES:
+			  - llamarlo change		*/
+ 		fut2.assign(fut1);
+		fut1.setValue();
 		//asignacion del data
 		Thread::sleep(1000);
 	}
