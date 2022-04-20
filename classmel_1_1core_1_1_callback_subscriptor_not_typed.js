@@ -5,6 +5,8 @@ var classmel_1_1core_1_1_callback_subscriptor_not_typed =
     [ "CallbackSubscriptorNotTyped", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#a2660779eb3879253af447c3782d11c2a", null ],
     [ "CallbackSubscriptorNotTyped", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#a3b54cea8730fe2778e8a8f20ad34ed0c", null ],
     [ "_applyPendingOperations", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#a88e42f96ce147143962e621b09432145", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#ac554c7723ee7beb1bfb8b77d6a26958a", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#abda321c8e82e897f68f57c119aea69ad", null ],
     [ "getNumCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#aea4f4d29b9bb0c5b8b900651ef244407", null ],
     [ "removeCallbacks", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#abeaa28e572e5a70755165b56f5272f04", null ],
     [ "subscribeCallback", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html#a7cb07697f1bb485c4a5892f660510af5", null ],

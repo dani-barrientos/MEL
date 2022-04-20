@@ -8,6 +8,8 @@ var classmel_1_1core_1_1_callback_subscriptor___base =
     [ "~CallbackSubscriptor_Base", "classmel_1_1core_1_1_callback_subscriptor___base.html#a8633c9b4645c2ed79adc1ded22d69014", null ],
     [ "CallbackSubscriptor_Base", "classmel_1_1core_1_1_callback_subscriptor___base.html#a1c1fed4f138e2ab40577e1f97ae6ab27", null ],
     [ "_applyPendingOperations", "classmel_1_1core_1_1_callback_subscriptor___base.html#a88e42f96ce147143962e621b09432145", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor___base.html#ac554c7723ee7beb1bfb8b77d6a26958a", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor___base.html#abda321c8e82e897f68f57c119aea69ad", null ],
     [ "getNumCallbacks", "classmel_1_1core_1_1_callback_subscriptor___base.html#aea4f4d29b9bb0c5b8b900651ef244407", null ],
     [ "removeCallbacks", "classmel_1_1core_1_1_callback_subscriptor___base.html#abeaa28e572e5a70755165b56f5272f04", null ],
     [ "subscribeCallback", "classmel_1_1core_1_1_callback_subscriptor___base.html#a7cb07697f1bb485c4a5892f660510af5", null ],

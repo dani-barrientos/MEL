@@ -5,6 +5,8 @@ var classmel_1_1core_1_1_callback_subscriptor =
     [ "CallbackSubscriptor", "classmel_1_1core_1_1_callback_subscriptor.html#a5b29055d722a906261d607ba0e4a7322", null ],
     [ "CallbackSubscriptor", "classmel_1_1core_1_1_callback_subscriptor.html#a79fa8a8d7640edf81a9b1f00b2773b35", null ],
     [ "_applyPendingOperations", "classmel_1_1core_1_1_callback_subscriptor.html#a88e42f96ce147143962e621b09432145", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor.html#ac554c7723ee7beb1bfb8b77d6a26958a", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor.html#abda321c8e82e897f68f57c119aea69ad", null ],
     [ "getNumCallbacks", "classmel_1_1core_1_1_callback_subscriptor.html#aea4f4d29b9bb0c5b8b900651ef244407", null ],
     [ "removeCallbacks", "classmel_1_1core_1_1_callback_subscriptor.html#abeaa28e572e5a70755165b56f5272f04", null ],
     [ "subscribeCallback", "classmel_1_1core_1_1_callback_subscriptor.html#a7cb07697f1bb485c4a5892f660510af5", null ],

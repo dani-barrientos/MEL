@@ -5,6 +5,7 @@ var classmel_1_1core_1_1_future___common =
     [ "Future_Common", "classmel_1_1core_1_1_future___common.html#a238d0f08b12313acca56a240942ef1f1", null ],
     [ "assign", "classmel_1_1core_1_1_future___common.html#a09b4c409d89e4d8291505ba513637ecb", null ],
     [ "assign", "classmel_1_1core_1_1_future___common.html#a87864cadc54dec7a1579ee6748487755", null ],
+    [ "assignData", "classmel_1_1core_1_1_future___common.html#ac30f09d49484ac50eb26d891a44d499b", null ],
     [ "getValue", "classmel_1_1core_1_1_future___common.html#aba2dbf5844e243c0a3d8bbf738df11d2", null ],
     [ "getValue", "classmel_1_1core_1_1_future___common.html#a663f1cf52f685b2a8e93e3d00f16ebf3", null ],
     [ "operator=", "classmel_1_1core_1_1_future___common.html#a0180ab27b501fb0fc6efa7e11cd2492a", null ],

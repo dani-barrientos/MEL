@@ -152,6 +152,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (const typ
 <tr class="memitem:a87864cadc54dec7a1579ee6748487755"><td class="memItemLeft" align="right" valign="top"><a id="a87864cadc54dec7a1579ee6748487755"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (typename _private::FutureData&lt; T &gt;::ValueType &amp;&amp;val)</td></tr>
 <tr class="separator:a87864cadc54dec7a1579ee6748487755"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac30f09d49484ac50eb26d891a44d499b"><td class="memItemLeft" align="right" valign="top"><a id="ac30f09d49484ac50eb26d891a44d499b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assignData</b> (<a class="el" href="classmel_1_1core_1_1_future___common.html">Future_Common</a>&lt; T &gt; &amp;val)</td></tr>
+<tr class="separator:ac30f09d49484ac50eb26d891a44d499b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="memTemplParams" colspan="2">template&lt;class F &gt; </td></tr>
 <tr class="memitem:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="memTemplItemLeft" align="right" valign="top">int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a> (F &amp;&amp;f) const</td></tr>
 <tr class="memdesc:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe callback to be executed when future is ready (valid or error)  <a href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">More...</a><br /></td></tr>
@@ -265,7 +268,7 @@ template&lt;class F &gt; </div>
 <p>Subscribe callback to be executed when future is ready (valid or error) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">F</td><td>Callable wit signature ( ::mel::core::FutureValue&amp;); </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">F</td><td>Callable with signature <code>void( \ref <a class="el" href="classmel_1_1core_1_1_future_value.html" title="Wrapper for value holded by a Future.">mel::core::FutureValue</a>&amp; )</code> </td></tr>
   </table>
   </dd>
 </dl>

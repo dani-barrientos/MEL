@@ -1,5 +1,12 @@
 var NAVTREEINDEX3 =
 {
+"classmel_1_1parallelism_1_1_barrier.html#a7231c54b77f21bbe368b526eaf0924a3":[7,0,0,3,0,9],
+"classmel_1_1parallelism_1_1_barrier.html#a8df1312b4af01717894ed057a5769e17":[7,0,0,3,0,4],
+"classmel_1_1parallelism_1_1_barrier.html#a8e7a1fcbab5cf571fc4bd569b17eb98c":[7,0,0,3,0,2],
+"classmel_1_1parallelism_1_1_barrier.html#aa4339fc5c918f309666553f9e021d247":[7,0,0,3,0,6],
+"classmel_1_1parallelism_1_1_barrier.html#ad8db8324a1ca20dfd50111c4f940618d":[7,0,0,3,0,1],
+"classmel_1_1parallelism_1_1_barrier.html#ae4559e2079709bf0057280c247ea04a3":[7,0,0,3,0,3],
+"classmel_1_1parallelism_1_1_thread_pool.html":[7,0,0,3,3],
 "classmel_1_1parallelism_1_1_thread_pool.html#a08e9ca6ba7702ed015303ecc588ba65e":[7,0,0,3,3,7],
 "classmel_1_1parallelism_1_1_thread_pool.html#a111b083c8b5d3a61729a1912062137d1":[7,0,0,3,3,9],
 "classmel_1_1parallelism_1_1_thread_pool.html#a3c847cca704bb8d2079b9929a85e026b":[7,0,0,3,3,10],
@@ -242,12 +249,5 @@ var NAVTREEINDEX3 =
 "classmel_1_1tasking_1_1_thread_runnable.html#acb278386e790b498bdec865ba22fd466":[7,0,0,4,12,17],
 "classmel_1_1tasking_1_1_thread_runnable.html#acb42def1c0524e42f9e6a33f3fabfdfb":[7,0,0,4,12,4],
 "classmel_1_1tasking_1_1_thread_runnable.html#ace5f09f603b7c25d3f898171e7caf06a":[7,0,0,4,12,23],
-"classmel_1_1tasking_1_1_thread_runnable.html#ad4648740579cca61ddd8ae5df2932302":[7,0,0,4,12,34],
-"classmel_1_1tasking_1_1_thread_runnable.html#ad890610e8fbbe03fafea4804813cd3b0":[7,0,0,4,12,6],
-"classmel_1_1tasking_1_1_thread_runnable.html#ae66eca4130c33b77143def5806c4d7dd":[7,0,0,4,12,16],
-"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3ab":[7,0,0,4,12,0],
-"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3aba3238cfa2475cc435fa4284f5f118ddea":[7,0,0,4,12,0,5],
-"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3aba405c94a933f51809700ee088b0ae6db1":[7,0,0,4,12,0,4],
-"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3aba930a62ccc284ae3441951b71a28bb0d7":[7,0,0,4,12,0,1],
-"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3abaa4683885442ecae285934a3c8894015d":[7,0,0,4,12,0,3]
+"classmel_1_1tasking_1_1_thread_runnable.html#ad4648740579cca61ddd8ae5df2932302":[7,0,0,4,12,34]
 };

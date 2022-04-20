@@ -5,6 +5,8 @@ var classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01
     [ "CallbackSubscriptor", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#a68daedf59334913864ecc96ed9c322fe", null ],
     [ "CallbackSubscriptor", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#a8cf77b8d0969598c40862eefaf6e5fe9", null ],
     [ "_applyPendingOperations", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#a88e42f96ce147143962e621b09432145", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#ac554c7723ee7beb1bfb8b77d6a26958a", null ],
+    [ "getCallbacks", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#abda321c8e82e897f68f57c119aea69ad", null ],
     [ "getNumCallbacks", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#aea4f4d29b9bb0c5b8b900651ef244407", null ],
     [ "removeCallbacks", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#abeaa28e572e5a70755165b56f5272f04", null ],
     [ "subscribeCallback", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html#a4ebf429ebbd5b387b3244dd2600b3624", null ],
