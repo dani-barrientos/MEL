@@ -201,19 +201,19 @@ int _testDebug(tests::BaseTest* test)
 				{
 					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
 					return TestClass(8);
-				},7) | 
-			execution::catchError([](std::exception_ptr err) 
+				},7)
+			|execution::catchError([](std::exception_ptr err) 
 			{
 				text::info("catchError");
 				return TestClass(9);
-			})|
-			execution::getExecutor([](auto ex)
+			})
+			| execution::getExecutor([](auto ex)
 			{
 				text::info("getExecutor");
 				text::info("Executor support microthreading={}",execution::ExecutorTraits<decltype(ex)>::has_microthreading);
 				text::info("Executor support parallelism={}",execution::ExecutorTraits<decltype(ex)>::has_parallelism);
-			}) | 
-			execution::next([](TestClass& v) 
+			}) 
+			| execution::next([](TestClass& v) 
 			{
 				//throw std::runtime_error("ERR EN NEXT");
 				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
@@ -493,7 +493,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	//use a task to make it more complex
 	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
 	{
-		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
+		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
 		text::info("Simple functor chaining. using operator | from now");
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
@@ -518,7 +518,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						tasking::Process::wait(300);
 						v.val = 12; //Bulk 1 should be the last to execute its assignment 
 					})  
-			//	| mel::execution::transfer(ex2)  //transfer execution to a different executor
+				| mel::execution::transfer(ex2)  //transfer execution to a different executor
 				| mel::execution::next([test,ll](TestClass& v)
 				{
 					//text::info("Val = {}",v.value().val);

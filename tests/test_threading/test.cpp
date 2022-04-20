@@ -18,7 +18,6 @@ using mel::tasking::Process;
 #include "future_tests.h"
 #include <tasking/utilities.h>
 #include <array>
-#include <core/Future2.h>
 
 const std::string TestThreading::TEST_NAME = "threading";
 /**
@@ -143,7 +142,6 @@ std::atomic<int> sCount(0);
 static int _testsDebug(tests::BaseTest* test)
 {	
 	{
-		using mel::core::Future2;
 		//auto th1 = ThreadRunnable::create();
 		Future<int> fut1;
 		Future<int> fut2;
@@ -170,7 +168,6 @@ static int _testsDebug(tests::BaseTest* test)
 		Thread::sleep(1000);
 	}
 	{
-		using mel::core::Future2;
 		//auto th1 = ThreadRunnable::create();
 		Future<void> fut1;
 		Future<void> fut2;
