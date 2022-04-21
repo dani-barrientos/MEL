@@ -84,7 +84,6 @@ $(document).ready(function(){initNavTree('classmel_1_1core_1_1_timer.html',''); 
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classmel_1_1core_1_1_timer-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -115,15 +114,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>getPaused</b> () cons
 <tr class="memitem:a7e1f068f7fd63d3fa396932a99c0845e"><td class="memItemLeft" align="right" valign="top"><a id="a7e1f068f7fd63d3fa396932a99c0845e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setStartTime</b> (uint64_t)</td></tr>
 <tr class="separator:a7e1f068f7fd63d3fa396932a99c0845e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6d81464c4028d95d526916586fa3a26e"><td class="memItemLeft" align="right" valign="top">static struct tm *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_timer.html#a6d81464c4028d95d526916586fa3a26e">gmtime</a> (const time_t *t, struct tm &amp;output)</td></tr>
-<tr class="separator:a6d81464c4028d95d526916586fa3a26e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb7b3b5ca05d68a9cbec8376a99a9c7d"><td class="memItemLeft" align="right" valign="top">static struct tm *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_timer.html#abb7b3b5ca05d68a9cbec8376a99a9c7d">localtime</a> (const time_t *, struct tm &amp;output)</td></tr>
-<tr class="separator:abb7b3b5ca05d68a9cbec8376a99a9c7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab26b3a2eddb4faab5417aa50cd17c479"><td class="memItemLeft" align="right" valign="top">static time_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_timer.html#ab26b3a2eddb4faab5417aa50cd17c479">mktime</a> (struct tm *t)</td></tr>
-<tr class="separator:ab26b3a2eddb4faab5417aa50cd17c479"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -232,114 +222,6 @@ uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>mMsActive</b></td
 </table>
 </div><div class="memdoc">
 <p>set start time (msecs) from when timer counts </p>
-
-</div>
-</div>
-<a id="a6d81464c4028d95d526916586fa3a26e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d81464c4028d95d526916586fa3a26e">&#9670;&nbsp;</a></span>gmtime()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static struct tm* mel::core::Timer::gmtime </td>
-          <td>(</td>
-          <td class="paramtype">const time_t *&#160;</td>
-          <td class="paramname"><em>t</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">struct tm &amp;&#160;</td>
-          <td class="paramname"><em>output</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>thread-safe counterpart for standard gmtime </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>timestamp </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">output</td><td>location for result </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>output pointer or null if error </dd></dl>
-
-</div>
-</div>
-<a id="abb7b3b5ca05d68a9cbec8376a99a9c7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb7b3b5ca05d68a9cbec8376a99a9c7d">&#9670;&nbsp;</a></span>localtime()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static struct tm* mel::core::Timer::localtime </td>
-          <td>(</td>
-          <td class="paramtype">const time_t *&#160;</td>
-          <td class="paramname">, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">struct tm &amp;&#160;</td>
-          <td class="paramname"><em>output</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>thread-safe counterpart for standard localtime </p>
-
-</div>
-</div>
-<a id="ab26b3a2eddb4faab5417aa50cd17c479"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab26b3a2eddb4faab5417aa50cd17c479">&#9670;&nbsp;</a></span>mktime()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static time_t mel::core::Timer::mktime </td>
-          <td>(</td>
-          <td class="paramtype">struct tm *&#160;</td>
-          <td class="paramname"><em>t</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>thread-safe counterpart for standard mktime </p>
 
 </div>
 </div>

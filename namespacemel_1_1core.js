@@ -11,8 +11,6 @@ var namespacemel_1_1core =
     [ "CallbackSubscriptorNotTyped< ThreadingPolicy, void >", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4" ],
     [ "CallbackSubscriptor", "classmel_1_1core_1_1_callback_subscriptor.html", "classmel_1_1core_1_1_callback_subscriptor" ],
     [ "CallbackSubscriptor< ThreadingPolicy, void >", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4" ],
-    [ "CriticalSection", "classmel_1_1core_1_1_critical_section.html", "classmel_1_1core_1_1_critical_section" ],
-    [ "Lock", "classmel_1_1core_1_1_lock.html", "classmel_1_1core_1_1_lock" ],
     [ "Event", "classmel_1_1core_1_1_event.html", "classmel_1_1core_1_1_event" ],
     [ "FutureValue", "classmel_1_1core_1_1_future_value.html", "classmel_1_1core_1_1_future_value" ],
     [ "Future_Common", "classmel_1_1core_1_1_future___common.html", "classmel_1_1core_1_1_future___common" ],
@@ -35,6 +33,14 @@ var namespacemel_1_1core =
       [ "VALID", "namespacemel_1_1core.html#aa8619e3d15e44b60d9d39823e34d2fc3a38cc2bb6fae582a6d037236e7557875a", null ],
       [ "INVALID", "namespacemel_1_1core.html#aa8619e3d15e44b60d9d39823e34d2fc3a385b32b443e32e59244a50af26e50b6d", null ]
     ] ],
+    [ "EThreadPriority", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c", [
+      [ "TP_LOWEST", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cacd587bf062a7434231bf4f2760720f92", null ],
+      [ "TP_LOW", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cad10aa37788b0e98e143029a86ac2f7af", null ],
+      [ "TP_NORMAL", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca6ed40d59935d833c64ef290d01ba19fe", null ],
+      [ "TP_HIGH", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca4c16f2ee258df9baf31cbdcb5dfe715f", null ],
+      [ "TP_HIGHEST", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca7982db93468f0d087376aa8d78e47c3c", null ],
+      [ "TP_NONE", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123caa3d42242f77431f31bec7a4e1b684104", null ]
+    ] ],
     [ "EWaitError", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0f", [
       [ "FUTURE_WAIT_OK", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa83986358cd8763d91a67b594a1d5aef5", null ],
       [ "FUTURE_RECEIVED_KILL_SIGNAL", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa2e9086b6513094ab1122bb5fed496987", null ],
@@ -44,13 +50,6 @@ var namespacemel_1_1core =
     [ "SubscriptionEmplacement", "namespacemel_1_1core.html#a8cf66608d9b44d5bc8ed22a87a4b2d7b", [
       [ "SE_BACK", "namespacemel_1_1core.html#a8cf66608d9b44d5bc8ed22a87a4b2d7baeac5acaac92d6536333a36ebce3669ee", null ],
       [ "SE_FRONT", "namespacemel_1_1core.html#a8cf66608d9b44d5bc8ed22a87a4b2d7ba452629298a6cf21631e10a7fcba4d123", null ]
-    ] ],
-    [ "ThreadPriority", "namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f", [
-      [ "TP_LOWEST", "namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fa61ad4d0651707c55485c41b0ba2be69e", null ],
-      [ "TP_LOW", "namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fad2e9b799ca4a0f396442e48eaba4b072", null ],
-      [ "TP_NORMAL", "namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fa07a57021ed64244591ac3a8ac742f9af", null ],
-      [ "TP_HIGH", "namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fa837d80fe58be167f9fb593eb5412ae0a", null ],
-      [ "TP_HIGHEST", "namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82faf2790e7661da3c1d2846aa77279c672d", null ]
     ] ],
     [ "getCurrentThreadId", "namespacemel_1_1core.html#a24458c1b3bfe615e56149382dabe841d", null ],
     [ "getNumProcessors", "namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d", null ],

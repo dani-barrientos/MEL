@@ -122,11 +122,6 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html">CallbackSubscriptor&lt; ThreadingPolicy, void &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_critical_section.html">CriticalSection</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_lock.html">Lock</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper class for easy use of the <a class="el" href="classmel_1_1core_1_1_critical_section.html">CriticalSection</a> class to lock scopes.  <a href="classmel_1_1core_1_1_lock.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_event.html">Event</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future_value.html">FutureValue</a></td></tr>
@@ -151,13 +146,13 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_singleton___singlethread___policy.html">Singleton_Singlethread_Policy</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html">Thread</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Platform-independent thread implementation. <br  />
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper around std::thread to prive more abstractions <br  />
   <a href="classmel_1_1core_1_1_thread.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_timer.html">Timer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_t_l_s.html">TLS</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> Local Storage.  <a href="classmel_1_1core_1_1_t_l_s.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> Local Storage.  <a href="classmel_1_1core_1_1_t_l_s.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -189,16 +184,17 @@ Enumerations</h2></td></tr>
 , <b>INVALID</b>
  }</td></tr>
 <tr class="separator:aa8619e3d15e44b60d9d39823e34d2fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09ec81fbf60f4c62e32529b58234f82f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f">ThreadPriority</a> { <br />
-&#160;&#160;<a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fa61ad4d0651707c55485c41b0ba2be69e">TP_LOWEST</a> =0x01
-, <a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fad2e9b799ca4a0f396442e48eaba4b072">TP_LOW</a> =0x02
-, <a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fa07a57021ed64244591ac3a8ac742f9af">TP_NORMAL</a> =0x03
-, <a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82fa837d80fe58be167f9fb593eb5412ae0a">TP_HIGH</a> =0x04
+<tr class="memitem:ad5aadb4eac481935225fcddd937b123c"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a> { <br />
+&#160;&#160;<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cacd587bf062a7434231bf4f2760720f92">TP_LOWEST</a> =0x01
+, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cad10aa37788b0e98e143029a86ac2f7af">TP_LOW</a> =0x02
+, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca6ed40d59935d833c64ef290d01ba19fe">TP_NORMAL</a> =0x03
+, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca4c16f2ee258df9baf31cbdcb5dfe715f">TP_HIGH</a> =0x04
 , <br />
-&#160;&#160;<a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82faf2790e7661da3c1d2846aa77279c672d">TP_HIGHEST</a> =0x05
+&#160;&#160;<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca7982db93468f0d087376aa8d78e47c3c">TP_HIGHEST</a> =0x05
+, <b>TP_NONE</b>
 <br />
  }</td></tr>
-<tr class="separator:a09ec81fbf60f4c62e32529b58234f82f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ad5aadb4eac481935225fcddd937b123c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -220,7 +216,7 @@ MEL_API bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr class="memitem:a6d42aa88f8243f26b4acd1d336288091"><td class="memTemplParams" colspan="2"><a id="a6d42aa88f8243f26b4acd1d336288091"></a>
 template&lt;class T &gt; </td></tr>
 <tr class="memitem:a6d42aa88f8243f26b4acd1d336288091"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">waitForFutureThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE)</td></tr>
-<tr class="memdesc:a6d42aa88f8243f26b4acd1d336288091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> from a <a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> <br  />
+<tr class="memdesc:a6d42aa88f8243f26b4acd1d336288091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> from a <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> <br  />
  <br /></td></tr>
 <tr class="separator:a6d42aa88f8243f26b4acd1d336288091"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0937af1a6401aa286a06dc047c21d70"><td class="memItemLeft" align="right" valign="top"><a id="ad0937af1a6401aa286a06dc047c21d70"></a>
@@ -242,6 +238,41 @@ static const <a class="el" href="structmel_1_1core_1_1use__function__t.html">use
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>base functionalities </p>
 </div><h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ad5aadb4eac481935225fcddd937b123c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5aadb4eac481935225fcddd937b123c">&#9670;&nbsp;</a></span>EThreadPriority</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">mel::core::EThreadPriority</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> priority enumeration. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad5aadb4eac481935225fcddd937b123cacd587bf062a7434231bf4f2760720f92"></a>TP_LOWEST&#160;</td><td class="fielddoc"><p>Lowest priority </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad5aadb4eac481935225fcddd937b123cad10aa37788b0e98e143029a86ac2f7af"></a>TP_LOW&#160;</td><td class="fielddoc"><p>Low priority </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad5aadb4eac481935225fcddd937b123ca6ed40d59935d833c64ef290d01ba19fe"></a>TP_NORMAL&#160;</td><td class="fielddoc"><p>Normal/standard priority. This is the default priority new threads are assigned if none is specified </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad5aadb4eac481935225fcddd937b123ca4c16f2ee258df9baf31cbdcb5dfe715f"></a>TP_HIGH&#160;</td><td class="fielddoc"><p>High priority. Use with caution. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad5aadb4eac481935225fcddd937b123ca7982db93468f0d087376aa8d78e47c3c"></a>TP_HIGHEST&#160;</td><td class="fielddoc"><p>Highest/realtime priority. May cause the system to become irresponsive while the thread is running. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a id="a78e61657fe4f901a8d397f7288e59a0f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a78e61657fe4f901a8d397f7288e59a0f">&#9670;&nbsp;</a></span>EWaitError</h2>
 
@@ -261,33 +292,6 @@ static const <a class="el" href="structmel_1_1core_1_1use__function__t.html">use
 <tr><td class="fieldname"><a id="a78e61657fe4f901a8d397f7288e59a0fa3d2caf80bfb6686189b84503219aa230"></a>FUTURE_WAIT_TIMEOUT&#160;</td><td class="fielddoc"><p>time out expired while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a78e61657fe4f901a8d397f7288e59a0fa0d30ed04c89c9d65e027912674b4ff33"></a>FUTURE_UNKNOWN_ERROR&#160;</td><td class="fielddoc"><p>Unknow error while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>. </p>
-</td></tr>
-</table>
-
-</div>
-</div>
-<a id="a09ec81fbf60f4c62e32529b58234f82f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a09ec81fbf60f4c62e32529b58234f82f">&#9670;&nbsp;</a></span>ThreadPriority</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f">mel::core::ThreadPriority</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p><a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> priority enumeration. </p>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a09ec81fbf60f4c62e32529b58234f82fa61ad4d0651707c55485c41b0ba2be69e"></a>TP_LOWEST&#160;</td><td class="fielddoc"><p>Lowest priority </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a09ec81fbf60f4c62e32529b58234f82fad2e9b799ca4a0f396442e48eaba4b072"></a>TP_LOW&#160;</td><td class="fielddoc"><p>Low priority </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a09ec81fbf60f4c62e32529b58234f82fa07a57021ed64244591ac3a8ac742f9af"></a>TP_NORMAL&#160;</td><td class="fielddoc"><p>Normal/standard priority. This is the default priority new threads are assigned if none is specified </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a09ec81fbf60f4c62e32529b58234f82fa837d80fe58be167f9fb593eb5412ae0a"></a>TP_HIGH&#160;</td><td class="fielddoc"><p>High priority. Use with caution. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a09ec81fbf60f4c62e32529b58234f82faf2790e7661da3c1d2846aa77279c672d"></a>TP_HIGHEST&#160;</td><td class="fielddoc"><p>Highest/realtime priority. May cause the system to become irresponsive while the thread is running. </p>
 </td></tr>
 </table>
 

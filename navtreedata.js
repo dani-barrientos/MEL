@@ -29,7 +29,6 @@ var NAVTREE =
     [ "Execution System", "execution_system.html", null ],
     [ "Higher level constructs for the tasking system", "tasking_constructs.html", null ],
     [ "Tasking System", "tasking_system.html", null ],
-    [ "Deprecated List", "deprecated.html", null ],
     [ "Todo List", "todo.html", null ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
@@ -66,11 +65,11 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "___if_8h_source.html",
-"classmel_1_1core_1_1_critical_section.html#a927cb18d22914b2809c847bc7af5de51",
-"classmel_1_1mpl_1_1__private_1_1_tuple___base_3_01_t_types_00_01_sorted_types_00_016_01_4.html#abde724540d004a4dd8c441b00b470e8a",
-"classmel_1_1mpl_1_1_type_traits.html",
-"classmel_1_1tasking_1_1_thread_runnable.html#abd99f0ac1fe1987a7c5370b71df28c5d",
-"structmel_1_1mpl_1_1_function_pointer_traits_3_01_u_07_arg1_00_01_arg2_00_01_arg3_00_01_arg4_00_e4603e740b576659d42fe478ad7ce55a.html"
+"classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3ca3f583680fcb4e03608f88313df9bd81e",
+"classmel_1_1mpl_1_1__private_1_1_tuple___base_3_01_t_types_00_01_sorted_types_00_017_01_4.html#ac1dcb34f386b8dfb54a7056238b2d566",
+"classmel_1_1parallelism_1_1_thread_pool.html",
+"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3abaa4683885442ecae285934a3c8894015d",
+"structmel_1_1mpl_1_1_pointer_to_member_traits_3_01_u_01_v_1_1_5_01_4.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

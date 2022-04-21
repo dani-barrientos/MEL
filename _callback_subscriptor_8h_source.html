@@ -100,38 +100,34 @@ $(document).ready(function(){initNavTree('_callback_subscriptor_8h_source.html',
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">using</span> <a class="code" href="namespacemel_1_1mpl.html#a0284b01f354d505f3916b87a88fd6d2c">mel::mpl::del_ptr</a>;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;list&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">using</span> std::list;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;core/CriticalSection.h&gt;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">using</span> <a class="code" href="classmel_1_1core_1_1_critical_section.html">mel::core::CriticalSection</a>; <span class="comment">//preferir�a no hacer esto y proporcionar el objeto &quot;bloqueador&quot; como argumento, pero no me da tiempo</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">using</span> <a class="code" href="classmel_1_1core_1_1_lock.html">mel::core::Lock</a>;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;{</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="keyword">enum</span> SubscriptionEmplacement {</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;            SE_BACK,</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;            SE_FRONT</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        };</div>
-<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">   29</a></span>&#160;        <span class="keyword">enum class</span> <a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">ECallbackResult</a> : uint8_t{ NO_UNSUBSCRIBE,UNSUBSCRIBE};</div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_c_s_multithread_policy.html">   30</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_c_s_multithread_policy.html">CSMultithreadPolicy</a>{};</div>
-<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_c_s_no_multithread_policy.html">   31</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_c_s_no_multithread_policy.html">CSNoMultithreadPolicy</a>{};</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    }</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;}</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &lt;deque&gt;</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#include &lt;functional&gt;</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#include &lt;mpl/IsSame.h&gt;</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="logger_8h.html">text/logger.h</a>&gt;</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#undef INCLUDE_PATH</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define INCLUDE_PATH &lt;core/CallbackSubscriptor_Impl.h&gt;</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#include &lt;mpl/VarArgs.h&gt;</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="ttc" id="aclassmel_1_1core_1_1_critical_section_html"><div class="ttname"><a href="classmel_1_1core_1_1_critical_section.html">mel::core::CriticalSection</a></div><div class="ttdef"><b>Definition:</b> CriticalSection.h:25</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_lock_html"><div class="ttname"><a href="classmel_1_1core_1_1_lock.html">mel::core::Lock</a></div><div class="ttdoc">Helper class for easy use of the CriticalSection class to lock scopes.</div><div class="ttdef"><b>Definition:</b> CriticalSection.h:102</div></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;mutex&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;{</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keyword">namespace </span>core {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="keyword">enum</span> SubscriptionEmplacement {</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;            SE_BACK,</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;            SE_FRONT</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        };</div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">   27</a></span>&#160;        <span class="keyword">enum class</span> <a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">ECallbackResult</a> : uint8_t{ NO_UNSUBSCRIBE,UNSUBSCRIBE};</div>
+<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_c_s_multithread_policy.html">   28</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_c_s_multithread_policy.html">CSMultithreadPolicy</a>{};</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_c_s_no_multithread_policy.html">   29</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_c_s_no_multithread_policy.html">CSNoMultithreadPolicy</a>{};</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    }</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;}</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &lt;deque&gt;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &lt;functional&gt;</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &lt;mpl/IsSame.h&gt;</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="logger_8h.html">text/logger.h</a>&gt;</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#undef INCLUDE_PATH</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define INCLUDE_PATH &lt;core/CallbackSubscriptor_Impl.h&gt;</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#include &lt;mpl/VarArgs.h&gt;</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
 <div class="ttc" id="alogger_8h_html"><div class="ttname"><a href="logger_8h.html">logger.h</a></div><div class="ttdoc">The only sense of this file is as a wrapper to spdlog in order t avoid its use if no installed in any...</div></div>
-<div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:29</div></div>
+<div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:27</div></div>
 <div class="ttc" id="anamespacemel_1_1mpl_html_a0284b01f354d505f3916b87a88fd6d2c"><div class="ttname"><a href="namespacemel_1_1mpl.html#a0284b01f354d505f3916b87a88fd6d2c">mel::mpl::del_ptr</a></div><div class="ttdeci">void del_ptr(T *object)</div><div class="ttdoc">generic functor to delete pointers</div><div class="ttdef"><b>Definition:</b> deleter.h:11</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
-<div class="ttc" id="astructmel_1_1core_1_1_c_s_multithread_policy_html"><div class="ttname"><a href="structmel_1_1core_1_1_c_s_multithread_policy.html">mel::core::CSMultithreadPolicy</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:30</div></div>
-<div class="ttc" id="astructmel_1_1core_1_1_c_s_no_multithread_policy_html"><div class="ttname"><a href="structmel_1_1core_1_1_c_s_no_multithread_policy.html">mel::core::CSNoMultithreadPolicy</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:31</div></div>
+<div class="ttc" id="astructmel_1_1core_1_1_c_s_multithread_policy_html"><div class="ttname"><a href="structmel_1_1core_1_1_c_s_multithread_policy.html">mel::core::CSMultithreadPolicy</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:28</div></div>
+<div class="ttc" id="astructmel_1_1core_1_1_c_s_no_multithread_policy_html"><div class="ttname"><a href="structmel_1_1core_1_1_c_s_no_multithread_policy.html">mel::core::CSNoMultithreadPolicy</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:29</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

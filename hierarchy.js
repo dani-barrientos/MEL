@@ -106,7 +106,6 @@ var hierarchy =
     [ "mel::mpl::CreateWideInheritance< TList >", "classmel_1_1mpl_1_1_create_wide_inheritance.html", null ],
     [ "mel::mpl::Creator< T, VARIABLE_ARGS >", "classmel_1_1mpl_1_1_creator.html", null ],
     [ "mel::mpl::Creator< T, void >", "classmel_1_1mpl_1_1_creator_3_01_t_00_01void_01_4.html", null ],
-    [ "mel::core::CriticalSection", "classmel_1_1core_1_1_critical_section.html", null ],
     [ "mel::tasking::CriticalSection_mthread< multithread >", "classmel_1_1tasking_1_1_critical_section__mthread.html", null ],
     [ "mel::core::CSMultithreadPolicy", "structmel_1_1core_1_1_c_s_multithread_policy.html", null ],
     [ "mel::core::CSNoMultithreadPolicy", "structmel_1_1core_1_1_c_s_no_multithread_policy.html", null ],
@@ -221,7 +220,6 @@ var hierarchy =
     [ "mel::mpl::Linker_Base< TListPos, Length< TListPos >::result >", "classmel_1_1mpl_1_1_linker___base.html", [
       [ "mel::mpl::Linker< F, TRet, TListVariable, TListPos >", "classmel_1_1mpl_1_1_linker.html", null ]
     ] ],
-    [ "mel::core::Lock", "classmel_1_1core_1_1_lock.html", null ],
     [ "mel::core::Singleton_Singlethread_Policy< T >::Lock", "classmel_1_1core_1_1_singleton___singlethread___policy_1_1_lock.html", null ],
     [ "mel::tasking::Lock_mthread", "classmel_1_1tasking_1_1_lock__mthread.html", null ],
     [ "mel::tasking::ProcessScheduler::LockFreeOptions", "structmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_options.html", null ],

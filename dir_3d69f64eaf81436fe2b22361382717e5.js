@@ -6,7 +6,6 @@ var dir_3d69f64eaf81436fe2b22361382717e5 =
     [ "CallbackInterface_Impl.h", "_callback_interface___impl_8h_source.html", null ],
     [ "CallbackSubscriptor.h", "_callback_subscriptor_8h_source.html", null ],
     [ "CallbackSubscriptor_Impl.h", "_callback_subscriptor___impl_8h_source.html", null ],
-    [ "CriticalSection.h", "_critical_section_8h_source.html", null ],
     [ "Event.h", "_event_8h_source.html", null ],
     [ "FunctionCallbackInterface.h", "_function_callback_interface_8h_source.html", null ],
     [ "FunctionCallbackInterface_Impl.h", "_function_callback_interface___impl_8h_source.html", null ],

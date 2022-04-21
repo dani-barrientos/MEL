@@ -13,8 +13,6 @@ var annotated_dup =
         [ "CallbackSubscriptorNotTyped< ThreadingPolicy, void >", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html", "classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4" ],
         [ "CallbackSubscriptor", "classmel_1_1core_1_1_callback_subscriptor.html", "classmel_1_1core_1_1_callback_subscriptor" ],
         [ "CallbackSubscriptor< ThreadingPolicy, void >", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4.html", "classmel_1_1core_1_1_callback_subscriptor_3_01_threading_policy_00_01void_01_4" ],
-        [ "CriticalSection", "classmel_1_1core_1_1_critical_section.html", "classmel_1_1core_1_1_critical_section" ],
-        [ "Lock", "classmel_1_1core_1_1_lock.html", "classmel_1_1core_1_1_lock" ],
         [ "Event", "classmel_1_1core_1_1_event.html", "classmel_1_1core_1_1_event" ],
         [ "FutureValue", "classmel_1_1core_1_1_future_value.html", "classmel_1_1core_1_1_future_value" ],
         [ "Future_Common", "classmel_1_1core_1_1_future___common.html", "classmel_1_1core_1_1_future___common" ],

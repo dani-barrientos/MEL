@@ -86,14 +86,13 @@ $(document).ready(function(){initNavTree('classmel_1_1core_1_1_thread.html','');
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#friends">Friends</a> &#124;
 <a href="classmel_1_1core_1_1_thread-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">mel::core::Thread Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Platform-independent thread implementation. <br  />
+<p>Wrapper around std::thread to prive more abstractions <br  />
   
  <a href="classmel_1_1core_1_1_thread.html#details">More...</a></p>
 
@@ -110,21 +109,20 @@ Public Types</h2></td></tr>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a8dd5fa37265e74107c20acac3d6e33f5"><td class="memTemplParams" colspan="2">template&lt;class F &gt; </td></tr>
 <tr class="memitem:a8dd5fa37265e74107c20acac3d6e33f5"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a8dd5fa37265e74107c20acac3d6e33f5">Thread</a> (F &amp;&amp;f)</td></tr>
+<tr class="memdesc:a8dd5fa37265e74107c20acac3d6e33f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts the main thread routine.  <a href="classmel_1_1core_1_1_thread.html#a8dd5fa37265e74107c20acac3d6e33f5">More...</a><br /></td></tr>
 <tr class="separator:a8dd5fa37265e74107c20acac3d6e33f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f6e151220c5b492718e24795844f18c"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a6f6e151220c5b492718e24795844f18c">~Thread</a> ()</td></tr>
+<tr class="memitem:a6f6e151220c5b492718e24795844f18c"><td class="memItemLeft" align="right" valign="top"><a id="a6f6e151220c5b492718e24795844f18c"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a6f6e151220c5b492718e24795844f18c">~Thread</a> ()</td></tr>
+<tr class="memdesc:a6f6e151220c5b492718e24795844f18c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> is joined on destruction. <br /></td></tr>
 <tr class="separator:a6f6e151220c5b492718e24795844f18c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ac5fe6b306866f66da2d65ad79455ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a3ac5fe6b306866f66da2d65ad79455ec">setPriority</a> (<a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f">ThreadPriority</a> tp)</td></tr>
-<tr class="separator:a3ac5fe6b306866f66da2d65ad79455ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5839512d902b624b1027d22bc7730fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f">ThreadPriority</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#ac5839512d902b624b1027d22bc7730fc">getPriority</a> () const</td></tr>
-<tr class="separator:ac5839512d902b624b1027d22bc7730fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab56c585bb361d16c92a1527123e87f65"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#ab56c585bb361d16c92a1527123e87f65">setPriority</a> (<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a> tp)</td></tr>
+<tr class="separator:ab56c585bb361d16c92a1527123e87f65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa51aff084d4ec38518e0cd29f45824a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#aa51aff084d4ec38518e0cd29f45824a5">getPriority</a> () const</td></tr>
+<tr class="separator:aa51aff084d4ec38518e0cd29f45824a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32a9ffeece50097f4eafa9f161988bef"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a32a9ffeece50097f4eafa9f161988bef">join</a> (unsigned int millis=0xFFFFFFFF)</td></tr>
 <tr class="separator:a32a9ffeece50097f4eafa9f161988bef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48aef994ca33536894e6b15c8adc8c3a"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a48aef994ca33536894e6b15c8adc8c3a">getResult</a> () const</td></tr>
-<tr class="separator:a48aef994ca33536894e6b15c8adc8c3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae44a64a50ffea1498404e941eedfed0c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#ae44a64a50ffea1498404e941eedfed0c">isRunning</a> () const</td></tr>
-<tr class="separator:ae44a64a50ffea1498404e941eedfed0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcc06ae0f50e4d47da4de06426acb650"><td class="memItemLeft" align="right" valign="top">ThreadId&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#afcc06ae0f50e4d47da4de06426acb650">getThreadId</a> () const</td></tr>
-<tr class="separator:afcc06ae0f50e4d47da4de06426acb650"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a659701c363c5a2c6a64220a1a0dca619"><td class="memItemLeft" align="right" valign="top">std::thread::id&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a659701c363c5a2c6a64220a1a0dca619">getThreadId</a> () const</td></tr>
+<tr class="separator:a659701c363c5a2c6a64220a1a0dca619"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65a90d154b32b3a550f7a2670536bd02"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a65a90d154b32b3a550f7a2670536bd02">getAffinity</a> () const</td></tr>
 <tr class="separator:a65a90d154b32b3a550f7a2670536bd02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a748172277e5241c0f7c217d35e550579"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a748172277e5241c0f7c217d35e550579">setAffinity</a> (uint64_t)</td></tr>
@@ -140,19 +138,11 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:ac482d6212ef6489a3455b0b5db43787b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac860adb1878011327090fcc319d8762c"><td class="memItemLeft" align="right" valign="top">constexpr static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#ac860adb1878011327090fcc319d8762c">getMinimunSleepTime</a> ()</td></tr>
 <tr class="separator:ac860adb1878011327090fcc319d8762c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:a15aad542b2dd434bed233e51a50c4790"><td class="memItemLeft" align="right" valign="top"><a id="a15aad542b2dd434bed233e51a50c4790"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>_threadProc</b> (void *param)</td></tr>
-<tr class="separator:a15aad542b2dd434bed233e51a50c4790"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Platform-independent thread implementation. <br  />
+<div class="textblock"><p>Wrapper around std::thread to prive more abstractions <br  />
  </p>
-<dl class="section note"><dt>Note</dt><dd>Threads are always created as <em>suspended</em>, and once starte are not suspended again by default when there are no any task to execute. This can be changed at will via setSuspendWhenNoTasks. </dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>Some of these features may not be present on certain platforms, or may have specific requirements.</dd></dl>
-<p>Please note that it's generally better to inherit from Thread_Impl insted of <a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> directly, as it provides a few off-the-shelf features like task execution and few more things. <a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> can of course be inherited, but will require additional programming to handle things safely. </p>
+<dl class="section warning"><dt>Warning</dt><dd>Some of these features may not be present on certain platforms, or may have specific requirements. </dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a8dd5fa37265e74107c20acac3d6e33f5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8dd5fa37265e74107c20acac3d6e33f5">&#9670;&nbsp;</a></span>Thread()</h2>
@@ -171,36 +161,15 @@ template&lt;class F &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Starts the main thread routine. Calling this function will force the main thread routine (Thread::run) to be spawned and will return automatically just after doing so.<br  />
- The thread will keep runing in background until Thread::run finishes.<br  />
- <a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> status can be queried meanwhile through <a class="el" href="classmel_1_1core_1_1_thread.html#ae44a64a50ffea1498404e941eedfed0c">Thread::isRunning</a>, and the final result obtained via <a class="el" href="classmel_1_1core_1_1_thread.html#a48aef994ca33536894e6b15c8adc8c3a">Thread::getResult</a>, once it finishes.<br  />
- Callers are encouraged to allways call <a class="el" href="classmel_1_1core_1_1_thread.html#a32a9ffeece50097f4eafa9f161988bef">Thread::join</a> before attempting to query the result value or even exiting the main application. </p>
 
-</div>
-</div>
-<a id="a6f6e151220c5b492718e24795844f18c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f6e151220c5b492718e24795844f18c">&#9670;&nbsp;</a></span>~Thread()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual mel::core::Thread::~Thread </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Creates a new thread with the given name. New threads are always created in a suspended state, meaning no actual thread process will be actually executed until Thread::start is invoked. </p><dl class="section remark"><dt>Remarks</dt><dd><a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> should be only deleted when is sure it's finished (see terminate and join) </dd></dl>
+<p>Starts the main thread routine. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>funtion with signature void f() <br  />
+ </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -249,8 +218,8 @@ template&lt;class F &gt; </div>
 
 </div>
 </div>
-<a id="ac5839512d902b624b1027d22bc7730fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5839512d902b624b1027d22bc7730fc">&#9670;&nbsp;</a></span>getPriority()</h2>
+<a id="aa51aff084d4ec38518e0cd29f45824a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa51aff084d4ec38518e0cd29f45824a5">&#9670;&nbsp;</a></span>getPriority()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -259,7 +228,7 @@ template&lt;class F &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f">ThreadPriority</a> mel::core::Thread::getPriority </td>
+          <td class="memname"><a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a> mel::core::Thread::getPriority </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -275,27 +244,8 @@ template&lt;class F &gt; </div>
 
 </div>
 </div>
-<a id="a48aef994ca33536894e6b15c8adc8c3a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a48aef994ca33536894e6b15c8adc8c3a">&#9670;&nbsp;</a></span>getResult()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned int mel::core::Thread::getResult </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Get the thread execution result. </p><dl class="section return"><dt>Returns</dt><dd>the requested result, that will only be meaningful if the thread already finished. The meaning (if any) of the returned value is defined by the concrete subclass implementing the thread. </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="classmel_1_1core_1_1_thread.html#a32a9ffeece50097f4eafa9f161988bef">join</a>, <a class="el" href="classmel_1_1core_1_1_thread.html#ae44a64a50ffea1498404e941eedfed0c">isRunning</a> </dd></dl>
-
-</div>
-</div>
-<a id="afcc06ae0f50e4d47da4de06426acb650"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afcc06ae0f50e4d47da4de06426acb650">&#9670;&nbsp;</a></span>getThreadId()</h2>
+<a id="a659701c363c5a2c6a64220a1a0dca619"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a659701c363c5a2c6a64220a1a0dca619">&#9670;&nbsp;</a></span>getThreadId()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -304,7 +254,7 @@ template&lt;class F &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">ThreadId mel::core::Thread::getThreadId </td>
+          <td class="memname">std::thread::id mel::core::Thread::getThreadId </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -317,32 +267,6 @@ template&lt;class F &gt; </div>
 </table>
 </div><div class="memdoc">
 <p>return handle for this thread </p>
-
-</div>
-</div>
-<a id="ae44a64a50ffea1498404e941eedfed0c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae44a64a50ffea1498404e941eedfed0c">&#9670;&nbsp;</a></span>isRunning()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool mel::core::Thread::isRunning </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Get thread's running status </p><dl class="section return"><dt>Returns</dt><dd>true if the thread is still running. false otherwise </dd></dl>
 
 </div>
 </div>
@@ -361,7 +285,7 @@ template&lt;class F &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Forces the caller to wait for thread completion. Calling this method will cause the calling thread to be wait until <a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a>:run finishes or the timeout expires. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Forces the caller to wait for thread completion. Calling this method will cause the calling thread to be wait until <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a>:run finishes or the timeout expires. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">millis</td><td>maximum milliseconds to wait for the thread. </td></tr>
   </table>
@@ -390,8 +314,8 @@ template&lt;class F &gt; </div>
 
 </div>
 </div>
-<a id="a3ac5fe6b306866f66da2d65ad79455ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3ac5fe6b306866f66da2d65ad79455ec">&#9670;&nbsp;</a></span>setPriority()</h2>
+<a id="ab56c585bb361d16c92a1527123e87f65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab56c585bb361d16c92a1527123e87f65">&#9670;&nbsp;</a></span>setPriority()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -399,7 +323,7 @@ template&lt;class F &gt; </div>
         <tr>
           <td class="memname">void mel::core::Thread::setPriority </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacemel_1_1core.html#a09ec81fbf60f4c62e32529b58234f82f">ThreadPriority</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a>&#160;</td>
           <td class="paramname"><em>tp</em></td><td>)</td>
           <td></td>
         </tr>
@@ -463,7 +387,7 @@ template&lt;class F &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Forces thread termination Use with extreme caution; this method exists but it should rarely be used; it's always safer to invoke terminatRequest and wait for the <a class="el" href="classmel_1_1core_1_1_thread.html" title="Platform-independent thread implementation.">Thread</a> to terminate "naturally", instead of forcing it to quite. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Forces thread termination Use with extreme caution; this method exists but it should rarely be used; it's always safer to invoke terminatRequest and wait for the <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> to terminate "naturally", instead of forcing it to quite. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">exitCode</td><td>the exit code for the terminated thread. </td></tr>
   </table>

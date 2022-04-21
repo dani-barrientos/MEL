@@ -40,8 +40,7 @@ var searchData=
   ['createwideinheritance_72',['CreateWideInheritance',['../classmel_1_1mpl_1_1_create_wide_inheritance.html',1,'mel::mpl']]],
   ['creator_73',['Creator',['../classmel_1_1mpl_1_1_creator.html',1,'mel::mpl']]],
   ['creator_3c_20t_2c_20void_20_3e_74',['Creator&lt; T, void &gt;',['../classmel_1_1mpl_1_1_creator_3_01_t_00_01void_01_4.html',1,'mel::mpl']]],
-  ['criticalsection_75',['CriticalSection',['../classmel_1_1core_1_1_critical_section.html',1,'mel::core']]],
-  ['criticalsection_5fmthread_76',['CriticalSection_mthread',['../classmel_1_1tasking_1_1_critical_section__mthread.html',1,'mel::tasking']]],
-  ['csmultithreadpolicy_77',['CSMultithreadPolicy',['../structmel_1_1core_1_1_c_s_multithread_policy.html',1,'mel::core']]],
-  ['csnomultithreadpolicy_78',['CSNoMultithreadPolicy',['../structmel_1_1core_1_1_c_s_no_multithread_policy.html',1,'mel::core']]]
+  ['criticalsection_5fmthread_75',['CriticalSection_mthread',['../classmel_1_1tasking_1_1_critical_section__mthread.html',1,'mel::tasking']]],
+  ['csmultithreadpolicy_76',['CSMultithreadPolicy',['../structmel_1_1core_1_1_c_s_multithread_policy.html',1,'mel::core']]],
+  ['csnomultithreadpolicy_77',['CSNoMultithreadPolicy',['../structmel_1_1core_1_1_c_s_no_multithread_policy.html',1,'mel::core']]]
 ];

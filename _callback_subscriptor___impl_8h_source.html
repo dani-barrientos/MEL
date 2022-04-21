@@ -100,13 +100,13 @@ $(document).ready(function(){initNavTree('_callback_subscriptor___impl_8h_source
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;        {</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span>&gt; <span class="keyword">struct </span>_CriticalSectionWrapper</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;            {</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                CriticalSection mSC;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                std::mutex mSC;</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;            };</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> enabled&gt; <span class="keyword">struct </span>_Lock</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;            {</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;                _Lock(_CriticalSectionWrapper&lt;enabled&gt;&amp; cs):mLck(cs.mSC){}</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;                <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                    Lock mLck;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                    std::scoped_lock&lt;std::mutex&gt; mLck;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            };</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;            <span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>_CriticalSectionWrapper&lt;false&gt;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;            {</div>
@@ -348,12 +348,12 @@ $(document).ready(function(){initNavTree('_callback_subscriptor___impl_8h_source
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;        <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;            <span class="keywordtype">void</span> triggerCallbacks( VARIABLE_ARGS_IMPL )</div>
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            {</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                _private::_Lock&lt;mpl::isSame&lt;ThreadingPolicy, ::mel::core::CSMultithreadPolicy&gt;::result&gt; lck(BaseType::mSC);</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                <span class="keywordflow">if</span> (BaseType::mTriggering)</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                {</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="comment">//              spdlog::debug(&quot;CallbackSubscriptor Callbacks are being triggered while  triggering again!!&quot;);</span></div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;                    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;                }</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                <span class="keywordflow">if</span> (BaseType::mTriggering)</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                {</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="comment">//              spdlog::debug(&quot;CallbackSubscriptor Callbacks are being triggered while  triggering again!!&quot;);</span></div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;                    <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;                }</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;                _private::_Lock&lt;mpl::isSame&lt;ThreadingPolicy, ::mel::core::CSMultithreadPolicy&gt;::result&gt; lck(BaseType::mSC);</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;                BaseType::mTriggering = <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;                <span class="keyword">typename</span> BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;                <span class="keyword">auto</span> j = BaseType::mCallbacks.end();</div>
@@ -685,12 +685,12 @@ $(document).ready(function(){initNavTree('_callback_subscriptor___impl_8h_source
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160; </div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;            <span class="keywordtype">void</span> triggerCallbacks( VARIABLE_ARGS_IMPL )</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;            {           </div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;                _private::_Lock&lt;mpl::isSame&lt;ThreadingPolicy, ::mel::core::CSMultithreadPolicy&gt;::result&gt; lck(BaseType::mSC);</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;                <span class="keywordflow">if</span> (BaseType::mTriggering)</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                {               </div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;                    <span class="comment">//spdlog::debug(&quot;CallbackSubscriptor Callbacks are being triggered while  triggering again YYY!!&quot;);</span></div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;                    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;                }</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;                <span class="keywordflow">if</span> (BaseType::mTriggering)</div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;                {               </div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                    mel::text::error(<span class="stringliteral">&quot;CallbackSubscriptor Callbacks are being triggered while triggering again!!&quot;</span>);</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;                    <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;                }</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;                _private::_Lock&lt;mpl::isSame&lt;ThreadingPolicy, ::mel::core::CSMultithreadPolicy&gt;::result&gt; lck(BaseType::mSC);</div>
 <div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;                BaseType::mTriggering = <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;                <span class="keyword">typename</span> BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();</div>
 <div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;                <span class="keywordflow">while</span>( i != BaseType::mCallbacks.end() )</div>
@@ -764,7 +764,7 @@ $(document).ready(function(){initNavTree('_callback_subscriptor___impl_8h_source
 <div class="ttc" id="aclassmel_1_1core_1_1_callback_subscriptor_html"><div class="ttname"><a href="classmel_1_1core_1_1_callback_subscriptor.html">mel::core::CallbackSubscriptor</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:351</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4_html"><div class="ttname"><a href="classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html">mel::core::CallbackSubscriptorNotTyped&lt; ThreadingPolicy, void &gt;</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:313</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_callback_subscriptor_not_typed_html"><div class="ttname"><a href="classmel_1_1core_1_1_callback_subscriptor_not_typed.html">mel::core::CallbackSubscriptorNotTyped</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:275</div></div>
-<div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:29</div></div>
+<div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:27</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
 <div class="ttc" id="astructmel_1_1core_1_1_callback_subscriptor___base_1_1_callback_info_html"><div class="ttname"><a href="structmel_1_1core_1_1_callback_subscriptor___base_1_1_callback_info.html">mel::core::CallbackSubscriptor_Base::CallbackInfo</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:45</div></div>
 <div class="ttc" id="astructmel_1_1core_1_1_callback_subscriptor___base_1_1_pending_operation_html"><div class="ttname"><a href="structmel_1_1core_1_1_callback_subscriptor___base_1_1_pending_operation.html">mel::core::CallbackSubscriptor_Base::PendingOperation</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:54</div></div>

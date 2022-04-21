@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('_event__mthread_8h_source.html',''); i
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;tasking/Process.h&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;core/Callback.h&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;tasking/ProcessScheduler.h&gt;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;mutex&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;{</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keyword">namespace </span>tasking</div>
@@ -134,7 +134,7 @@ $(document).ready(function(){initNavTree('_event__mthread_8h_source.html',''); i
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                <a class="code" href="classmel_1_1tasking_1_1_event_m_t_thread_safe_policy.html">EventMTThreadSafePolicy</a>(<span class="keywordtype">bool</span> autoRelease, <span class="keywordtype">bool</span> signaled);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                <span class="keywordtype">void</span> set(<span class="keywordtype">bool</span> sendToAll)</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                {</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                    <a class="code" href="classmel_1_1core_1_1_lock.html">core::Lock</a> lck(mCS);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                    std::scoped_lock&lt;std::mutex&gt; lck(mCS);</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                    EventBase::_set(sendToAll);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                }</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            <span class="keyword">protected</span>:</div>
@@ -143,7 +143,7 @@ $(document).ready(function(){initNavTree('_event__mthread_8h_source.html',''); i
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                EEventMTWaitCode _waitAndDo( F postSleep,<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> msecs ) </div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                {</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                    EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                    mCS.enter();</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                    mCS.lock();</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                    <span class="keywordflow">if</span> ( !mSignaled )</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                    {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                        <span class="keyword">auto</span> p = <a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html#af03dfb3497edb0290a3fba05277562e3">::mel::tasking::ProcessScheduler::getCurrentProcess</a>();</div>
@@ -153,13 +153,13 @@ $(document).ready(function(){initNavTree('_event__mthread_8h_source.html',''); i
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                        <span class="keywordflow">if</span> ( msecs == EVENTMT_WAIT_INFINITE )</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                            switchResult = <a class="code" href="classmel_1_1tasking_1_1_process.html#a1d33bf2b9d05b216146279f5473f2b29">::mel::tasking::Process::sleepAndDo</a>([<span class="keyword">this</span>,postSleep]()</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                            {</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                                mCS.leave();</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                                mCS.unlock();</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                                postSleep();</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                            } );</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                        <span class="keywordflow">else</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                            switchResult = <a class="code" href="classmel_1_1tasking_1_1_process.html#ac4d27370bdd1e85dde2c479bf8921b1a">::mel::tasking::Process::waitAndDo</a>(msecs, [<span class="keyword">this</span>,postSleep]()</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                            {</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                                mCS.leave();</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                                mCS.unlock();</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                                postSleep();</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                            });</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                        <span class="keywordflow">switch</span> ( switchResult )</div>
@@ -176,18 +176,18 @@ $(document).ready(function(){initNavTree('_event__mthread_8h_source.html',''); i
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                        }</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                        <span class="comment">//remove process form list. It&#39;s safe to do it here because current process is already waiting (now is returning)</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                        <span class="comment">//maybe other process do wait on this events</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                        mCS.enter();</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                        mCS.lock();</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                        mWaitingProcesses.remove( p );</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                        mCS.leave();</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                        mCS.unlock();</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                    }<span class="keywordflow">else</span></div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                    {</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                        mCS.leave();</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                        mCS.unlock();</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                        postSleep();</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                    }</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                    <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                }</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                <a class="code" href="classmel_1_1core_1_1_critical_section.html">core::CriticalSection</a> mCS;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                std::mutex mCS;</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        };</div>
 <div class="line"><a name="l00110"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_event_no_m_t_thread_safe_policy.html">  110</a></span>&#160;        <span class="keyword">class </span>MEL_API <a class="code" href="classmel_1_1tasking_1_1_event_no_m_t_thread_safe_policy.html">EventNoMTThreadSafePolicy</a> : <span class="keyword">public</span> <a class="code" href="classmel_1_1tasking_1_1_event_base.html">EventBase</a></div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;        {</div>
@@ -269,8 +269,6 @@ $(document).ready(function(){initNavTree('_event__mthread_8h_source.html',''); i
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    }</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;}</div>
 <div class="ttc" id="aclassmel_1_1core_1_1_callback_html"><div class="ttname"><a href="classmel_1_1core_1_1_callback.html">mel::core::Callback</a></div><div class="ttdoc">create Callback from callable</div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:129</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_critical_section_html"><div class="ttname"><a href="classmel_1_1core_1_1_critical_section.html">mel::core::CriticalSection</a></div><div class="ttdef"><b>Definition:</b> CriticalSection.h:25</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_lock_html"><div class="ttname"><a href="classmel_1_1core_1_1_lock.html">mel::core::Lock</a></div><div class="ttdoc">Helper class for easy use of the CriticalSection class to lock scopes.</div><div class="ttdef"><b>Definition:</b> CriticalSection.h:102</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_event__mthread_html"><div class="ttname"><a href="classmel_1_1tasking_1_1_event__mthread.html">mel::tasking::Event_mthread</a></div><div class="ttdoc">class similar to Event Class (which is for thread synchronization) but for Process (with Microthread ...</div><div class="ttdef"><b>Definition:</b> Event_mthread.h:167</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_event__mthread_html_a2ede24a34f9e3aaecf9b6a70fb2df76b"><div class="ttname"><a href="classmel_1_1tasking_1_1_event__mthread.html#a2ede24a34f9e3aaecf9b6a70fb2df76b">mel::tasking::Event_mthread::wait</a></div><div class="ttdeci">EEventMTWaitCode wait(unsigned int msecs=EVENTMT_WAIT_INFINITE)</div><div class="ttdef"><b>Definition:</b> Event_mthread.h:191</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_event__mthread_html_abd44c1fe7d4aef647acc85a9312861b4"><div class="ttname"><a href="classmel_1_1tasking_1_1_event__mthread.html#abd44c1fe7d4aef647acc85a9312861b4">mel::tasking::Event_mthread::set</a></div><div class="ttdeci">void set(bool sendToAll=true)</div><div class="ttdef"><b>Definition:</b> Event_mthread.h:184</div></div>

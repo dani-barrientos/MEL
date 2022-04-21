@@ -95,7 +95,7 @@ $(document).ready(function(){initNavTree('_timer_8h_source.html',''); initResiza
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#elif defined (MEL_LINUX)</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;time.h&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;core/CriticalSection.h&gt;</span>   </div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">struct </span>tm; <span class="comment">//predeclaration</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
@@ -117,87 +117,81 @@ $(document).ready(function(){initNavTree('_timer_8h_source.html',''); initResiza
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;            <span class="keyword">inline</span> <span class="keywordtype">bool</span> getPaused() <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            <span class="keyword">inline</span> uint64_t getStartTime() <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;            <span class="keyword">inline</span> <span class="keywordtype">void</span> setStartTime( uint64_t );</div>
-<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#a6d81464c4028d95d526916586fa3a26e">   59</a></span>&#160;            <span class="keyword">static</span> <span class="keyword">struct </span>tm* <a class="code" href="classmel_1_1core_1_1_timer.html#a6d81464c4028d95d526916586fa3a26e">gmtime</a>(<span class="keyword">const</span> time_t* t,<span class="keyword">struct</span> tm&amp; output);</div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#abb7b3b5ca05d68a9cbec8376a99a9c7d">   63</a></span>&#160;            <span class="keyword">static</span> <span class="keyword">struct </span>tm* <a class="code" href="classmel_1_1core_1_1_timer.html#abb7b3b5ca05d68a9cbec8376a99a9c7d">localtime</a>(<span class="keyword">const</span> time_t*, <span class="keyword">struct</span> tm&amp; output);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#ab26b3a2eddb4faab5417aa50cd17c479">   68</a></span>&#160;            <span class="keyword">static</span> time_t <a class="code" href="classmel_1_1core_1_1_timer.html#ab26b3a2eddb4faab5417aa50cd17c479">mktime</a>(<span class="keyword">struct</span> tm* t);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            uint64_t mReference; <span class="comment">//reference time when Timer is created, units depends on platform</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            uint64_t mStartTime;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">    #ifdef WIN32</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            uint64_t mFrequency;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            <span class="keyword">mutable</span> uint64_t mLastTime; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">    #elif defined (MEL_IOS) || defined(MEL_MACOSX) </span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            mach_timebase_info_data_t mTimeBase;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            <span class="keyword">mutable</span> uint64_t mLastTime;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">    #elif defined(MEL_LINUX) || defined(MEL_ANDROID)</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            <span class="keyword">mutable</span> uint64_t mLastTime;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor">    #endif</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            uint64_t   mMsActive; </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            <span class="keyword">enum</span> { ACTIVE, PAUSED } mState;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        };</div>
-<div class="line"><a name="l00086"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#a7f44533ffb931b080cb2be49029f0099">   86</a></span>&#160;        uint64_t <a class="code" href="classmel_1_1core_1_1_timer.html#a7f44533ffb931b080cb2be49029f0099">Timer::getMilliseconds</a>( )<span class="keyword"> const</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">        </span>{</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            uint64_t result;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;            <span class="keywordflow">if</span> ( mState == ACTIVE )</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">            #ifdef WIN32</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                uint64_t tmp;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                QueryPerformanceCounter((LARGE_INTEGER*)&amp;tmp);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                result = (tmp - mReference)*1000/mFrequency;  <span class="comment">//because counter/frecuency = seconds</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">            #elif defined(MEL_IOS) || defined(MEL_MACOSX)</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                uint64_t tmp=mach_absolute_time();</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                uint64_t elapsed=tmp-mReference;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                result = (elapsed * mTimeBase.numer )/mTimeBase.denom;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            #elif defined(MEL_LINUX) || defined(MEL_ANDROID)</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                timespec ts;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                uint64_t tmp;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                <span class="keywordtype">int</span> chk(clock_gettime(CLOCK_MONOTONIC, &amp;ts));</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">                #pragma unused(chk)</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                assert(!chk);</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                tmp=ts.tv_sec * 1000 + ts.tv_nsec/1000000;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                result=tmp-mReference;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="preprocessor">            #endif      </span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;            }<span class="keywordflow">else</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;            {</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                <span class="comment">//it&#39;s paused</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                result = 0;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            }</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            mLastTime = result  + mMsActive + mStartTime;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            <span class="keywordflow">return</span> mLastTime;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        }</div>
-<div class="line"><a name="l00116"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#a3a6c5c4a6d165870e6c348324736fb8e">  116</a></span>&#160;        uint64_t <a class="code" href="classmel_1_1core_1_1_timer.html#a3a6c5c4a6d165870e6c348324736fb8e">Timer::getLastMilliseconds</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="keyword">        </span>{</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;            <span class="comment">//@todo no me gusta nada esta conversion y tal vez alg�n d�a tengamos problemas, pero devolver 64bits es</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            <span class="comment">//muy ineficiente ahrora</span></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;            <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>)mLastTime;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        }</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        <span class="keywordtype">bool</span> Timer::getPaused()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="keyword">        </span>{</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;            <span class="keywordflow">return</span> mState == PAUSED;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        }</div>
-<div class="line"><a name="l00126"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#ae6a8b17aaeb541ff14d98e57cd58cb01">  126</a></span>&#160;        uint64_t <a class="code" href="classmel_1_1core_1_1_timer.html#ae6a8b17aaeb541ff14d98e57cd58cb01">Timer::getStartTime</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="keyword">        </span>{</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;            <span class="keywordflow">return</span> mStartTime;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        }</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        <span class="keywordtype">void</span> Timer::setStartTime( uint64_t v )</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        {</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            mStartTime = v;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;        }</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;}</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            </div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            uint64_t mReference; <span class="comment">//reference time when Timer is created, units depends on platform</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            uint64_t mStartTime;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">    #ifdef WIN32</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;            uint64_t mFrequency;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;            <span class="keyword">mutable</span> uint64_t mLastTime; </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">    #elif defined (MEL_IOS) || defined(MEL_MACOSX) </span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;            mach_timebase_info_data_t mTimeBase;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;            <span class="keyword">mutable</span> uint64_t mLastTime;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">    #elif defined(MEL_LINUX) || defined(MEL_ANDROID)</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            <span class="keyword">mutable</span> uint64_t mLastTime;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">    #endif</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            uint64_t   mMsActive; </div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            <span class="keyword">enum</span> { ACTIVE, PAUSED } mState;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        };</div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#a7f44533ffb931b080cb2be49029f0099">   71</a></span>&#160;        uint64_t <a class="code" href="classmel_1_1core_1_1_timer.html#a7f44533ffb931b080cb2be49029f0099">Timer::getMilliseconds</a>( )<span class="keyword"> const</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keyword">        </span>{</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            uint64_t result;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            <span class="keywordflow">if</span> ( mState == ACTIVE )</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            {</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">            #ifdef WIN32</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                uint64_t tmp;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                QueryPerformanceCounter((LARGE_INTEGER*)&amp;tmp);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                result = (tmp - mReference)*1000/mFrequency;  <span class="comment">//because counter/frecuency = seconds</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">            #elif defined(MEL_IOS) || defined(MEL_MACOSX)</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                uint64_t tmp=mach_absolute_time();</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                uint64_t elapsed=tmp-mReference;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                result = (elapsed * mTimeBase.numer )/mTimeBase.denom;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            #elif defined(MEL_LINUX) || defined(MEL_ANDROID)</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                timespec ts;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                uint64_t tmp;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                <span class="keywordtype">int</span> chk(clock_gettime(CLOCK_MONOTONIC, &amp;ts));</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">                #pragma unused(chk)</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                assert(!chk);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                tmp=ts.tv_sec * 1000 + ts.tv_nsec/1000000;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                result=tmp-mReference;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="preprocessor">            #endif      </span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            }<span class="keywordflow">else</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;            {</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                <span class="comment">//it&#39;s paused</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                result = 0;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;            }</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;            mLastTime = result  + mMsActive + mStartTime;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            <span class="keywordflow">return</span> mLastTime;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        }</div>
+<div class="line"><a name="l00101"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#a3a6c5c4a6d165870e6c348324736fb8e">  101</a></span>&#160;        uint64_t <a class="code" href="classmel_1_1core_1_1_timer.html#a3a6c5c4a6d165870e6c348324736fb8e">Timer::getLastMilliseconds</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keyword">        </span>{</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;            <span class="comment">//@todo no me gusta nada esta conversion y tal vez alg�n d�a tengamos problemas, pero devolver 64bits es</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            <span class="comment">//muy ineficiente ahrora</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;            <span class="keywordflow">return</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>)mLastTime;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        }</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        <span class="keywordtype">bool</span> Timer::getPaused()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keyword">        </span>{</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;            <span class="keywordflow">return</span> mState == PAUSED;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        }</div>
+<div class="line"><a name="l00111"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_timer.html#ae6a8b17aaeb541ff14d98e57cd58cb01">  111</a></span>&#160;        uint64_t <a class="code" href="classmel_1_1core_1_1_timer.html#ae6a8b17aaeb541ff14d98e57cd58cb01">Timer::getStartTime</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="keyword">        </span>{</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            <span class="keywordflow">return</span> mStartTime;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        }</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keywordtype">void</span> Timer::setStartTime( uint64_t v )</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        {</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            mStartTime = v;</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        }</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    }</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;}</div>
 <div class="ttc" id="aclassmel_1_1core_1_1_timer_html"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html">mel::core::Timer</a></div><div class="ttdef"><b>Definition:</b> Timer.h:18</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a13fdbce5c3ec013f70c610284d68732d"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a13fdbce5c3ec013f70c610284d68732d">mel::core::Timer::reset</a></div><div class="ttdeci">virtual void reset()</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a3a6c5c4a6d165870e6c348324736fb8e"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a3a6c5c4a6d165870e6c348324736fb8e">mel::core::Timer::getLastMilliseconds</a></div><div class="ttdeci">uint64_t getLastMilliseconds() const</div><div class="ttdef"><b>Definition:</b> Timer.h:116</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a3a6c5c4a6d165870e6c348324736fb8e"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a3a6c5c4a6d165870e6c348324736fb8e">mel::core::Timer::getLastMilliseconds</a></div><div class="ttdeci">uint64_t getLastMilliseconds() const</div><div class="ttdef"><b>Definition:</b> Timer.h:101</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a3ad5879e6d184c6687e53ed94285f387"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a3ad5879e6d184c6687e53ed94285f387">mel::core::Timer::Timer</a></div><div class="ttdeci">Timer()</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a508e2a8d597f5dc45bb4576189feb80a"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a508e2a8d597f5dc45bb4576189feb80a">mel::core::Timer::pause</a></div><div class="ttdeci">void pause()</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a6d81464c4028d95d526916586fa3a26e"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a6d81464c4028d95d526916586fa3a26e">mel::core::Timer::gmtime</a></div><div class="ttdeci">static struct tm * gmtime(const time_t *t, struct tm &amp;output)</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a7f44533ffb931b080cb2be49029f0099"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a7f44533ffb931b080cb2be49029f0099">mel::core::Timer::getMilliseconds</a></div><div class="ttdeci">uint64_t getMilliseconds() const</div><div class="ttdef"><b>Definition:</b> Timer.h:86</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_ab26b3a2eddb4faab5417aa50cd17c479"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#ab26b3a2eddb4faab5417aa50cd17c479">mel::core::Timer::mktime</a></div><div class="ttdeci">static time_t mktime(struct tm *t)</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_abb7b3b5ca05d68a9cbec8376a99a9c7d"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#abb7b3b5ca05d68a9cbec8376a99a9c7d">mel::core::Timer::localtime</a></div><div class="ttdeci">static struct tm * localtime(const time_t *, struct tm &amp;output)</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_ae6a8b17aaeb541ff14d98e57cd58cb01"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#ae6a8b17aaeb541ff14d98e57cd58cb01">mel::core::Timer::getStartTime</a></div><div class="ttdeci">uint64_t getStartTime() const</div><div class="ttdef"><b>Definition:</b> Timer.h:126</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_a7f44533ffb931b080cb2be49029f0099"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#a7f44533ffb931b080cb2be49029f0099">mel::core::Timer::getMilliseconds</a></div><div class="ttdeci">uint64_t getMilliseconds() const</div><div class="ttdef"><b>Definition:</b> Timer.h:71</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_timer_html_ae6a8b17aaeb541ff14d98e57cd58cb01"><div class="ttname"><a href="classmel_1_1core_1_1_timer.html#ae6a8b17aaeb541ff14d98e57cd58cb01">mel::core::Timer::getStartTime</a></div><div class="ttdeci">uint64_t getStartTime() const</div><div class="ttdef"><b>Definition:</b> Timer.h:111</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
