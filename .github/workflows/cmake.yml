@@ -15,7 +15,7 @@ env:
 
 jobs:
   build_linux:
-    if: ${{ false }}
+    # if: ${{ false }}
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
@@ -43,7 +43,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}} --tests-regex RunAll -D Nightly
   build_mac:
-    if: ${{ false }}
+    # if: ${{ false }}
     #ahora probando, fijo que se puede hacer con condiciones y no repetir casi todo
     runs-on: [macos-latest]
 
