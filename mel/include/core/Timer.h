@@ -7,7 +7,7 @@
 #elif defined (MEL_LINUX)
 #include <time.h>
 #endif
-#include <core/CriticalSection.h>	
+
 #include <cassert>
 struct tm; //predeclaration
 namespace mel
@@ -50,22 +50,7 @@ namespace mel
 			*/
 			inline uint64_t getStartTime() const;
 			inline void setStartTime( uint64_t );
-			/**
-			* thread-safe counterpart for standard gmtime
-			* @param[in] t timestamp
-			* @param[in] output location for result
-			* @return output pointer or null if error
-			*/
-			static struct tm* gmtime(const time_t* t,struct tm& output);
-			/**
-			* thread-safe counterpart for standard localtime
-			*/
-			static struct tm* localtime(const time_t*, struct tm& output);
-
-			/**
-			* thread-safe counterpart for standard mktime
-			*/
-			static time_t mktime(struct tm* t);
+			
 
 		protected:
 			uint64_t mReference; //reference time when Timer is created, units depends on platform

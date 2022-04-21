@@ -6,7 +6,7 @@
  */
 #include <mpl/TypeTraits.h>
 #include <memory>
-#include <core/CriticalSection.h>
+#include <mutex>
 
 #include <string>
 #include <memory>
@@ -18,7 +18,6 @@ namespace mel
 {
 	namespace core
 	{
-		using mel::core::CriticalSection;
 		using mel::mpl::TypeTraits;
 
 		/**
@@ -188,9 +187,9 @@ namespace mel
 					return mState;
 				}
 				//! use carefully, only for very special cases
-				CriticalSection& getMutex(){ return mSC;}
+				std::recursive_mutex& getMutex(){ return mSC;}
 			protected:
-				mutable CriticalSection	mSC; 
+				mutable std::recursive_mutex	mSC; 
 				EFutureState		mState;
 
 			};
@@ -230,21 +229,21 @@ namespace mel
 				void setValue(U&& value)
 				{
 					volatile auto protectMe= FutureData<T>::shared_from_this();
-					FutureData_Base::mSC.enter();	
+					FutureData_Base::mSC.lock();	
 					if ( mState == NOTAVAILABLE)
 					{
 						mValue = std::forward<U>(value);
 						FutureData_Base::mState = VALID;
-						FutureData_Base::mSC.leave();
+						FutureData_Base::mSC.unlock();
 						Subscriptor::triggerCallbacks(mValue);
 					}else
-						FutureData_Base::mSC.leave();
+						FutureData_Base::mSC.unlock();
 					
 				}
 				void setError( std::exception_ptr ei )
 				{
 					volatile auto protectMe=FutureData<T>::shared_from_this();
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					if ( mState == NOTAVAILABLE)
 					{
 						mValue = ei;
@@ -256,7 +255,7 @@ namespace mel
 				void setError( ET&& ei )
 				{
 					volatile auto protectMe=FutureData<T>::shared_from_this();
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 
 					if ( mState == NOTAVAILABLE)
 					{
@@ -268,7 +267,7 @@ namespace mel
 				};
 				void assign(const ValueType& val)
 				{
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					mValue = val;
 					if (mValue.isAvailable())
 					{
@@ -280,7 +279,7 @@ namespace mel
 				}
 				void assign(ValueType&& val)
 				{
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					mValue = std::move(val);
 					if (mValue.isAvailable())
 					{
@@ -302,7 +301,7 @@ namespace mel
 				 */
 				template <class F> int subscribeCallback(F&& f)
 				{
-					Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					int result = -1;
 					if ( mState != NOTAVAILABLE)
 					{
@@ -320,7 +319,7 @@ namespace mel
 				}
 				template <class F> auto unsubscribeCallback(F&& f)
 				{
-					Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					return Subscriptor::unsubscribeCallback( std::forward<F>(f));
 				}
 
@@ -352,7 +351,7 @@ namespace mel
 
 				template <class F> auto subscribeCallback(F&& f)
 				{				
-					Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					bool continueSubscription = true;
 					int result = -1;
 					if ( mState != NOTAVAILABLE)
@@ -372,7 +371,7 @@ namespace mel
 				}
 				template <class F> auto unsubscribeCallback(F&& f)
 				{
-					Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					return Subscriptor::unsubscribeCallback(std::forward<F>(f));
 				}
 				ValueType& getValue(){ return mValue;}
@@ -380,15 +379,15 @@ namespace mel
 				inline void setValue( void )
 				{
 					volatile auto protectMe=FutureData<void>::shared_from_this();
-					FutureData_Base::mSC.enter();	
+					FutureData_Base::mSC.lock();	
 					if ( mState == NOTAVAILABLE)
 					{
 						mValue.setValid();
 						FutureData_Base::mState = VALID;
-						FutureData_Base::mSC.leave();
+						FutureData_Base::mSC.unlock();
 						Subscriptor::triggerCallbacks(mValue);
 					}else
-						FutureData_Base::mSC.leave();
+						FutureData_Base::mSC.unlock();
 				}
 				/**
 				* set error info. TAKES OWNSERHIP
@@ -396,20 +395,20 @@ namespace mel
 				void setError( std::exception_ptr ei )
 				{
 					volatile auto protectMe=FutureData<void>::shared_from_this();
-					FutureData_Base::mSC.enter();
+					FutureData_Base::mSC.lock();
 					if ( mState == NOTAVAILABLE)
 					{
 						mValue = ei;
 						mState = INVALID;
 						Subscriptor::triggerCallbacks(mValue);
 					}			
-					FutureData_Base::mSC.leave();
+					FutureData_Base::mSC.unlock();
 				};
 				template<class ET>
 				void setError( ET&& ei )
 				{
 					volatile auto protectMe=FutureData<void>::shared_from_this();
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					if ( mState == NOTAVAILABLE)
 					{
 						mValue = std::make_exception_ptr(std::forward<ET>(ei));
@@ -420,7 +419,7 @@ namespace mel
 				void assign(const ValueType& val)
 				{
 					volatile auto protectMe=FutureData<void>::shared_from_this();
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					mValue = val;
 					if (mValue.isAvailable())
 					{
@@ -432,7 +431,7 @@ namespace mel
 				void assign(ValueType&& val)
 				{
 					volatile auto protectMe=FutureData<void>::shared_from_this();
-					core::Lock lck(FutureData_Base::mSC);
+					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
 					mValue = std::move(val);
 					if (mValue.isAvailable())
 					{
@@ -556,14 +555,31 @@ namespace mel
 			 * callbacks are triggeres as usual. It's improtante to note that *all futures* sharing same data will change
 			 */
 			void assign( Future_Common<T>& val)
-			{
-				core::Lock lck(val.getData().getMutex()); 
+			{				
 				auto ptr = mData->getPtr(); //to avoid destruction before unlock
-				core::Lock lck2(getData().getMutex()); 								
+				std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(val.getData().getMutex(),getData().getMutex());
+				// std::scoped_lock<std::recursive_mutex> lck(val.getData().getMutex());
+				// std::scoped_lock<std::recursive_mutex> lck2(getData().getMutex());
+				if (val.getValue().isAvailable())  
+				{
+				// problema, necesito establecer el value, para que que se pueda consuta el avaialbe
+				// pero si establezco el data, vuelvo a hacer trigger de lo mismo
+				// POSIBILIDADES: GUARDAR CALLBACKS 
+					auto old = mData->getPtr();
+				  	setData(val.mData->getPtr());
+					//if value is already available, tigger callbacks now. It's more efficient and avoid recursive calls					
+					static_cast<_private::FutureData<T>*>(old.get())->triggerCallbacks(getData().getValue());
+				}else
+				{
+					val.getData().append(std::move(getData())); //append callbacks
+					setData(val.mData->getPtr());
+				}
+				/*
 				val.getData().append(std::move(getData()));
 				setData(val.mData->getPtr());
 				if (val.getValue().isAvailable())
 					getData().triggerCallbacks(getData().getValue());
+				*/
 			}
 			/**
 			 * @brief Subscribe callback to be executed when future is ready (valid or error)

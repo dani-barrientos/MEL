@@ -5,7 +5,7 @@ using mel::parallelism::BarrierData;
 void BarrierData::set()
 {
     volatile auto protectMe = shared_from_this();
-    ::mel::core::Lock lck(mCS);
+    std::scoped_lock<std::mutex> lck(mCS);
     if ( --mActiveWorkers == 0 ) 
     {				
         triggerCallbacks(*this);

@@ -57,7 +57,7 @@ void BaseTest::addTextToBuffer(string str,LogLevel ll)
             break;
         default:break;
     }
-    auto lck = mel::core::Lock(mCS);
+    std::scoped_lock<std::mutex> lck(mCS);
     mTextBuffer << str;//std::move(str);    
 }
 string BaseTest::getBuffer() const

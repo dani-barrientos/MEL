@@ -99,7 +99,7 @@ namespace mel
 			std::shared_ptr<ThreadRunnable>*	mPool;
 			unsigned int		mNThreads;
 			volatile	int		mLastIndex;  //last thread used
-			core::CriticalSection mExceptionLock;  //one lock to proyect all exception set.
+			std::mutex mExceptionLock;  //one lock to protect all exception set.
 			/**
 			* execute generic case.
 			* @param[in] opts execution options
@@ -144,7 +144,7 @@ namespace mel
 							func(arg);
 						}catch(...)
 						{
-							core::Lock lck(mExceptionLock);
+							std::scoped_lock<std::mutex> lck(mExceptionLock);
 							if ( !except )
 								except = std::current_exception();
 						}						
@@ -176,7 +176,7 @@ namespace mel
 								func(arg);
 							}catch(...)
 							{
-								core::Lock lck(mExceptionLock);
+								std::scoped_lock<std::mutex> lck(mExceptionLock);
 								if ( !except )
 									except = std::current_exception();
 							}
@@ -207,7 +207,7 @@ namespace mel
 							std::get<n>(result) = func(arg);
 						}catch(...)
 						{
-							core::Lock lck(mExceptionLock);
+							std::scoped_lock<std::mutex> lck(mExceptionLock);
 							if ( !except )
 								except = std::current_exception();
 						}		
@@ -237,7 +237,7 @@ namespace mel
 								std::get<n>(result) = func(arg);
 							}catch(...)
 							{
-								core::Lock lck(mExceptionLock);
+								std::scoped_lock<std::mutex> lck(mExceptionLock);
 								if ( !except )
 									except = std::current_exception();
 							}		

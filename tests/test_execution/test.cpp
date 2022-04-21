@@ -493,12 +493,12 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	//use a task to make it more complex
 	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
 	{
-		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
 		text::info("Simple functor chaining. using operator | from now");
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
 		{		
-			auto th2 = ThreadRunnable::create();
+			auto th2 = ThreadRunnable::create();			
 			execution::Executor<Runnable> ex2(th2);		
 			auto res1_1 = 
 				execution::start(ex)
@@ -526,7 +526,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 					return std::move(v); //avoid copy constructor			
 				});
 			//very simple second job
-			auto res1_2 = mel::execution::launch(ex,[]()
+			auto res1_2 = mel::execution::launch(ex2,[]()
 			{
 				return "pepe";
 			});

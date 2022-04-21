@@ -21,7 +21,7 @@ using std::for_each;
 using mel::core::TLS;
 static TLS::TLSKey gCurrentRunnableKey;
 static bool gCurrentRunnableKeyCreated = false;
-static CriticalSection gCurrrentRunnableCS;
+static std::mutex gCurrrentRunnableCS;
 
 GenericProcess* mel::tasking::DefaultAllocator::allocate(Runnable* _this)
 {
@@ -37,7 +37,7 @@ void* ::mel::tasking::_private::RunnableTask::operator new( size_t s,Runnable* o
 	/*
 	//descartado hasta ahcer sistema eficiente
 	//Lock lck(owner->mMemPoolCS);
-	//std::lock_guard<std::mutex> lck(owner->mMemPoolCS);
+	//std::scoped_lock<std::mutex> lck(owner->mMemPoolCS);
 	RTMemPool* selectedPool = NULL;
 	//run over memory zones looking for free one
 	for( auto& i:owner->mRTZone.getList())
@@ -79,7 +79,7 @@ void ::mel::tasking::_private::RunnableTask::operator delete( void* ptr ) noexce
 	RTMemBlock* block = (RTMemBlock*)((char*)ptr - offsetof( RTMemBlock, task));
 	ownerRunnable = block->owner->owner;
 	//Lock lck(ownerRunnable->mMemPoolCS);
-	//std::lock_guard<std::mutex> lck(ownerRunnable->mMemPoolCS);
+	//std::scoped_lock<std::mutex> lck(ownerRunnable->mMemPoolCS);
 	block->memState = RTMemBlock::EMemState::FREE;
 	if (--block->owner->count == 0 )
 	{
@@ -168,7 +168,7 @@ Runnable::Runnable(RunnableCreationOptions options ):
 	mOwnerThread(0)  //assume 0 is invalid thread id!!
 {
 	//create one default pool
-	gCurrrentRunnableCS.enter();
+	gCurrrentRunnableCS.lock();
 	
 	
 	if (!gCurrentRunnableKeyCreated)
@@ -177,7 +177,7 @@ Runnable::Runnable(RunnableCreationOptions options ):
 		gCurrentRunnableKeyCreated = true;
 	}
 	
-	gCurrrentRunnableCS.leave();
+	gCurrrentRunnableCS.unlock();
 	//_addNewPool(); quitado hasta tener todo claro, pero parece que incluso inicializar el pool cuesta mucho cuando es grande
 	//Create default timer. Can be overriden by calling
 	setTimer(std::make_shared<Timer>());

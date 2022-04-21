@@ -55,7 +55,7 @@ EventMTThreadSafePolicy::EventMTThreadSafePolicy(bool autoRelease, bool signaled
 mel::tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msecs ) 
 {
 	EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
-	mCS.enter();
+	mCS.lock();
 	if ( !EventBase::mSignaled )
 	{
 		auto p = ProcessScheduler::getCurrentProcess();
@@ -65,12 +65,12 @@ mel::tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msec
 		if ( msecs == EVENTMT_WAIT_INFINITE )
 			switchResult = ::mel::tasking::Process::sleepAndDo([this]()
 			{
-				mCS.leave();
+				mCS.unlock();
 			} );
 		else
 			switchResult = ::mel::tasking::Process::waitAndDo(msecs, [this]()
 			{
-				mCS.leave();
+				mCS.unlock();
 			});
 		switch ( switchResult )
 		{
@@ -86,11 +86,11 @@ mel::tasking::EEventMTWaitCode EventMTThreadSafePolicy::_wait( unsigned int msec
 		}
 		//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
 		//maybe other process do wait on this events
-		mCS.enter();
+		mCS.lock();
 		mWaitingProcesses.remove( p );
-		mCS.leave();
+		mCS.unlock();
 	}else
-		mCS.leave();
+		mCS.unlock();
 	return result;
 }
 

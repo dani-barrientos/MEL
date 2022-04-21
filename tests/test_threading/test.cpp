@@ -162,8 +162,8 @@ static int _testsDebug(tests::BaseTest* test)
 		 	viendo eso uno pensaría que sólo cambia el fut2, cuando en realidad cambia el data por lo que afecta a todos
 			 POSIBILDIADES:
 			  - llamarlo change		*/
- 		fut2.assign(fut1);
 		fut1.setValue(6);
+ 		fut2.assign(fut1);
 		//asignacion del data
 		Thread::sleep(1000);
 	}

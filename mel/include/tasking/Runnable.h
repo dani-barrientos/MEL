@@ -36,7 +36,6 @@ using mel::core::Future;
 #include <functional>
 #include <cassert>
 #include <forward_list>
-#include <mutex>
 #include <type_traits>
 
 #define RUNNABLE_TASK_ALIGNMENT 8
@@ -223,7 +222,7 @@ namespace mel
 			RunnableCreationOptions mOpts;
 			mel::tasking::_private::MemZoneList mRTZone;
 			//std::atomic<State>	mState;
-			CriticalSection	mMemPoolCS;		
+			std::mutex	mMemPoolCS;		
 			mel::core::ThreadId	mOwnerThread;//thread executing Runnable		
 			
 			//! helper function. Create new pool and append it at front

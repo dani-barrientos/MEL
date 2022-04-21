@@ -2,14 +2,10 @@
 
 #include <core/Event.h>  
 #include <core/ThreadDefs.h>
-
 #include <memory>
 #include <parallelism/Barrier.h>
 #include <core/Future.h>
-#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
-#include <pthread.h>
-#endif
-#include <functional>
+#include <thread>
 
 namespace mel
 {	
@@ -29,25 +25,13 @@ namespace mel
 		
 		/**
 		 * @class Thread
-		 * @brief Platform-independent thread implementation.		
-		 * @note Threads are always created as _suspended_, and once starte are not suspended again by default
-		 * when there are no any task to execute. This can be changed at will via setSuspendWhenNoTasks.
+		 * @brief Wrapper around std::thread to prive more abstractions 		 
 		 * @warning Some of these features may not be present on certain platforms, or may have
 		 * specific requirements.
-		 * 
-		 * Please note that it's generally better to inherit from Thread_Impl insted of Thread directly, as
-		 * it provides a few off-the-shelf features like task execution and few more things. Thread can of course
-		 * be inherited, but will require additional programming to handle things safely.
 		 */
 		class MEL_API Thread
 		{
-
-		#ifdef _WINDOWS
-			friend DWORD WINAPI _threadProc(void* /*__in LPVOID*/);
-		#else
-			friend void* _threadProc(void* param);
-		#endif
-
+			
 			public:
 				//@brief policy for yield() function
 				enum YieldPolicy {
@@ -56,23 +40,14 @@ namespace mel
 				};
 				
 				/**
-				 * Starts the main thread routine.
-				 * Calling this function will force the main thread routine (Thread::run) to be spawned 
-				 * and will return automatically just after doing so.<br>
-				 * The thread will keep runing in background until Thread::run finishes.<br>
-				 * Thread status can be queried meanwhile through Thread::isRunning, and the final
-				 * result obtained via Thread::getResult, once it finishes.<br>
-				 * Callers are encouraged to allways call Thread::join before attempting to query the
-				 * result value or even exiting the main application.
+				 * @brief Starts the main thread routine.
+				 * @param[in] f funtion with signature void f()				 
 				 */		
 				template <class F> Thread(F&& f);
 				//not a thread
 				Thread();
 				/**				 
-				 * Creates a new thread with the given name.
-				 * New threads are always created in a suspended state, meaning no actual thread
-				 * process will be actually executed until Thread::start is invoked.
-				 * @remarks Thread should be only deleted when is sure it's finished (see terminate and join)
+				 * @brief Thread is joined on destruction
 				 */
 				virtual ~Thread();
 
@@ -81,12 +56,12 @@ namespace mel
 				 * May not be available in some platforms.
 				 * @param tp the new priority to be set.				 
 				 */
-				void setPriority(ThreadPriority tp);
+				void setPriority(EThreadPriority tp);
 				/**
 				 * Query thread's current priority.
 				 * @return the priority of the thread
 				 */
-				inline ThreadPriority getPriority() const;
+				inline EThreadPriority getPriority() const;
 
 				
 				
@@ -98,20 +73,8 @@ namespace mel
 				 * @param millis maximum milliseconds to wait for the thread.
 				 * @return true if the thread finished. false if timeout 
 				 */
-				bool join(unsigned int millis=0xFFFFFFFF/*TODO mac: INFINITE*/);
-				/**
-				 * Get the thread execution result.
-				 * @return the requested result, that will only be meaningful if the
-				 * thread already finished. The meaning (if any) of the returned value is defined
-				 * by the concrete subclass implementing the thread.
-				 * @see join, isRunning
-				 */
-				unsigned int getResult() const;
-				/**
-				 * Get thread's running status
-				 * @return true if the thread is still running. false otherwise
-				 */
-				inline bool isRunning() const;
+				bool join(unsigned int millis=0xFFFFFFFF/*TODO mac: INFINITE*/);				
+
 
 				/**
 				 * Forces the calling thread to sleep.
@@ -136,7 +99,7 @@ namespace mel
 				/**
 				* return handle for this thread
 				*/
-				inline ThreadId getThreadId() const;			
+				inline std::thread::id getThreadId() const;			
 				/**
 				* Get thread state
 				* @return the thread's current state
@@ -175,43 +138,27 @@ namespace mel
 			private:
 				Thread(const char* name);
 				enum class EJoinResult{JOINED_NONE,JOINED_OK,JOINED_ERROR} mJoinResult;
-		#ifdef MEL_WINDOWS
-				HANDLE mHandle = 0;
-				DWORD mID;
-		#elif defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
-			ThreadId mHandle = 0;
-			#if !defined (MEL_MACOSX) && !defined(MEL_IOS)
-			pid_t mThHandle = 0; //depending on posix functions used, (the miriad of them) use diferent handles types, etc
-			#endif
+				#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)
 				int	mPriorityMin;
 				int mPriorityMax;
+				#endif
 				uint64_t mAffinity = 0; //affinity to set on start. if 0, is ignored
-		#endif
-		#if defined (MEL_MACOSX) || defined(MEL_IOS)
-				void* mARP; //The autorelease pool as an opaque-type
-		#endif
 				unsigned int mExitCode;
-				ThreadPriority mPriority;
+				EThreadPriority mPriority = EThreadPriority::TP_NONE;
 
-				std::function<void()> mFunction;
+				std::thread mThread;
 				void _initialize();
-				void _start();
 		};
-		template <class F> Thread::Thread(F&& f):mFunction(std::forward<F>(f))
+		template <class F> Thread::Thread(F&& f):mThread(std::forward<F>(f))
 		{
 			_initialize();
-			_start();
 		}
-		ThreadId Thread::getThreadId() const
+		std::thread::id Thread::getThreadId() const
 		{
-	#ifdef _WINDOWS
-			return mID;
-	#else
-			return mHandle;
-	#endif
+			return mThread.get_id();	
 		}
 		
-		ThreadPriority Thread::getPriority() const {
+		EThreadPriority Thread::getPriority() const {
 			return mPriority;
 		}	
 

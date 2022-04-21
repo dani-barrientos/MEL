@@ -6,20 +6,20 @@ using mel::core::TLS;
 
 static TLS::TLSKey gCurrentThreadKey;
 static bool gCurrentThreadKeyCreated = false;
-static CriticalSection gCurrrentThreadCS;
+static std::mutex gCurrrentThreadCS;
 
 Runnable::RunnableCreationOptions ThreadRunnable::sDefaultOpts;
 ThreadRunnable::ThreadRunnable( Runnable::RunnableCreationOptions opts):Runnable(std::move(opts)),mState(THREAD_INIT),mEnd(false),
 	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
 	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&ThreadRunnable::_processAwaken, this));
-	gCurrrentThreadCS.enter();
+	gCurrrentThreadCS.lock();
 	if ( !gCurrentThreadKeyCreated )
 	{
 		TLS::createKey( gCurrentThreadKey );
 		gCurrentThreadKeyCreated = true;
 	}
-	gCurrrentThreadCS.leave();
+	gCurrrentThreadCS.unlock();
 }
 void ThreadRunnable::_execute()	
 {
@@ -178,7 +178,7 @@ void ThreadRunnable::_signalWakeup()
 	mWaitForTasks.set();
 #else
 	{
-		std::lock_guard<std::mutex> lk(mCondMut);
+		std::scoped_lock<std::mutex> lk(mCondMut);
 		mSignaled = true;
 	}
 	mWaitForTasksCond.notify_one();

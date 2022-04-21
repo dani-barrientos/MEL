@@ -9,7 +9,7 @@
 #include <tasking/Process.h>
 #include <core/Callback.h>
 #include <tasking/ProcessScheduler.h>
-
+#include <mutex>
 namespace mel
 {
 	namespace tasking
@@ -49,7 +49,7 @@ namespace mel
 				EventMTThreadSafePolicy(bool autoRelease, bool signaled);
 				void set(bool sendToAll)
 				{
-					core::Lock lck(mCS);
+					std::scoped_lock<std::mutex> lck(mCS);
 					EventBase::_set(sendToAll);
 				}
 			protected:
@@ -58,7 +58,7 @@ namespace mel
 				EEventMTWaitCode _waitAndDo( F postSleep,unsigned int msecs ) 
 				{
 					EEventMTWaitCode result = EEventMTWaitCode::EVENTMT_WAIT_OK;
-					mCS.enter();
+					mCS.lock();
 					if ( !mSignaled )
 					{
 						auto p = ::mel::tasking::ProcessScheduler::getCurrentProcess();
@@ -68,13 +68,13 @@ namespace mel
 						if ( msecs == EVENTMT_WAIT_INFINITE )
 							switchResult = ::mel::tasking::Process::sleepAndDo([this,postSleep]()
 							{
-								mCS.leave();
+								mCS.unlock();
 								postSleep();
 							} );
 						else
 							switchResult = ::mel::tasking::Process::waitAndDo(msecs, [this,postSleep]()
 							{
-								mCS.leave();
+								mCS.unlock();
 								postSleep();
 							});
 						switch ( switchResult )
@@ -91,18 +91,18 @@ namespace mel
 						}
 						//remove process form list. It's safe to do it here because current process is already waiting (now is returning)
 						//maybe other process do wait on this events
-						mCS.enter();
+						mCS.lock();
 						mWaitingProcesses.remove( p );
-						mCS.leave();
+						mCS.unlock();
 					}else
 					{
-						mCS.leave();
+						mCS.unlock();
 						postSleep();
 					}
 					return result;
 				}
 			private:
-				core::CriticalSection mCS;
+				std::mutex mCS;
 		};
 			/**
 		 * @brief Policy for non-multithread safe event

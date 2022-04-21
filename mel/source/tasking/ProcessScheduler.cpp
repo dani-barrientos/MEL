@@ -29,7 +29,7 @@ using mel::core::TLS;
 
 static TLS::TLSKey	gTLSCurrentProcessKey;
 static bool gTLSInited = false;
-static CriticalSection gPSCS;
+static std::mutex gPSCS;
 
 //initial memory for new posted tasks
 ProcessScheduler::LockFreeTasksContainer::LockFreeTasksContainer(size_t chunkSize,size_t maxChunks):
@@ -61,7 +61,7 @@ void ProcessScheduler::LockFreeTasksContainer::add(std::shared_ptr<Process>& pro
 	idx = mCurrIdx.fetch_add(1,::std::memory_order_release);  //no lo tengo claro todavía, estudiar
 	if ( idx >= size())
 	{
-		Lock lck(mSC);
+		std::scoped_lock<std::mutex> lck(mSC);
 		//check size again
 		size_t currSize = mSize.load(std::memory_order_relaxed);
 		if ( idx >= currSize)
@@ -85,11 +85,11 @@ void ProcessScheduler::LockFreeTasksContainer::clear()
 
 void ProcessScheduler::LockFreeTasksContainer::lock()
 {
-	mSC.enter();
+	mSC.lock();
 }
 void ProcessScheduler::LockFreeTasksContainer::unlock()
 {
-	mSC.leave();
+	mSC.unlock();
 }
 
 
@@ -110,13 +110,13 @@ ProcessScheduler::ProcessScheduler(SchedulerOptions opts):
 		mLockFreeTasks.reset(new LockFreeTasksContainer(op.chunkSize,op.maxChunks));
 	}
 
-	gPSCS.enter();
+	gPSCS.lock();
 	if ( !gTLSInited )
 	{
 		TLS::createKey( gTLSCurrentProcessKey);
 		gTLSInited = true;
 	}
-	gPSCS.leave();
+	gPSCS.unlock();
 }
 
 
@@ -252,7 +252,7 @@ void ProcessScheduler::executeProcesses()
 		//don't block if no new processes. size member is not atomic, but if a new process is being inserted in this moment, it will be inserted in next iteration
 		if ( !mBlockingTasks.empty())
 		{
-			mCS.enter();
+			mCS.lock();
 			TNewProcesses::reverse_iterator i;
 			TNewProcesses::reverse_iterator end;
 			end = mBlockingTasks.rend();
@@ -265,7 +265,7 @@ void ProcessScheduler::executeProcesses()
 			}
 			mBlockingTasks.clear();	
 			
-			mCS.leave();
+			mCS.unlock();
 		}
 	}
 	_executeProcesses( time,mProcessList);
@@ -361,15 +361,16 @@ void ProcessScheduler::_killTasks()
 	{
 		(*i).first->kill();
 	}
-	mCS.enter();
 	/*
 	@todo resolver
+	mCS.enter();
+	
 	for( auto i = mNewProcesses.begin(); i != mNewProcesses.end(); ++i)
 	{
 		(*i).first->kill();
-	}*/
-
+	}
 	mCS.leave();
+	*/
 	mKillingProcess = false;
 }
 void ProcessScheduler::killProcesses( bool deferred )
@@ -426,7 +427,7 @@ void ProcessScheduler::insertProcess(std::shared_ptr<Process> process, unsigned 
 		mLockFreeTasks->add( process,startTime );
 	}else
 	{
-		Lock lck(mCS);
+		std::scoped_lock<std::mutex> lck(mCS);
 		mBlockingTasks.push_back( std::make_pair(process,startTime) );
 	}
 }

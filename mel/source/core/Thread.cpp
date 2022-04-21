@@ -1,24 +1,16 @@
 #include <assert.h>
 #include <core/Thread.h>
-
 #include <text/logger.h>
 
-/*#if defined(MEL_MACOSX) || defined(MEL_IOS)
-#import <Foundation/Foundation.h>
-#endif*/
 #if defined(MEL_MACOSX) || defined(MEL_IOS)
 //#import <sys/sysctl.h>
 #include <sys/sysctl.h>
 #include <pthread.h>
-//#import <mach/thread_act.h>
 #include <mach/thread_act.h>
 #elif defined(MEL_LINUX) || defined(MEL_ANDROID)
 #include <unistd.h>
 #include <sched.h>
 #include <pthread.h>
-	/*#ifdef MEL_ANDROID
-	#import <sys/syscall.h>
-	#endif*/
 #endif
 
 namespace mel
@@ -163,7 +155,7 @@ namespace mel
 		return _setAffinity(affinity,gettid());
 	#endif
 	}
-
+/*
 	#ifdef _WINDOWS
 		DWORD WINAPI _threadProc(void* lpParameter)
 		{
@@ -181,177 +173,115 @@ namespace mel
 			assert(t && "NULL Thread!");
 			if ( t->mAffinity != 0 )
 				t->setAffinity(t->mAffinity);
-	/*
-	esto tengo que estudiarlo a ver si realmente es necesario. no me fío
-	#if defined(MEL_MACOSX) || defined(MEL_IOS)
-			//Create the auto-release pool so anyone can call Objective-C code safely
-			t->mARP=[[NSAutoreleasePool alloc] init];
-	#endif		
-	*/
+	
+	// esto tengo que estudiarlo a ver si realmente es necesario. no me fío
+	// #if defined(MEL_MACOSX) || defined(MEL_IOS)
+	// 		//Create the auto-release pool so anyone can call Objective-C code safely
+	// 		t->mARP=[[NSAutoreleasePool alloc] init];
+	// #endif		
+	
 			
 			t->mFunction();
 			//t->mResult = t->runInternal();
-			/*
-			lo mismo que el comentario anterior
-	#if defined(MEL_MACOSX) || defined(MEL_IOS)
-			//Destroy auto-release pool
-			[(NSAutoreleasePool*)t->mARP release];
-	#endif
-	*/
+			
+	// 		lo mismo que el comentario anterior
+	// #if defined(MEL_MACOSX) || defined(MEL_IOS)
+	// 		//Destroy auto-release pool
+	// 		[(NSAutoreleasePool*)t->mARP release];
+	// #endif
+	
 			return NULL;
 	}
 	#endif	
-
+*/
 	Thread::Thread()
 	{	
-		_initialize();
 	}
 	void Thread::_initialize()
 	{
-		mJoinResult = EJoinResult::JOINED_NONE;
-	#ifdef _WINDOWS
-		mID = 0;
-	#endif
-	/*
-	@todo
-	#if defined (MEL_MACOSX) || defined(MEL_IOS)
-		mARP = nil;
-	#endif
-	*/
-		mHandle = 0;
-		mPriority = TP_NORMAL;
-		
+		mJoinResult = EJoinResult::JOINED_NONE;	
+	#ifdef MEL_ANDROID
+			#define __PLATFORM_POLICY SCHED_OTHER
+		#else
+				//SCHED_RR vs SCHED_FIFO?
+			#define __PLATFORM_POLICY SCHED_OTHER
 
-	/*
-	I think I should create it on start
-	#ifdef MEL_WINDOWS
-		mHandle=CreateThread(
-			NULL,
-			0,
-			_threadProc,
-			this,
-			CREATE_SUSPENDED,
-			&mID);	
-	#endif
-	*/
-	#if defined (MEL_MACOSX) || defined(MEL_IOS)
-	/* @todoesto no me gusta nada,. revisar
-		if ([NSThread isMultiThreaded]!=YES) {
-			NSThread* t=[[NSThread alloc] init];
-			[t start];
-			assert([NSThread isMultiThreaded]==YES && "Cocoa is not running in multi-threaded mode!");
-			[t release];
-		}
-		*/
-	#endif
+		#endif
 	#if defined (MEL_MACOSX) || defined(MEL_IOS) 
-		mPriorityMin = sched_get_priority_min(SCHED_RR);
-		mPriorityMax = sched_get_priority_max(SCHED_RR);
+		mPriorityMin = sched_get_priority_min(__PLATFORM_POLICY);
+		mPriorityMax = sched_get_priority_max(__PLATFORM_POLICY);
 	#elif defined(MEL_LINUX) || defined(MEL_ANDROID)
-		mPriorityMin=sched_get_priority_min(SCHED_OTHER);
-		mPriorityMax=sched_get_priority_max(SCHED_OTHER);
+		mPriorityMin=sched_get_priority_min(__PLATFORM_POLICY);
+		mPriorityMax=sched_get_priority_max(__PLATFORM_POLICY);	
 	#endif
+		setPriority(EThreadPriority::TP_NORMAL);
 	}
 
 	Thread::~Thread()
 	{
-	#ifdef _WINDOWS
-		//maybe the thread was not started
-		if (mHandle )
-		{
-			join();
-			CloseHandle(mHandle);
-			mHandle=0;
-		}
-		mID=0;
-	#else
-		if (mHandle && mJoinResult == EJoinResult::JOINED_NONE) 
-		{
-			join();
-		}
-	#endif
+	
+		join();
 	}
 
 	void Thread::sleep(const unsigned int millis) {
-	#ifdef _WINDOWS
-		Sleep(millis);
-	#else
-		struct timespec req={0},rem={0};
-		time_t sec=(int)(millis/1000);
-		long millisec=millis-(sec*1000);
-		req.tv_sec=sec;
-		req.tv_nsec=millisec*1000000L;
-		nanosleep(&req,&rem);
-	#endif
+		std::this_thread::sleep_for(std::chrono::milliseconds(millis));	
 	}
 
 	#if defined(MEL_MACOSX) || defined(MEL_LINUX) ||defined(MEL_IOS) || defined(MEL_ANDROID)
-	int priority2pthread(ThreadPriority tp,int pMin,int pMax) {
+	static int priority2pthread(EThreadPriority tp,int pMin,int pMax) {
 		switch (tp) {
-			case TP_HIGHEST:
+			case EThreadPriority::TP_HIGHEST:
 				return pMax;
-			case TP_HIGH:
+			case EThreadPriority::TP_HIGH:
 				return pMin+((pMax-pMin)*3/4);
-			case TP_NORMAL:
+			case EThreadPriority::TP_NORMAL:
 				return (pMin+pMax)>>1;
-			case TP_LOW:
+			case EThreadPriority::TP_LOW:
 				return pMin+((pMax-pMin)*1/4);
-			case TP_LOWEST:
+			case EThreadPriority::TP_LOWEST:
 				return pMin;
 			default:
 				return (pMin+pMax)>>1;
 		}
 	}
-	#endif
-
-	void Thread::_start() {
-
-		
-	#ifdef MEL_WINDOWS
-		mHandle=CreateThread(
-			NULL,
-			0,
-			_threadProc,
-			this,
-			0,
-			&mID);	
-	#else
-	using namespace ::std::string_literals;
-		pthread_attr_t  attr;
-		int err;
-		//Then we setup thread attributes as "joinable"
-		if ((err=pthread_attr_init(&attr))) {
-			throw std::runtime_error( "Unable to initialize thread attributes: err="s+ std::to_string(err));
+	#else //Windows
+	static int priority2WindowsAPI(EThreadPriority tp) {
+		switch (tp) {
+			case EThreadPriority::TP_HIGHEST:
+				return THREAD_PRIORITY_HIGHEST;
+			case EThreadPriority::TP_HIGH:
+				return THREAD_PRIORITY_ABOVE_NORMAL;
+			case EThreadPriority::TP_NORMAL:
+				return THREAD_PRIORITY_NORMAL;
+			case EThreadPriority::TP_LOW:
+				return THREAD_PRIORITY_BELOW_NORMAL;
+			case EThreadPriority::TP_LOWEST:
+				return THREAD_PRIORITY_LOWEST;
+			default:
+				return THREAD_PRIORITY_NORMAL;
 		}
-		if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE)) { //PTHREAD_CREATE_DETACHED
-			pthread_attr_destroy(&attr);
-			throw std::runtime_error("Unable to set detached state!");
-		}
-
-		sched_param sp;
-		sp.sched_priority=priority2pthread(mPriority,mPriorityMin,mPriorityMax);
-		if (pthread_attr_setschedparam(&attr,&sp)) {
-			pthread_attr_destroy(&attr);
-			throw std::runtime_error("Unable to set thread priority!");
-		}
-
-		err = pthread_create(&mHandle, &attr, _threadProc, this);
-		if (err != 0) {
-			throw std::runtime_error("Unable to spawn new thread: err="s+ std::to_string(err));
-		}
-		
-		if ((err=pthread_attr_destroy(&attr))) {
-			#ifndef MEL_ANDROID
-			pthread_cancel(mHandle);
-			#endif
-			throw std::runtime_error("Unable to destroy thread attribute!");
-		}	
-	#endif	
 	}
-
+	#endif
 	bool Thread::join(unsigned int millis)
 	{
-		if ( mJoinResult == EJoinResult::JOINED_NONE)
+		if (mJoinResult == EJoinResult::JOINED_NONE && mThread.joinable())
+		{
+			try
+			{
+				mThread.join();
+				mJoinResult = EJoinResult::JOINED_OK;
+			}catch(std::system_error& e)
+			{
+				//@todo revisar error
+				const std::error_code& ec = e.code();
+				text::error("Error joining thread. Code = 0x{:x}. Msg={}",ec.value(),ec.message());
+				mJoinResult = EJoinResult::JOINED_ERROR;
+			}catch(...)
+			{
+				mJoinResult = EJoinResult::JOINED_ERROR;	
+			}
+		}
+		/*if ( mJoinResult == EJoinResult::JOINED_NONE)
 		{
 	#ifdef MEL_WINDOWS
 		DWORD status;
@@ -383,7 +313,7 @@ namespace mel
 			}
 		}
 	#else
-		int err = pthread_join(mHandle, NULL/*result*/);
+		int err = pthread_join(mHandle, NULL);
 		
 		if ( err != 0)
 		{
@@ -404,11 +334,20 @@ namespace mel
 			mJoinResult = EJoinResult::JOINED_OK;
 		
 	#endif
-		}
+		}*/
 		return mJoinResult == EJoinResult::JOINED_OK;	
+		
 	}
 
 	void Thread::yield(YieldPolicy yp) {
+		if (yp==YP_ANY_THREAD_ANY_PROCESSOR) {
+			Thread::sleep(0);
+		}
+		else {
+			//SwitchToThread();
+			std::this_thread::yield();
+		}
+		/*
 	#ifdef _WINDOWS
 		if (yp==YP_ANY_THREAD_ANY_PROCESSOR) {
 			Sleep(0);
@@ -424,12 +363,31 @@ namespace mel
 			sched_yield();
 		}
 	#endif
+	*/
 	}
-
-	#ifdef _WINDOWS
-	void Thread::setPriority(ThreadPriority tp) {
+	void Thread::setPriority(EThreadPriority tp) {
 		if (mPriority==tp)
 			return;
+		mPriority=tp;
+		#ifdef _WINDOWS
+			BOOL r = SetThreadPriority(mThread.native_handle(),priority2WindowsAPI(tp));
+			if (!r)
+				mel::text::error("Error setting thread priority. Error code = 0x{:x}",GetLastError());
+		#else
+			sched_param sp;
+			sp.sched_priority = priority2pthread(mPriority,mPriorityMin,mPriorityMax);
+			
+			int ret = pthread_setschedparam(mThread.native_handle(), __PLATFORM_POLICY, &sp);
+			if (ret)
+				mel::text::warn("Error setting thread priority. Error code = 0x{:x}",ret);
+		#endif
+	}
+/*	#ifdef _WINDOWS
+	void Thread::setPriority(ThreadPriority tp) {
+	
+		if (mPriority==tp)
+			return;
+		
 
 		BOOL r;
 		mPriority=tp;
@@ -451,11 +409,13 @@ namespace mel
 				break;
 		}
 		assert(r==TRUE);
+		
 	}
 	#endif
 	#ifndef MEL_WINDOWS
 
-	void Thread::setPriority(ThreadPriority tp) {
+	void Thread::setPriority(ThreadPriority tp) {		
+		@todo resolver, seguramente tenga que seguir haciendolo de forma nativa
 		if (mPriority==tp)
 			return;
 		mPriority=tp;
@@ -473,11 +433,12 @@ namespace mel
 			int ret = pthread_setschedparam(mHandle, __PLATFORM_POLICY, &sp);
 			#pragma unused(ret)
 			assert(!ret);
+			
 		}
 
 	}
 	#endif
-
+*/
 
 	uint64_t Thread::getAffinity() const
 	{
@@ -487,6 +448,7 @@ namespace mel
 	bool Thread::setAffinity(uint64_t affinity)
 	{
 		bool result = false;
+		/*
 	#ifdef MEL_WINDOWS
 		DWORD_PTR aff = (DWORD_PTR)affinity;
 		DWORD_PTR oldAff = SetThreadAffinityMask(mHandle, aff);
@@ -522,7 +484,7 @@ namespace mel
 		}
 		else
 			return true;
-	#endif
+	#endif*/
 		return result;
 	}
 

@@ -12,9 +12,7 @@ using std::for_each;
 using mel::mpl::del_ptr;
 #include <list>
 using std::list;
-#include <core/CriticalSection.h>
-using mel::core::CriticalSection; //preferir�a no hacer esto y proporcionar el objeto "bloqueador" como argumento, pero no me da tiempo
-using mel::core::Lock;
+#include <mutex>
 namespace mel
 {
 	namespace core {

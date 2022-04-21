@@ -1,6 +1,6 @@
 #pragma once
 #include <MelLibType.h>
-#include <core/CriticalSection.h>
+#include <mutex>
 
 
 namespace mel
@@ -20,20 +20,20 @@ namespace mel
 			public:
 				Locker()
 				{
-					mCs.enter();
+					mCs.lock();
 				}
 				~Locker()
 				{
-					mCs.leave();
+					mCs.unlock();
 				}
 			private:
-				static CriticalSection mCs;
+				static std::mutex mCs;
 			};
 		public:
 			typedef T VolatileType; 
 			typedef Locker<T> Lock;
 		
 		};
-		template <class T> template <class U> CriticalSection Singleton_Multithread_Policy<T>::Locker<U>::mCs;
+		template <class T> template <class U> std::mutex Singleton_Multithread_Policy<T>::Locker<U>::mCs;
 	}
 }

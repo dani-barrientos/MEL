@@ -16,13 +16,13 @@ namespace mel
 		{
 			template <bool> struct _CriticalSectionWrapper
 			{
-				CriticalSection mSC;
+				std::mutex mSC;
 			};
 			template <bool enabled> struct _Lock
 			{
 				_Lock(_CriticalSectionWrapper<enabled>& cs):mLck(cs.mSC){}
 				private:
-					Lock mLck;
+					std::scoped_lock<std::mutex> mLck;
 			};
 			template <> struct _CriticalSectionWrapper<false>
 			{
@@ -277,12 +277,12 @@ namespace mel
 		public:
 			void triggerCallbacks( VARIABLE_ARGS_IMPL )
 			{
-				_private::_Lock<mpl::isSame<ThreadingPolicy, ::mel::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 				if (BaseType::mTriggering)
 				{
 	//				spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again!!");
 					return;
 				}
+				_private::_Lock<mpl::isSame<ThreadingPolicy, ::mel::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 				BaseType::mTriggering = true;
 				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
 				auto j = BaseType::mCallbacks.end();
@@ -626,12 +626,12 @@ namespace mel
 
 			void triggerCallbacks( VARIABLE_ARGS_IMPL )
 			{			
-				_private::_Lock<mpl::isSame<ThreadingPolicy, ::mel::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 				if (BaseType::mTriggering)
 				{				
-					//spdlog::debug("CallbackSubscriptor Callbacks are being triggered while  triggering again YYY!!");
+					mel::text::error("CallbackSubscriptor Callbacks are being triggered while triggering again!!");
 					return;
 				}
+				_private::_Lock<mpl::isSame<ThreadingPolicy, ::mel::core::CSMultithreadPolicy>::result> lck(BaseType::mSC);
 				BaseType::mTriggering = true;
 				typename BaseType::CallbackListType::iterator i = BaseType::mCallbacks.begin();
 				while( i != BaseType::mCallbacks.end() )

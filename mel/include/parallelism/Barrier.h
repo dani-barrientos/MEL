@@ -1,6 +1,5 @@
 #pragma once
 #include <core/CallbackSubscriptor.h>
-#include <core/CriticalSection.h>
 #include <memory>
 namespace mel
 {
@@ -20,19 +19,19 @@ namespace mel
 			template <class F> auto subscribeCallback(F&& f)
 			{
 				volatile auto protectMe = shared_from_this();
-				Lock lck(mCS);
+				std::scoped_lock<std::mutex> lock(mCS);
 				if (mActiveWorkers==0)
 					f(*this);
 				return Subscriptor::subscribeCallback(std::forward<F>(f));
 			}
 			template <class F> auto unsubscribeCallback(F&& f)
 			{
-				Lock lck(mCS);
+				std::scoped_lock<std::mutex> lock(mCS);
 				return Subscriptor::unsubscribeCallback(std::forward<F>(f));
 			}
 		protected:
 			size_t	mActiveWorkers; 
-			mel::core::CriticalSection mCS;
+			std::mutex mCS;
 
 		};
 		///@endcond

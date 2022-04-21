@@ -20,8 +20,6 @@ using mel::tasking::Process;
  *
  * SPDX-License-Identifier: MIT
  */
-#include <core/CriticalSection.h>
-using mel::core::CriticalSection;
 
 #include <core/Timer.h>
 using mel::core::Timer;
@@ -34,6 +32,7 @@ using::mel::mpl::Int2Type;
 #include <deque>
 #include <variant>
 #include <vector>
+#include <mutex>
 namespace mel
 {
 	namespace tasking
@@ -70,7 +69,7 @@ namespace mel
 					size_t mChunkSize;
 					size_t mMaxSize; 
 					volatile bool mInvalidate;
-					CriticalSection mSC;
+					std::mutex mSC;
 				public:
 					LockFreeTasksContainer(size_t chunkSize,size_t maxChunks );
 					PoolType::value_type& operator[](size_t idx);
@@ -260,7 +259,7 @@ namespace mel
 			//new processes to insert next time blocking variant
 			TNewProcesses  mBlockingTasks;
 			size_t mLastIdx;	
-			mutable CriticalSection	mCS;		
+			std::mutex	mCS;
 			std::shared_ptr<Timer>			mTimer;
 			std::atomic<unsigned int> mProcessCount;
 			std::atomic<int32_t>		mInactiveProcessCount;
