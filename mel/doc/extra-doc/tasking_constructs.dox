@@ -47,7 +47,7 @@ Explanation: a \ref ::mel::tasking::ThreadRunnable "ThreadRunnable" is posted a 
 the cooperative multitasking power of the microthread system. The **Process::wait** is inserted only to be clear that the caller will have to have some timeout
 for the function to be executed.
 
-A future holds its value as a shared value such that Futures can be assigned between them, so pointing to the same internal data. This alows using value semantics for Futures.
+A future holds its value as a shared one such that Futures can be assigned between them, so pointing to the same internal data. This alows using value semantics for Futures.
 So, assigning or copy-construct Futures, makes them to hold the same value.
 For example:
 \code

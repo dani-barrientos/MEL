@@ -208,7 +208,7 @@ namespace mel
                 std::function<void( ValueType&)>([result,source](ValueType& input) mutable
                 {
                     //result.assign(std::move(input));
-                    result.assign(source);
+                    //result.assign(source);
                 })
             );
             return result;
@@ -264,8 +264,8 @@ namespace mel
                                     if ( *except ) //any exception?
                                         result.setError(*except);
                                     else
-                                        //result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
-                                        result.assign(source);
+                                        result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
+                                        //result.assign(source);
                                     delete except;
                                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                                 }));
@@ -311,7 +311,7 @@ namespace mel
                                 std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source](const ::mel::parallelism::BarrierData& ) mutable
                                 {
                                     //result.assign(std::move(source.getValue()));
-                                    result.assign(source);
+                                    //result.assign(source);
                                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                                 }));
                         }else
@@ -356,7 +356,7 @@ namespace mel
                                     result.setError(*except);
                                 else
                                     //result.assign(std::move(source.getValue()));//@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
-                                    result.assign(source);
+                                    //result.assign(source);
                                 delete except;
                                 return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
                             }));
@@ -395,8 +395,8 @@ namespace mel
                             return f(arg.getValue().error());
                         },source,result);
                     }else
-                        //result.assign(std::move(input));
-                        result.assign(source);
+                        result.assign(std::move(input));
+                        //result.assign(source);
                     
                 })
             );
@@ -463,7 +463,7 @@ namespace mel
                 {       
                     f(source.agent);
                     //result.assign(std::move(input));
-                    result.assign(source);
+                    //result.assign(source);
                 })
             );
             return result;

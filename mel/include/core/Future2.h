@@ -187,8 +187,7 @@ namespace mel
 					return mState;
 				}
 				//! use carefully, only for very special cases
-				std::recursive_mutex& getMutex() const{ return mSC;}
-				
+				std::recursive_mutex& getMutex(){ return mSC;}
 			protected:
 				mutable std::recursive_mutex	mSC; 
 				EFutureState		mState;
@@ -466,15 +465,14 @@ namespace mel
 
 			public:
 				
-			/*	Future_Base( const Future_Base& f )
+				Future_Base( const Future_Base& f )
 				{
-					mImpl = f.mImpl; no
+					mImpl = f.mImpl; 
 				};
 				Future_Base( Future_Base&& f )
 				{
 					mImpl = std::move(f.mImpl); 
 				};
-				*/
 			
 				/**
 				* return if data is valid
@@ -510,23 +508,18 @@ namespace mel
 			{
 				mImpl = std::make_unique<_private::FutureImpl>( std::make_shared<_private::FutureData<T>>());
 			};
-			Future_Common( const Future_Common& f )
-			{ 
-				_assign(const_cast<Future_Common&>(f));	
-			}
-			Future_Common( Future_Common&& f )
-			{
-				mImpl = std::move(f.mImpl); 
-			}
+			Future_Common( const Future_Common& f ): _private::Future_Base( f ){}
+			Future_Common( Future_Common&& f ): _private::Future_Base( std::move(f) ){}
 			Future_Common& operator= ( const Future_Common& f )
 			{
-				_assign(const_cast<Future_Common&>(f));	
+				¿tendré que quitar el const del arugmneto? ¿deberái el const significar que no puedo cambiar nada? no creo
+				_assign(f);
 				return *this;
 			};		
 			Future_Common& operator= (  Future_Common&& f )
 			{
-				_assign(f);	
-			//	_private::Future_Base::operator=( std::move(f));
+				¿puedo hacer un move del impl o del data? meditar
+				_private::Future_Base::operator=( std::move(f));
 				return *this;
 			};
 		public:
@@ -583,25 +576,18 @@ namespace mel
 			 */
 			void _assign( Future_Common<T>& val)
 			{				
-				if ( mImpl )
+				auto ptr = mImpl->getData(); //to avoid destruction before unlock
+				std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(val.getData().getMutex(),getData().getMutex());
+				if (val.getValue().isAvailable())  
 				{
-					auto ptr = mImpl->getData(); //to avoid destruction before unlock
-					std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(val.getData().getMutex(),getData().getMutex());
-					if (val.getValue().isAvailable())  
-					{
-						auto old = mImpl->getData();
-						setData(val.mImpl->getData());
-						//if value is already available, tigger callbacks now. It's more efficient and avoid recursive calls					
-						static_cast<_private::FutureData<T>*>(old.get())->triggerCallbacks(getData().getValue());
-					}else
-					{
-						val.getData().append(std::move(getData())); //append callbacks
-						setData(val.mImpl->getData());
-					}
+					auto old = mImpl->getData();
+				  	setData(val.mImpl->getData());
+					//if value is already available, tigger callbacks now. It's more efficient and avoid recursive calls					
+					static_cast<_private::FutureData<T>*>(old.get())->triggerCallbacks(getData().getValue());
 				}else
 				{
-					std::scoped_lock<std::recursive_mutex> lck(val.getData().getMutex());
-					mImpl = std::make_unique<_private::FutureImpl>( val.mImpl->getData() );
+					val.getData().append(std::move(getData())); //append callbacks
+					setData(val.mImpl->getData());
 				}
 			}
 		};
@@ -623,11 +609,11 @@ namespace mel
 			Future( Future&& f ):Future_Common<T>(std::move(f)){};
 			Future(const T& val)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>(std::make_shared<_private::FutureData<T>>(val));
+				_private::Future_Base::mImpl = std::make_shared<_private::FutureImpl>(std::make_shared<_private::FutureData<T>>(val));
 			}
 			Future(T&& val)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>(std::make_shared<_private::FutureData<T>>(std::move(val)));
+				_private::Future_Base::mImpl = std::make_shared<_private::FutureImpl>(std::make_shared<_private::FutureData<T>>(std::move(val)));
 			}
 			Future& operator= ( const Future& f )
 			{
@@ -657,11 +643,11 @@ namespace mel
 		public:
 			typedef typename _private::FutureData<T&>::ValueType ValueType;
 			Future(){};
-			Future( const  Future& f ):Future_Common<T&>(f){};
+			Future( const Future& f ):Future_Common<T&>(f){};
 			Future( Future&& f ):Future_Common<T&>(std::move(f)){};
 			Future(T& val)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>(std::make_shared<_private::FutureData<T&>>(val));
+				_private::Future_Base::mImpl = std::make_shared<_private::FutureImpl>(std::make_shared<_private::FutureData<T&>>(val));
 			}
 
 
@@ -697,16 +683,16 @@ namespace mel
 			//fake initializacion to indicate we want to initialize as valid
 			Future(int a)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>( std::make_shared<_private::FutureData<void>>(a));
+				_private::Future_Base::mImpl = std::make_shared<_private::FutureImpl>( std::make_shared<_private::FutureData<void>>(a));
 			};
-			Future( const Future& f):Future_Common<void>(f){};	
+			Future(const Future& f):Future_Common<void>(f){};	
 			Future(Future&& f):Future_Common<void>(std::move(f)){};	
 			Future& operator= ( const Future& f )
 			{
 				Future_Common<void>::operator=(f);
 				return *this;
 			};		
-			Future& operator= ( Future&& f )
+			Future& operator= (  Future&& f )
 			{
 				Future_Common<void>::operator=(f);
 				return *this;

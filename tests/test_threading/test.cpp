@@ -146,6 +146,10 @@ static int _testsDebug(tests::BaseTest* test)
 		Future<int> fut1;
 		Future<int> fut2;
 		Future<int> fut3(fut2);
+		Future<int> fut4;
+		int a = 16;
+		Future<int&> fut5(a);
+		Future<int> fut6(15);
 		fut1.subscribeCallback( [](Future<int>::ValueType& vt)
 		{
 			mel::text::info("Fut1 set! {}",vt.value());
@@ -158,12 +162,47 @@ static int _testsDebug(tests::BaseTest* test)
 		{
 			mel::text::info("Fut3 set! {}",vt.value());
 		});
-/*		 meditar sobre esto. Funciona bien pero tengo que dejarlo bien hilvanado: igual tengo que ponerle otro nombre, ya que 
-		 	viendo eso uno pensaría que sólo cambia el fut2, cuando en realidad cambia el data por lo que afecta a todos
-			 POSIBILDIADES:
-			  - llamarlo change		*/
+		fut4.subscribeCallback( [](Future<int>::ValueType& vt)
+		{
+			mel::text::info("Fut4 set! {}",vt.value());
+		});
+
+	//en ralidad cualqueir asignacion deberái ser igual, ¿no?
+	//es decir,
+	//fut2 = fut1 debería implica que se asigna y no cambia
+
+ 		//fut2.assign(fut1);
+		 fut2 = fut1;// deberia significar esto lo mismo que el assígn? El problema de esto es, por ejemplo, que se pierden los callbacks.
+			//¿pero podría querer  que no fuese así? Es decir, si quiero reasignar el fut2, necesitaría un reset. pero si alguien se suscribio, se entiende que lo querrá
+ 	soy subnormal, no está bien: si fut3 está asignado a fut2, pero luego cambio fut2, el impl de fut3 sigue apuntando al _PSTL_VERSION_MAJOR
+ lo que no entiendo es porque el callback de fut3 se llama bien
+/*
+Ejemplo
+	Start			F2 = F1			| F1.setValue(6)				
+									|								
+F1->Impl->Data	|	F1->Impl->Data	| F1->Impl->Data(6)
+F2->Impl->Data	|	F2->Impl /		| F2->Impl / 
+F3->Impl /		|	F3->Impl->Data 	| F3->Impl->Data(NOAVAILABLE)
+
+Con el método del assign anterior:
+Start				F2 = F1			| F1.setValue(6)				
+									|								
+F1->Impl->Data	|	F1->Impl->Data	| F1->Impl->Data(6)
+F2->Impl->Data	|	F2 /			| F2 / 
+F3 / 			|	F3 ->Impl->Data	| F3->Impl->Data(NOAVAILABLE)
+
+Aunque este casi mostrado es normal, también es confuso, porque el F3 ya deja de ser como F2.
+ES POSIBLE QUE TODO ESTO NO TENGA MUCHO SENTIDO, YA QUE ESTOY ASIGNANDO FUTURES DISTINTOS Y TAL VEZ NO TENGA SENTIDO
+*/
 		fut1.setValue(6);
- 		fut2.assign(fut1);
+		mel::text::info("Fut1 value = {}",fut1.getValue().value());
+		mel::text::info("Fut2 value = {}",fut2.getValue().value());
+		mel::text::info("Fut3 value = {}",fut3.getValue().value());
+		 fut3 = fut2;		 
+		fut4 = fut2;			
+		mel::text::info("Fut4 value = {}",fut4.getValue().value());		
+		fut4 = fut6;
+		mel::text::info("Fut4 value = {}",fut4.getValue().value());		
 		//asignacion del data
 		Thread::sleep(1000);
 	}
@@ -188,7 +227,8 @@ static int _testsDebug(tests::BaseTest* test)
 		 	viendo eso uno pensaría que sólo cambia el fut2, cuando en realidad cambia el data por lo que afecta a todos
 			 POSIBILDIADES:
 			  - llamarlo change		*/
- 		fut2.assign(fut1);
+ 		//fut2.assign(fut1);
+		fut2 = fut1;
 		fut1.setValue();
 		//asignacion del data
 		Thread::sleep(1000);
