@@ -14,6 +14,7 @@
 #include <variant>
 #include <exception>
 #include <functional>
+#include <vector>
 namespace mel
 {
 	namespace core
@@ -163,17 +164,17 @@ namespace mel
 		};
 		///@endcond
 		enum EFutureState {NOTAVAILABLE,VALID,INVALID} ;
-		
 		///@cond HIDDEN_SYMBOLS
 		namespace _private
 		{
+			class Future_Base; //predeclaration
 			/**
 			* internal data for Future
 			*/
 			class FutureData_Base 
 			{
 			public:								
-				FutureData_Base():mState(NOTAVAILABLE)
+				FutureData_Base(Future_Base* user):mState(NOTAVAILABLE),mRefs{user}
 				{}
 
 				virtual ~FutureData_Base() //no me gusta nada que sea virtual. Intentarlo sin ello
@@ -188,10 +189,35 @@ namespace mel
 				}
 				//! use carefully, only for very special cases
 				std::recursive_mutex& getMutex() const{ return mSC;}
-				
+				void addRef(Future_Base* user)
+				{
+					mRefs.push_back(user);
+				}
+				void removeRef(Future_Base* user)
+				{
+					//prefiero ponerlo a null
+					for(auto it = mRefs.begin(); it != mRefs.end();++it)
+						if (*it == user)
+						{
+							*it = nullptr;
+							return;
+						}
+				}
+				void changeRef(Future_Base* old, Future_Base* newRef)
+				{
+					for(auto it = mRefs.begin(); it != mRefs.end();++it)
+						if (*it == old)
+						{
+							*it = newRef;
+							return;
+						}
+				}
+				//for internal purpose only
+				inline auto& getRefs(){ return mRefs;}
 			protected:
 				mutable std::recursive_mutex	mSC; 
 				EFutureState		mState;
+				std::vector<Future_Base*> mRefs;
 
 			};
 			template <typename T>
@@ -214,12 +240,13 @@ namespace mel
 				/**
 				* default constructor
 				*/
-				FutureData(){};
+				FutureData(Future_Base* user):FutureData_Base(user){};
 				~FutureData(){};
 				/**
 				* constructor from value. It becomes valid. For casting purposes. 
 				*/
-				template <class U> FutureData( U&& value):mValue(std::forward<U>(value))
+				template <class U> FutureData( U&& value,Future_Base* user):FutureData_Base(user),
+					mValue(std::forward<U>(value))
 				{
 					FutureData_Base::mState = VALID;
 				}
@@ -340,10 +367,10 @@ namespace mel
 			public:
 				typedef FutureValue<void> ValueType;
 
-				FutureData(){};
+				FutureData(Future_Base* user):FutureData_Base(user){};
 				
 				//overload to inicializce as valid
-				FutureData(int)
+				FutureData(Future_Base* user,int):FutureData_Base(user)
 				{
 					mValue.setValid();
 					FutureData_Base::mState = VALID;
@@ -445,51 +472,65 @@ namespace mel
 					ValueType mValue;
 			};
 
-			class FutureImpl
-			{
-				public:
-					FutureImpl(std::shared_ptr<FutureData_Base> ptr):mData(ptr){}
-					inline const std::shared_ptr<FutureData_Base>& getData() const{ return mData;}
-					inline std::shared_ptr<FutureData_Base>& getData(){ return mData;}
-					inline void setData(const std::shared_ptr<FutureData_Base>& data){mData = data;}
-				private:
-					std::shared_ptr<FutureData_Base> mData;
-			};
 			/**
 			* no templated common data.
 			*/
 			class Future_Base
 			{
 			protected:
-				std::unique_ptr<FutureImpl> mImpl; //@todo usar unique_ptr
-				Future_Base():mImpl(nullptr){};
-
+				std::shared_ptr<FutureData_Base> mData;
+				Future_Base():mData(nullptr){};
+				Future_Base& operator= ( const Future_Base& f2 )
+				{
+					for( auto it = mData->getRefs().begin(); it != mData->getRefs().end();++it)
+					{
+						if (*it && *it != this) //intentar mejorar esto if (*it)
+						{
+							f2.mData->addRef(*it);
+							(*it)->mData = f2.mData;
+						}
+					}
+					mData = f2.mData;
+					mData->addRef(this);
+					return *this;
+				};
+				Future_Base& operator= ( Future_Base&& f2 )
+				{
+					for( auto it = mData->getRefs().begin(); it != mData->getRefs().end();++it)
+					{
+						if (*it && *it != this) //intentar mejorar esto if (*it)
+						{
+							f2.mData->addRef(*it);
+							(*it)->mData = f2.mData;
+						}
+					}
+					mData = std::move(f2.mData);
+					mData->changeRef(&f2,this);
+					return *this;
+				};	
 			public:
-				
-			/*	Future_Base( const Future_Base& f )
+				~Future_Base()
 				{
-					mImpl = f.mImpl; no
-				};
-				Future_Base( Future_Base&& f )
-				{
-					mImpl = std::move(f.mImpl); 
-				};
-				*/
+					if (mData)
+						mData->removeRef(this);
+				}
+		
+				Future_Base( const Future_Base& f ):mData(f.mData){}
+				Future_Base( Future_Base&& f ):mData(std::move(f.mData)){}
 			
 				/**
 				* return if data is valid
 				*/
 				inline bool getValid() const
 				{
-					return mImpl->getData()->getValid();
+					return mData->getValid();
 				}
 				inline EFutureState getState() const
 				{
-					return mImpl->getData()->getState();
+					return mData->getState();
 				}
 				//Check if given future points to same data
-				inline bool operator == ( const Future_Base& f ) const{ return mImpl->getData() == f.mImpl->getData(); };
-						
+				inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };		
 			};
 			
 		}
@@ -508,38 +549,87 @@ namespace mel
 		protected:
 			Future_Common()
 			{
-				mImpl = std::make_unique<_private::FutureImpl>( std::make_shared<_private::FutureData<T>>());
+				mData = std::make_shared<_private::FutureData<T>>(this);
 			};
-			Future_Common( const Future_Common& f )
-			{ 
-				_assign(const_cast<Future_Common&>(f));	
-			}
-			Future_Common( Future_Common&& f )
+			Future_Common( const Future_Common& f ):Future_Base(f){}
+			Future_Common( Future_Common&& f ):Future_Base(std::move(f)){}
+			Future_Common& operator= ( const Future_Common& f2 )
 			{
-				mImpl = std::move(f.mImpl); 
+				throw std::runtime_error("QUE HAGO!!!");
 			}
-			Future_Common& operator= ( const Future_Common& f )
+			Future_Common& operator= ( Future_Common& f2 )
 			{
-				_assign(const_cast<Future_Common&>(f));	
+				std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(f2.mData->getMutex(),mData->getMutex());
+				
+				if (f2.getData().getValue().isAvailable())
+				{
+					//because the future is already available, trigger subcribed callbacks
+					auto old = mData;
+					Future_Base::operator=(f2);
+					static_cast<_private::FutureData<T>*>(old.get())->triggerCallbacks(getData().getValue());
+				
+				}else
+				{
+					f2.getData().append(std::move(getData())); //append callbacks
+					Future_Base::operator=(f2);
+				}
+				/*---
+				if (val.getValue().isAvailable())  
+					{
+						auto old = mImpl->getData();
+						setData(val.mImpl->getData());
+						//if value is already available, tigger callbacks now. It's more efficient and avoid recursive calls					
+						static_cast<_private::FutureData<T>*>(old.get())->triggerCallbacks(getData().getValue());
+					}else
+					{
+						val.getData().append(std::move(getData())); //append callbacks
+						setData(val.mImpl->getData());
+					}
+					----
+					*/
+				mData = f2.mData;
+				mData->addRef(this);
 				return *this;
 			};		
-			Future_Common& operator= (  Future_Common&& f )
+			Future_Common& operator= ( Future_Common&& f2 )
 			{
-				_assign(f);	
-			//	_private::Future_Base::operator=( std::move(f));
+				std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(f2.mData->getMutex(),mData->getMutex());
+				if (f2.getData().getValue().isAvailable())
+				{
+					//because the future is already available, trigger subcribed callbacks
+					auto old = mData;
+					Future_Base::operator=(std::move(f2));
+					static_cast<_private::FutureData<T>*>(old.get())->triggerCallbacks(getData().getValue());
+				
+				}else
+				{
+					f2.getData().append(std::move(getData())); //append callbacks
+					Future_Base::operator=(std::move(f2));
+				}
 				return *this;
 			};
+			/**
+			 * @brief detach this future from all its references, isolating it from them.
+			 * @details A copy of the previous value is done
+			 */
+			void detach()
+			{
+				std::scoped_lock<std::recursive_mutex> lck(mData->getMutex());
+				mData->removeRef(this);
+				auto newData = std::make_shared<_private::FutureData<T>>(this);
+				newData->setValue( static_cast<_private::FutureData<T>*>(mData.get())->getValue() );
+				mData = newData;
+			}
 		public:
 			/**
 			 * @brief Get the Value object
 			 * @return const ::mel::core::FutureValue
 			 */
-			inline  const typename _private::FutureData<T>::ValueType& getValue() const{ return static_cast<_private::FutureData<T>*>(mImpl->getData().get())->getValue();}
-			/**
+			inline const typename _private::FutureData<T>::ValueType& getValue() const{ return ((_private::FutureData<T>*)mData.get())->getValue();}			/**
 			 * @brief Get the Value object
 			 * @return const ::mel::core::FutureValue
 			 */
-			inline  typename _private::FutureData<T>::ValueType& getValue() { return static_cast<_private::FutureData<T>*>(mImpl->getData().get())->getValue();}
+			inline  typename _private::FutureData<T>::ValueType& getValue() { return ((_private::FutureData<T>*)mData.get())->getValue();}
 			void assign( const typename _private::FutureData<T>::ValueType& val)
 			{
 				getData().assign(val);
@@ -570,18 +660,18 @@ namespace mel
 				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
 			}
 		private:
-			inline const _private::FutureData<T>& getData() const{ return *static_cast<_private::FutureData<T>*>(mImpl->getData().get()); }
-			inline _private::FutureData<T>& getData(){ return *static_cast<_private::FutureData<T>*>(mImpl->getData().get()); }
+			inline const _private::FutureData<T>& getData() const{ return *static_cast<_private::FutureData<T>*>(mData.get()); }
+			inline _private::FutureData<T>& getData(){ return *static_cast<_private::FutureData<T>*>(mData.get()); }
 			inline void setData(const std::shared_ptr<_private::FutureData_Base	>& data)
 			{
-				mImpl->setData(data);
+				mData = data;
 			}
 			/**
 			 * @brief Makes this Future to point to the same value as the given Future
 			 * @details This ways, both futures will share the same value/error. If input Future is already set at that moment, 
 			 * callbacks are triggeres as usual. It's improtante to note that *all futures* sharing same data will change
 			 */
-			void _assign( Future_Common<T>& val)
+			/*void _assign( Future_Common<T>& val)
 			{				
 				if ( mImpl )
 				{
@@ -601,9 +691,9 @@ namespace mel
 				}else
 				{
 					std::scoped_lock<std::recursive_mutex> lck(val.getData().getMutex());
-					mImpl = std::make_unique<_private::FutureImpl>( val.mImpl->getData() );
+					mData = _private::FutureImpl>( val.mData->getData() );
 				}
-			}
+			}*/
 		};
 		/**
 		* @brief Represents a value that *maybe* is not present at the current moment.
@@ -619,17 +709,23 @@ namespace mel
 		public:
 			typedef typename _private::FutureData<T>::ValueType ValueType;
 			Future(){};
+			Future( Future& f ):Future_Common<T>(f){};
 			Future( const Future& f ):Future_Common<T>(f){};
 			Future( Future&& f ):Future_Common<T>(std::move(f)){};
 			Future(const T& val)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>(std::make_shared<_private::FutureData<T>>(val));
+				_private::Future_Base::mData = std::make_shared<_private::FutureData<T>>(val,this);
 			}
 			Future(T&& val)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>(std::make_shared<_private::FutureData<T>>(std::move(val)));
+				_private::Future_Base::mData = std::make_shared<_private::FutureData<T>>(std::move(val),this);
 			}
 			Future& operator= ( const Future& f )
+			{
+				Future_Common<T>::operator=(f);
+				return *this;
+			};
+			Future& operator= ( Future& f )
 			{
 				Future_Common<T>::operator=(f);
 				return *this;
@@ -642,12 +738,12 @@ namespace mel
 			template <class F>
 			void setValue( F&& value )
 			{
-				static_cast<_private::FutureData<T>*>(Future_Common<T>::mImpl->getData().get())->setValue( std::forward<F>(value) );
+				static_cast<_private::FutureData<T>*>(Future_Common<T>::mData.get())->setValue( std::forward<F>(value) );
 			}	
 			template <class F>
 			void setError( F&& ei )
 			{
-				static_cast<_private::FutureData<T>*>(Future_Common<T>::mImpl->getData().get())->setError( std::forward<F>(ei) ); 
+				static_cast<_private::FutureData<T>*>(Future_Common<T>::mData.get())->setError( std::forward<F>(ei) ); 
 			}
 		};
 		///@cond HIDDEN_SYMBOLS	
@@ -661,7 +757,7 @@ namespace mel
 			Future( Future&& f ):Future_Common<T&>(std::move(f)){};
 			Future(T& val)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>(std::make_shared<_private::FutureData<T&>>(val));
+				_private::Future_Base::mData = std::make_shared<_private::FutureData<T&>>(val,this);
 			}
 
 
@@ -670,6 +766,11 @@ namespace mel
 				Future_Common<T>::operator=(f);
 				return *this;
 			};		
+			Future& operator= ( Future& f )
+			{
+				Future_Common<T>::operator=(f);
+				return *this;
+			};
 			Future& operator= (  Future&& f )
 			{
 				Future_Common<T>::operator=(f);
@@ -678,12 +779,12 @@ namespace mel
 			template <class F>
 			void setValue( F&& value )
 			{				
-				static_cast<_private::FutureData<T&>*>(Future_Common<T&>::mImpl->getData().get())->setValue( std::forward<F>(value) );
+				static_cast<_private::FutureData<T&>*>(Future_Common<T&>::mData.get())->setValue( std::forward<F>(value) );
 			}	
 			template <class F>
 			void setError( F&& ei )
 			{
-				static_cast<_private::FutureData<T&>*>(Future_Common<T&>::mImpl->getData().get())->setError( std::forward<F>(ei) ); 
+				static_cast<_private::FutureData<T&>*>(Future_Common<T&>::mData.get())->setError( std::forward<F>(ei) ); 
 			}
 		};
 
@@ -697,11 +798,16 @@ namespace mel
 			//fake initializacion to indicate we want to initialize as valid
 			Future(int a)
 			{
-				_private::Future_Base::mImpl = std::make_unique<_private::FutureImpl>( std::make_shared<_private::FutureData<void>>(a));
+				_private::Future_Base::mData = std::make_shared<_private::FutureData<void>>(this,a);
 			};
 			Future( const Future& f):Future_Common<void>(f){};	
 			Future(Future&& f):Future_Common<void>(std::move(f)){};	
 			Future& operator= ( const Future& f )
+			{
+				Future_Common<void>::operator=(f);
+				return *this;
+			};
+			Future& operator= ( Future& f )
 			{
 				Future_Common<void>::operator=(f);
 				return *this;
@@ -713,12 +819,12 @@ namespace mel
 			};
 			
 			inline void setValue( void ){ 
-				static_cast<_private::FutureData<void>*>(Future_Common<void>::mImpl->getData().get())->setValue( );
+				static_cast<_private::FutureData<void>*>(Future_Common<void>::mData.get())->setValue( );
 				}		
 			template <class F>
 			void setError( F&& ei )
 			{
-				static_cast<_private::FutureData<void>*>(Future_Common<void>::mImpl->getData().get())->setError( std::forward<F>(ei) ); 
+				static_cast<_private::FutureData<void>*>(Future_Common<void>::mData.get())->setError( std::forward<F>(ei) ); 
 			}		
 		};
 		///@endcond

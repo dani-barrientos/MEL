@@ -142,6 +142,7 @@ std::atomic<int> sCount(0);
 static int _testsDebug(tests::BaseTest* test)
 {	
 	{
+		mel::text::set_level(mel::text::level::ELevel::info);
 		//auto th1 = ThreadRunnable::create();
 		Future<int> fut1;
 		Future<int> fut2;
@@ -170,12 +171,10 @@ static int _testsDebug(tests::BaseTest* test)
 	//en ralidad cualqueir asignacion deberái ser igual, ¿no?
 	//es decir,
 	//fut2 = fut1 debería implica que se asigna y no cambia
-
  		//fut2.assign(fut1);
 		 fut2 = fut1;// deberia significar esto lo mismo que el assígn? El problema de esto es, por ejemplo, que se pierden los callbacks.
 			//¿pero podría querer  que no fuese así? Es decir, si quiero reasignar el fut2, necesitaría un reset. pero si alguien se suscribio, se entiende que lo querrá
- 	soy subnormal, no está bien: si fut3 está asignado a fut2, pero luego cambio fut2, el impl de fut3 sigue apuntando al _PSTL_VERSION_MAJOR
- lo que no entiendo es porque el callback de fut3 se llama bien
+ 
 /*
 Ejemplo
 	Start			F2 = F1			| F1.setValue(6)				
