@@ -644,6 +644,5 @@ We are going to see a more real example with measurements to compare performance
 
 
 CONTAR TEMA PERFECT FORWARDING Y COPIAS Y TAL. PONER ALGUN EJMPLO CON CALSE CON CONSTRUCTOR DE COPIA Y QUE SE VEAN LAS COPIAS QUE SE HACEN
-contar el tema del "perfect forwarding" y cuando se hacen copias
 
 */

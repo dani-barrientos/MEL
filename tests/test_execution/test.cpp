@@ -888,7 +888,73 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 		}));
 		uint64_t t1 = timer.getMilliseconds();
 		text::info("Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
-		tests::BaseTest::addMeasurement(title+" time: ",(float)((t1-t0)/1000.f));
+		tests::BaseTest::addMeasurement(title+" time:",(float)((t1-t0)/1000.f));
+	}catch(std::exception& e)
+	{
+		text::info("Error = {}",e.what());
+	}
+}
+template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFuture<ExecutorType,vector<double>> fut,string title,tests::BaseTest* test)
+{
+	typedef vector<double> VectorType;
+	try
+	{
+		Timer timer;
+		uint64_t t0 = timer.getMilliseconds();
+
+		auto res5 = mel::core::waitForFutureThread(
+		fut
+		| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t endIdx = tam;
+				for(size_t i = 0; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			},
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam;
+				size_t endIdx = tam*2;
+				for(size_t i = startIdx; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			},
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam*2;
+				size_t endIdx = tam*3;
+				for(size_t i = startIdx; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			},
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam*3;
+				size_t endIdx = v.size();
+				for(size_t i = startIdx; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			}
+		) | mel::execution::next( [](std::tuple<double,double,double,double>& means)
+		{
+			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
+		}));
+		uint64_t t1 = timer.getMilliseconds();
+		text::info("Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
+		tests::BaseTest::addMeasurement(title+" time:",(float)((t1-t0)/1000.f));
 	}catch(std::exception& e)
 	{
 		text::info("Error = {}",e.what());
@@ -958,9 +1024,8 @@ int _testAdvanceSample(tests::BaseTest* test)
 	}));
 	uint64_t t1 = timer.getMilliseconds();
 	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
-	tests::BaseTest::addMeasurement("vector mean: plain way time: ",(float)((t1-t0)/1000.f));
-	{
-		
+	tests::BaseTest::addMeasurement("vector mean: plain way time:",(float)((t1-t0)/1000.f));
+	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;
 		opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
@@ -1105,8 +1170,9 @@ int _testFor(tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(false,opts);
 			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorOpts exopts;
-			exopts.independentTasks = true;
+			execution::RunnableExecutorOpts exOpts;
+			exOpts.independentTasks = true;
+			ex.setOpts(exOpts);
 			int idx0 = 0;
 			auto r = mel::execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
 			th1->resume();
@@ -1119,8 +1185,9 @@ int _testFor(tests::BaseTest* test)
 		{
 			auto th1 = ThreadRunnable::create(true,opts);
 			execution::Executor<Runnable> ex(th1);	
-			execution::RunnableExecutorOpts exopts;
-			exopts.independentTasks = false;
+			execution::RunnableExecutorOpts exOpts;
+			exOpts.independentTasks = false;
+			ex.setOpts(exOpts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
 		},iters,loopSize
@@ -1132,9 +1199,9 @@ int _testFor(tests::BaseTest* test)
 			opts.threadOpts.schedulerOpts = ProcessScheduler::BlockingOptions{};
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
-			execution::ThreadPoolExecutorOpts exopts;
-			exopts.independentTasks = false;
-			extp.setOpts(exopts);
+			execution::ThreadPoolExecutorOpts exOpts;
+			exOpts.independentTasks = false;
+			extp.setOpts(exOpts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
 		},iters,loopSize
@@ -1146,9 +1213,9 @@ int _testFor(tests::BaseTest* test)
 			opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
 			auto myPool = make_shared<parallelism::ThreadPool>(opts);
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
-			execution::ThreadPoolExecutorOpts exopts;
-			exopts.independentTasks = false;
-			extp.setOpts(exopts);
+			execution::ThreadPoolExecutorOpts exOpts;
+			exOpts.independentTasks = false;
+			extp.setOpts(exOpts);
 			const int idx0 = 0;
 			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
 		},iters,loopSize
