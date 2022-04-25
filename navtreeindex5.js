@@ -1,10 +1,5 @@
 var NAVTREEINDEX5 =
 {
-"structmel_1_1mpl_1_1_functor_wrapper.html#aa63fd5ae125818bca715eae8fcfbdd8d":[4,0,0,2,25,0],
-"structmel_1_1mpl_1_1_functor_wrapper.html#ae165254c8a4154bee5f0c13e53e4cf92":[4,0,0,2,25,2],
-"structmel_1_1mpl_1_1_int2_type.html":[4,0,0,2,22],
-"structmel_1_1mpl_1_1_int_traits.html":[4,0,0,2,85],
-"structmel_1_1mpl_1_1_int_traits_3_01int_01_4.html":[4,0,0,2,86],
 "structmel_1_1mpl_1_1_is_const.html":[4,0,0,2,83],
 "structmel_1_1mpl_1_1_is_const_3_01_u_01const_01_4.html":[4,0,0,2,84],
 "structmel_1_1mpl_1_1_pointer_to_member_traits.html":[4,0,0,2,63],
@@ -161,9 +156,8 @@ var NAVTREEINDEX5 =
 "synchronization__macros_8h.html#af1d9511834b9e945980e6c1f223fe07b":[5,0,0,5,15,0],
 "synchronization__macros_8h_source.html":[5,0,0,5,15],
 "tasking_constructs.html":[0,1],
-"tasking_constructs.html#futures":[8],
-"tasking_constructs.html#introduction":[7],
-"tasking_constructs.html#sync_mechanisms":[9],
+"tasking_constructs.html#futures":[7],
+"tasking_constructs.html#sync_mechanisms":[8],
 "tasking_system.html":[0,0],
 "tasking_system.html#autotoc_md2":[6,0],
 "tasking_system.html#autotoc_md3":[6,1],
@@ -178,5 +172,11 @@ var NAVTREEINDEX5 =
 "utilities_8h.html":[5,0,0,5,17],
 "utilities_8h.html#a980262925f312c4b3cfbadc7a2882eca":[5,0,0,5,17,1],
 "utilities_8h.html#ab0522a534c6ddb11108bc01646722960":[5,0,0,5,17,0],
-"utilities_8h_source.html":[5,0,0,5,17]
+"utilities_8h_source.html":[5,0,0,5,17],
+"":[3,0,0,13,0],
+"":[3,0,0,16,0],
+"":[3,0,0,12,0],
+"":[3,0,0,16,0,0],
+"":[3,0,0,13,1],
+"":[3,0,0,13,1,0]
 };
