@@ -104,7 +104,6 @@ namespace mel
             static ThreadRunnable* getCurrentThreadRunnable();
         private:
             static Runnable::RunnableCreationOptions sDefaultOpts;
-            static thread_local ThreadRunnable* tlCurrentRunnable;
             std::unique_ptr<Thread> mThread;
         #ifdef USE_CUSTOM_EVENT
             Event	mWaitForTasks; 

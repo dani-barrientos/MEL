@@ -17,14 +17,14 @@ using mel::mpl::linkFunctor;
 #include <algorithm>
 using std::for_each;
 
-#include <core/TLS.h>
-using mel::core::TLS;
+// #include <core/TLS.h>
+// using mel::core::TLS;
 // static TLS::TLSKey gCurrentRunnableKey;
 // static bool gCurrentRunnableKeyCreated = false;
 // static std::mutex gCurrrentRunnableCS;
 
 
-thread_local Runnable::RunnableInfo Runnable::tlCurrentRunnable{nullptr};
+thread_local Runnable::RunnableInfo tlCurrentRunnable{nullptr};
 GenericProcess* mel::tasking::DefaultAllocator::allocate(Runnable* _this)
 {
 	return _this->getDefaultFactory()->create(_this);

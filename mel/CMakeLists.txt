@@ -10,7 +10,7 @@ endif()
 add_library(mel  "source/tasking/CriticalSection_mthread.cpp"
 "source/tasking/Event_mthread.cpp" "source/tasking/Process.cpp"
 "source/tasking/GenericProcess.cpp"  "source/tasking/ProcessScheduler.cpp" "source/tasking/Runnable.cpp" "source/tasking/ThreadRunnable.cpp" 
-"source/core/Timer.cpp" "source/core/Type.cpp" "source/core/Thread.cpp"  "source/core/TLS.cpp" 
+"source/core/Timer.cpp" "source/core/Type.cpp" "source/core/Thread.cpp"  
 "source/core/Event_win32.cpp" "source/core/Event_posix.cpp" "include/tasking/CriticalSection_mthread.h"  "include/MelLibType.h"
  "source/parallelism/Barrier.cpp" "source/tasking/utilities.cpp" "source/text/logger.cpp"
 "source/parallelism/ThreadPool.cpp" "include/parallelism/For.h" "include/execution/Executor.h"  "include/execution/RunnableExecutor.h"

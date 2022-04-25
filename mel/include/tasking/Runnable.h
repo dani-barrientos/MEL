@@ -42,7 +42,7 @@ using mel::core::Future;
 namespace mel
 {
 	namespace tasking 
-	{
+	{		
 		//some macros to create task functors easily from bool f() functors
 		//note: be carefull with f forma, because if it has soma "," inside, maybe you
 		// need to use "coma" (defined somewhere in mpl) or use a extra parenthesis
@@ -182,11 +182,12 @@ namespace mel
 		class MEL_API Runnable
 		{
 		private:
+			
+		public:			
 			struct RunnableInfo
 			{
 				Runnable* current = nullptr;
 			};		
-		public:			
 			static const unsigned int DEFAULT_POOL_SIZE = 512;
 			//static const unsigned int DEFAULT_MAX_NEW_TASKS = DEFAULT_POOL_SIZE*4;
 			
@@ -215,8 +216,8 @@ namespace mel
 		private:
 		//get info on currently executing Runnable in current thread
 			static RunnableInfo* _getCurrentRunnableInfo();
-			friend class ::mel::tasking::_private:: RunnableTask;
-			static thread_local RunnableInfo tlCurrentRunnable;
+			friend class ::mel::tasking::_private:: RunnableTask;			
+			//static thread_local Runnable::RunnableInfo tlCurrentRunnable;
 			RunnableInfo* mCurrentInfo;
 			std::unique_ptr<ProcessFactory>	mDefaultFactory; //factory to use for allocating tasks if no other given
 			ProcessScheduler	mTasks;
@@ -483,5 +484,6 @@ namespace mel
 		
 			return output;
 		}						
+		
 	}
 }

@@ -20,15 +20,15 @@ using mel::mpl::makeMemberEncapsulate;
 using mel::mpl::addParam;
 #include <mpl/ReturnAdaptor.h>
 using mel::mpl::returnAdaptor;
-#include <core/TLS.h>
-using mel::core::TLS;
+// #include <core/TLS.h>
+// using mel::core::TLS;
 #include <cassert>
 #include <core/Thread.h> //para pruebas, QUITAR!!!
 #include <limits>
 #undef max
 
 
-thread_local ProcessScheduler::ProcessInfo ProcessScheduler::tlCurrentProcess{nullptr};
+static thread_local ProcessScheduler::ProcessInfo tlCurrentProcess{nullptr};
 
 // static TLS::TLSKey	gTLSCurrentProcessKey;
 // static bool gTLSInited = false;

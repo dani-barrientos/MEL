@@ -246,14 +246,14 @@ namespace mel
 			{
 				mES.unsubscribeCallback(id);
 			}
-		private:				
-			SchedulerOptions mOpts;
-			bool mIsLockFree; //same as checking index in mOpts but for performance
 			struct ProcessInfo  //for TLS
 			{
 				std::shared_ptr<Process> current;
 			};
-			static thread_local ProcessInfo tlCurrentProcess;
+		private:				
+			SchedulerOptions mOpts;
+			bool mIsLockFree; //same as checking index in mOpts but for performance
+			
 			ProcessInfo*	mProcessInfo;
 			TProcessList mProcessList;
 			std::unique_ptr<LockFreeTasksContainer> mLockFreeTasks;
@@ -333,6 +333,6 @@ namespace mel
 		{
 			return mTimer;
 		}
-
+		//static thread_local ProcessScheduler::ProcessInfo tlCurrentProcess{nullptr};
 	}
 }

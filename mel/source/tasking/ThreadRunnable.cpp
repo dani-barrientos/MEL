@@ -1,10 +1,10 @@
 #include <tasking/ThreadRunnable.h>
 using mel::tasking::ThreadRunnable;
 #include <mpl/MemberEncapsulate.h>
-#include <core/TLS.h>
-using mel::core::TLS;
+// #include <core/TLS.h>
+// using mel::core::TLS;
 
-thread_local ThreadRunnable* ThreadRunnable::tlCurrentRunnable{nullptr};
+static thread_local ThreadRunnable* tlCurrentRunnable{nullptr};
 // static TLS::TLSKey gCurrentThreadKey;
 // static bool gCurrentThreadKeyCreated = false;
 // static std::mutex gCurrrentThreadCS;
