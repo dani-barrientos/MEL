@@ -253,6 +253,7 @@ namespace mel
 			{
 				std::shared_ptr<Process> current;
 			};
+			static thread_local ProcessInfo tlCurrentProcess;
 			ProcessInfo*	mProcessInfo;
 			TProcessList mProcessList;
 			std::unique_ptr<LockFreeTasksContainer> mLockFreeTasks;
@@ -271,6 +272,7 @@ namespace mel
 			SleepSubscriptor mSS;
 			EvictSubscriptor mES;
 
+			
 			/**
 			* helper function
 			*/

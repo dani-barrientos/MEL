@@ -4,28 +4,30 @@ using mel::tasking::ThreadRunnable;
 #include <core/TLS.h>
 using mel::core::TLS;
 
-static TLS::TLSKey gCurrentThreadKey;
-static bool gCurrentThreadKeyCreated = false;
-static std::mutex gCurrrentThreadCS;
+thread_local ThreadRunnable* ThreadRunnable::tlCurrentRunnable{nullptr};
+// static TLS::TLSKey gCurrentThreadKey;
+// static bool gCurrentThreadKeyCreated = false;
+// static std::mutex gCurrrentThreadCS;
 
 Runnable::RunnableCreationOptions ThreadRunnable::sDefaultOpts;
 ThreadRunnable::ThreadRunnable( Runnable::RunnableCreationOptions opts):Runnable(std::move(opts)),mState(THREAD_INIT),mEnd(false),
 	mPauseEV(true,false),mThread(std::make_unique<Thread>())
 {
 	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&ThreadRunnable::_processAwaken, this));
-	gCurrrentThreadCS.lock();
-	if ( !gCurrentThreadKeyCreated )
-	{
-		TLS::createKey( gCurrentThreadKey );
-		gCurrentThreadKeyCreated = true;
-	}
-	gCurrrentThreadCS.unlock();
+	// gCurrrentThreadCS.lock();
+	// if ( !gCurrentThreadKeyCreated )
+	// {
+	// 	TLS::createKey( gCurrentThreadKey );
+	// 	gCurrentThreadKeyCreated = true;
+	// }
+	// gCurrrentThreadCS.unlock();
 }
 void ThreadRunnable::_execute()	
 {
 	
 	//TLS::setValue( gCurrentThreadKey,new ThreadInfo{shared_from_this()} );
-	TLS::setValue( gCurrentThreadKey,this );
+	//TLS::setValue( gCurrentThreadKey,this );
+	tlCurrentRunnable = this;
     onThreadStart();
     while ( mState != THREAD_FINISHING_DONE )
     {
@@ -186,7 +188,8 @@ void ThreadRunnable::_signalWakeup()
 }
 ThreadRunnable* ThreadRunnable::getCurrentThreadRunnable()
 {
-	return (ThreadRunnable*)TLS::getValue( gCurrentThreadKey );
+	return tlCurrentRunnable;
+	//return (ThreadRunnable*)TLS::getValue( gCurrentThreadKey );
 	// ThreadInfo* ti = (ThreadInfo*)TLS::getValue( gCurrentThreadKey );
 	// if ( ti )
 	// 	return ti->tr;

@@ -19,10 +19,12 @@ using std::for_each;
 
 #include <core/TLS.h>
 using mel::core::TLS;
-static TLS::TLSKey gCurrentRunnableKey;
-static bool gCurrentRunnableKeyCreated = false;
-static std::mutex gCurrrentRunnableCS;
+// static TLS::TLSKey gCurrentRunnableKey;
+// static bool gCurrentRunnableKeyCreated = false;
+// static std::mutex gCurrrentRunnableCS;
 
+
+thread_local Runnable::RunnableInfo Runnable::tlCurrentRunnable{nullptr};
 GenericProcess* mel::tasking::DefaultAllocator::allocate(Runnable* _this)
 {
 	return _this->getDefaultFactory()->create(_this);
@@ -129,15 +131,16 @@ void Runnable::_removePool( RTMemPool* pool )
 }
 Runnable::RunnableInfo* Runnable::_getCurrentRunnableInfo()
 {
-	if (gCurrentRunnableKeyCreated) //not multithread-safe but it shouldn't be a problem
-	{
-		auto ri = (RunnableInfo*)TLS::getValue(gCurrentRunnableKey);
-		return ri;
-	}
-	else
-	{
-		return nullptr;
-	}
+	return &tlCurrentRunnable;
+	// if (gCurrentRunnableKeyCreated) //not multithread-safe but it shouldn't be a problem
+	// {
+	// 	auto ri = (RunnableInfo*)TLS::getValue(gCurrentRunnableKey);
+	// 	return ri;
+	// }
+	// else
+	// {
+	// 	return nullptr;
+	// }
 }
 Runnable* Runnable::getCurrentRunnable()
 {
@@ -167,7 +170,7 @@ Runnable::Runnable(RunnableCreationOptions options ):
 	mOpts(std::move(options)),
 	mOwnerThread(0)  //assume 0 is invalid thread id!!
 {
-	//create one default pool
+	/*//create one default pool
 	gCurrrentRunnableCS.lock();
 	
 	
@@ -178,6 +181,7 @@ Runnable::Runnable(RunnableCreationOptions options ):
 	}
 	
 	gCurrrentRunnableCS.unlock();
+	*/
 	//_addNewPool(); quitado hasta tener todo claro, pero parece que incluso inicializar el pool cuesta mucho cuando es grande
 	//Create default timer. Can be overriden by calling
 	setTimer(std::make_shared<Timer>());
@@ -211,7 +215,7 @@ void Runnable::processTasks()
 	if ( mOwnerThread == 0)  //first time?
 		mOwnerThread = ::mel::core::getCurrentThreadId(); 
 	
-	if ( !mCurrentInfo )  //now initialize curranble info
+	/*if ( !mCurrentInfo )  //now initialize curranble info
 	{
 		RunnableInfo* ri = _getCurrentRunnableInfo();
 		if (ri == nullptr)
@@ -221,6 +225,8 @@ void Runnable::processTasks()
 		}
 		mCurrentInfo = ri;
 	}
+	*/
+	mCurrentInfo = &tlCurrentRunnable;
 	Runnable* oldR = mCurrentInfo->current;
 	mCurrentInfo->current = this;
 	mTasks.executeProcesses();

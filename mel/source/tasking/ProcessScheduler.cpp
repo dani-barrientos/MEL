@@ -27,9 +27,12 @@ using mel::core::TLS;
 #include <limits>
 #undef max
 
-static TLS::TLSKey	gTLSCurrentProcessKey;
-static bool gTLSInited = false;
-static std::mutex gPSCS;
+
+thread_local ProcessScheduler::ProcessInfo ProcessScheduler::tlCurrentProcess{nullptr};
+
+// static TLS::TLSKey	gTLSCurrentProcessKey;
+// static bool gTLSInited = false;
+// static std::mutex gPSCS;
 
 //initial memory for new posted tasks
 ProcessScheduler::LockFreeTasksContainer::LockFreeTasksContainer(size_t chunkSize,size_t maxChunks):
@@ -110,13 +113,13 @@ ProcessScheduler::ProcessScheduler(SchedulerOptions opts):
 		mLockFreeTasks.reset(new LockFreeTasksContainer(op.chunkSize,op.maxChunks));
 	}
 
-	gPSCS.lock();
-	if ( !gTLSInited )
-	{
-		TLS::createKey( gTLSCurrentProcessKey);
-		gTLSInited = true;
-	}
-	gPSCS.unlock();
+	// gPSCS.lock();
+	// if ( !gTLSInited )
+	// {
+	// 	TLS::createKey( gTLSCurrentProcessKey);
+	// 	gTLSInited = true;
+	// }
+	// gPSCS.unlock();
 }
 
 
@@ -143,9 +146,7 @@ void ProcessScheduler::executeProcesses()
 		assert(_stack==&stack && "ProcessScheduler::executeProcesses. Invalid stack!!");
 	}
 	#endif
-	/*if (mProcessCount.load(std::memory_order_relaxed) == 0)
-		return;
-	*/
+	/*
 	if (mProcessInfo == nullptr)
 	{
 		auto pi = _getCurrentProcessInfo();
@@ -155,7 +156,12 @@ void ProcessScheduler::executeProcesses()
 			TLS::setValue(gTLSCurrentProcessKey, pi);
 		}
 		mProcessInfo = pi;
+	}*/
+	if (mProcessInfo == nullptr)
+	{
+		mProcessInfo = &tlCurrentProcess;
 	}
+		
 	auto previousProcess = mProcessInfo->current;
 	assert(	mTimer != NULL );
 	uint64_t time= mTimer->getMilliseconds();
@@ -451,12 +457,17 @@ void ProcessScheduler::setTimer(std::shared_ptr<Timer> timer )
 {
  	mTimer = timer;
 }
-ProcessScheduler::ProcessInfo* ProcessScheduler::_getCurrentProcessInfo()
+/*ProcessScheduler::ProcessInfo* ProcessScheduler::_getCurrentProcessInfo()
 {
 	if (gTLSInited)
 		return (ProcessInfo*)TLS::getValue(gTLSCurrentProcessKey);
 	else
 		return nullptr;
+}
+*/
+ProcessScheduler::ProcessInfo* ProcessScheduler::_getCurrentProcessInfo()
+{
+	return &tlCurrentProcess;
 }
 std::shared_ptr<Process> ProcessScheduler::getCurrentProcess()
 {	

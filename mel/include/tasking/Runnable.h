@@ -185,7 +185,7 @@ namespace mel
 			struct RunnableInfo
 			{
 				Runnable* current = nullptr;
-			};
+			};		
 		public:			
 			static const unsigned int DEFAULT_POOL_SIZE = 512;
 			//static const unsigned int DEFAULT_MAX_NEW_TASKS = DEFAULT_POOL_SIZE*4;
@@ -216,6 +216,7 @@ namespace mel
 		//get info on currently executing Runnable in current thread
 			static RunnableInfo* _getCurrentRunnableInfo();
 			friend class ::mel::tasking::_private:: RunnableTask;
+			static thread_local RunnableInfo tlCurrentRunnable;
 			RunnableInfo* mCurrentInfo;
 			std::unique_ptr<ProcessFactory>	mDefaultFactory; //factory to use for allocating tasks if no other given
 			ProcessScheduler	mTasks;

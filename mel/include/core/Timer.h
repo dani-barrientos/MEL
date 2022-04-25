@@ -4,7 +4,7 @@
 #ifdef WIN32
 #elif defined (MEL_IOS) || defined(MEL_MACOSX)
 #include <mach/mach_time.h>
-#elif defined (MEL_LINUX)
+#elif defined (MEL_LINUX) || defined (MEL_ANDROID)
 #include <time.h>
 #endif
 
