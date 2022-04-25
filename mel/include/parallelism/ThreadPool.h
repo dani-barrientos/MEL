@@ -169,20 +169,20 @@ namespace mel
 					}else
 					{
 						mPool[mLastIndex]->post(
-					std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([&except,this,func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
-					{
-							try
+							std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([&except,this,func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
 							{
-								func(arg);
-							}catch(...)
-							{
-								std::scoped_lock<std::mutex> lck(mExceptionLock);
-								if ( !except )
-									except = std::current_exception();
-							}
-							output.set();
-							return mel::tasking::EGenericProcessResult::KILL;
-					})
+									try
+									{
+										func(arg);
+									}catch(...)
+									{
+										std::scoped_lock<std::mutex> lck(mExceptionLock);
+										if ( !except )
+											except = std::current_exception();
+									}
+									output.set();
+									return mel::tasking::EGenericProcessResult::KILL;
+							})
 					);
 					}
 				}

@@ -137,4 +137,55 @@ The results show two very good news:
     By default a ThreadPool uses all available cores. In this used machine, the number of cores is 8, so each task in *parallel_convert* is fully independent. Althoguh apparently this 
     should mean that the code should be 4 times faster, other things can affect performance, mainly cache issues.
     - the direct way takes almost the same time that the *RunnableExecutor* way, meaning that the internals of the execution and microthread system is very,very low
+
+In order to do improve the previous code, it had been better to take advantage of concrete parallelism possibilities of the system. Instead of dividing the 
+input vector in 4 different parts, It would be better to divide in as much parts as the system can. The coide could be:
+\code
+try
+	{
+		Timer timer;
+		uint64_t t0 = timer.getMilliseconds();
+		int numParts = ExecutorTraits<Executor<ExecutorType>>::has_parallelism?mel::core::getNumProcessors():1;
+		vector<double> means(numParts);
+		auto res5 = mel::core::waitForFutureThread(
+		//todo obtener numero de cores
+		fut
+		| mel::execution::loop(
+						0,(int)numParts,
+						[&means,numParts](int idx,VectorType& v) noexcept
+						{
+							double mean = 0.f;
+							size_t tam = v.size()/numParts;  //size of each sub-vector
+							size_t startIdx = idx*tam;
+							size_t endIdx;
+							if ( idx == numParts-1)
+								endIdx = v.size();
+							else
+								endIdx = startIdx+tam;
+							for(size_t i = startIdx; i < endIdx;++i)
+								mean += v[i];
+							mean /= v.size();
+							means[idx] = mean;
+						},1
+					)
+		 | mel::execution::next( [&means](VectorType&)
+		 {
+			double mean = 0.0;
+			for(size_t i = 0; i < means.size();++i)
+				mean+=means[i];
+			return mean; 
+		 })		
+		);
+		uint64_t t1 = timer.getMilliseconds();
+		text::info("Using loop. Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
+		tests::BaseTest::addMeasurement(title+" time:",(float)((t1-t0)/1000.f));
+	}catch(std::exception& e)
+	{
+		text::info("Error = {}",e.what());
+	}
+\endcode
+In this new version, \ref ::mel::execution::loop "loop" is used, doing as much iterations as available cores. Also, the parallelism capabilities
+of the used executor is checked with \ref ::mel::execution::ExecutorTraits "ExecutorTraits", such that, with no real parallelism , dividing processing in chunks doesn't0
+make any advantage (also the loss is minimal as was seen in the previous example).
+
 */

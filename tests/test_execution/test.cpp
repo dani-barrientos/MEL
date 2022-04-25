@@ -896,64 +896,45 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 }
 template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFuture<ExecutorType,vector<double>> fut,string title,tests::BaseTest* test)
 {
+	using namespace mel::execution;
 	typedef vector<double> VectorType;
 	try
 	{
 		Timer timer;
 		uint64_t t0 = timer.getMilliseconds();
-
+		int numParts = ExecutorTraits<Executor<ExecutorType>>::has_parallelism?mel::core::getNumProcessors():1;
+		vector<double> means(numParts);
 		auto res5 = mel::core::waitForFutureThread(
+		//todo obtener numero de cores
 		fut
-		| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
-			[](VectorType& v) noexcept
-			{
-				double mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t endIdx = tam;
-				for(size_t i = 0; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			},
-			[](VectorType& v) noexcept
-			{
-				double mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t startIdx = tam;
-				size_t endIdx = tam*2;
-				for(size_t i = startIdx; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			},
-			[](VectorType& v) noexcept
-			{
-				double mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t startIdx = tam*2;
-				size_t endIdx = tam*3;
-				for(size_t i = startIdx; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			},
-			[](VectorType& v) noexcept
-			{
-				double mean = 0.f;
-				size_t tam = v.size()/4;
-				size_t startIdx = tam*3;
-				size_t endIdx = v.size();
-				for(size_t i = startIdx; i < endIdx;++i)
-					mean += v[i];
-				mean /= v.size();
-				return mean;
-			}
-		) | mel::execution::next( [](std::tuple<double,double,double,double>& means)
-		{
-			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
-		}));
+		| mel::execution::loop(
+						0,(int)numParts,
+						[&means,numParts](int idx,VectorType& v) noexcept
+						{
+							double mean = 0.f;
+							size_t tam = v.size()/numParts;  //size of each sub-vector
+							size_t startIdx = idx*tam;
+							size_t endIdx;
+							if ( idx == numParts-1)
+								endIdx = v.size();
+							else
+								endIdx = startIdx+tam;
+							for(size_t i = startIdx; i < endIdx;++i)
+								mean += v[i];
+							mean /= v.size();
+							means[idx] = mean;
+						},1
+					)
+		 | mel::execution::next( [&means](VectorType&)
+		 {
+			double mean = 0.0;
+			for(size_t i = 0; i < means.size();++i)
+				mean+=means[i];
+			return mean; 
+		 })		
+		);
 		uint64_t t1 = timer.getMilliseconds();
-		text::info("Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
+		text::info("Using loop. Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
 		tests::BaseTest::addMeasurement(title+" time:",(float)((t1-t0)/1000.f));
 	}catch(std::exception& e)
 	{
@@ -1001,7 +982,7 @@ int _testAdvanceSample(tests::BaseTest* test)
 	auto initFut = execution::launch(exr,[]()
 	{				
 		//int vecSize = std::rand()%1000'000; //generate random big vector
-		constexpr int vecSize = 10'000'000;
+		constexpr int vecSize = 50'000'000;
 		VectorType v(vecSize);
 		for( size_t i = 0; i < vecSize;++i)
 			v[i] = (std::rand()%20)/3.0; //to create a double
@@ -1038,7 +1019,23 @@ int _testAdvanceSample(tests::BaseTest* test)
 	{
 		exr.setOpts({true,false});
 		text::info("vector mean: RunnableExecutor");		
-		_testMeanVector(initFut,"vector mean: RunnableExecutor",test);
+		_testMeanVector(execution::transfer(initFut,exr),"vector mean: RunnableExecutor",test); //the transfer is not neccesary because initFut is launched in exr, but jsut in case it changes
+	}
+	//now testing different algorithm using execution ::loop
+	{
+		parallelism::ThreadPool::ThreadPoolOpts opts;
+		opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+		auto myPool = make_shared<parallelism::ThreadPool>(opts);
+		parallelism::ThreadPool::ExecutionOpts exopts;
+		execution::Executor<parallelism::ThreadPool> extp(myPool);
+		extp.setOpts({true,true});
+		text::info("vector mean(loop): ThreadPoolExecutor");
+		_testMeanVectorLoop( execution::transfer(initFut,extp),"vector mean(loop): ThreadPoolExecutor",test);		
+	}
+	{
+		exr.setOpts({true,false});
+		text::info("vector mean(loop): RunnableExecutor");		
+		_testMeanVectorLoop(execution::transfer(initFut,exr),"vector mean(loop): RunnableExecutor",test);
 	}
 
 	//comparar resultados?
