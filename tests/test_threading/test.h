@@ -15,9 +15,10 @@ namespace test_threading
          * -n <number> -> test number:
          * 		0 = microthreading-mono thread
          * 		1 = lots of tasks
-         * 		2 = Future uses
+         * 		2 = basic Future uses
          * 		3 = testing lock_free scheduler
          * 		4 = microthread+exceptions
+         * 		5 = hard Future uses
          * @return int 
          */
         int onExecuteTest() override;

@@ -12,7 +12,7 @@ namespace test_execution
         /**
          * @brief execution tests
          * commandline options
-	    *   -n: test number (0->test launch; 1->test for)
+	    *   -n: test number (0->test launch; 1->test for; 2->advanced sample)
   	    *   -ls: loop size for test number 1
          * @return int 
          */

@@ -137,6 +137,7 @@ namespace mel
             enum {has_microthreading = true};  //support microthreading?
             enum {has_parallelism = true}; ////support true parallelism?
         };
+        //! @brief alias for Executor<ThreadPool>
         typedef Executor<ThreadPool> ThreadPoolExecutor; //alias
     }
 }

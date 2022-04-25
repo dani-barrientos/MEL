@@ -146,6 +146,7 @@ static int _testsDebug(tests::BaseTest* test)
 		Future<int> fut1;
 		Future<int> fut2;
 		Future<int> fut3(fut2);
+		Future<int> fut4;
 		fut1.subscribeCallback( [](Future<int>::ValueType& vt)
 		{
 			mel::text::info("Fut1 set! {}",vt.value());
@@ -158,12 +159,21 @@ static int _testsDebug(tests::BaseTest* test)
 		{
 			mel::text::info("Fut3 set! {}",vt.value());
 		});
+		fut4.subscribeCallback( [](Future<int>::ValueType& vt)
+		{
+			mel::text::info("Fut4 set! {}",vt.value());
+		});
 /*		 meditar sobre esto. Funciona bien pero tengo que dejarlo bien hilvanado: igual tengo que ponerle otro nombre, ya que 
 		 	viendo eso uno pensaría que sólo cambia el fut2, cuando en realidad cambia el data por lo que afecta a todos
 			 POSIBILDIADES:
 			  - llamarlo change		*/
 		fut1.setValue(6);
  		fut2.assign(fut1);
+		mel::text::info("Fut1 value {}",fut1.getValue().value());
+		mel::text::info("Fut2 value {}",fut2.getValue().value());
+		mel::text::info("Fut3 value {}",fut3.getValue().value());
+		fut4 = fut1; 		
+		mel::text::info("Fut4 value {}",fut3.getValue().value());
 		//asignacion del data
 		Thread::sleep(1000);
 	}
@@ -730,7 +740,7 @@ int TestThreading::onExecuteTest()
 					result = _testPerformanceLotTasks(this);
 					break;
 				case 2:
-					result = ::test_threading::test_futures( this );
+					result = ::test_threading::basicTestFutures( this );
 					break;
 				case 3:
 					result = _test_concurrent_post(this);
@@ -738,6 +748,9 @@ int TestThreading::onExecuteTest()
 				case 4:
 					result = _testExceptions(this);
 					break;
+				case 5:
+					result = ::test_threading::test_futures( this );
+					break;					
 				case 1000:
 					result = _testsDebug(this);
 					break;
@@ -766,7 +779,7 @@ int TestThreading::onExecuteAllTests()
 	//@todo tengo quitados los testes que todavía no están bien
 	//_testMicroThreadingMonoThread( this );
 	//_testPerformanceLotTasks(this);
-	::test_threading::test_futures(this);
+	::test_threading::allTests(this);
 	 //_test_concurrent_post(this);	
 	 //_testExceptions(this);
 	 return 0;

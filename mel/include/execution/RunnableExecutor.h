@@ -273,6 +273,7 @@ namespace mel
             enum {has_microthreading = true};  //support microthreading?
             enum {has_parallelism = false}; ////support true parallelism?
         };
+        //! @brief alias for Executor<Runnable>
         typedef Executor<Runnable> RunnableExecutor; //alias
     }
 }

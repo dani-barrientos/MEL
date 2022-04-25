@@ -4,6 +4,7 @@
 Contents of this section:
 - [Introduction] (#introduction)
 - [Usage samples] (#usage_samples)
+- [Advanced example] (#advance_example)
 
 ## Introduction {#introduction}
 The goal of this module is to provide a very high level API for task execution in a generic way, such that is not neccesary to know the underlying execution system.
@@ -638,8 +639,9 @@ Result value = [First Job,10,(5,8.7)]
 \endcode
 Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, **as a tuple**. Also, 
 the third job returns a tuple (this is how \ref ::mel::execution::parallel_convert "parallel_convert" works), and it's shown between parenthesis.
-### More complex sample
-algo más complejo, tal vez el de la media del vector. pero me gustaria que fuese practico y pudiesehacer transfer y cosas asi
+### Advanced example {#advance_example}
+We are going to see a more real example with measurements to compare performance in various cases. Follow this \ref execution_sample_advance "link" to explore it
+
 
 CONTAR TEMA PERFECT FORWARDING Y COPIAS Y TAL. PONER ALGUN EJMPLO CON CALSE CON CONSTRUCTOR DE COPIA Y QUE SE VEAN LAS COPIAS QUE SE HACEN
 contar el tema del "perfect forwarding" y cuando se hacen copias

@@ -443,7 +443,7 @@ namespace mel
 				private:
 					ValueType mValue;
 			};
-
+			
 			class FutureDataContainer
 			{
 				public:
@@ -552,19 +552,14 @@ namespace mel
 			/**
 			 * @brief Makes this Future to point to the same value as the given Future
 			 * @details This ways, both futures will share the same value/error. If input Future is already set at that moment, 
-			 * callbacks are triggeres as usual. It's improtante to note that *all futures* sharing same data will change
+			 * callbacks are triggered as usual. It's important to note that *all futures* sharing same data will change
 			 */
 			void assign( Future_Common<T>& val)
 			{				
 				auto ptr = mData->getPtr(); //to avoid destruction before unlock
 				std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(val.getData().getMutex(),getData().getMutex());
-				// std::scoped_lock<std::recursive_mutex> lck(val.getData().getMutex());
-				// std::scoped_lock<std::recursive_mutex> lck2(getData().getMutex());
 				if (val.getValue().isAvailable())  
 				{
-				// problema, necesito establecer el value, para que que se pueda consuta el avaialbe
-				// pero si establezco el data, vuelvo a hacer trigger de lo mismo
-				// POSIBILIDADES: GUARDAR CALLBACKS 
 					auto old = mData->getPtr();
 				  	setData(val.mData->getPtr());
 					//if value is already available, tigger callbacks now. It's more efficient and avoid recursive calls					
@@ -573,13 +568,7 @@ namespace mel
 				{
 					val.getData().append(std::move(getData())); //append callbacks
 					setData(val.mData->getPtr());
-				}
-				/*
-				val.getData().append(std::move(getData()));
-				setData(val.mData->getPtr());
-				if (val.getValue().isAvailable())
-					getData().triggerCallbacks(getData().getValue());
-				*/
+				}				
 			}
 			/**
 			 * @brief Subscribe callback to be executed when future is ready (valid or error)

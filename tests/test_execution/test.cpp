@@ -810,76 +810,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);				
 
-		text::info("Calculate mean of a long vector");
-		typedef vector<float> VectorType;
-		auto values = std::make_unique<VectorType>();  //create pointer because this is executed in a microthread, so no local variable can be referenced
-		//first, create random, big vector in another thread
-		//@todo ampliar este ejemplo a un when_all
-		try
-		{
-			auto res5 = mel::tasking::waitForFutureMThread(
-			execution::launch(ex,[](VectorType& v)->VectorType&
-			{
-				//generate random big vector
-				int vecSize = std::rand()%1000'000;
-				v.resize(vecSize);
-				for( size_t i = 0; i < vecSize;++i)
-					v[i] = (std::rand()%20)/3.f; //to create a float
-				return v;
-			},std::ref(*values))
-			| mel::execution::parallel_convert<std::tuple<float,float,float,float>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
-				[](VectorType& v)
-				{
-					float mean = 0.f;
-					size_t tam = v.size()/4;
-					size_t endIdx = tam;
-					for(size_t i = 0; i < endIdx;++i)
-						mean += v[i];
-					mean /= v.size();
-					return mean;
-				},
-				[](VectorType& v)
-				{
-					float mean = 0.f;
-					size_t tam = v.size()/4;
-					size_t startIdx = tam;
-					size_t endIdx = tam*2;
-					for(size_t i = startIdx; i < endIdx;++i)
-						mean += v[i];
-					mean /= v.size();
-					return mean;
-				},
-				[](VectorType& v)
-				{
-					float mean = 0.f;
-					size_t tam = v.size()/4;
-					size_t startIdx = tam*2;
-					size_t endIdx = tam*3;
-					for(size_t i = startIdx; i < endIdx;++i)
-						mean += v[i];
-					mean /= v.size();
-					return mean;
-				},
-				[](VectorType& v)
-				{
-					float mean = 0.f;
-					size_t tam = v.size()/4;
-					size_t startIdx = tam*3;
-					size_t endIdx = v.size();
-					for(size_t i = startIdx; i < endIdx;++i)
-						mean += v[i];
-					mean /= v.size();
-					return mean;
-				}
-			) | mel::execution::next( [](std::tuple<float,float,float,float>& means)
-			{
-				return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
-			}));
-			text::info("Mean = {}",res5.value());
-		}catch(std::exception& e)
-		{
-			text::info("Error = {}",e.what());
-		}
+		
 		
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
@@ -887,7 +818,82 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	});
 	event.wait();
 }
+template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<ExecutorType,vector<double>> fut,string title,tests::BaseTest* test)
+{
+	typedef vector<double> VectorType;
+	try
+	{
+		Timer timer;
+		uint64_t t0 = timer.getMilliseconds();
 
+		auto res5 = mel::core::waitForFutureThread(
+		/*execution::launch(ex,[](VectorType& v)->VectorType&
+		{				
+			//int vecSize = std::rand()%1000'000; //generate random big vector
+			constexpr int vecSize = 2000'000;
+			v.resize(vecSize);
+			for( size_t i = 0; i < vecSize;++i)
+				v[i] = (std::rand()%20)/3.f; //to create a float
+			return v;
+		},std::ref(*values))
+		*/
+		fut
+		| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t endIdx = tam;
+				for(size_t i = 0; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			},
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam;
+				size_t endIdx = tam*2;
+				for(size_t i = startIdx; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			},
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam*2;
+				size_t endIdx = tam*3;
+				for(size_t i = startIdx; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			},
+			[](VectorType& v) noexcept
+			{
+				double mean = 0.f;
+				size_t tam = v.size()/4;
+				size_t startIdx = tam*3;
+				size_t endIdx = v.size();
+				for(size_t i = startIdx; i < endIdx;++i)
+					mean += v[i];
+				mean /= v.size();
+				return mean;
+			}
+		) | mel::execution::next( [](std::tuple<double,double,double,double>& means)
+		{
+			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
+		}));
+		uint64_t t1 = timer.getMilliseconds();
+		text::info("Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
+		tests::BaseTest::addMeasurement(title+" time: ",(float)((t1-t0)/1000.f));
+	}catch(std::exception& e)
+	{
+		text::info("Error = {}",e.what());
+	}
+}
 //basic test for launching task in execution agents
 int _testLaunch( tests::BaseTest* test)
 {
@@ -913,141 +919,64 @@ int _testLaunch( tests::BaseTest* test)
 			_basicTests(extp,th1.get(),test);
 			text::info("\n\tFinished BasicTests with ThreadPoolExecutor");
 		}
-	}
-		
-	/*
-		{
-		const int idx0 = 0;
-		const int loopSize = 10;
-		auto kk1 = mel::execution::launch(ex,
-			[]()
-			{		
-				text::info("Launch kk");			
-				::tasking::Process::wait(5000);					
-				throw std::runtime_error("Error1");
-				return "pepe";
-			}
-		);
-		auto kk2 = mel::execution::loop(kk1,idx0,loopSize,
-			[](int idx,const auto& v)
-			{
-				::tasking::Process::wait(1000);
-				if ( v.isValid() )
-					text::info("It {}. Value = {}",idx,v.value());				
-				else
-					text::info("It {}. Error = {}",idx,v.error().errorMsg);				
+	}	
+	return result;
+}
+int _testAdvanceSample(tests::BaseTest* test)
+{
+	int result = 0;	
+	text::info("Calculate mean of a long vector");
 
-			}
-		);
-		auto kk3 = mel::execution::next(kk2,[](const auto& v)->int
-		{								
-			text::info("Launch waiting");
-			if ( ::mel::tasking::Process::wait(5000) != mel::tasking::Process::ESwitchResult::ESWITCH_KILL )
-			{
-				//throw std::runtime_error("Error1");
-				text::info("Launch done");
-			}else
-				text::info("Launch killed");
-			return 4;
-		}
-		);
-		::core::waitForFutureThread(kk3);
-		text::info("Done!!");
+	Runnable::RunnableCreationOptions opts;
+	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+	auto th1 = ThreadRunnable::create(true,opts);
+	execution::Executor<Runnable> exr(th1);
+	typedef vector<double> VectorType;
+	auto initFut = execution::launch(exr,[]()
+	{				
+		//int vecSize = std::rand()%1000'000; //generate random big vector
+		constexpr int vecSize = 10'000'000;
+		VectorType v(vecSize);
+		for( size_t i = 0; i < vecSize;++i)
+			v[i] = (std::rand()%20)/3.0; //to create a double
+		return v;
+	});
+	core::waitForFutureThread(initFut); //wait for completion of vector creation to not interfere in time measurement
+	//plain version
+	text::info("vector mean: plain way");
+	Timer timer;
+	uint64_t t0 = timer.getMilliseconds();
+	auto mean = core::waitForFutureThread( initFut | 
+	execution::next([](VectorType& v) noexcept
+	{
+		double mean = 0.0;
+		size_t endIdx = v.size();
+		for(size_t i = 0; i < endIdx;++i)
+			mean+=v[i];
+		mean/=v.size();
+		return mean;
+	}));
+	uint64_t t1 = timer.getMilliseconds();
+	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
+	tests::BaseTest::addMeasurement("vector mean: plain way time: ",(float)((t1-t0)/1000.f));
+	{
 		
-		}
-		//---
-		// auto fut = mel::execution::next(execution::start(ex),
-		// 			[](const auto& v)->int
-		// 			{					
-		// 				text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
-		// 				text::info("Launch waiting");
-		// 				if ( ::mel::tasking::Process::wait(5000) != mel::tasking::Process::ESwitchResult::ESWITCH_KILL )
-		// 				{
-		// 					//throw std::runtime_error("Error1");
-		// 					text::info("Launch done");
-		// 				}else
-		// 					text::info("Launch killed");
-		// 				return 4;
-		// 			}
-		// 		);
-		// //Thread::sleep(10000);
-		// mel::execution::Executor<Runnable> extp(th2);
-		// //::core::waitForFutureThread(fut);	
-		// //auto fut_1 = mel::execution::transfer(fut,extp);
-		// fut = mel::execution::transfer(fut,extp);
-		// auto fut2 = mel::execution::next(fut,[](const auto& v)
-		// 		{
-		// 			text::info("Current Runnable {}",static_cast<void*>(ThreadRunnable::getCurrentRunnable()));
-		// 			if (v.isValid())
-		// 			{
-		// 				text::info("Next done: {}",v.value());		
-		// 			}else					
-		// 				text::error("Next error: {}",v.error().errorMsg);		
-		// 		}
-		// 		);						
-		// ::mel::core::waitForFutureThread(fut2);				
-	}*/
-	/*
-	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;
+		opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
 		auto myPool = make_shared<parallelism::ThreadPool>(opts);
 		parallelism::ThreadPool::ExecutionOpts exopts;
-		execution::Executor<parallelism::ThreadPool> ex(myPool);
-		ex.setOpts({true,true});
-		{
-		const int idx0 = 0;
-		const int loopSize = 10;		
-		// auto kk1 = mel::execution::launch(ex,
-		// 	[]()
-		// 	{		
-		// 		text::info("Launch TP kk");			
-		// 		::tasking::Process::wait(5000);					
-		// 		//throw std::runtime_error("Error1");
-		// 		return "pepe";
-		// 	}
-		// );
-		// auto kk = mel::execution::loop(kk1,idx0,loopSize,
-		// 	[](int idx,const auto& v)
-		// 	{
-		// 		::tasking::Process::wait(1000);
-		// 		if ( v.isValid())
-		// 		{
-		// 			text::info("It {}. Value = {}",idx,v.value());				
-		// 		}else
-		// 			text::error("It {} .Err = {}",idx,v.error().errorMsg);				
-				
-		// 	}
-		// );
-		// mel::text::info("voy a esperar");
-		// ::mel::core::waitForFutureThread(kk);
-		text::info("terminó");
-		}
-		//auto fut = mel::execution::launch(ex,
-		// 	[](string v)
-		// 	{					
-		// 		text::info("Tp Launch waiting");
-		// 		if ( ::mel::tasking::Process::wait(5000) != mel::tasking::Process::ESwitchResult::ESWITCH_KILL )
-		// 			text::info("TP Launch done: {}",v);
-		// 		else
-		// 			text::info("TP Launch killed");
-		// 		return 4;
-		// 	},"pepe"
-		// );
-		// mel::text::info("TP Sleep");
-		// Thread::sleep(10000);
-		// auto fut2 = mel::execution::next(fut,[](const auto& v)->void
-		// 		{
-		// 			if (v.isValid())
-		// 			{
-		// 				text::info("TP Next done: {}",v.value());		
-		// 			}else					
-		// 				text::error("TP Next error: {}",v.error().errorMsg);		
-		// 		}
-		// 		);		
-		// ::mel::core::waitForFutureThread(fut2);                
+		execution::Executor<parallelism::ThreadPool> extp(myPool);
+		extp.setOpts({true,true});
+		text::info("vector mean: ThreadPoolExecutor");
+		_testMeanVector( execution::transfer(initFut,extp),"vector mean: ThreadPoolExecutor",test);
+	}
+	{
+		exr.setOpts({true,false});
+		text::info("vector mean: RunnableExecutor");		
+		_testMeanVector(initFut,"vector mean: RunnableExecutor",test);
+	}
 
-	}	
-	*/
+	//comparar resultados?
 	return result;
 }
 #ifdef NDEBUG
@@ -1281,6 +1210,9 @@ int TestExecution::onExecuteTest()
 				case 1:
 					result = _testFor(this);
 					break;				
+				case 2:
+					result = _testAdvanceSample(this);
+					break;
 				default:
 				#if USE_SPDLOG
 					spdlog::warn("Test number {} doesn't exist. Executing default test",n);
@@ -1305,6 +1237,7 @@ void TestExecution::registerTest()
 int TestExecution::onExecuteAllTests()
 {
 	_testLaunch(this);
+	_testAdvanceSample(this);
 	_testFor(this);
 	return 0;
 }

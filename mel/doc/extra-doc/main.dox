@@ -23,17 +23,11 @@ So, some functionalities could be removed and used the "new" C++11 equivalents, 
 
 And on top of this, achieving more genericity and flexibility, we have the \ref execution_system "Execution System". This is a fully template module that allows to express in a very easy, understable and efficient way,
 sequences of tasks and where to execute them, in a way independent of the underliying execution system. More on this in \ref execution_system "its section".
-<ul>
-	<li>\ref tasking_system "Tasking System"<br/>
-		The base support for the rest of the system.
-	</li>
-	<li>\ref tasking_constructs "Higher level constructs" <br/>
-		Elements built on top of the tasking system.
-	</li>
-	<li>\ref execution_system "Execution system"<br/>
-		High level tasking execution system.
-	</li>
-		
-</ul>
+- \subpage tasking_system \n
+	The base support for the rest of the system.
+- \subpage tasking_constructs \n
+	Elements built on top of the tasking system.
+- \subpage execution_system \n
+	High level tasking execution system.
 
 */

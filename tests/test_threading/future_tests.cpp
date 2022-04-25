@@ -425,3 +425,67 @@ int test_threading::test_futures( tests::BaseTest* test)
 		
 	return result;
 }
+static tests::BaseTest* currentTest;
+int test_threading::basicTestFutures(tests::BaseTest* test)
+{
+	currentTest = test;
+	{
+		test->clearTextBuffer();
+		//auto th1 = ThreadRunnable::create();
+		Future<int> fut1;
+		Future<int> fut2;
+		Future<int> fut3(fut2);
+		Future<int> fut4;
+		fut1.subscribeCallback( [](Future<int>::ValueType& vt)
+		{					
+			stringstream ss;
+			ss << "Fut1 set! value = "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+//			mel::text::info("Fut1 set! {}",vt.value());
+		});
+		fut2.subscribeCallback( [](Future<int>::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut2 set! value = "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut3.subscribeCallback( [](Future<int>::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut3 set! value = "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut4.subscribeCallback( [](Future<int>::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut4 set! "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut1.setValue(6);
+ 		fut2.assign(fut1);		
+		currentTest->checkOccurrences("Fut1 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut2 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut3 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+
+		stringstream ss;
+		ss << "Fut1 value = "<<fut1.getValue().value()<<'\n';
+		ss << "Fut2 value = "<<fut2.getValue().value()<<'\n';
+		ss << "Fut3 value = "<<fut3.getValue().value()<<'\n';
+		currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		// mel::text::info("Fut1 value = {}",fut1.getValue().value());
+		// mel::text::info("Fut2 value = {}",fut2.getValue().value());
+		// mel::text::info("Fut3 value = {}",fut3.getValue().value());
+		currentTest->checkOccurrences("value = 6",6,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		fut4 = fut1; 		
+		ss << "Fut4 value = "<<fut4.getValue().value()<<'\n';
+		currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut4 value = 6",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
+	//@todo algo más avanzado??
+	}
+	return 0;
+}
+void test_threading::allTests(tests::BaseTest* test)
+{
+	basicTestFutures(test);
+	test_futures(test);
+}
