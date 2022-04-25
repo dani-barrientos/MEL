@@ -142,7 +142,7 @@ $(document).ready(function(){initNavTree('_thread_runnable_8h_source.html',''); 
 <div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_thread_runnable.html#a6599cc178733e5d47b6ecf8841688468">  104</a></span>&#160;            <span class="keyword">static</span> <a class="code" href="classmel_1_1tasking_1_1_thread_runnable.html">ThreadRunnable</a>* <a class="code" href="classmel_1_1tasking_1_1_thread_runnable.html#a6599cc178733e5d47b6ecf8841688468">getCurrentThreadRunnable</a>();</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        <span class="keyword">private</span>:</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;            <span class="keyword">static</span> <a class="code" href="structmel_1_1tasking_1_1_runnable_1_1_runnable_creation_options.html">Runnable::RunnableCreationOptions</a> sDefaultOpts;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            </div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            <span class="keyword">static</span> thread_local <a class="code" href="classmel_1_1tasking_1_1_thread_runnable.html">ThreadRunnable</a>* tlCurrentRunnable;</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;            std::unique_ptr&lt;Thread&gt; mThread;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor">        #ifdef USE_CUSTOM_EVENT</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;            Event   mWaitForTasks; </div>
