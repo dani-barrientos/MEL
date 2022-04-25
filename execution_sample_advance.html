@@ -213,8 +213,53 @@ $(document).ready(function(){initNavTree('execution_sample_advance.html',''); in
 <div class="ttc" id="anamespacemel_1_1execution_html_a5e0ddd0955796bd634b11035be2161d7"><div class="ttname"><a href="namespacemel_1_1execution.html#a5e0ddd0955796bd634b11035be2161d7">mel::execution::ThreadPoolExecutor</a></div><div class="ttdeci">Executor&lt; ThreadPool &gt; ThreadPoolExecutor</div><div class="ttdoc">alias for Executor&lt;ThreadPool&gt;</div><div class="ttdef"><b>Definition:</b> ThreadPoolExecutor.h:141</div></div>
 </div><!-- fragment --><p> The results show two very good news:</p><ul>
 <li>using a <a class="el" href="namespacemel_1_1execution.html#a5e0ddd0955796bd634b11035be2161d7">ThreadPoolExecutor</a> is more than double faster than a simple <a class="el" href="namespacemel_1_1execution.html#a0c008697e5e12a69ade00e0fd0ae3254">RunnableExecutor</a>. By default a ThreadPool uses all available cores. In this used machine, the number of cores is 8, so each task in <em>parallel_convert</em> is fully independent. Althoguh apparently this should mean that the code should be 4 times faster, other things can affect performance, mainly cache issues.</li>
-<li>the direct way takes almost the same time that the <em>RunnableExecutor</em> way, meaning that the internals of the execution and microthread system is very,very low </li>
+<li>the direct way takes almost the same time that the <em>RunnableExecutor</em> way, meaning that the internals of the execution and microthread system is very,very low</li>
 </ul>
+<p>In order to do improve the previous code, it had been better to take advantage of concrete parallelism possibilities of the system. Instead of dividing the input vector in 4 different parts, It would be better to divide in as much parts as the system can. The coide could be: </p><div class="fragment"><div class="line"><span class="keywordflow">try</span></div>
+<div class="line">    {</div>
+<div class="line">        Timer timer;</div>
+<div class="line">        uint64_t t0 = timer.getMilliseconds();</div>
+<div class="line">        <span class="keywordtype">int</span> numParts = ExecutorTraits&lt;Executor&lt;ExecutorType&gt;&gt;::has_parallelism?<a class="code" href="namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d">mel::core::getNumProcessors</a>():1;</div>
+<div class="line">        vector&lt;double&gt; means(numParts);</div>
+<div class="line">        <span class="keyword">auto</span> res5 = <a class="code" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a>(</div>
+<div class="line">        <span class="comment">//todo obtener numero de cores</span></div>
+<div class="line">        fut</div>
+<div class="line">        | <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">mel::execution::loop</a>(</div>
+<div class="line">                        0,(<span class="keywordtype">int</span>)numParts,</div>
+<div class="line">                        [&amp;means,numParts](<span class="keywordtype">int</span> idx,VectorType&amp; v) noexcept</div>
+<div class="line">                        {</div>
+<div class="line">                            <span class="keywordtype">double</span> mean = 0.f;</div>
+<div class="line">                            <span class="keywordtype">size_t</span> tam = v.size()/numParts;  <span class="comment">//size of each sub-vector</span></div>
+<div class="line">                            <span class="keywordtype">size_t</span> startIdx = idx*tam;</div>
+<div class="line">                            <span class="keywordtype">size_t</span> endIdx;</div>
+<div class="line">                            <span class="keywordflow">if</span> ( idx == numParts-1)</div>
+<div class="line">                                endIdx = v.size();</div>
+<div class="line">                            <span class="keywordflow">else</span></div>
+<div class="line">                                endIdx = startIdx+tam;</div>
+<div class="line">                            <span class="keywordflow">for</span>(<span class="keywordtype">size_t</span> i = startIdx; i &lt; endIdx;++i)</div>
+<div class="line">                                mean += v[i];</div>
+<div class="line">                            mean /= v.size();</div>
+<div class="line">                            means[idx] = mean;</div>
+<div class="line">                        },1</div>
+<div class="line">                    )</div>
+<div class="line">         | <a class="code" href="namespacemel_1_1execution.html#a00134f8a177ada6961f5f9927816a961">mel::execution::next</a>( [&amp;means](VectorType&amp;)</div>
+<div class="line">         {</div>
+<div class="line">            <span class="keywordtype">double</span> mean = 0.0;</div>
+<div class="line">            <span class="keywordflow">for</span>(<span class="keywordtype">size_t</span> i = 0; i &lt; means.size();++i)</div>
+<div class="line">                mean+=means[i];</div>
+<div class="line">            <span class="keywordflow">return</span> mean; </div>
+<div class="line">         })     </div>
+<div class="line">        );</div>
+<div class="line">        uint64_t t1 = timer.getMilliseconds();</div>
+<div class="line">        text::info(<span class="stringliteral">&quot;Using loop. Mean = {}. Time spent = {} seconds&quot;</span>,res5.value(),(<span class="keywordtype">float</span>)((t1-t0)/1000.f));</div>
+<div class="line">        tests::BaseTest::addMeasurement(title+<span class="stringliteral">&quot; time:&quot;</span>,(<span class="keywordtype">float</span>)((t1-t0)/1000.f));</div>
+<div class="line">    }<span class="keywordflow">catch</span>(std::exception&amp; e)</div>
+<div class="line">    {</div>
+<div class="line">        text::info(<span class="stringliteral">&quot;Error = {}&quot;</span>,e.what());</div>
+<div class="line">    }</div>
+<div class="ttc" id="anamespacemel_1_1core_html_a566d83eac83e728480e727dbfe24753d"><div class="ttname"><a href="namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d">mel::core::getNumProcessors</a></div><div class="ttdeci">MEL_API unsigned int getNumProcessors()</div><div class="ttdoc">Get the number of logical processors.</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_acbcaf139dc87026232b3816d7ecb256e"><div class="ttname"><a href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">mel::execution::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</div><div class="ttdoc">parallel (possibly, depending on executor capabilities) loop</div><div class="ttdef"><b>Definition:</b> Executor.h:221</div></div>
+</div><!-- fragment --><p> In this new version, <a class="el" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a> is used, doing as much iterations as available cores. Also, the parallelism capabilities of the used executor is checked with <a class="el" href="structmel_1_1execution_1_1_executor_traits.html">ExecutorTraits</a>, such that, with no real parallelism , dividing processing in chunks doesn't0 make any advantage (also the loss is minimal as was seen in the previous example). </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

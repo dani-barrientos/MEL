@@ -230,20 +230,20 @@ $(document).ready(function(){initNavTree('_thread_pool_8h_source.html',''); init
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;                    }<span class="keywordflow">else</span></div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;                    {</div>
 <div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;                        mPool[mLastIndex]-&gt;post(</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                    std::function&lt;<a class="code" href="namespacemel_1_1tasking.html#a96d9377d27d919302df6839559a34a5d">tasking::EGenericProcessResult</a> (uint64_t,<a class="code" href="classmel_1_1tasking_1_1_process.html">Process</a>*)&gt;([&amp;except,<span class="keyword">this</span>,func = std::forward&lt;F&gt;(func),output,arg](uint64_t, <a class="code" href="classmel_1_1tasking_1_1_process.html">Process</a>*) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                    {</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                            <span class="keywordflow">try</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                            {</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;                                func(arg);</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;                            }<span class="keywordflow">catch</span>(...)</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                            {</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                                std::scoped_lock&lt;std::mutex&gt; lck(mExceptionLock);</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;                                <span class="keywordflow">if</span> ( !except )</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;                                    except = std::current_exception();</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                            }</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                            output.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;                            <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1tasking.html#a96d9377d27d919302df6839559a34a5da3986dd0914958ae2115e0ae7f10beef3">mel::tasking::EGenericProcessResult::KILL</a>;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;                    })</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                            std::function&lt;<a class="code" href="namespacemel_1_1tasking.html#a96d9377d27d919302df6839559a34a5d">tasking::EGenericProcessResult</a> (uint64_t,<a class="code" href="classmel_1_1tasking_1_1_process.html">Process</a>*)&gt;([&amp;except,<span class="keyword">this</span>,func = std::forward&lt;F&gt;(func),output,arg](uint64_t, <a class="code" href="classmel_1_1tasking_1_1_process.html">Process</a>*) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                            {</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                                    <span class="keywordflow">try</span></div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                                    {</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;                                        func(arg);</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;                                    }<span class="keywordflow">catch</span>(...)</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                                    {</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                                        std::scoped_lock&lt;std::mutex&gt; lck(mExceptionLock);</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;                                        <span class="keywordflow">if</span> ( !except )</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;                                            except = std::current_exception();</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                                    }</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                                    output.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;                                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1tasking.html#a96d9377d27d919302df6839559a34a5da3986dd0914958ae2115e0ae7f10beef3">mel::tasking::EGenericProcessResult::KILL</a>;</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;                            })</div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;                    );</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;                    }</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;                }</div>
