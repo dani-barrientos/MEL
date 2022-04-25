@@ -25,16 +25,15 @@
 var NAVTREE =
 [
   [ "MEL", "index.html", [
-    [ "Introduction", "index.html", null ],
-    [ "Execution System", "execution_system.html", null ],
-    [ "Higher level constructs for the tasking system", "tasking_constructs.html", null ],
-    [ "Tasking System", "tasking_system.html", null ],
+    [ "Introduction", "index.html", "index" ],
+    [ "Advanced example", "execution_sample_advance.html", null ],
     [ "Todo List", "todo.html", null ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
         [ "All", "namespacemembers.html", null ],
         [ "Functions", "namespacemembers_func.html", null ],
+        [ "Typedefs", "namespacemembers_type.html", null ],
         [ "Enumerations", "namespacemembers_enum.html", null ],
         [ "Enumerator", "namespacemembers_eval.html", null ]
       ] ]
@@ -64,12 +63,12 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"___if_8h_source.html",
-"classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3ca3f583680fcb4e03608f88313df9bd81e",
-"classmel_1_1mpl_1_1__private_1_1_tuple___base_3_01_t_types_00_01_sorted_types_00_017_01_4.html#ac1dcb34f386b8dfb54a7056238b2d566",
-"classmel_1_1parallelism_1_1_thread_pool.html",
-"classmel_1_1tasking_1_1_thread_runnable.html#af090b21adbd3adef079f79ef687ea3abaa4683885442ecae285934a3c8894015d",
-"structmel_1_1mpl_1_1_pointer_to_member_traits_3_01_u_01_v_1_1_5_01_4.html"
+"",
+"classmel_1_1core_1_1_callback_subscriptor_not_typed_3_01_threading_policy_00_01void_01_4.html#aea4f4d29b9bb0c5b8b900651ef244407",
+"classmel_1_1mpl_1_1__private_1_1_tuple___base_3_01_t_types_00_01_sorted_types_00_017_01_4.html#a49bae65f3a3a94a815ca23fd5a596762",
+"classmel_1_1parallelism_1_1_barrier.html#a7231c54b77f21bbe368b526eaf0924a3",
+"classmel_1_1tasking_1_1_thread_runnable.html#ad890610e8fbbe03fafea4804813cd3b0",
+"structmel_1_1mpl_1_1_functor_wrapper.html#aa63fd5ae125818bca715eae8fcfbdd8d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
