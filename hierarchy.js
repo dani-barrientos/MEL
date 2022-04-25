@@ -251,6 +251,7 @@ var hierarchy =
       [ "mel::tasking::GenericProcess", "classmel_1_1tasking_1_1_generic_process.html", null ]
     ] ],
     [ "mel::tasking::ProcessFactory", "classmel_1_1tasking_1_1_process_factory.html", null ],
+    [ "mel::tasking::ProcessScheduler::ProcessInfo", "structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html", null ],
     [ "mel::tasking::ProcessScheduler", "classmel_1_1tasking_1_1_process_scheduler.html", null ],
     [ "mel::mpl::Ref< T >", "structmel_1_1mpl_1_1_ref.html", null ],
     [ "mel::mpl::ReferenceTraits< U >", "structmel_1_1mpl_1_1_reference_traits.html", null ],
@@ -271,6 +272,7 @@ var hierarchy =
     ] ],
     [ "mel::tasking::Runnable::RunnableCreationOptions", "structmel_1_1tasking_1_1_runnable_1_1_runnable_creation_options.html", null ],
     [ "mel::execution::RunnableExecutorOpts", "structmel_1_1execution_1_1_runnable_executor_opts.html", null ],
+    [ "mel::tasking::Runnable::RunnableInfo", "structmel_1_1tasking_1_1_runnable_1_1_runnable_info.html", null ],
     [ "std::runtime_error", null, [
       [ "mel::core::WaitException", "classmel_1_1core_1_1_wait_exception.html", null ],
       [ "mel::execution::OnAllException", "classmel_1_1execution_1_1_on_all_exception.html", null ]

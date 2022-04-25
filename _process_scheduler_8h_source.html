@@ -254,15 +254,15 @@ $(document).ready(function(){initNavTree('_process_scheduler_8h_source.html','')
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            {</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;                mES.unsubscribeCallback(<span class="keywordtype">id</span>);</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;            }</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;        <span class="keyword">private</span>:                </div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;            SchedulerOptions mOpts;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;            <span class="keywordtype">bool</span> mIsLockFree; <span class="comment">//same as checking index in mOpts but for performance</span></div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;            <span class="keyword">struct </span>ProcessInfo  <span class="comment">//for TLS</span></div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;            {</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                std::shared_ptr&lt;Process&gt; current;</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;            };</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;            <span class="keyword">static</span> thread_local ProcessInfo tlCurrentProcess;</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;            ProcessInfo*    mProcessInfo;</div>
+<div class="line"><a name="l00249"></a><span class="lineno"><a class="line" href="structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html">  249</a></span>&#160;            <span class="keyword">struct </span><a class="code" href="structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html">ProcessInfo</a>  <span class="comment">//for TLS</span></div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;            {</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;                std::shared_ptr&lt;Process&gt; current;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;            };</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;        <span class="keyword">private</span>:                </div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;            <a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html#a32c0039a640d54dcf4ff06309dae69f6">SchedulerOptions</a> mOpts;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;            <span class="keywordtype">bool</span> mIsLockFree; <span class="comment">//same as checking index in mOpts but for performance</span></div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;            </div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;            <a class="code" href="structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html">ProcessInfo</a>*    mProcessInfo;</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;            TProcessList mProcessList;</div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;            std::unique_ptr&lt;LockFreeTasksContainer&gt; mLockFreeTasks;</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;            <span class="comment">//new processes to insert next time blocking variant</span></div>
@@ -276,9 +276,9 @@ $(document).ready(function(){initNavTree('_process_scheduler_8h_source.html','')
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<span class="preprocessor">            #ifndef NDEBUG</span></div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;            <span class="keywordtype">void</span>* _stack = <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="preprocessor">            #endif</span></div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;            WakeSubscriptor mWS;</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;            SleepSubscriptor mSS;</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;            EvictSubscriptor mES;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;            <a class="code" href="classmel_1_1core_1_1_callback_subscriptor.html">WakeSubscriptor</a> mWS;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;            <a class="code" href="classmel_1_1core_1_1_callback_subscriptor.html">SleepSubscriptor</a> mSS;</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;            <a class="code" href="classmel_1_1core_1_1_callback_subscriptor.html">EvictSubscriptor</a> mES;</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160; </div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;            </div>
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            <span class="keywordtype">void</span> _executeProcesses(uint64_t time,TProcessList&amp; processes) OPTIMIZE_FLAGS;</div>
@@ -286,7 +286,7 @@ $(document).ready(function(){initNavTree('_process_scheduler_8h_source.html','')
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;            <span class="keywordtype">void</span> _killTasks();</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;            <span class="keywordtype">void</span> _triggerSleepEvents(std::shared_ptr&lt;Process&gt; p);</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;            <span class="keywordtype">void</span> _triggerWakeEvents(std::shared_ptr&lt;Process&gt; p);</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;            <span class="keyword">static</span> ProcessInfo* _getCurrentProcessInfo();</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;            <span class="keyword">static</span> <a class="code" href="structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html">ProcessInfo</a>* _getCurrentProcessInfo();</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;            <span class="keywordtype">void</span> processAwakened(std::shared_ptr&lt;Process&gt;);</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;            <span class="keywordtype">void</span> processAsleep(std::shared_ptr&lt;Process&gt;);</div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        };</div>
@@ -330,7 +330,7 @@ $(document).ready(function(){initNavTree('_process_scheduler_8h_source.html','')
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;        {</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;            <span class="keywordflow">return</span> mTimer;</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;        }</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160; </div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;        <span class="comment">//static thread_local ProcessScheduler::ProcessInfo tlCurrentProcess{nullptr};</span></div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    }</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;}</div>
 <div class="ttc" id="aclassmel_1_1core_1_1_callback_subscriptor_html"><div class="ttname"><a href="classmel_1_1core_1_1_callback_subscriptor.html">mel::core::CallbackSubscriptor</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:351</div></div>
@@ -356,6 +356,7 @@ $(document).ready(function(){initNavTree('_process_scheduler_8h_source.html','')
 <div class="ttc" id="astructmel_1_1tasking_1_1_process_scheduler_1_1_blocking_options_html"><div class="ttname"><a href="structmel_1_1tasking_1_1_process_scheduler_1_1_blocking_options.html">mel::tasking::ProcessScheduler::BlockingOptions</a></div><div class="ttdoc">option for blocking scheduler</div><div class="ttdef"><b>Definition:</b> ProcessScheduler.h:111</div></div>
 <div class="ttc" id="astructmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_options_html"><div class="ttname"><a href="structmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_options.html">mel::tasking::ProcessScheduler::LockFreeOptions</a></div><div class="ttdoc">options for lock_free scheduler</div><div class="ttdef"><b>Definition:</b> ProcessScheduler.h:104</div></div>
 <div class="ttc" id="astructmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_tasks_container_1_1_element_type_html"><div class="ttname"><a href="structmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_tasks_container_1_1_element_type.html">mel::tasking::ProcessScheduler::LockFreeTasksContainer::ElementType</a></div><div class="ttdef"><b>Definition:</b> ProcessScheduler.h:58</div></div>
+<div class="ttc" id="astructmel_1_1tasking_1_1_process_scheduler_1_1_process_info_html"><div class="ttname"><a href="structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html">mel::tasking::ProcessScheduler::ProcessInfo</a></div><div class="ttdef"><b>Definition:</b> ProcessScheduler.h:250</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

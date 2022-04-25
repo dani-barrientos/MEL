@@ -2,6 +2,7 @@ var classmel_1_1tasking_1_1_process_scheduler =
 [
     [ "BlockingOptions", "structmel_1_1tasking_1_1_process_scheduler_1_1_blocking_options.html", null ],
     [ "LockFreeOptions", "structmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_options.html", "structmel_1_1tasking_1_1_process_scheduler_1_1_lock_free_options" ],
+    [ "ProcessInfo", "structmel_1_1tasking_1_1_process_scheduler_1_1_process_info.html", "structmel_1_1tasking_1_1_process_scheduler_1_1_process_info" ],
     [ "ProcessElement", "classmel_1_1tasking_1_1_process_scheduler.html#ae3c1175c26a1b69e6ec589291ce32d74", null ],
     [ "SchedulerOptions", "classmel_1_1tasking_1_1_process_scheduler.html#a32c0039a640d54dcf4ff06309dae69f6", null ],
     [ "TNewProcesses", "classmel_1_1tasking_1_1_process_scheduler.html#a2ab67e4e6b03da9cfc511601be6e9961", null ],

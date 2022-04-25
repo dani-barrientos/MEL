@@ -1,6 +1,7 @@
 var classmel_1_1tasking_1_1_runnable =
 [
     [ "RunnableCreationOptions", "structmel_1_1tasking_1_1_runnable_1_1_runnable_creation_options.html", "structmel_1_1tasking_1_1_runnable_1_1_runnable_creation_options" ],
+    [ "RunnableInfo", "structmel_1_1tasking_1_1_runnable_1_1_runnable_info.html", "structmel_1_1tasking_1_1_runnable_1_1_runnable_info" ],
     [ "Runnable", "classmel_1_1tasking_1_1_runnable.html#ad5c2f5863c6a3d76f143c58c2db8a4d8", null ],
     [ "~Runnable", "classmel_1_1tasking_1_1_runnable.html#ab05d5cc65de706c63326a0e3c5932563", null ],
     [ "execute", "classmel_1_1tasking_1_1_runnable.html#acb42def1c0524e42f9e6a33f3fabfdfb", null ],

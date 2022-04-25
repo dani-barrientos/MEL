@@ -459,7 +459,7 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 
 <p>Mark this process to be eliminated by the process manager. </p>
 <p>Internally, kill calls virtual function <a class="el" href="classmel_1_1tasking_1_1_process.html#a328551bd556eb9cc2e1717693b46cdbc">Process::onKill</a>, which returns true if kill can be acomplished or not. In case of true, then process is put in PREPARED_TO_DIE state, so the scheduler can remove it. In case of false, process is put in a TRYING_TO_KILL state so scheduler will continue to trying to kill it in next iterations. You can know if a process is die checking getDead </p><dl class="section remark"><dt>Remarks</dt><dd>if process is not already inited (state == PREPARED) then onKill is not called </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000014">Todo:</a></b></dt><dd>CAMBIAR ESTO?</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>CAMBIAR ESTO?</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">force</td><td>if true, then killing is without regarding previous explained process, so <a class="el" href="classmel_1_1tasking_1_1_process.html" title="A periodic task, implementing a microthread.">Process</a> go inmediately to PREPARED_TO_DIE</td></tr>
