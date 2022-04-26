@@ -252,7 +252,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;NewExecutorAgent,TRet&gt;</a> result(newAgent);</div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;OldExecutorAgent,TRet&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([result,source](ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([result,source](ValueType&amp; input) <span class="keyword">mutable</span> </div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                {</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;                    <span class="comment">//result.assign(std::move(input));</span></div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;                    result.assign(source);</div>

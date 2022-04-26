@@ -90,6 +90,7 @@ $(document).ready(function(){initNavTree('tasking_constructs.html',''); initResi
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#futures">Futures</a></li>
 <li><a href="#sync_mechanisms">Synchronization mechanisms</a></li>
+<li><a href="#sync_macros">Synchronized functions</a></li>
 </ul>
 <h2><a class="anchor" id="introduction"></a>
 Introduction</h2>
@@ -178,7 +179,7 @@ Futures</h2>
 </div><!-- fragment --><p> This example is a modification of the first one. Here, a Future is created as local to the function and passed to the task in order for this to return a result there. In turn, the task execute another function in the same ThreadRunnable (of course, any other agent could be used). It's important to note, in the line doing <code>auto fut = th-&gt;execute&lt;string&gt;...</code> we don't assign directly to <code>result</code>. The reason is that,the internal data where <code>result</code> is pointing, will be changed and the wait that is being done in the function (the line <code>auto res = mel::core::waitForFutureThread(result)</code>) is waiting for a different data.</p>
 <h2><a class="anchor" id="sync_mechanisms"></a>
 Synchronization mechanisms</h2>
-<p>The usual mechanisms for in-thread communication are avaiable: ::mel::core::event and ::mel::core::CriticalSection. The <em>microthread</em> system has equivalent ones: <a class="el" href="classmel_1_1tasking_1_1_event__mthread.html">mel::tasking::Event_mthread</a> and <a class="el" href="classmel_1_1tasking_1_1_critical_section__mthread.html" title="A critical section for synchronizing microthreads (AKA Process)">mel::tasking::CriticalSection_mthread</a>. Now an example with I think is self-explained </p><div class="fragment"><div class="line"><span class="keywordtype">void</span> _sample3()</div>
+<p>In the same way that inter-thread communication has its syncronization mechanism, as mutex or events, the <em>microthread</em> system has equivalent ones: <a class="el" href="classmel_1_1tasking_1_1_event__mthread.html" title="class similar to Event Class (which is for thread synchronization) but for Process (with Microthread ...">mel::tasking::Event_mthread</a> and <a class="el" href="classmel_1_1tasking_1_1_critical_section__mthread.html" title="A critical section for synchronizing microthreads (AKA Process)">mel::tasking::CriticalSection_mthread</a>. Now an example with I think is self-explained </p><div class="fragment"><div class="line"><span class="keywordtype">void</span> _sample3()</div>
 <div class="line">{</div>
 <div class="line">    Event_mthread event;  </div>
 <div class="line">    CriticalSection_mthread cs;</div>
@@ -212,7 +213,72 @@ Synchronization mechanisms</h2>
 <div class="line">    );</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_html_ae3350d1645cca8cb94f65b1b85dff032"><div class="ttname"><a href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a></div><div class="ttdeci">static ESwitchResult wait(unsigned int msegs) OPTIMIZE_FLAGS</div></div>
-</div><!-- fragment --><p>MEER EJEMPLOS DE ESPERAS FOR FUTURES UN TIEMPO CORTO Y QUE SE LANCE EXEPCEION. LO MISMO CON Event_mthread hablar tambien de Barrier, ThreadPool... ¿o esto para la seccion de tasking o propia de paralelismo? creo que mejor esto ultimo </p>
+</div><!-- fragment --> <h2><a class="anchor" id="sync_macros"></a>
+Synchronized functions macros</h2>
+<p>In many situations, some functions or member functions need to be called in a concrete <a class="el" href="classmel_1_1tasking_1_1_runnable.html">Runnable</a>. For example, is typical in an UI system or graphics engine to be mandatory to execute their functions in a concrete thread. In those cases, the user should know this limitation and take care of that when calling thatthose functions.</p>
+<p>MEL provide the mechanisms to force these functions execution in their mandatory Runnable. For this purpose there are a couple of macros in <a class="el" href="synchronization__macros_8h.html">synchronization_macros.h</a>. As always, let's see an example: </p><div class="fragment"><div class="line">std::shared_ptr&lt;Runnable&gt; sRunnable;  <span class="comment">// created somewhere...</span></div>
+<div class="line"><a class="code" href="synchronization__macros_8h.html#acf032ec40ae26021883725e4b66a6423">SYNCHRONIZED_STATIC</a>( f1,<span class="keywordtype">int</span>,(<span class="keywordtype">int</span>),,sRunnable ) ;    </div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> f1_sync(<span class="keywordtype">int</span> v)  </div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;ERROR in f1!!!!&quot;</span>);</div>
+<div class="line">    <span class="keywordflow">return</span> v + 5;</div>
+<div class="line">}</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">class </span>MyClass</div>
+<div class="line">{</div>
+<div class="line">    <span class="keyword">public</span>:</div>
+<div class="line">        <a class="code" href="synchronization__macros_8h.html#af1d9511834b9e945980e6c1f223fe07b">SYNCHRONIZED_METHOD</a>( f2,<span class="keywordtype">string</span>,(<span class="keywordtype">int</span>,<span class="keywordtype">float</span>),noexcept,sRunnable) ;   </div>
+<div class="line"> </div>
+<div class="line">};</div>
+<div class="line"><span class="keywordtype">string</span> MyClass::f2_sync(<span class="keywordtype">int</span> v1,<span class="keywordtype">float</span> v2) noexcept</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordflow">return</span> <span class="stringliteral">&quot;f2_sync &quot;</span>+std::to_string(v1)+<span class="stringliteral">&quot; &quot;</span>+std::to_string(v2);</div>
+<div class="line">}</div>
+<div class="line"><span class="keywordtype">void</span> _sampleSyncMacros()</div>
+<div class="line">{</div>
+<div class="line">    sRunnable = ThreadRunnable::create(<span class="keyword">true</span>);</div>
+<div class="line">    {</div>
+<div class="line">        mel::text::info(<span class="stringliteral">&quot;Calling static function f1 syncronized with a Runnable&quot;</span>);</div>
+<div class="line">        <span class="keyword">auto</span> r = f1(6);</div>
+<div class="line">        <span class="keywordflow">try</span></div>
+<div class="line">        {</div>
+<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a>(r);</div>
+<div class="line">            mel::text::info(<span class="stringliteral">&quot;Result = {}&quot;</span>,res.value());</div>
+<div class="line">        }</div>
+<div class="line">        <span class="keywordflow">catch</span>(std::exception&amp; e)</div>
+<div class="line">        {</div>
+<div class="line">            mel::text::error(<span class="stringliteral">&quot;Exception!!. {}&quot;</span>,e.what());</div>
+<div class="line">        }</div>
+<div class="line">       </div>
+<div class="line">    }</div>
+<div class="line">    {</div>
+<div class="line">        MyClass obj;</div>
+<div class="line">        mel::text::info(<span class="stringliteral">&quot;Calling static function f2 syncronized with a Runnable&quot;</span>);</div>
+<div class="line">        <span class="keyword">auto</span> r2 = obj.f2(6,9.1f);</div>
+<div class="line">        <span class="keywordflow">try</span></div>
+<div class="line">        {</div>
+<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a>(r2);</div>
+<div class="line">            mel::text::info(<span class="stringliteral">&quot;Result = {}&quot;</span>,res.value());</div>
+<div class="line">        }</div>
+<div class="line">        <span class="keywordflow">catch</span>(std::exception&amp; e)</div>
+<div class="line">        {</div>
+<div class="line">            mel::text::error(<span class="stringliteral">&quot;Exception!!. {}&quot;</span>,e.what());</div>
+<div class="line">        }       </div>
+<div class="line">    }  </div>
+<div class="line">}</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">Output:</div>
+<div class="line"> </div>
+<div class="line">[info] Calling <span class="keyword">static</span> <span class="keyword">function</span> f1 syncronized with a Runnable</div>
+<div class="line">[error] Exception!!. ERROR in f1!!!!</div>
+<div class="line">[info] Calling <span class="keyword">static</span> <span class="keyword">function</span> f2 syncronized with a Runnable</div>
+<div class="line">[info] Result = f2_sync 6 9.100000</div>
+<div class="ttc" id="asynchronization__macros_8h_html_acf032ec40ae26021883725e4b66a6423"><div class="ttname"><a href="synchronization__macros_8h.html#acf032ec40ae26021883725e4b66a6423">SYNCHRONIZED_STATIC</a></div><div class="ttdeci">#define SYNCHRONIZED_STATIC(function_name, TRet, args, qualifiers, runnable)</div><div class="ttdoc">Declare a static function synchronized with a given runnable.</div><div class="ttdef"><b>Definition:</b> synchronization_macros.h:86</div></div>
+<div class="ttc" id="asynchronization__macros_8h_html_af1d9511834b9e945980e6c1f223fe07b"><div class="ttname"><a href="synchronization__macros_8h.html#af1d9511834b9e945980e6c1f223fe07b">SYNCHRONIZED_METHOD</a></div><div class="ttdeci">#define SYNCHRONIZED_METHOD(function_name, TRet, args, qualifiers, runnable)</div><div class="ttdoc">Declare a method synchronized with a given runnable.</div><div class="ttdef"><b>Definition:</b> synchronization_macros.h:110</div></div>
+</div><!-- fragment --><p> In this example we define two functions synchronized with a Runnable called <em>sRunnable</em> (where, when and how is created depends on the concrete application, and it's not shown to not obfuscate the code). This means that, executing those functions will really execute them in the given Runnable. This implies that result should be a <a class="el" href="classmel_1_1core_1_1_future.html">Future</a> because it will be resolved when <em>sRunnable</em> is able to do it, so user can wait for this value in any of the <a class="el" href="tasking_constructs.html#futures_section">wait methods</a></p>
+<p>MEER EJEMPLOS DE ESPERAS FOR FUTURES UN TIEMPO CORTO Y QUE SE LANCE EXEPCEION. LO MISMO CON Event_mthread hablar tambien de Barrier, ThreadPool... ¿o esto para la seccion de tasking o propia de paralelismo? creo que mejor esto ultimo </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

@@ -3,9 +3,8 @@ var namespacemel =
     [ "Posting tasks to runnables", "tasking_system.html#posting_tasks", null ],
     [ "Microthreading", "tasking_system.html#microthreading", null ],
     [ "Terminating tasks", "tasking_system.html#terminating_tasks", null ],
-    [ "Custom task types", "tasking_system.html#custom_tasks", null ],
+    [ "Customized task types", "tasking_system.html#custom_tasks", null ],
     [ "Runnable specialization", "tasking_system.html#runnable_specialization", null ],
-    [ "Synchronization macros", "tasking_system.html#sync_macros", null ],
     [ "Known limitations", "tasking_system.html#limitations", [
       [ "Careful with local variables and microthreads", "tasking_system.html#autotoc_md2", null ],
       [ "Careful with executing tasks in a Runnable", "tasking_system.html#autotoc_md3", null ]
@@ -13,6 +12,7 @@ var namespacemel =
     [ "Introduction", "tasking_constructs.html#introduction", null ],
     [ "Futures", "tasking_constructs.html#futures", null ],
     [ "Synchronization mechanisms", "tasking_constructs.html#sync_mechanisms", null ],
+    [ "Synchronized functions macros", "tasking_constructs.html#sync_macros", null ],
     [ "Usage samples", "execution_system.html#usage_samples", [
       [ "Basic sample", "execution_system.html#basic_sample", null ],
       [ "Using references", "execution_system.html#using_references", null ],
