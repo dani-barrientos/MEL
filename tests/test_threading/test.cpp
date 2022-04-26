@@ -512,8 +512,8 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 	{
 		//meter test bueno como si furrulase
 		constexpr int NUM_POSTS = 100'000;
-		//constexpr int NUM_PRODUCERS = 200;
-		constexpr int NUM_PRODUCERS = 10;
+		//constexpr int NUM_PRODUCERS = 500;
+		constexpr int NUM_PRODUCERS = 7; //in github action increasing this number leads to very high test time
 		sCount = 0;
 		mel::text::info("Concurrent posts with normal sized buffer. Num producers={}, num_posts={}",NUM_PRODUCERS,NUM_POSTS);
 
@@ -562,12 +562,10 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 			mel::text::info("Test concurrent posts OK!!");
 		}
 	}
-	return 0; //avoid next text for debugging purposes
 	{
-		//meter test bueno como si furrulase
 		constexpr int NUM_POSTS = 100'000;
 		//constexpr int NUM_PRODUCERS = 50;
-		constexpr int NUM_PRODUCERS = 1;
+		constexpr int NUM_PRODUCERS = 5;
 		sCount = 0;
 		mel::text::info("Concurrent posts with very small sized buffer. Num producers={}, num_posts={}",NUM_PRODUCERS,NUM_POSTS);
 
@@ -642,7 +640,6 @@ int _testExceptions( tests::BaseTest* test)
 		 [test](RUNNABLE_TASK_PARAMS)
 		 {
 			int val;
-		//	tasking::Process::wait(2000);
 			try
 			{
 				mel::text::info("Task1: Context switch");
@@ -650,6 +647,7 @@ int _testExceptions( tests::BaseTest* test)
 				{
 					mel::text::info("Task1: Throw exception");
 					_throwMyException(val);
+					//_throwExc(val); wn Windows también peta con esto
 					test->setFailed("Task1: After throw exception. Shouldn't occur");
 				}
 				//_throwExc(val);
