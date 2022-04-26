@@ -4,7 +4,6 @@
 Contents of this section:
 - [Introduction] (#introduction)
 - [Usage samples] (#usage_samples)
-- [Advanced example] (#advance_example)
 
 ## Introduction {#introduction}
 The goal of this module is to provide a very high level API for task execution in a generic way, such that is not neccesary to know the underlying execution system.
@@ -161,6 +160,7 @@ This functions could be used as:
  - [Error management](#error_management)
  - [Changing executor](#chaging_executor)
  - [Converging jobs](#converging_jobs)
+ - [Advanced example] (#advance_example)
 
 ### Basic sample	{#basic_sample}
 A simple execution chain. This code consists of three execution steps:

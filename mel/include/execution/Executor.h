@@ -205,7 +205,7 @@ namespace mel
             ExFuture<NewExecutorAgent,TRet> result(newAgent);
             typedef typename ExFuture<OldExecutorAgent,TRet>::ValueType  ValueType;
             source.subscribeCallback(
-                std::function<void( ValueType&)>([result,source](ValueType& input) mutable
+                std::function<void( ValueType&)>([result,source](ValueType& input) mutable 
                 {
                     //result.assign(std::move(input));
                     result.assign(source);

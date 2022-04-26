@@ -57,8 +57,9 @@ add_test(NAME TestThreading.LotsTasks COMMAND main -t threading -n 1)
 add_test(NAME TestThreading.FutureTests COMMAND main -t threading -n 2)
 add_test(NAME TestThreading.LockFree COMMAND main -t threading -n 3)
 add_test(NAME TestThreading.Exceptions COMMAND main -t threading -n 4)
+add_test(NAME TestThreading.ConcurrentPosts COMMAND main -t threading -n 3)
 set_property(TEST RunAll TestCallbacks TestExecution.Launch TestExecution.For  TestThreading.SimpleMicrothreads 
-TestThreading.LotsTasks TestThreading.FutureTests TestThreading.LockFree TestThreading.Exceptions PROPERTY FAIL_REGULAR_EXPRESSION "${failRegex}")
+TestThreading.LotsTasks TestThreading.FutureTests TestThreading.LockFree TestThreading.Exceptions TestThreading.ConcurrentPosts PROPERTY FAIL_REGULAR_EXPRESSION "${failRegex}")
 
 enable_testing() #se supone que no es necesario haciendo luego el include.., pero en algun sitio vi que también lo ponen
 include(CTest) 

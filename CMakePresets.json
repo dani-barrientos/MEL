@@ -203,6 +203,22 @@
                 "verbosity": "verbose",
                 "outputOnFailure": true
             }
+        },
+        {
+            "name": "ThreadingTests",
+            "hidden": true,
+            "filter": {
+                "include": {
+                    "name": "TestThreading"
+                }
+            },
+            "execution": {
+                "stopOnFailure": true
+            },
+            "output": {
+                "verbosity": "verbose",
+                "outputOnFailure": true
+            }
         }
     ]
 }

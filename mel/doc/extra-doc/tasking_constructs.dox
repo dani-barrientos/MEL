@@ -4,6 +4,7 @@ Contents of this section:
 - [Introduction] (#introduction)
 - [Futures] (#futures)
 - [Synchronization mechanisms] (#sync_mechanisms)
+- [Synchronized functions] (#sync_macros)
 
 ## Introduction {#introduction}
 Although the tasking system shown if \ref tasking_system "this section" by itself is a powerful tool, we can provide higher constructs to offer
@@ -111,8 +112,8 @@ is pointing, will be changed and the wait that is being done in the function (th
 data. 
 
 ##Synchronization mechanisms {#sync_mechanisms}
-The usual mechanisms for in-thread communication are avaiable: \ref ::mel::core::event and \ref ::mel::core::CriticalSection. The *microthread* system has equivalent ones:
-\ref ::mel::tasking::Event_mthread and ::mel::tasking::CriticalSection_mthread. 
+In the same way that inter-thread communication has its syncronization mechanism, as mutex or events, the *microthread* system has equivalent ones:
+ ::mel::tasking::Event_mthread and ::mel::tasking::CriticalSection_mthread. 
 Now an example with I think is self-explained
 \code
 void _sample3()
@@ -149,6 +150,76 @@ void _sample3()
     );
 }
 \endcode
+##Synchronized functions macros {#sync_macros}
+In many situations, some functions or member functions need to be called in a concrete \ref mel::tasking::Runnable "Runnable". For example, is typical in an UI system or graphics engine to be
+mandatory to execute their functions in a concrete thread. In those cases, the user should know this limitation and take care of that when calling thatthose functions.
+
+MEL provide the mechanisms to force these functions execution in their mandatory Runnable. For this purpose there are a couple of macros in \ref synchronization_macros.h.
+As always, let's see an example:
+\code{.cpp}
+std::shared_ptr<Runnable> sRunnable;  // created somewhere...
+SYNCHRONIZED_STATIC( f1,int,(int),,sRunnable ) ;    
+
+static int f1_sync(int v)  
+{
+    throw std::runtime_error("ERROR in f1!!!!");
+    return v + 5;
+}
+
+class MyClass
+{
+    public:
+        SYNCHRONIZED_METHOD( f2,string,(int,float),noexcept,sRunnable) ;   
+
+};
+string MyClass::f2_sync(int v1,float v2) noexcept
+{
+    return "f2_sync "+std::to_string(v1)+" "+std::to_string(v2);
+}
+void _sampleSyncMacros()
+{
+    sRunnable = ThreadRunnable::create(true);
+    {
+        mel::text::info("Calling static function f1 syncronized with a Runnable");
+        auto r = f1(6);
+        try
+        {
+            auto res = mel::core::waitForFutureThread(r);
+            mel::text::info("Result = {}",res.value());
+        }
+        catch(std::exception& e)
+        {
+            mel::text::error("Exception!!. {}",e.what());
+        }
+       
+    }
+    {
+        MyClass obj;
+        mel::text::info("Calling static function f2 syncronized with a Runnable");
+        auto r2 = obj.f2(6,9.1f);
+        try
+        {
+            auto res = mel::core::waitForFutureThread(r2);
+            mel::text::info("Result = {}",res.value());
+        }
+        catch(std::exception& e)
+        {
+            mel::text::error("Exception!!. {}",e.what());
+        }       
+    }  
+}
+
+
+Output:
+
+[info] Calling static function f1 syncronized with a Runnable
+[error] Exception!!. ERROR in f1!!!!
+[info] Calling static function f2 syncronized with a Runnable
+[info] Result = f2_sync 6 9.100000
+\endcode
+In this example we define two functions synchronized with a Runnable called *sRunnable* (where, when and how is created depends on the concrete application, and it's not shown
+to not obfuscate the code). This means that, executing those functions will really execute them in the given Runnable. This implies that result should be a \ref mel::core::Future "Future"
+because it will be resolved when *sRunnable* is able to do it, so user can wait for this value in any of the \ref futures_section "wait methods"
 
 MEER EJEMPLOS DE ESPERAS FOR FUTURES UN TIEMPO CORTO Y QUE SE LANCE EXEPCEION. LO MISMO CON Event_mthread
 hablar tambien de Barrier, ThreadPool... ¿o esto para la seccion de tasking o propia de paralelismo? creo que mejor esto ultimo

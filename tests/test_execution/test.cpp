@@ -481,11 +481,10 @@ int _testDebug(tests::BaseTest* test)
 	return 0;
 }
 
-//más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
-//tal vez algun ejemplo serio de verdad como colofon
+//basic test for chain of jobs
+static bool wasError = false;//for testing
 template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
 {
-
 	core::Event event;
 	TestClass pp(8);
 	vector<TestClass> vec;
@@ -493,6 +492,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 	//use a task to make it more complex
 	th->fireAndForget([ex,&event,test,&pp,&vec] () mutable
 	{
+		srand(time(NULL));
 		constexpr tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
 		text::info("Simple functor chaining. using operator | from now");
 		test->clearTextBuffer();
@@ -504,7 +504,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				execution::start(ex)
 				| mel::execution::inmediate(TestClass(initVal,ll)) 				
 				| mel::execution::parallel(
-					[](TestClass& v)
+					[](TestClass& v) noexcept
 					{
 						text::debug("Bulk 1");					
 						auto prevVal = v.val;
@@ -512,21 +512,21 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						tasking::Process::wait(1000);
 						v.val = prevVal + 5;
 					},
-					[](TestClass& v)
+					[](TestClass& v) 
 					{
 						text::debug("Bulk 2");
 						tasking::Process::wait(300);
 						v.val = 12; //Bulk 1 should be the last to execute its assignment 
 					})  
 				| mel::execution::transfer(ex2)  //transfer execution to a different executor
-				| mel::execution::next([test,ll](TestClass& v)
+				| mel::execution::next([test,ll](TestClass& v) noexcept
 				{
 					//text::info("Val = {}",v.value().val);
 					v.val+= 3;
 					return std::move(v); //avoid copy constructor			
 				});
 			//very simple second job
-			auto res1_2 = mel::execution::launch(ex2,[]()
+			auto res1_2 = mel::execution::launch(ex2,[]() noexcept
 			{
 				return "pepe";
 			});
@@ -550,7 +550,6 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		}		
 		test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
 		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
-
 		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 			
 		// 	base form to do the same
@@ -598,14 +597,14 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			try
 			{
 				auto res2 = mel::tasking::waitForFutureMThread(
-					execution::launch(ex,[](TestClass& tc) -> TestClass&
+					execution::launch(ex,[](TestClass& tc) noexcept -> TestClass& 
 					{
 						tc.val = 7;
 						tasking::Process::wait(1000);
 						return tc;
 						//throw std::runtime_error("chiquilin");
 					},std::ref(pp)) 
-					| mel::execution::next([test,ll](TestClass& v) -> TestClass&
+					| mel::execution::next([test,ll](TestClass& v) noexcept-> TestClass&
 					{
 						v.val += 10;
 						return v;
@@ -644,7 +643,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			auto res3 = mel::tasking::waitForFutureMThread(
 				execution::start(ex) 
 				| mel::execution::inmediate(std::ref(vec)) 
-				| mel::execution::next([test,ll](vector<TestClass>& v)->vector<TestClass>&
+				| mel::execution::next([test,ll](vector<TestClass>& v) noexcept ->vector<TestClass>&
 					{				
 						//fill de vector with a simple case for the result to be predecible
 						//I don't want out to log the initial constructions, oncly constructons and after this function
@@ -658,39 +657,41 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						return v;
 					}
 					)
-					| mel::execution::next([](vector<TestClass>& v)->vector<TestClass>&
+					| mel::execution::next([](vector<TestClass>& v) noexcept ->vector<TestClass>&
 					{
 						for(auto& elem:v)
 							++elem.val;						
 						return v;	
 					})
-					| mel::execution::parallel([](vector<TestClass>& v)
-					{					
-						//multiply by 2 the first half								
-						size_t endIdx = v.size()/2;	
-						for(size_t i = 0; i < endIdx;++i )
+					| mel::execution::parallel(
+						[](vector<TestClass>& v) noexcept
+						{					
+							//multiply by 2 the first half								
+							size_t endIdx = v.size()/2;	
+							for(size_t i = 0; i < endIdx;++i )
+							{
+								v[i].val = v[i].val*2.f;	
+							}
+						},
+						[](vector<TestClass>& v) noexcept
 						{
-							v[i].val = v[i].val*2.f;	
+							//multiply by 3 the second half
+							size_t startIdx = v.size()/2;
+							for(size_t i = startIdx; i < v.size();++i )
+							{
+								v[i].val = v[i].val*3.f;
+							}
 						}
-					},
-					[](vector<TestClass>& v)			
-					{
-						//multiply by 3 the second half
-						size_t startIdx = v.size()/2;
-						for(size_t i = startIdx; i < v.size();++i )
-						{
-							v[i].val = v[i].val*3.f;
-						}
-					}) 
+					) 
 					| mel::execution::loop(
 						0,LOOP_SIZE,
-						[](int idx,vector<TestClass>& v)
+						[](int idx,vector<TestClass>& v) noexcept
 						{
 							v[idx].val+=5.f;
 						},1
 					)
 					| mel::execution::next(
-						[](vector<TestClass>& v)->vector<TestClass>&
+						[](vector<TestClass>& v) noexcept->vector<TestClass>&
 						{															
 							for(auto& elem:v)
 								++elem.val;		
@@ -722,14 +723,18 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		//ss.str(""s); //empty stream
 		test->clearTextBuffer();
 		try
-		{
+		{			
+			if ( rand()%10 < 5 )
+				wasError = true;
+			else	
+				wasError = false;
 			auto res4 = mel::tasking::waitForFutureMThread(
 				execution::start(ex) 
 				| mel::execution::next([test,ll]
 				{				
 					return vector<TestClass>();
 				})
-					| mel::execution::next([test,ll](vector<TestClass>& v)
+					| mel::execution::next([test,ll](vector<TestClass>& v) noexcept
 					{				
 						//fill de vector with a simple case for the result to be predecible
 						//I don't want out to log the initial constructions, oncly constructons and after this function
@@ -743,7 +748,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						return std::move(v); 
 					}
 					)
-					| mel::execution::next([](vector<TestClass>& v)
+					| mel::execution::next([](vector<TestClass>& v) noexcept
 					{
 					
 						size_t s = v.size();
@@ -751,36 +756,61 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 							++elem.val;						
 						return std::move(v);	
 					})
-					| mel::execution::parallel([](vector<TestClass>& v)
-					{					
-						//multiply by 2 the first half			
-						size_t endIdx = v.size()/2;	
-						for(size_t i = 0; i < endIdx;++i )
+					| mel::execution::parallel(
+						[](vector<TestClass>& v) 
+						{		
+							//randomly throw exception												
+							if ( wasError )
+							{
+								throw std::runtime_error("random error");
+							}							
+							//multiply by 2 the first half			
+							size_t endIdx = v.size()/2;	
+							for(size_t i = 0; i < endIdx;++i )
+							{
+								v[i].val = v[i].val*2.f;	
+							}
+						},
+						[](vector<TestClass>& v) noexcept
 						{
-							v[i].val = v[i].val*2.f;	
-						}
-					},
-					[](vector<TestClass>& v)			
-					{
-						//multiply by 3 the second half
+							//multiply by 3 the second half
 
-						size_t startIdx = v.size()/2;
-						for(size_t i = startIdx; i < v.size();++i )
-						{
-							v[i].val = v[i].val*3.f;
+							size_t startIdx = v.size()/2;
+							for(size_t i = startIdx; i < v.size();++i )
+							{
+								v[i].val = v[i].val*3.f;
+							}
 						}
-					}) 
+					) 
 					| mel::execution::loop(
 						0,LOOP_SIZE,
-						[](int idx,vector<TestClass>& v)
+						[](int idx,vector<TestClass>& v) noexcept
 						{
 							tasking::Process::wait(100);
 							v[idx].val+=5.f;
 							tasking::Process::wait(2000);
 						},1
 					)
+					|execution::catchError([](std::exception_ptr err) 
+					{
+						try
+						{
+							std::rethrow_exception(err);
+						}catch(std::exception& e)
+						{
+							sCurrentTest->addTextToBuffer("captured error "s+e.what(),tests::BaseTest::LogLevel::None);
+						}
+						catch(...)
+						{
+							sCurrentTest->addTextToBuffer("captured error unknkown"s,tests::BaseTest::LogLevel::None);
+						}
+						
+						//this job capture error is any was thrown in previous jobs, and create a new vector for the next job						
+						vector<TestClass> newVector(10,TestClass(1,tests::BaseTest::LogLevel::None,false));
+						return newVector;
+					})
 					| mel::execution::next(
-						[](vector<TestClass>& v)
+						[](vector<TestClass>& v) noexcept
 						{					
 							for(auto& elem:v)
 							{
@@ -800,8 +830,15 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 			const auto& v = res4.value(); 
 			if ( &v == &vec )
 				test->setFailed("Both vectors NUST NOT be the same ");
-			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-			test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+			if (!wasError)
+			{
+				test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+				test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+			}else
+			{
+				//in case of error, en new vector of size 10 is created, with values initialized to 1, and later incremented in last job
+				test->checkOccurrences("2",10,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+			}
 		}catch( std::exception& e)
 		{
 			text::info("Error = {}",e.what());
@@ -1073,7 +1110,7 @@ template <class F> void _measureTest(string txt,F f, size_t iters,size_t loopSiz
 	text::info("Finished. Time: {}",mean);
 }
 
-auto gTestFunc=[](int idx) OPTIMIZE_FLAGS
+auto gTestFunc=[](int idx) noexcept OPTIMIZE_FLAGS 
 	{
 		//text::debug("iteracion pre {}",idx);
 		::tasking::Process::switchProcess(true);
@@ -1108,7 +1145,7 @@ int _testFor(tests::BaseTest* test)
 	_measureTest("Plain thread, only one",[]
 	{	
 		auto plainThread = std::make_unique<Thread>(
-			[] () OPTIMIZE_FLAGS
+			[] () OPTIMIZE_FLAGS 
 			{
 				for(volatile int i = 0; i < 100000000;++i);					
 				//text::info("Finish plain thread");
@@ -1119,7 +1156,7 @@ int _testFor(tests::BaseTest* test)
 	_measureTest("Plain thread, create/destroy ",[]
 	{	
 		auto plainThread = std::make_unique<Thread>(
-			[]() OPTIMIZE_FLAGS
+			[]() OPTIMIZE_FLAGS 
 			{
 				for(volatile int i = 0; i < 100000000;++i);
 					//text::debug("Plain Thread");

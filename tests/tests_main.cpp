@@ -31,7 +31,7 @@ static void _initialize()
 	test_callbacks::TestCallbacks::registerTest();
 	test_threading::TestThreading::registerTest(); 
 	test_parallelism::TestParallelism::registerTest();
-	test_execution::TestExecution::registerTest();
+	test_execution::TestExecution::registerTest();	
 }
 int testsMain(int argc,const char* argv[])
 {

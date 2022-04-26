@@ -6,9 +6,8 @@ Contents of this section:
 - [Posting tasks] (#posting_tasks)
 - [Microthreading] (#microthreading)
 - [Terminating tasks] (#terminating_tasks)
-- [Custom tasks] (#custom_tasks)
+- [Customized task types] (#custom_tasks)
 - [Runnable specialization] (#runnable_specialization)
-- [Synchronization macros] (#sync_macros)
 - [Known limitations] (#limitations)
 
 ## Introduction {#introduction}
@@ -288,7 +287,7 @@ void _sampleTasking4_ok()
 }
 \endcode
 
-## Custom task types {#custom_tasks}
+## Customized task types {#custom_tasks}
 Although posting tasks to runnables using callables (\ref ::mel::tasking::Runnable::post "post") is very flexible and enoguh in the vast majority of the cases, sometimes more control is needed.
 With the use of \ref mel::tasking::Runnable::postTask "postTask" we can post directly an instance of a  \ref mel::tasking::Process "Process" specialization. In this case, we will need to implemente
 some pure virtual member functions:
@@ -438,76 +437,6 @@ void _sampleCustomRunnable()
 The only thing the Runnable specialization (MyRunnable) has to do, is to call `Runnable::processTasks` which is a protected function not exposed publicy to avoid calling it
 by the users.
 
-##Synchronization macros {#sync_macros}
-In many situations, some functions or member functions need to be called in a concrete Runnable. For example, is typical in a UI system or graphics engine to be obliged to execute
-their functions in a concrete thread. In that cases, the user should know this limitation and take care of that when calling that functions.
-
-MEL provide the mechanisms to force these functions execution in their mandatory Runnable. For this purpose there are a couple of macros in \ref synchronization_macros.h.
-As always, let's see an example:
-\code{.cpp}
-std::shared_ptr<Runnable> sRunnable;  // created somewhere...
-SYNCHRONIZED_STATIC( f1,int,(int),,sRunnable ) ;    
-
-static int f1_sync(int v)  
-{
-    throw std::runtime_error("ERROR in f1!!!!");
-    return v + 5;
-}
-
-class MyClass
-{
-    public:
-        SYNCHRONIZED_METHOD( f2,string,(int,float),noexcept,sRunnable) ;   
-
-};
-string MyClass::f2_sync(int v1,float v2) noexcept
-{
-    return "f2_sync "+std::to_string(v1)+" "+std::to_string(v2);
-}
-void _sampleSyncMacros()
-{
-    sRunnable = ThreadRunnable::create(true);
-    {
-        mel::text::info("Calling static function f1 syncronized with a Runnable");
-        auto r = f1(6);
-        try
-        {
-            auto res = mel::core::waitForFutureThread(r);
-            mel::text::info("Result = {}",res.value());
-        }
-        catch(std::exception& e)
-        {
-            mel::text::error("Exception!!. {}",e.what());
-        }
-       
-    }
-    {
-        MyClass obj;
-        mel::text::info("Calling static function f2 syncronized with a Runnable");
-        auto r2 = obj.f2(6,9.1f);
-        try
-        {
-            auto res = mel::core::waitForFutureThread(r2);
-            mel::text::info("Result = {}",res.value());
-        }
-        catch(std::exception& e)
-        {
-            mel::text::error("Exception!!. {}",e.what());
-        }       
-    }  
-}
-
-
-Output:
-
-[info] Calling static function f1 syncronized with a Runnable
-[error] Exception!!. ERROR in f1!!!!
-[info] Calling static function f2 syncronized with a Runnable
-[info] Result = f2_sync 6 9.100000
-\endcode
-In this example we define two functions synchronized with a Runnable called *sRunnable* (where, when and how is created depends on the concrete application, and it's not shown
-to not obfuscate the code). This means that, executing those functions will really execute them in the given Runnable. This implies that result should be a \ref mel::core::Future "Future"
-because it will be resolved when *sRunnable* is able to do it, so user can wait for this value in any of the \ref futures_section "wait methods"
 
 ##Known limitations {#limitations}
 ### Careful with local variables and microthreads
@@ -532,7 +461,7 @@ because it will be resolved when *sRunnable* is able to do it, so user can wait 
 		},0,Runnable::killFalse);     
     }
  \endcode
-This code does the following: a task launched in *th1* launch another task to the same ThreadRunnable (but any other ThreadRunnable would be valid) passing it *a reference to a local variable*.
+This code does the following: a task launched in *th1* launch another task to the same \ef ::mel::tasking::ThreadRunnable "ThreadRunnable" (but any other ThreadRunnable would be valid) passing it *a reference to a local variable*.
 After that, the first task waits for 5 seconds, so the second task is executed and change the reference variable to a new value.
 The expected result should be:
 \code
@@ -550,7 +479,7 @@ The reason is that, when first task does the *wait*, the stack has been unwund, 
 to a function and a context switch is done. 
 ###Careful with executing tasks in a Runnable
 
-If we change the code in \ref #runnable_specialization and do the following:
+If we change the code in [this section] (#runnable_specialization) and do the following:
 \code
 auto f1 = [&r]
 {

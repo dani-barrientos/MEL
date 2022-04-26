@@ -562,11 +562,12 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 			mel::text::info("Test concurrent posts OK!!");
 		}
 	}
+	return 0; //avoid next text for debugging purposes
 	{
 		//meter test bueno como si furrulase
 		constexpr int NUM_POSTS = 100'000;
-		//constexpr int NUM_PRODUCERS = 50;
-		constexpr int NUM_PRODUCERS = 1;
+		constexpr int NUM_PRODUCERS = 50;
+		//constexpr int NUM_PRODUCERS = 1;
 		sCount = 0;
 		mel::text::info("Concurrent posts with very small sized buffer. Num producers={}, num_posts={}",NUM_PRODUCERS,NUM_POSTS);
 
