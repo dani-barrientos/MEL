@@ -513,7 +513,7 @@ int _test_concurrent_post( ::tests::BaseTest* test)
 		//meter test bueno como si furrulase
 		constexpr int NUM_POSTS = 100'000;
 		//constexpr int NUM_PRODUCERS = 200;
-		constexpr int NUM_PRODUCERS = 15;
+		constexpr int NUM_PRODUCERS = 10;
 		sCount = 0;
 		mel::text::info("Concurrent posts with normal sized buffer. Num producers={}, num_posts={}",NUM_PRODUCERS,NUM_POSTS);
 
