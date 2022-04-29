@@ -165,7 +165,7 @@ namespace mel
 		/**
 		* @brief Wait for a Future from a Thread		
 		*/
-		template<class T> ::mel::core::WaitResult<T> waitForFutureThread(  const mel::core::Future<T>& f,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE)
+		/*template<class T> ::mel::core::WaitResult<T> waitForFutureThread(  const mel::core::Future<T>& f,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE)
 		{
 			using ::mel::core::Event;
 			struct _Receiver
@@ -222,7 +222,93 @@ namespace mel
 				throw mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
 				break;
 			}
-		}	
+			*/
+	        template<class ErrorType = mel::core::WaitErrorAsException,class T> ::mel::core::WaitResult<T> waitForFutureThread(  const mel::core::Future<T>& f,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same<ErrorType,::mel::core::WaitErrorNoException>::value)
+        {
+            constexpr bool NotuseException = std::is_same<ErrorType,::mel::core::WaitErrorNoException>::value;
+            constexpr bool UseException = std::is_same<ErrorType,::mel::core::WaitErrorAsException>::value;
+            static_assert(NotuseException || UseException,"WaitForFutureMThread must specify either WaitErrorNoException or WaitErrorAsException");
+            using ::mel::core::Event;
+			struct _Receiver
+			{		
+				_Receiver():mEvent(false,false){}
+				using futT = mel::core::Future<T>;
+				mel::core::EWaitError wait( const futT& f,unsigned int msecs)
+				{
+					Event::EWaitCode eventresult;				
+					int evId = f.subscribeCallback([this](typename futT::ValueType& ) 
+						{
+							mEvent.set();
+						});				
+					eventresult = mEvent.wait(msecs); 
+					f.unsubscribeCallback(evId);            
+					switch( eventresult )
+					{               
+					case ::mel::core::Event::EVENT_WAIT_OK:
+						return ::mel::core::EWaitError::FUTURE_WAIT_OK;
+						break;
+					case ::mel::core::Event::EVENT_WAIT_TIMEOUT:
+						return ::mel::core::EWaitError::FUTURE_WAIT_TIMEOUT;
+						break;
+					case ::mel::core::Event::EVENT_WAIT_ERROR:
+						return ::mel::core::EWaitError::FUTURE_UNKNOWN_ERROR;
+						break;				
+					default:
+						return ::mel::core::EWaitError::FUTURE_WAIT_OK; //silent warnin
+					}			        
+				}
+				private:
+					mel::core::Event mEvent;
+			};
+			::mel::core::WaitResult result(f);
+			auto receiver = std::make_unique<_Receiver>();
+			mel::core::EWaitError waitRes = receiver->wait(f,msecs);        
+            if constexpr (NotuseException)
+            {
+                switch (waitRes)
+                {
+                case ::mel::core::EWaitError::FUTURE_WAIT_OK:
+                    break;
+                case ::mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
+                    result.setError( std::make_exception_ptr(mel::core::WaitException(mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received")));
+                    break;
+                case ::mel::core::EWaitError::FUTURE_WAIT_TIMEOUT:
+                    result.setError( std::make_exception_ptr(mel::core::WaitException(mel::core::EWaitError::FUTURE_WAIT_TIMEOUT,"Time out exceeded")));
+                    break;
+                case ::mel::core::EWaitError::FUTURE_UNKNOWN_ERROR:
+                    result.setError( std::make_exception_ptr(mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error")));
+                    break;
+                default:
+                    result.setError( std::make_exception_ptr(mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error")));
+                    break;
+                }
+            }else  //verion throwing exception (UseExceptoion == true)
+            {
+                switch (waitRes)
+				{
+				case ::mel::core::EWaitError::FUTURE_WAIT_OK:
+					if ( f.getValue().isValid())
+						return ::mel::core::WaitResult(f);
+					else
+						std::rethrow_exception(f.getValue().error());
+					break;
+				case ::mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL:
+					throw mel::core::WaitException(mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Kill signal received");
+					break;
+				case ::mel::core::EWaitError::FUTURE_WAIT_TIMEOUT:
+					throw mel::core::WaitException(mel::core::EWaitError::FUTURE_RECEIVED_KILL_SIGNAL,"Time out exceeded");
+					break;
+				case ::mel::core::EWaitError::FUTURE_UNKNOWN_ERROR:
+					throw mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
+					break;
+				default:
+					throw mel::core::WaitException(mel::core::EWaitError::FUTURE_UNKNOWN_ERROR,"Unknown error");
+					break;
+				}
+            }
+            return result;
+        }  
+		
 		/**
          * @brief Wait for a \ref ::mel::parallelism::Barrier "barrier" to activated in the context of a thread
          */

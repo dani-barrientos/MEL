@@ -20,14 +20,6 @@ using mel::tasking::Process;
 #include <array>
 
 const std::string TestThreading::TEST_NAME = "threading";
-/**
- * @todo pensar en test neceasrios:
- *  - mono hilo + microhilos
- *  - multihilo +`microhilos
- *  - futures y demas
- * 
- * @return int 
- */
 
 class CustomProcessType : public GenericProcess
 {
@@ -142,6 +134,83 @@ std::atomic<int> sCount(0);
 static int _testsDebug(tests::BaseTest* test)
 {	
 	{
+		auto th1 = ThreadRunnable::create();
+		th1->fireAndForget( []() noexcept
+        {
+            auto th = ThreadRunnable::getCurrentThreadRunnable();
+            auto fut = th->execute<int>( 
+                []()
+                {
+					//pensar también como encajarái esto con establecer el error de otra forma
+					//continuar ejemplo generando otro error distinto que no sea timeout
+					//throw std::runtime_error("PRUEBAAAA");
+					using namespace std::string_literals;
+					throw "prueba string"s;
+					mel::tasking::Process::wait(1000);
+                    return 6;
+                }
+            );
+			//fut.setError("triquimore"s);
+			constexpr bool waitWithException = false;
+			
+			if ( waitWithException)
+			{
+				try
+				{
+					auto res = ::mel::tasking::waitForFutureMThread<::mel::core::WaitErrorAsException>(fut,500); //will wait only for 20 msecs
+					mel::text::info("Result = {}",res.value());					
+				}catch( mel::core::WaitException& e)
+				{
+					mel::text::error("Error waiting. Code {}, Reason = {}",(int)e.getCode(),e.what());
+				}
+				catch(std::exception& e)
+				{
+					mel::text::error("Error waiting for result. Reason = {}",e.what());
+				}
+				catch(string& msg)
+				{
+					mel::text::error("Error waiting for result. Msg = {}",msg);
+				}
+				catch(...)
+				{
+					mel::text::error("Error waiting. Unknown Reason");
+				}
+			}else
+			{
+				auto res = ::mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(fut,500); //will wait only for 20 msecs
+				if ( res.isValid())
+					mel::text::info("Result = {}",res.value());
+				else
+				{
+					//@too el problema es que si quiero dar la posibildiad de que el código sea exception-free, esto no me vale, ¿merece la pena?
+					try
+					{
+						std::rethrow_exception(res.error());
+					}
+					catch(mel::core::WaitException& e)
+					{
+						mel::text::error("Error waiting for result. Err code = {}, Reason = {}",(int)e.getCode(),e.what());
+					}
+					catch(std::exception& e)
+					{
+						mel::text::error("Error waiting for result. Reason = {}",e.what());
+					}
+					catch(string& msg)
+					{
+						mel::text::error("Error waiting for result. Msg = {}",msg);
+					}
+					catch(...)
+					{
+						mel::text::error("Error waiting for result. Unknown exception");
+					}
+					
+				}				
+			}
+        }
+        ,0,Runnable::killFalse
+    );
+	}
+	{
 		//auto th1 = ThreadRunnable::create();
 		Future<int> fut1;
 		Future<int> fut2;
@@ -229,8 +298,8 @@ static int _testsDebug(tests::BaseTest* test)
 			}
 
 			//fut.setValue(10);
-			//fut.setError(std::make_exception_ptr(std::runtime_error("Prueba error")));;
-			fut.setError( "error infame");
+			fut.setError(std::runtime_error("Prueba error"));;
+		//	fut.setError( "error infame");
 			//return ::mel::tasking::EGenericProcessResult::KILL;
 			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::killTrue,1000);
@@ -242,16 +311,29 @@ static int _testsDebug(tests::BaseTest* test)
 			mel::text::debug("CINCO");
 			return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		},Runnable::killTrue,700);
-		try
+/*		try
 		{
-			auto res = mel::core::waitForFutureThread(fut);
-			mel::text::info("Valor = {}",res.value());
-		}catch(std::exception& e)
-		{
-			mel::text::error("exception: {}",e.what());;
-		}catch(...)
+			auto res = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(fut);
+			mel::text::info("Valor = {}",si
 		{
 			mel::text::error("unknown exception");
+		}
+		*/
+		auto res = mel::core::waitForFutureThread<::mel::core::WaitErrorNoException>(fut);
+		if ( res.isValid())
+			mel::text::info("Valor = {}",res.value());
+		else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());
+			}catch(std::exception& e)
+			{
+				mel::text::error("exception: {}",e.what());;
+			}catch(...)
+			{
+				mel::text::error("unknown exception");
+			}
 		}
 		Thread::sleep(11000);		
 		mel::text::info("HECHO");

@@ -18,35 +18,40 @@ tasks between them.
 The first function to stop in is \ref ::mel::tasking::Runnable::execute. This function allows to execute a *calllable* with no input arguments, and returns a future.
 \code
 auto th1 = ThreadRunnable::create();
-    th1->fireAndForget( []()
+Future<string> result;
+th1->fireAndForget( [result]() mutable
+    {
+        auto th = ThreadRunnable::getCurrentThreadRunnable();
+        auto fut = th->execute<string>( 
+            []() noexcept
+            {
+                Process::wait(100);
+                return "Hello";
+            }
+        );
+        try
         {
-            auto th = ThreadRunnable::getCurrentThreadRunnable();
-            Future<int> fut = th->execute<int>( 
-                [](){
-                    Process::wait(100);
-                    return 10;
-                }
-            );
-            try
-            {
-                auto res = waitForFutureMThread(fut);
-                mel::text::info("Result = {}",res.value());
-            }catch( mel::core::WaitException& e)
-            {
-                mel::text::error("Error waiting. Reason = {}",e.what());
-            }
-            catch(...)
-            {
-                mel::text::error("Error waiting. Unknown Reason");
-            }
-
+            auto res = waitForFutureMThread(fut,20); //will wait only for 20 msecs
+            result.setValue(res.value());
+            mel::text::info("Result = {}",res.value());
+        }catch( mel::core::WaitException& e)
+        {
+            result.setValue(std::current_exception());;
+            mel::text::error("Error waiting. Code {}, Reason = {}",(int)e.getCode(),e.what());
         }
-        ,0,Runnable::killFalse
-    );
+        catch(...)
+        {
+            result.setValue(std::current_exception());;
+            mel::text::error("Error waiting. Unknown Reason");
+        }
+    }
+    ,0,Runnable::killFalse
+);
 \endcode
-Explanation: a \ref ::mel::tasking::ThreadRunnable "ThreadRunnable" is posted a task, which execute a task that returns an *int* in some Runnable, in this case, the same ThreadRunnable to show one more timeout
-the cooperative multitasking power of the microthread system. The **Process::wait** is inserted only to be clear that the caller will have to have some timeout
-for the function to be executed.
+Explanation: a \ref ::mel::tasking::ThreadRunnable "ThreadRunnable" is posted a task, which execute another task that returns an *int* in some Runnable, in this case
+the same ThreadRunnable. The first task will wait for the result for 20 milliseconds Because the result is generated 100 milliseconds later (due to the `Process::wait(100)` line), a timeout will occur
+and the code will enter in that first catch.
+
 
 A future holds its value as a shared value such that Futures can be assigned between them, so pointing to the same internal data. This alows using value semantics for Futures.
 So, assigning or copy-construct Futures, makes them to hold the same value.
@@ -60,7 +65,7 @@ With this in mind, we can do things as in the next example:
 \code
 void _sample2()
 {
-    auto th1 = ThreadRunnable::create();
+   auto th1 = ThreadRunnable::create();
     Future<string> result;
     th1->fireAndForget( [result]() mutable
         {
@@ -74,17 +79,17 @@ void _sample2()
             );
             try
             {
-                auto res = waitForFutureMThread(fut,20);
+                auto res = waitForFutureMThread(fut,20); //will wait only for 20 msecs
                 result.setValue(res.value());
                 mel::text::info("Result = {}",res.value());
             }catch( mel::core::WaitException& e)
             {
-                result.setValue(std::current_exception());
-                mel::text::error("Error waiting. Reason = {}",e.what());
+                result.setValue(std::current_exception());;
+                mel::text::error("Error waiting. Code {}, Reason = {}",(int)e.getCode(),e.what());
             }
             catch(...)
             {
-                result.setValue(std::current_exception());
+                result.setValue(std::current_exception());;
                 mel::text::error("Error waiting. Unknown Reason");
             }
         }
@@ -150,7 +155,7 @@ void _sample3()
     );
 }
 \endcode
-##Synchronized functions macros {#sync_macros}
+##Synchronized functions {#sync_macros}
 In many situations, some functions or member functions need to be called in a concrete \ref mel::tasking::Runnable "Runnable". For example, is typical in an UI system or graphics engine to be
 mandatory to execute their functions in a concrete thread. In those cases, the user should know this limitation and take care of that when calling thatthose functions.
 
@@ -220,8 +225,5 @@ Output:
 In this example we define two functions synchronized with a Runnable called *sRunnable* (where, when and how is created depends on the concrete application, and it's not shown
 to not obfuscate the code). This means that, executing those functions will really execute them in the given Runnable. This implies that result should be a \ref mel::core::Future "Future"
 because it will be resolved when *sRunnable* is able to do it, so user can wait for this value in any of the \ref futures_section "wait methods"
-
-MEER EJEMPLOS DE ESPERAS FOR FUTURES UN TIEMPO CORTO Y QUE SE LANCE EXEPCEION. LO MISMO CON Event_mthread
-hablar tambien de Barrier, ThreadPool... ¿o esto para la seccion de tasking o propia de paralelismo? creo que mejor esto ultimo
 
 */

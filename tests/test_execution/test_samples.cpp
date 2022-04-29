@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
 	auto th = ThreadRunnable::create();
-        th->fireAndForget(
+    th->fireAndForget(
             [ex]() mutable {
               try {
                 auto res = ::mel::tasking::waitForFutureMThread(
@@ -267,7 +267,7 @@ void _sampleTransfer()
 		}
 		catch(core::WaitException& e)
 		{
-			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}catch(std::exception& e)
 		{
 			::text::error("Some error occured!! Reason: {}",e.what());
@@ -384,10 +384,83 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 		}
 	},0,::tasking::Runnable::killFalse);
 }
-//más ejemplos: otro empezando con start y un inmediate; referencias,transferencia a executor, gestion errores, que no siempre sea una lambda, que se usen cosas microhililes.....
-//me falta el PARALLEL_CONVERT
-//tal vez algun ejemplo serio de verdad como colofon
+//showing Perfect forwarding in action
+struct SampleClass
+{
+	float val;
+	explicit SampleClass(float v = 0.0):val(v)
+	{
+		::mel::text::info("SampleClass constructor");
+	}	
+	SampleClass(const SampleClass& ob)
+	{
+		val = ob.val;
+		::mel::text::info("SampleClass copy constructor");
+	}
+	SampleClass(SampleClass&& ob)
+	{
+		val = ob.val;
+		ob.val = -1;
+		::mel::text::info("SampleClass move constructor");		
+	}
+	~SampleClass()
+	{
+		::mel::text::info("SampleClass destructor");
+	}
+	SampleClass& operator=(const SampleClass& ob)
+	{
+		val = ob.val;
+		::mel::text::info("SampleClass copy operator=");
+		return *this;
+	}
+	SampleClass& operator=(SampleClass&& ob)
+	{
+		val = ob.val;
+		ob.val = -1;
+		::mel::text::info("SampleClass move operator=");
+		return *this;
+	}
+};
+template <class ExecutorType> void _samplePF(ExecutorType ex)
+{
+	SampleClass cl(5);
+	auto th = ThreadRunnable::create();
+    th->fireAndForget(
+		[ex,&cl]() mutable 
+		{
+			try
+			{
+				auto ref = mel::tasking::waitForFutureMThread(
+					execution::launch(ex, [](SampleClass& input) -> SampleClass&
+					{
+						//Job 1
+						input.val++;
+						return input;  //return reference to input argument
+					},std::ref(cl))
+					| execution::next( [](SampleClass& input)
+					{
+						//Job 2
+						input.val++;
+						return input; //returns a copy, because return type is not specified in lambda
+					} )
+					| execution::next( [](SampleClass& input)
+					{
+						//Job 3
+						input.val++;
+						return std::move(input); //a move move construction
+					})
+				);
+				mel::text::info("Result value = {}",ref.value().val);
+				mel::text::info("Original value = {}",cl.val);
+			}catch(...)
+			{
+				//...
+				mel::text::error("_samplePF unknown error!!!");
+			}
 
+		},0,::tasking::Runnable::killFalse
+	);
+}
 void test_execution::samples()
 {
 	text::set_level(text::level::info);
@@ -400,7 +473,7 @@ void test_execution::samples()
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});
     
-	_sampleBasic(exr);	
+	//_sampleBasic(exr);	
 	//_sampleBasic(extp);
 //	_sampleReference(exr);
 	//_sampleError1(exr);
@@ -408,5 +481,5 @@ void test_execution::samples()
 	//_sampleTransfer();
    // _sampleSeveralFlows(exr,extp);
   // _sampleCallables(extp);
-	text::info("HECHO");
+  	_samplePF(exr);	
 }

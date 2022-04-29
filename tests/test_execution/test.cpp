@@ -1,4 +1,5 @@
 #include "test.h"
+#include "test_debug.h"
 using test_execution::TestExecution;
 #include <tasking/ThreadRunnable.h>
 using mel::tasking::ThreadRunnable;
@@ -15,10 +16,12 @@ using mel::tasking::Process;
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <execution/InlineExecutor.h>
 #include <vector>
 using std::vector;
 #include "test_samples.h"
 using namespace mel;
+
 
 const std::string TestExecution::TEST_NAME = "execution";
 
@@ -179,307 +182,6 @@ public:
 	}
 };
 
-//funcion para pruebas a lo cerdo
-int _testDebug(tests::BaseTest* test)
-{
-	int result = 0;	
-	auto th1 = ThreadRunnable::create(true);	
-	//auto th2 = ThreadRunnable::create(true);	
-	execution::Executor<Runnable> exr(th1);		
-	exr.setOpts({true,false});
-	//now executor for threadpool
-	parallelism::ThreadPool::ThreadPoolOpts opts;
-	auto myPool = make_shared<parallelism::ThreadPool>(opts);
-	parallelism::ThreadPool::ExecutionOpts exopts;
-	execution::Executor<parallelism::ThreadPool> extp(myPool);
-	extp.setOpts({true,true});   
-	sCurrentTest = test;
-	{		
-		{
-			auto f = execution::launch(exr,
-				[test](int arg) noexcept
-				{
-					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-					return TestClass(8);
-				},7)
-			|execution::catchError([](std::exception_ptr err) 
-			{
-				text::info("catchError");
-				return TestClass(9);
-			})
-			| execution::getExecutor([](auto ex)
-			{
-				text::info("getExecutor");
-				text::info("Executor support microthreading={}",execution::ExecutorTraits<decltype(ex)>::has_microthreading);
-				text::info("Executor support parallelism={}",execution::ExecutorTraits<decltype(ex)>::has_parallelism);
-			}) 
-			| execution::next([](TestClass& v) 
-			{
-				//throw std::runtime_error("ERR EN NEXT");
-				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-				text::info("Next tras getExecutor. {}",v.val);				
-			});
-			Thread::sleep(10000);
-		}
-		{	
-
-			auto idc = std::is_default_constructible<TestClass>::value;
-			auto f1 = 
-			execution::launch(extp,
-			[test](int arg) noexcept
-			{
-				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-				return TestClass (8);
-			},7) |
-			execution::next([](TestClass& tc) 
-			{
-				//throw std::runtime_error("ERR EN NEXT");
-				//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-				text::info("Next");
-				return tc;
-			}
-			) 
-			|  mel::execution::parallel(
-				[](TestClass& tc) noexcept 
-				{
-					text::info("B1");					
-					//throw std::runtime_error("ERR EN parallel");
-					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-				}
-				,[](TestClass& tc)  
-				{					
-					//throw std::runtime_error("ERR EN parallel 2");
-					text::info("B2");
-				}
-				)
-			| mel::execution::parallel_convert<std::tuple<int,float>>(
-				[](TestClass& tc) noexcept
-				{
-					::tasking::Process::wait(100);
-					//throw std::runtime_error("ERR EN parallel");
-					return 1;
-				},[](TestClass& tc)
-				{
-					//throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-					return 6.7f;
-				}
-			)
-			| mel::execution::catchError([](std::exception_ptr err) 
-			{
-				//throw std::runtime_error("ERR EN catchError");
-				std::rethrow_exception(err);
-				return std::tuple<int,float>(1,1.1f);
-			})
-			// | mel::execution::catchError([](std::exception_ptr err) noexcept
-			// {
-			// 	return std::tuple<int,float>(2,2.1f);
-			// })
-			| mel::execution::loop(0,10,[](int idx,std::tuple<int,float>& input) noexcept
-			{
-				text::info("Loop it {}. ",idx);
-				// if ( idx == 4 )
-				// 	throw test_execution::MyErrorInfo(idx,"usando MyErrorInfo");
-				std::get<1>(input)=10.4f;
-			})
-			| mel::execution::next([](std::tuple<int,float>& input)
-			{
-				text::info("Values: [{}.{}] ",std::get<0>(input),std::get<1>(input));
-				return TestClass(11);
-			})
-			;
-			// try
-			// {
-			// 	auto res = mel::core::waitForFutureThread(f1);
-			// 	text::info("Wait ok...");
-			// }catch(std::exception& e)
-			// {
-			// 	text::error("Error waiting for result.Reason = {}",e.what());
-			// }
-			// catch(test_execution::MyErrorInfo& e)
-			// {
-			// 	text::error("Error (MyErrorInfo)waiting for result.Reason = {}",e.errorMsg);
-			// }
-			// catch(...)
-			// {
-			// 	text::error("Error waiting for result.Reason = unknown");
-			// }
-			auto f2 = 
-			execution::launch(exr,
-			[]()
-			{
-				//throw std::runtime_error("ERR EN LAUNCH");
-				throw test_execution::MyErrorInfo(0,"usando MyErrorInfo");
-				return "pepe";
-			});
-			
-			auto f3 = mel::execution::on_all(exr,f1,f2);
-			try
-			{
-				auto res = mel::core::waitForFutureThread(f3);
-				const auto& val = res.value();
-				text::info("tras on_all[ {}, {} ]",std::get<0>(val).val,std::get<1>(val));				
-			}
-			catch(execution::OnAllException& e)
-			{
-				text::error("OnAllException: Error {} in element {}.", e.what(),e.getWrongElement());
-				try
-				{
-					std::rethrow_exception(e.getCause());
-				}catch(std::exception& e)
-				{
-					text::error("	Cause = {}",e.what());
-				}
-				catch(test_execution::MyErrorInfo& e)
-				{
-					text::error("	Cause = {}",e.errorMsg);
-				}
-				catch(...)
-				{
-					text::error("	Cause = Unknown");
-				}
-			}
-			catch(std::exception& e)
-			{
-				text::info("Error {}", e.what());
-			}
-			catch(test_execution::MyErrorInfo& e)
-			{
-				text::error("Error (MyErrorInfo)waiting for result.Reason = {}",e.errorMsg);
-			}
-			catch(...)
-			{
-				text::error("Error waiting for result.Reason = unknown");
-			}
-		}
-		int var = 7;
-		auto f_0 = 
-		execution::launch(exr,
-		[](int& arg) noexcept ->int&
-		{
-			//throw std::runtime_error("ERR EN LAUNCH");
-			//throw test_execution::MyErrorInfo(0,"ERR EN LAUNCH");
-			arg=9;
-			return arg;
-		},std::ref(var))	
-		| mel::execution::catchError( [&var](std::exception_ptr err)-> int&
-		{
-			return var;
-		})
-		
-		;
-		/*auto f = f_0 | mel::execution::transfer(extp) | mel::execution::parallel_convert<std::tuple<TestClass,string>>(
-			[test](int n)
-			{
-				//text::info("BULK 1 {}",v);
-				//return v.value()+5;
-				return TestClass(7,test);
-			},
-			[](int n)
-			{
-				//text::info("BULK 2 {}",v);
-				//return v.value()+5;
-				return "pepe";
-			}
-		);*/
-
-		try
-		{
-			auto res = ::mel::core::waitForFutureThread(f_0);
-			//text::info("Value = [{},{}]",std::get<0>(res.value()).val,std::get<1>(res.value()));
-		}catch(std::exception& e)
-		{
-			text::info("ERR = {}",e.what());
-		}
-
-		text::info("FIN");
-	}
-	
-	
-	
-	
-	// {
-	
-	// 	vector<float> vec = {1.0f,20.0f,36.5f};
-		
-	// 	auto kk0 = mel::execution::next(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v) -> vector<float>&
-	// 	{
-	// 		auto& val = v.value();
-	// 		val[1] = 1000.7;
-	// 		//return std::ref(val);
-	// 		return val;
-	// 	}
-	// 	);
-	// 	//auto kk1 = mel::execution::parallel(execution::inmediate(execution::start(exr),std::ref(vec)),[](auto& v)
-	// 	auto kk1 = mel::execution::parallel(kk0,[](auto& v)
-	// 	{
-	// 		auto idx = v.index();
-	// 		//::tasking::Process::switchProcess(true);
-	// 		if ( v.isValid() )	
-	// 			text::info("Runnable Bulk 1 Value = {}",v.value()[0]);
-	// 		else
-	// 			text::info("Runnable Bulk 1 Error = {}",v.error().errorMsg);
-	// 		++v.value()[0];
-	// 	},[](auto& v)
-	// 	{
-	// 		if ( v.isValid() )	
-	// 			text::info("Runnable Bulk 2 Value = {}",v.value()[1]);
-	// 		else
-	// 			text::info("Runnable Bulk 2 Error = {}",v.error().errorMsg);
-	// 		++v.value()[1];
-	// 	},
-	// 	[](auto& v)
-	// 	{
-	// 		if ( v.isValid() )	
-	// 			text::info("Runnable Bulk 3 Value = {}",v.value()[2]);
-	// 		else
-	// 			text::info("Runnable Bulk 3 Error = {}",v.error().errorMsg);
-	// 		++v.value()[2];
-	// 	}
-	// 	);	
-	// 	core::waitForFutureThread(kk1);
-	// 	// auto kk1_1 = mel::execution::next(kk1,[](auto& v)
-	// 	// {
-	// 	// 	text::info("After Bulk");			
-	// 	// 	if ( v.isValid() )
-	// 	// 	{
-	// 	// 		text::info("Value = {}",v.value()[1]);
-	// 	// 		v.value()[1] = 9.7f;
-	// 	// 		//text::info("After parallel value ({},{},{})",std::get<0>(val),std::get<1>(val),std::get<2>(val));
-	// 	// 	}else
-	// 	// 		text::info("After parallel err {}",v.error().errorMsg);
-	// 	// });
-	// 	// mel::core::waitForFutureThread(kk1_1);
-	// 	text::info("After wait");
-	// 	// auto kk2 = mel::execution::loop(kk1,idx0,loopSize,
-	// 	// 	[](int idx,const auto& v)
-	// 	// 	{
-	// 	// 		::tasking::Process::wait(1000);
-	// 	// 		if ( v.isValid() )
-	// 	// 		{
-	// 	// 			const auto& val = v.value();
-	// 	// 			text::info("It {}. Value = {}",idx,std::get<0>(val));				
-	// 	// 		}
-	// 	// 		else
-	// 	// 			text::info("It {}. Error = {}",idx,v.error().errorMsg);											
-	// 	// 	}
-	// 	// );
-	// 	// auto kk3 = mel::execution::next(kk2,[](const auto& v)->int
-	// 	// {								
-	// 	// 	text::info("Launch waiting");
-	// 	// 	if ( ::mel::tasking::Process::wait(5000) != mel::tasking::Process::ESwitchResult::ESWITCH_KILL )
-	// 	// 	{
-	// 	// 		//throw std::runtime_error("Error1");
-	// 	// 		text::info("Launch done");
-	// 	// 	}else
-	// 	// 		text::info("LauncstartIdx
-	// 	// ::mel::core::waitForFutureThread(kk3);
-	// 	text::info("Done!!");
-	// }		
-	
-
-	Thread::sleep(5000);
-	return 0;
-}
 
 //basic test for chain of jobs
 static bool wasError = false;//for testing
@@ -1109,8 +811,12 @@ template <class F> void _measureTest(string txt,F f, size_t iters,size_t loopSiz
 	tests::BaseTest::addMeasurement(txt+" time:",mean);
 	text::info("Finished. Time: {}",mean);
 }
-
-auto gTestFunc=[](int idx) noexcept OPTIMIZE_FLAGS 
+//gcc and clang need different order in atributes
+#if !defined(MEL_X64_GCC) && !defined(MEL_X86_GCC)
+auto gTestFunc=[](int idx) OPTIMIZE_FLAGS noexcept 
+#else 
+auto gTestFunc=[](int idx) noexcept OPTIMIZE_FLAGS  
+#endif
 	{
 		//text::debug("iteracion pre {}",idx);
 		::tasking::Process::switchProcess(true);

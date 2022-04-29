@@ -4,6 +4,7 @@
 Contents of this section:
 - [Introduction] (#introduction)
 - [Usage samples] (#usage_samples)
+- [Perfect forwarding] (#perfect_forwarding)
 
 ## Introduction {#introduction}
 The goal of this module is to provide a very high level API for task execution in a generic way, such that is not neccesary to know the underlying execution system.
@@ -217,13 +218,13 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 }
 \endcode
 Output will be:
-\code{.cpp}
+\verbatim
 Current executor supports true parallelism. Next job will be executed parallelized
 Parallel 1. 16.500000 hello!
 Parallel 2. 16.500000 hi!
 Parallel 2. 16.500000 whats up!
 Result value = 16.500000
-\endcode
+\endverbatim
 
 Although the samples are shown using *lambdas* for clarity, any other callable can be used:
 
@@ -277,12 +278,12 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 }
 \endcode
 And the output will be:
-\code
+\verbatim
 Parallel operator() 17.200001 hi!
 Parallel 2. 17.200001 whats up!
 Parallel 2. 17.200001 hi!
 Result value = 17.200001
-\endcode
+\endverbatim
 In the previous example we see some other callables: member functions, using bind and function object (with operator() ).
 \warning std::bind doesn't preserve **noexcept** specifier ( https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind)- This is an important
 aspect to take into account as is explained in [this section](#error_management)
@@ -334,10 +335,10 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 }
 \endcode
 And the output will be:
-\code{.cpp}
+\verbatim
 Result value = Hello Dani. How are you?Bye!See you!
 Original str = Hello Dani. How are you?Bye!
-\endcode
+\endverbatim
 As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will
  receive a copy.
 Also just as a way to better understanding, the previous code is **functionally equivalent** to this other (redundant parts are removed):
@@ -436,10 +437,10 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 }
 \endcode
 Output will be:
-\code{.cpp}
+\verbatim
 [error] Some error occured!! Reason: This is an error
 [info] Original str = Hello Dani. How are you?
-\endcode
+\endverbatim
 In the previous code, and exception is thrown in the second job, so third and fourth jobs won't be executed. The wait is wrapped with a try/catch and the neccesary
 exceptions are checked.
 Things to take into account:
@@ -502,10 +503,10 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 }
 \endcode
 And the output will be:
-\code{.cpp}
+\verbatim{.cpp}
 [info] Result value = Error caught!! See you!
 [info] Original str = Hello Dani. How are you?
-\endcode
+\endverbatim
 Because the error was captured in the job chain, no exception was thrown. The \ref ::mel::execution::catchError "catchError" function gets an exception as parameter
 and *must return the same type* as the previous job in the chain (because this type is what that job expects . If no exception was launched *before* the catchError call,
 this function will be ignored.
@@ -630,19 +631,116 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 	},0,::tasking::Runnable::killFalse);
 }
 \endcode
-\code{.cpp}
 And the output is:
+\verbatim{.cpp}
 second job, t2
 second job, t1
 First job
 Result value = [First Job,10,(5,8.7)]
-\endcode
+\endverbatim
 Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, **as a tuple**. Also, 
 the third job returns a tuple (this is how \ref ::mel::execution::parallel_convert "parallel_convert" works), and it's shown between parenthesis.
 ### Advanced example {#advance_example}
 We are going to see a more real example with measurements to compare performance in various cases. Follow this \ref execution_sample_advance "link" to explore it
 
+## Perfect forwarding {#perfect_forwarding}
+Perefect-forwarding is tried to be achieved in every argument agument passing between jobs, so avoiding copies as much as possible. The best way to see that is by 
+showing an example. First, we will have a class `TestClass` which will log whenever a constructor/assignment is done. This is:
+\code
+struct SampleClass
+{
+	float val;
+	explicit SampleClass(float v = 0.0):val(v)
+	{
+		::mel::text::info("SampleClass constructor");
+	}	
+	SampleClass(const SampleClass& ob)
+	{
+		val = ob.val;
+		::mel::text::info("SampleClass copy constructor");
+	}
+	SampleClass(SampleClass&& ob)
+	{
+		val = ob.val;
+		ob.val = -1;
+		::mel::text::info("SampleClass move constructor");		
+	}
+	~SampleClass()
+	{
+		::mel::text::info("SampleClass destructor");
+	}
+	SampleClass& operator=(const SampleClass& ob)
+	{
+		val = ob.val;
+		::mel::text::info("SampleClass copy operator=");
+		return *this;
+	}
+	SampleClass& operator=(SampleClass&& ob)
+	{
+		val = ob.val;
+		ob.val = -1;
+		::mel::text::info("SampleClass move operator=");
+		return *this;
+	}
+};
+\endcode
+The code will be:
+\code
+	SampleClass cl(5);
+	auto th = ThreadRunnable::create();
+    th->fireAndForget(
+		[ex,&cl]() mutable 
+		{
+			try
+			{
+				auto ref = mel::tasking::waitForFutureMThread(
+					execution::launch(ex, [](SampleClass& input) -> SampleClass&
+					{
+						//Job 1
+						input.val++;
+						return input;  //return reference to input argument
+					},std::ref(cl))
+					| execution::next( [](SampleClass& input)
+					{
+						//Job 2
+						input.val++;
+						return input; //returns a copy, because return type is not specified in lambda
+					} )
+					| execution::next( [](SampleClass& input)
+					{
+						//Job 3
+						input.val++;
+						return std::move(input); //a move move construction
+					})
+				);
+				mel::text::info("Result value = {}",ref.value().val);
+				mel::text::info("Original value = {}",cl.val);
+			}catch(...)
+			{
+				//...
+				mel::text::error("_samplePF unknown error!!!");
+			}
 
-CONTAR TEMA PERFECT FORWARDING Y COPIAS Y TAL. PONER ALGUN EJMPLO CON CALSE CON CONSTRUCTOR DE COPIA Y QUE SE VEAN LAS COPIAS QUE SE HACEN
+		},0,::tasking::Runnable::killFalse
+	);
+\endcode
+And now the out, in which comments are added to explain where every concrete message comes from:
 
+\verbatim
+SampleClass constructor 		-> contruction of object 'cl'
+SampleClass copy constructor	-> copy construction as result in Job 2
+SampleClass move constructor	-> moved to the new Job 3
+SampleClass destructor			-> destroyed object returned in Job 2
+SampleClass move constructor	->
+SampleClass move constructor 	-> this and the previous neccesary to return object from Job 3 and set final result
+SampleClass destructor			
+SampleClass destructor			 
+Result value = 8				-> end result is a copy of the original 'cl' object
+Original value = 7 				-> value of original 'cl.val', which was modified in jobs 1 & 2
+SampleClass destructor			
+SampleClass destructor
+\endverbatim
+
+As can be seen, perfect forwarding is trying to be applied when possible. One thing to keep in maind is that, because avery job implies launching a task
+to target executor, move constructions are impossible to avoid. This is because the asynchronous nature of the system.
 */

@@ -14,6 +14,7 @@
 #include <variant>
 #include <exception>
 #include <functional>
+#include <mpl/ReturnAdaptor.h>
 namespace mel
 {
 	namespace core
@@ -23,10 +24,10 @@ namespace mel
 		/**
 		* @brief Generic result error codes for future waiting
 		*/
-		enum EWaitError{
-			FUTURE_WAIT_OK = 0,
+		enum class EWaitError :int{
+			FUTURE_WAIT_OK = 0, //!<No error
 			FUTURE_RECEIVED_KILL_SIGNAL = -1, //!<Wait for Future was interrupted because waiting Process was killed
-			FUTURE_WAIT_TIMEOUT = -2, //!<time out expired while waiting for Future
+			FUTURE_WAIT_TIMEOUT = -2, //!<Time out expired while waiting for Future
 			FUTURE_UNKNOWN_ERROR = -3//!<Unknow error while waiting for Future
 		};
 		///@cond HIDDEN_SYMBOLS
@@ -307,7 +308,7 @@ namespace mel
 					{
 						f(mValue);
 					}else
-					{
+					{												
 						result = Subscriptor::subscribeCallback( std::function<::mel::core::ECallbackResult (ValueType&)>([f = std::forward<F>(f)](ValueType& vt)
 							{
 								f(vt);
@@ -316,11 +317,13 @@ namespace mel
 						);
 					}					
 					return result;
-				}
-				template <class F> auto unsubscribeCallback(F&& f)
+				}				
+
+				//because use of lambda, unsubscription can only be done by id (returned by subscribeCallback)
+				auto unsubscribeCallback(int id)
 				{
 					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
-					return Subscriptor::unsubscribeCallback( std::forward<F>(f));
+					return Subscriptor::unsubscribeCallback( id);
 				}
 
 			private:
@@ -369,10 +372,11 @@ namespace mel
 					}
 					return result;
 				}
-				template <class F> auto unsubscribeCallback(F&& f)
+				//because use of lambda, unsubscription can only be done by id (returned by subscribeCallback)
+				auto unsubscribeCallback(int id)
 				{
 					std::scoped_lock<std::recursive_mutex> lck(FutureData_Base::mSC);
-					return Subscriptor::unsubscribeCallback(std::forward<F>(f));
+					return Subscriptor::unsubscribeCallback(id);
 				}
 				ValueType& getValue(){ return mValue;}
 				const ValueType& getValue()const{ return mValue;}
@@ -527,7 +531,7 @@ namespace mel
 			};		
 			Future_Common& operator= (  Future_Common&& f )
 			{
-				_private::Future_Base::operator=(f);
+				_private::Future_Base::operator=( std::move(f));
 				return *this;
 			};
 		public:
@@ -585,10 +589,11 @@ namespace mel
 			}
 			/**
 			 * @brief Unsubscribe given callback		
+			 * @details because use of lambda, unsubscription can only be done by id (returned by subscribeCallback)
 			 */
-			template <class F> auto unsubscribeCallback(F&& f) const
+			int unsubscribeCallback(int id) const
 			{
-				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( std::forward<F>(f));
+				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( id );
 			}
 		private:
 			inline const _private::FutureData<T>& getData() const{ return *static_cast<_private::FutureData<T>*>(mData->getPtr().get()); }
@@ -616,11 +621,11 @@ namespace mel
 			Future( Future&& f ):Future_Common<T>(std::move(f)){};
 			Future(const T& val)
 			{
-				_private::Future_Base::mData = std::make_shared<_private::FutureData<T>>(val);
+				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>(val));				
 			}
 			Future(T&& val)
 			{
-				_private::Future_Base::mData = std::make_shared<_private::FutureData<T>>(std::move(val));
+				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>(std::move(val)));				
 			}
 			Future& operator= ( const Future& f )
 			{
@@ -654,18 +659,16 @@ namespace mel
 			Future( Future&& f ):Future_Common<T&>(std::move(f)){};
 			Future(T& val)
 			{
-				_private::Future_Base::mData = std::make_shared<_private::FutureData<T&>>(val);
+				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T&>>(val));
 			}
-
-
 			Future& operator= ( const Future& f )
 			{
-				Future_Common<T>::operator=(f);
+				Future_Common<T&>::operator=(f);
 				return *this;
 			};		
 			Future& operator= (  Future&& f )
 			{
-				Future_Common<T>::operator=(f);
+				Future_Common<T&>::operator=(std::move(f));
 				return *this;
 			};
 			template <class F>
@@ -702,7 +705,7 @@ namespace mel
 			};		
 			Future& operator= (  Future&& f )
 			{
-				Future_Common<void>::operator=(f);
+				Future_Common<void>::operator=(std::move(f));
 				return *this;
 			};
 			
@@ -724,16 +727,41 @@ namespace mel
 		class WaitException: public std::runtime_error
 		{
 			public:
-				WaitException(int code,const std::string& msg): mCode(code),std::runtime_error(msg){}
-				WaitException(int code,std::string&& msg): mCode(code),std::runtime_error(std::move(msg)){}
-				int getCode() const{ return mCode;}
+				WaitException(EWaitError code,const std::string& msg): mCode(code),std::runtime_error(msg){}
+				WaitException(EWaitError code,std::string&& msg): mCode(code),std::runtime_error(std::move(msg)){}
+				EWaitError getCode() const{ return mCode;}
 			private:
-				int mCode;
+				EWaitError mCode;
 		};
 
 		/** @brief Wrapper for future value after wait
 		 * 
 		**/
+		// template <class T> class WaitResult 
+		// {        
+		// 	public:
+		// 		WaitResult(const mel::core::Future<T>& f):mFut(f){}
+		// 		bool isValid () const
+		// 		{
+		// 			return mFut.getValue().isValid();
+		// 		}
+		// 		typename mel::core::Future<T>::ValueType::CReturnType value() const
+		// 		{				
+		// 			return mFut.getValue().value();			
+		// 		}
+		// 		typename mel::core::Future<T>::ValueType::ReturnType value()
+		// 		{
+		// 			return mFut.getValue().value();
+		// 		}
+		// 		std::exception_ptr error() const{ 
+		// 			return mFut.getValue().error();				
+		// 		}
+		// 		//! @brief access internal just if needed to do excepctional things
+		// 		const mel::core::Future<T>& getFuture() const noexcept{ return mFut;}
+		// 		core::Future<T>& getFuture() noexcept{ return mFut;}
+		// 	private:
+		// 		core::Future<T> mFut;
+		// };
 		template <class T> class WaitResult 
 		{        
 			public:
@@ -751,13 +779,23 @@ namespace mel
 					return mFut.getValue().value();
 				}
 				std::exception_ptr error() const{ 
-					return mFut.getValue().error();				
+					if ( !mErr )
+						return mFut.getValue().error();				
+					else
+						return mErr;
 				}
+				void setError(std::exception_ptr err){mErr = err;}
 				//! @brief access internal just if needed to do excepctional things
 				const mel::core::Future<T>& getFuture() const noexcept{ return mFut;}
 				core::Future<T>& getFuture() noexcept{ return mFut;}
 			private:
 				core::Future<T> mFut;
+				std::exception_ptr mErr{nullptr}; 
 		};
+		//! @brief Policyt for treating error as exception in future wait functions
+		struct WaitErrorAsException{};
+		//! @brief Policyt for not treating error as exception in future wait functions
+        struct WaitErrorNoException{};
+
 	}
 }

@@ -47,8 +47,6 @@ void _sample2()
     th1->fireAndForget( [result]() mutable
         {
             auto th = ThreadRunnable::getCurrentThreadRunnable();
-        //@todo explicar bien esto de n oasignar el future de enrtada!!!
-        //de hecho..¿tendrái sentido gestionarlo de alguna forma??
             auto fut = th->execute<string>( 
                 []() noexcept
                 {
@@ -58,13 +56,13 @@ void _sample2()
             );
             try
             {
-                auto res = waitForFutureMThread(fut,20);
+                auto res = waitForFutureMThread(fut,20); //will wait only for 20 msecs
                 result.setValue(res.value());
                 mel::text::info("Result = {}",res.value());
             }catch( mel::core::WaitException& e)
             {
                 result.setValue(std::current_exception());;
-                mel::text::error("Error waiting. Reason = {}",e.what());
+                mel::text::error("Error waiting. Code {}, Reason = {}",(int)e.getCode(),e.what());
             }
             catch(...)
             {
@@ -529,7 +527,7 @@ void _sampleSyncMacros()
 void test_threading::samples()
 {
     //_sample1();
-    //_sample2();
+    _sample2();
     //_sample3();
  //   _sampleTasking1();
     //_sampleTasking2();
@@ -542,5 +540,5 @@ void test_threading::samples()
  //   _sampleLimitation();
     //_sampleCustomRunnable();
     //_sampleCustomRunnableBad();
-    _sampleSyncMacros();
+    //_sampleSyncMacros();
 }

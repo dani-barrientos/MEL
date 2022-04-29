@@ -21,8 +21,8 @@ namespace mel
             public:
                 ExFuture(const ExFuture& ob):Future<ResultType>(ob),agent(ob.agent){}
                 ExFuture(ExFuture&& ob):Future<ResultType>(std::move(ob)),agent(std::move(ob.agent)){}
-                ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}            
-                ExFuture(Executor<ExecutorAgent> aEx,ResultType& val):Future<ResultType>(val),agent(aEx){}
+                ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}
+                ExFuture(Executor<ExecutorAgent> aEx,const ResultType& val):Future<ResultType>(val),agent(aEx){}
                 ExFuture(Executor<ExecutorAgent> aEx,ResultType&& val):Future<ResultType>(std::move(val)),agent(aEx){}
             
                 ExFuture& operator= ( const ExFuture& f )
@@ -40,6 +40,7 @@ namespace mel
                 Executor<ExecutorAgent> agent; //!< execution agent associated with this instance
             
         };
+      
         ///@cond HIDDEN_SYMBOLS
         //for reference type
         template <typename ExecutorAgent,typename ResultType>

@@ -96,8 +96,7 @@ namespace mel
                 std::function<void( ValueType&)>([fut,result,arg = std::forward<TRet>(arg)](  ValueType& input) mutable
                 {                                 
                     //launch tasks as response for callback for two reasons: manage the case when Future is already available when checked, so callback is trigered
-                    //on calling thread and to decouple tasks and no staturate execution resoruce and independence tasks
-                    //hasta aquí las copias tienen sentido
+                    //on calling thread and to decouple tasks and no saturate execution resource and independence tasks
                     if ( input.isValid() )
                     {                                    
                         launch(fut.agent,[result,arg = std::forward<TRet>(arg)]() mutable noexcept
@@ -110,7 +109,7 @@ namespace mel
                         //set error as task in executor
                         launch(fut.agent,[result,err = std::move(input.error())]( ) mutable noexcept
                         {
-                        result.setError(std::move(err));
+                            result.setError(std::move(err));
                         });
                     }   
                 })
@@ -134,20 +133,19 @@ namespace mel
                 //need to bind de source future to not get lost and input pointing to unknown place                
                 std::function<void( ValueType&)>([source,f = std::forward<F>(f),result](  ValueType& input) mutable
                 {       
-
                     if ( input.isValid() )
-                    {    
+                    {                            
                         source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg&>::value)->TRet 
                         {                                          
                             return f(arg.getValue().value());                         
-                        },source,result);            
+                        },source,result);                                                          
                     }
                     else
                     {
                         //set error as task in executor
                         launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
                         {
-                        result.setError(std::move(err));
+                            result.setError(std::move(err));
                         });
                     }                                        
                 })
@@ -480,7 +478,7 @@ namespace mel
                 TRet arg;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> fut)
                 {
-                    return mel::execution::inmediate(fut,std::forward<TRet>(arg));
+                    return inmediate(fut,std::forward<TRet>(arg));
                 }
             };
             template <class NewExecutionAgent> struct ApplyTransfer
@@ -490,7 +488,7 @@ namespace mel
                 Executor<NewExecutionAgent> newAgent;
                 template <class TRet,class OldExecutionAgent> ExFuture<NewExecutionAgent,TRet> operator()(ExFuture<OldExecutionAgent,TRet> fut)
                 {
-                    return mel::execution::transfer(fut,newAgent);
+                    return transfer(fut,newAgent);
                 }
             };
             template <class F> struct ApplyNext
@@ -500,7 +498,7 @@ namespace mel
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return ::mel::execution::next(inputFut,std::forward<F>(mFunc));
+                    return next(inputFut,std::forward<F>(mFunc));
                 }
             };
             template <class I,class F> struct ApplyLoop
@@ -513,7 +511,7 @@ namespace mel
                 int increment;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return mel::execution::loop(inputFut,begin,end,std::forward<F>(mFunc));
+                    return loop(inputFut,begin,end,std::forward<F>(mFunc));
                 }
             };
             
@@ -524,7 +522,7 @@ namespace mel
                 std::tuple<FTypes...> mFuncs;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return mel::execution::parallel(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                    return parallel(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
             };
             template <class F> struct ApplyError
@@ -534,7 +532,7 @@ namespace mel
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return ::mel::execution::catchError(inputFut,std::forward<F>(mFunc));
+                    return catchError(inputFut,std::forward<F>(mFunc));
                 }
             };
             template <class F> struct ApplyGetExecutor
@@ -544,7 +542,7 @@ namespace mel
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return ::mel::execution::getExecutor(inputFut,std::forward<F>(mFunc));
+                    return getExecutor(inputFut,std::forward<F>(mFunc));
                 }
             };            
             template <int n,class TupleType,class FType> void _on_all(TupleType* tup,::mel::parallelism::Barrier& barrier, FType fut)
@@ -583,7 +581,7 @@ namespace mel
                 std::tuple<FTypes...> mFuncs;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return mel::execution::parallel_convert<ReturnTuple>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                    return parallel_convert<ReturnTuple>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
             };
         }
@@ -638,6 +636,10 @@ namespace mel
         template <class ExecutorAgent,class TRet1,class U> auto operator | (const ExFuture<ExecutorAgent,TRet1>& input,U&& u)
         {
             return u(input);
+        } 
+        template <class ExecutorAgent,class TRet1,class U> auto operator | (ExFuture<ExecutorAgent,TRet1>&& input,U&& u)
+        {
+            return u(std::move(input));
         } 
 
         /**

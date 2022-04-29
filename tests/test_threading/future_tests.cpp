@@ -426,42 +426,63 @@ int test_threading::test_futures( tests::BaseTest* test)
 	return result;
 }
 static tests::BaseTest* currentTest;
-int test_threading::basicTestFutures(tests::BaseTest* test)
+void _f1cb(Future<int>::ValueType& vt)
 {
+	stringstream ss;
+	ss << "(_f1cb) Fut1 set! value = "<<vt.value();
+	currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+}
+void _f2cb(Future<int&>::ValueType& vt)
+{
+	stringstream ss;
+	ss << "(_f2cb) Fut1 set! value = "<<vt.value();
+	currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+}
+void _f3cb(Future<void>::ValueType& vt)
+{
+	stringstream ss;
+	ss << "(_f3cb) Fut1 set! value";
+	currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+}
+int test_threading::basicTestFutures(tests::BaseTest* test)
+{	
 	currentTest = test;
 	{
 		test->clearTextBuffer();
-		//auto th1 = ThreadRunnable::create();
-		Future<int> fut1;
-		Future<int> fut2;
-		Future<int> fut3(fut2);
-		Future<int> fut4;
-		fut1.subscribeCallback( [](Future<int>::ValueType& vt)
+		using FutType = Future<int>;
+		FutType fut1;
+		FutType fut2;
+		FutType fut3(fut2);
+		FutType fut4;
+
+		fut1.subscribeCallback( [](FutType::ValueType& vt)
 		{					
 			stringstream ss;
 			ss << "Fut1 set! value = "<<vt.value();
 			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
 //			mel::text::info("Fut1 set! {}",vt.value());
 		});
-		fut2.subscribeCallback( [](Future<int>::ValueType& vt)
+		int id = fut1.subscribeCallback(_f1cb);//subscribe to another static callback
+		fut2.subscribeCallback( [](FutType::ValueType& vt)
 		{
 			stringstream ss;
 			ss << "Fut2 set! value = "<<vt.value();
 			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
 		});
-		fut3.subscribeCallback( [](Future<int>::ValueType& vt)
+		fut3.subscribeCallback( [](FutType::ValueType& vt)
 		{
 			stringstream ss;
 			ss << "Fut3 set! value = "<<vt.value();
 			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
 		});
-		fut4.subscribeCallback( [](Future<int>::ValueType& vt)
+		fut4.subscribeCallback( [](FutType::ValueType& vt)
 		{
 			stringstream ss;
 			ss << "Fut4 set! "<<vt.value();
 			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
 		});
-		fut1.setValue(6);
+		fut1.unsubscribeCallback(id); //remove previous subscribed callback
+		fut1.setValue(6);		
  		fut2.assign(fut1);		
 		currentTest->checkOccurrences("Fut1 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		currentTest->checkOccurrences("Fut2 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
@@ -481,6 +502,111 @@ int test_threading::basicTestFutures(tests::BaseTest* test)
 		currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
 		currentTest->checkOccurrences("Fut4 value = 6",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
 	//@todo algo más avanzado??
+	}
+	{
+		test->clearTextBuffer();
+		using FutType = Future<int&>;
+		FutType fut1;
+		FutType fut2;
+		FutType fut3(fut2);
+		FutType fut4;
+
+		fut1.subscribeCallback( [](FutType::ValueType& vt)
+		{					
+			stringstream ss;
+			ss << "Fut1 set! value = "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+//			mel::text::info("Fut1 set! {}",vt.value());
+		});
+		int id = fut1.subscribeCallback(_f2cb);//subscribe to another static callback
+		fut2.subscribeCallback( [](FutType::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut2 set! value = "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut3.subscribeCallback( [](FutType::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut3 set! value = "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut4.subscribeCallback( [](FutType::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut4 set! "<<vt.value();
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut1.unsubscribeCallback(id); //remove previous subscribed callback
+		int a = 6;
+		fut1.setValue(a);		
+ 		fut2.assign(fut1);		
+		currentTest->checkOccurrences("Fut1 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut2 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut3 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+
+		stringstream ss;
+		ss << "Fut1 value = "<<fut1.getValue().value()<<'\n';
+		ss << "Fut2 value = "<<fut2.getValue().value()<<'\n';
+		ss << "Fut3 value = "<<fut3.getValue().value()<<'\n';
+		currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		// mel::text::info("Fut1 value = {}",fut1.getValue().value());
+		// mel::text::info("Fut2 value = {}",fut2.getValue().value());
+		// mel::text::info("Fut3 value = {}",fut3.getValue().value());
+		currentTest->checkOccurrences("value = 6",6,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		fut4 = fut1;
+		ss << "Fut4 value = "<<fut4.getValue().value()<<'\n';
+		currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut4 value = 6",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);		
+	//@todo algo más avanzado??
+	}
+	{
+		test->clearTextBuffer();
+		using FutType = Future<void>;
+		FutType fut1;
+		FutType fut2;
+		FutType fut3(fut2);
+		FutType fut4;
+
+		fut1.subscribeCallback( [](FutType::ValueType& vt)
+		{					
+			stringstream ss;
+			ss << "Fut1 set! value";
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+//			mel::text::info("Fut1 set! {}",vt.value());
+		});
+		int id = fut1.subscribeCallback(_f3cb);//subscribe to another static callback
+		fut2.subscribeCallback( [](FutType::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut2 set! value";
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut3.subscribeCallback( [](FutType::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut3 set! value";
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut4.subscribeCallback( [](FutType::ValueType& vt)
+		{
+			stringstream ss;
+			ss << "Fut4 set! ";
+			currentTest->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::Info);
+		});
+		fut1.unsubscribeCallback(id); //remove previous subscribed callback
+		fut1.setValue();		
+ 		fut2.assign(fut1);		
+		currentTest->checkOccurrences("Fut1 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut2 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		currentTest->checkOccurrences("Fut3 set!",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		
+		if ( fut4.getValid())
+			currentTest->setFailed("Fut4 shouldn't be available");
+		fut4 = fut1; 		
+		if ( !fut4.getValid())
+			currentTest->setFailed("Fut4 should be available");
+	
 	}
 	return 0;
 }
