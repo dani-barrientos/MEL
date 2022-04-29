@@ -26,6 +26,6 @@ var namespacemel_1_1tasking =
       [ "KILL", "namespacemel_1_1tasking.html#a96d9377d27d919302df6839559a34a5da3986dd0914958ae2115e0ae7f10beef3", null ]
     ] ],
     [ "waitForBarrierMThread", "namespacemel_1_1tasking.html#ab0522a534c6ddb11108bc01646722960", null ],
-    [ "waitForFutureMThread", "namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca", null ],
+    [ "waitForFutureMThread", "namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b", null ],
     [ "EVENTMT_WAIT_INFINITE", "namespacemel_1_1tasking.html#ab2a1e3a0f223540d0e17a2409d013684", null ]
 ];

@@ -89,6 +89,7 @@ $(document).ready(function(){initNavTree('execution_system.html',''); initResiza
 <div class="textblock"><p>Contents of this section:</p><ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#usage_samples">Usage samples</a></li>
+<li><a href="#perfect_forwarding">Perfect forwarding</a></li>
 </ul>
 <h2><a class="anchor" id="introduction"></a>
 Introduction</h2>
@@ -105,13 +106,13 @@ Introduction</h2>
 <div class="line">}); </div>
 <div class="line"><span class="keywordflow">try</span></div>
 <div class="line">{</div>
-<div class="line">  <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a>(fut); <span class="comment">//depending on the concrete situation where this code is running, maybe use some other mechanism as mel::tasking::waitForFutureMThread or ::mel::core::Future::subscribeCallback</span></div>
+<div class="line">  <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a>(fut); <span class="comment">//depending on the concrete situation where this code is running, maybe use some other mechanism as mel::tasking::waitForFutureMThread or ::mel::core::Future::subscribeCallback</span></div>
 <div class="line">  <span class="comment">//now execute task t2</span></div>
 <div class="line">  <span class="keyword">auto</span> fut2 = th1-&gt;execute&lt;<span class="keywordtype">void</span>&gt;([]()</div>
 <div class="line">  {</div>
 <div class="line">      <span class="comment">//...task t2... </span></div>
 <div class="line">  }); </div>
-<div class="line">  <span class="keyword">auto</span> res2 = <a class="code" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a>(fut2);</div>
+<div class="line">  <span class="keyword">auto</span> res2 = <a class="code" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a>(fut2);</div>
 <div class="line">  <span class="comment">//now execute t3 and t4</span></div>
 <div class="line">  ThreadPool::ThreadPoolOpts opts;      </div>
 <div class="line">  ThreadPool myPool(opts);</div>
@@ -132,7 +133,7 @@ Introduction</h2>
 <div class="line">{</div>
 <div class="line">    <span class="comment">//...manage error..</span></div>
 <div class="line">}  </div>
-<div class="ttc" id="anamespacemel_1_1core_html_a6d42aa88f8243f26b4acd1d336288091"><div class="ttname"><a href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE)</div><div class="ttdoc">Wait for a Future from a Thread</div><div class="ttdef"><b>Definition:</b> Thread.h:168</div></div>
+<div class="ttc" id="anamespacemel_1_1core_html_a104e002cdbc28f6e37b771760742e3b6"><div class="ttname"><a href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType,::mel::core::WaitErrorNoException &gt;::value)</div><div class="ttdoc">Wait for a Future from a Thread</div><div class="ttdef"><b>Definition:</b> Thread.h:226</div></div>
 <div class="ttc" id="anamespacemel_1_1core_html_ad0937af1a6401aa286a06dc047c21d70"><div class="ttname"><a href="namespacemel_1_1core.html#ad0937af1a6401aa286a06dc047c21d70">mel::core::waitForBarrierThread</a></div><div class="ttdeci">MEL_API ::mel::core::Event::EWaitCode waitForBarrierThread(const ::mel::parallelism::Barrier &amp;b, unsigned int msecs=Event::EVENT_WAIT_INFINITE)</div><div class="ttdoc">Wait for a barrier to activated in the context of a thread.</div></div>
 </div><!-- fragment --><p> As can be seen, mel already provides high level tools to facilitate task execution. But, despite of that, it can be hard to manage a complex execution sequence. Think, for example, how to manage error in any point of the chain. And, of course, think how to resolve the same problem only with plain C++ threads...</p>
 <p>Instead, with the <a class="el" href="namespacemel_1_1execution.html">execution system</a>, built on top of those functionalities, we could write something like: </p><div class="fragment"><div class="line"><span class="keyword">auto</span> th1 = ThreadRunnable::create(<span class="keyword">true</span>);    </div>
@@ -169,9 +170,9 @@ Introduction</h2>
 <div class="line">{</div>
 <div class="line"> </div>
 <div class="line">}</div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a00134f8a177ada6961f5f9927816a961"><div class="ttname"><a href="namespacemel_1_1execution.html#a00134f8a177ada6961f5f9927816a961">mel::execution::next</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F, TArg &amp; &gt; &gt; next(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Attach a functor to execute when input fut is complete Given functor will be executed inf the input E...</div><div class="ttdef"><b>Definition:</b> Executor.h:128</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a80bf4bcc9121c697abfe89240f2c5de6"><div class="ttname"><a href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">mel::execution::parallel</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; parallel(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes &amp;&amp;... functions)</div><div class="ttdoc">Execute given functions in a (possibly, depending on concrete executor) parallel way If an exception ...</div><div class="ttdef"><b>Definition:</b> Executor.h:342</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a9c2d394e1f670743253c44823c2e26fc"><div class="ttname"><a href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">mel::execution::transfer</a></div><div class="ttdeci">ExFuture&lt; NewExecutorAgent, TRet &gt; transfer(ExFuture&lt; OldExecutorAgent, TRet &gt; source, Executor&lt; NewExecutorAgent &gt; newAgent)</div><div class="ttdoc">Transfer given ExFuture to a different executor This way, continuations can be chained but executed i...</div><div class="ttdef"><b>Definition:</b> Executor.h:203</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_a00134f8a177ada6961f5f9927816a961"><div class="ttname"><a href="namespacemel_1_1execution.html#a00134f8a177ada6961f5f9927816a961">mel::execution::next</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F, TArg &amp; &gt; &gt; next(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Attach a functor to execute when input fut is complete Given functor will be executed inf the input E...</div><div class="ttdef"><b>Definition:</b> Executor.h:127</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_a80bf4bcc9121c697abfe89240f2c5de6"><div class="ttname"><a href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">mel::execution::parallel</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; parallel(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes &amp;&amp;... functions)</div><div class="ttdoc">Execute given functions in a (possibly, depending on concrete executor) parallel way If an exception ...</div><div class="ttdef"><b>Definition:</b> Executor.h:340</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_a9c2d394e1f670743253c44823c2e26fc"><div class="ttname"><a href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">mel::execution::transfer</a></div><div class="ttdeci">ExFuture&lt; NewExecutorAgent, TRet &gt; transfer(ExFuture&lt; OldExecutorAgent, TRet &gt; source, Executor&lt; NewExecutorAgent &gt; newAgent)</div><div class="ttdoc">Transfer given ExFuture to a different executor This way, continuations can be chained but executed i...</div><div class="ttdef"><b>Definition:</b> Executor.h:201</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_aa15811b945ee6be8ccbfb93fdd66baa7"><div class="ttname"><a href="namespacemel_1_1execution.html#aa15811b945ee6be8ccbfb93fdd66baa7">mel::execution::launch</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F &gt; &gt; launch(Executor&lt; ExecutorAgent &gt; ex, F &amp;&amp;f)</div><div class="ttdoc">Launch given functor in given executor.</div><div class="ttdef"><b>Definition:</b> Executor.h:47</div></div>
 <div class="ttc" id="astructmel_1_1parallelism_1_1_thread_pool_1_1_thread_pool_opts_html"><div class="ttname"><a href="structmel_1_1parallelism_1_1_thread_pool_1_1_thread_pool_opts.html">mel::parallelism::ThreadPool::ThreadPoolOpts</a></div><div class="ttdef"><b>Definition:</b> ThreadPool.h:48</div></div>
 </div><!-- fragment --><p> As can be seen in the example code, the expresiveness and flexibility of this mechanism is far superior. The used executor can be any executor type, the <em>only thing</em> to do (of course, it can be difficult) is to implement the neccesary parts of a new execution system when neccesary (for example, an execution system based on GPU processing). Mel provides two types of executors, the ones used in this example: an executor based on <a class="el" href="classmel_1_1tasking_1_1_runnable.html">runnables</a> and an executor based on a thread pool. Both has microthread capabilities, meaning that the tasks executed in any of then can take advange of cooperative multitasking (see ::Tasking::Process). Some examples will be provided in the next sections trying to describe al the functionalities with simple cases, and showing all the power of this system. As a note, the examples will be shown using de pipe ('|') operator, but the <em>classic</em> form could be used, althoguh is less expresive and hard to read: </p><div class="fragment"><div class="line">[...same as previous example..]</div>
@@ -241,7 +242,7 @@ Basic sample</h3>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line">    th-&gt;fireAndForget([ex] () <span class="keyword">mutable</span></div>
 <div class="line">    {</div>
-<div class="line">        <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">        <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">            execution::launch(ex,[](<span class="keywordtype">float</span> param) noexcept</div>
 <div class="line">            {   </div>
 <div class="line">                <span class="keywordflow">return</span> param+6.f;</div>
@@ -278,14 +279,14 @@ Basic sample</h3>
 <div class="line">        }</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-<div class="ttc" id="anamespacemel_1_1execution_html_adb3e0d12579dd9c19d462ded948ccb68"><div class="ttname"><a href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">mel::execution::getExecutor</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; getExecutor(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Get the Executor used in the chaing of execution.</div><div class="ttdef"><b>Definition:</b> Executor.h:455</div></div>
-<div class="ttc" id="anamespacemel_1_1tasking_html_a980262925f312c4b3cfbadc7a2882eca"><div class="ttname"><a href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">mel::tasking::waitForFutureMThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureMThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=EVENTMT_WAIT_INFINITE)</div><div class="ttdoc">Waits for future completion, returning a wapper around the internal vale.</div><div class="ttdef"><b>Definition:</b> utilities.h:25</div></div>
-</div><!-- fragment --><p> Output will be: </p><div class="fragment"><div class="line">Current executor supports <span class="keyword">true</span> parallelism. Next job will be executed parallelized</div>
-<div class="line">Parallel 1. 16.500000 hello!</div>
-<div class="line">Parallel 2. 16.500000 hi!</div>
-<div class="line">Parallel 2. 16.500000 whats up!</div>
-<div class="line">Result value = 16.500000</div>
-</div><!-- fragment --><p>Although the samples are shown using <em>lambdas</em> for clarity, any other callable can be used:</p>
+<div class="ttc" id="anamespacemel_1_1execution_html_adb3e0d12579dd9c19d462ded948ccb68"><div class="ttname"><a href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">mel::execution::getExecutor</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; getExecutor(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Get the Executor used in the chaing of execution.</div><div class="ttdef"><b>Definition:</b> Executor.h:453</div></div>
+<div class="ttc" id="anamespacemel_1_1tasking_html_adcb60d6784a9c571ee675342fab73f7b"><div class="ttname"><a href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">mel::tasking::waitForFutureMThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureMThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=EVENTMT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType,::mel::core::WaitErrorNoException &gt;::value)</div><div class="ttdoc">Waits for future completion, returning a wapper around the internal vale.</div><div class="ttdef"><b>Definition:</b> utilities.h:94</div></div>
+</div><!-- fragment --><p> Output will be: </p><pre class="fragment">Current executor supports true parallelism. Next job will be executed parallelized
+Parallel 1. 16.500000 hello!
+Parallel 2. 16.500000 hi!
+Parallel 2. 16.500000 whats up!
+Result value = 16.500000
+</pre><p>Although the samples are shown using <em>lambdas</em> for clarity, any other callable can be used:</p>
 <div class="fragment"><div class="line"><span class="keyword">class </span>MyClass</div>
 <div class="line">{</div>
 <div class="line">    <span class="keyword">public</span>:</div>
@@ -310,7 +311,7 @@ Basic sample</h3>
 <div class="line">    th-&gt;fireAndForget([ex,&amp;obj] () <span class="keyword">mutable</span></div>
 <div class="line">    {</div>
 <div class="line"> </div>
-<div class="line">        <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">        <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">            execution::launch(ex,</div>
 <div class="line">                std::bind(&amp;MyClass::f1,&amp;obj,6.7f,_1),10.5f)</div>
 <div class="line">            | <a class="code" href="namespacemel_1_1execution.html#a00134f8a177ada6961f5f9927816a961">mel::execution::next</a>(std::bind(&amp;MyClass::f2,&amp;obj,_1))</div>
@@ -333,11 +334,11 @@ Basic sample</h3>
 <div class="line">        }</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> And the output will be: </p><div class="fragment"><div class="line">Parallel operator() 17.200001 hi!</div>
-<div class="line">Parallel 2. 17.200001 whats up!</div>
-<div class="line">Parallel 2. 17.200001 hi!</div>
-<div class="line">Result value = 17.200001</div>
-</div><!-- fragment --><p> In the previous example we see some other callables: member functions, using bind and function object (with operator() ). </p><dl class="section warning"><dt>Warning</dt><dd>std::bind doesn't preserve <b>noexcept</b> specifier ( <a href="https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind">https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind</a>)- This is an important aspect to take into account as is explained in <a href="#error_management">this section</a> </dd></dl>
+</div><!-- fragment --><p> And the output will be: </p><pre class="fragment">Parallel operator() 17.200001 hi!
+Parallel 2. 17.200001 whats up!
+Parallel 2. 17.200001 hi!
+Result value = 17.200001
+</pre><p> In the previous example we see some other callables: member functions, using bind and function object (with operator() ). </p><dl class="section warning"><dt>Warning</dt><dd>std::bind doesn't preserve <b>noexcept</b> specifier ( <a href="https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind">https://stackoverflow.com/questions/71673262/noexcept-preservation-using-bind</a>)- This is an important aspect to take into account as is explained in <a href="#error_management">this section</a> </dd></dl>
 <h3><a class="anchor" id="using_references"></a>
 Using references</h3>
 <p>In this example, it's shown how to use references to variables. In order to be able to pass a reference to <a class="el" href="namespacemel_1_1execution.html#aa15811b945ee6be8ccbfb93fdd66baa7">launch</a> or to <a class="el" href="namespacemel_1_1execution.html#a26bfe70c6773c309cd8b411db27f115f">inmediate</a> we must use <a href="https://en.cppreference.com/w/cpp/utility/functional/ref">std::ref</a>, because it's not possible to deduce what the user wants only by the type of the parameter. Also, when a function wants to return a reference to the next function in the chain, it's neccesary to indicate it without auto deduction. So, if using a lambda as in the examples, you must specify the return type.</p>
@@ -347,7 +348,7 @@ Using references</h3>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line">    th-&gt;fireAndForget([ex,&amp;str] () <span class="keyword">mutable</span></div>
 <div class="line">    {</div>
-<div class="line">        <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">        <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">            execution::launch(ex,[](<span class="keywordtype">string</span>&amp; str) noexcept -&gt;<span class="keywordtype">string</span>&amp;</div>
 <div class="line">            {   </div>
 <div class="line">                <span class="comment">//First job</span></div>
@@ -380,9 +381,9 @@ Using references</h3>
 <div class="line">        }</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> And the output will be: </p><div class="fragment"><div class="line">Result value = Hello Dani. How are you?Bye!See you!</div>
-<div class="line">Original str = Hello Dani. How are you?Bye!</div>
-</div><!-- fragment --><p> As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will receive a copy. Also just as a way to better understanding, the previous code is <b>functionally equivalent</b> to this other (redundant parts are removed): </p><div class="fragment"><div class="line"><span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+</div><!-- fragment --><p> And the output will be: </p><pre class="fragment">Result value = Hello Dani. How are you?Bye!See you!
+Original str = Hello Dani. How are you?Bye!
+</pre><p> As can be seen, the original string is modified, but only until third job. because this job doesn't return a reference to the next,that fourth job will receive a copy. Also just as a way to better understanding, the previous code is <b>functionally equivalent</b> to this other (redundant parts are removed): </p><div class="fragment"><div class="line"><span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">    <a class="code" href="namespacemel_1_1execution.html#a200611bdc3f3201ce07114f06347f3e0">mel::execution::start</a>(ex)</div>
 <div class="line">    | <a class="code" href="namespacemel_1_1execution.html#a26bfe70c6773c309cd8b411db27f115f">mel::execution::inmediate</a>(std::ref(str))</div>
 <div class="line">    | <a class="code" href="namespacemel_1_1execution.html#a00134f8a177ada6961f5f9927816a961">mel::execution::next</a>([](<span class="keywordtype">string</span>&amp; str) noexcept -&gt;<span class="keywordtype">string</span>&amp;</div>
@@ -415,7 +416,7 @@ Using references</h3>
 </div><!-- fragment --><p> Instead of launching a callable intially, the chain of execution is started with a <a class="el" href="namespacemel_1_1execution.html#a200611bdc3f3201ce07114f06347f3e0">start</a>, followed by a <a class="el" href="namespacemel_1_1execution.html#a26bfe70c6773c309cd8b411db27f115f">inmediate</a>. Although in this example this doesn't improves anything, can be usefull in other situations.</p>
 <h3><a class="anchor" id="error_management"></a>
 Error management</h3>
-<p>This is a very important part and need to be addressed carefully. When using any of the wait functions (<a class="el" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">mel::tasking::waitForFutureMThread</a> or <a class="el" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">mel::core::waitForFutureThread</a>) an exception will be thrown if any error occurs while execution that sequence of jobs the program is waiting for. If this wait mechanisms are not used, the returned <a class="el" href="classmel_1_1execution_1_1_ex_future.html">mel::execution::ExFuture</a> from the execution chain must be checked for error (see <a class="el" href="classmel_1_1core_1_1_future___common.html#a663f1cf52f685b2a8e93e3d00f16ebf3">Future::getValue</a> and <a class="el" href="classmel_1_1core_1_1_future_value.html">mel::core::FutureValue</a>)</p>
+<p>This is a very important part and need to be addressed carefully. When using any of the wait functions (<a class="el" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">mel::tasking::waitForFutureMThread</a> or <a class="el" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a>) an exception will be thrown if any error occurs while execution that sequence of jobs the program is waiting for. If this wait mechanisms are not used, the returned <a class="el" href="classmel_1_1execution_1_1_ex_future.html">mel::execution::ExFuture</a> from the execution chain must be checked for error (see <a class="el" href="classmel_1_1core_1_1_future___common.html#a663f1cf52f685b2a8e93e3d00f16ebf3">Future::getValue</a> and <a class="el" href="classmel_1_1core_1_1_future_value.html">mel::core::FutureValue</a>)</p>
 <p>Let's see an example code:</p>
 <div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleError1(ExecutorType ex)</div>
 <div class="line">{   </div>
@@ -425,7 +426,7 @@ Error management</h3>
 <div class="line">    {</div>
 <div class="line">        <span class="keywordflow">try</span></div>
 <div class="line">        {</div>
-<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">                <a class="code" href="namespacemel_1_1execution.html#aa15811b945ee6be8ccbfb93fdd66baa7">mel::execution::launch</a>(ex,[](<span class="keywordtype">string</span>&amp; str) noexcept -&gt;<span class="keywordtype">string</span>&amp;</div>
 <div class="line">                {   </div>
 <div class="line">                    <span class="comment">//First job</span></div>
@@ -469,9 +470,9 @@ Error management</h3>
 <div class="line">        ::text::info(<span class="stringliteral">&quot;Original str = {}&quot;</span>,str);</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> Output will be: </p><div class="fragment"><div class="line">[error] Some error occured!! Reason: This is an error</div>
-<div class="line">[info] Original str = Hello Dani. How are you?</div>
-</div><!-- fragment --><p> In the previous code, and exception is thrown in the second job, so third and fourth jobs won't be executed. The wait is wrapped with a try/catch and the neccesary exceptions are checked. Things to take into account:</p><ul>
+</div><!-- fragment --><p> Output will be: </p><pre class="fragment">[error] Some error occured!! Reason: This is an error
+[info] Original str = Hello Dani. How are you?
+</pre><p> In the previous code, and exception is thrown in the second job, so third and fourth jobs won't be executed. The wait is wrapped with a try/catch and the neccesary exceptions are checked. Things to take into account:</p><ul>
 <li>If a job won't throw an exception (you have to be sure) you <em>shoud mark this function as <b>noexcept</b></em>. This way, the generated code will be more efficient (mainly in space).</li>
 <li>Of course, yo can throw any type of object and follow the usual rules for exception management.</li>
 <li>the <em>waitForFuture</em> functions will throw a <a class="el" href="classmel_1_1core_1_1_wait_exception.html">WaitException</a> if the wait was unsuccessful, as process killed, timeout,..</li>
@@ -484,7 +485,7 @@ Error management</h3>
 <div class="line">    {</div>
 <div class="line">        <span class="keywordflow">try</span></div>
 <div class="line">        {</div>
-<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">                execution::launch(ex,[](<span class="keywordtype">string</span>&amp; str) noexcept -&gt;<span class="keywordtype">string</span>&amp;</div>
 <div class="line">                {   </div>
 <div class="line">                    <span class="comment">//First job</span></div>
@@ -527,10 +528,11 @@ Error management</h3>
 <div class="line">        ::text::info(<span class="stringliteral">&quot;Original str = {}&quot;</span>,str);</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a60515a3e4bce7adcf1b7ef51c850d3b7"><div class="ttname"><a href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">mel::execution::catchError</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; catchError(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Capture previous error, if any, and execute the function this function works similar to next,...</div><div class="ttdef"><b>Definition:</b> Executor.h:384</div></div>
-</div><!-- fragment --><p> And the output will be: </p><div class="fragment"><div class="line">[info] Result value = Error caught!! See you!</div>
-<div class="line">[info] Original str = Hello Dani. How are you?</div>
-</div><!-- fragment --><p> Because the error was captured in the job chain, no exception was thrown. The <a class="el" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a> function gets an exception as parameter and <em>must return the same type</em> as the previous job in the chain (because this type is what that job expects . If no exception was launched <em>before</em> the catchError call, this function will be ignored.</p>
+<div class="ttc" id="anamespacemel_1_1execution_html_a60515a3e4bce7adcf1b7ef51c850d3b7"><div class="ttname"><a href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">mel::execution::catchError</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; catchError(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Capture previous error, if any, and execute the function this function works similar to next,...</div><div class="ttdef"><b>Definition:</b> Executor.h:382</div></div>
+</div><!-- fragment --><p> And the output will be: </p><pre class="fragment">{.cpp} 
+[info] Result value = Error caught!! See you!
+[info] Original str = Hello Dani. How are you?
+</pre><p> Because the error was captured in the job chain, no exception was thrown. The <a class="el" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a> function gets an exception as parameter and <em>must return the same type</em> as the previous job in the chain (because this type is what that job expects . If no exception was launched <em>before</em> the catchError call, this function will be ignored.</p>
 <h3><a class="anchor" id="chaging_executor"></a>
 Changing executor</h3>
 <p>In this example we will show how to tranfer execution from one executor to another in the same flow. This is acomplished by the function <a class="el" href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">transfer</a>. It's better seen with an example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span> _sampleTransfer()</div>
@@ -548,7 +550,7 @@ Changing executor</h3>
 <div class="line">        </div>
 <div class="line">        <span class="keywordflow">try</span></div>
 <div class="line">        {</div>
-<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(</div>
 <div class="line">                execution::start(exr)</div>
 <div class="line">                | <a class="code" href="namespacemel_1_1execution.html#a26bfe70c6773c309cd8b411db27f115f">mel::execution::inmediate</a>(<span class="stringliteral">&quot;Hello &quot;</span>s)</div>
 <div class="line">                | <a class="code" href="namespacemel_1_1execution.html#a00134f8a177ada6961f5f9927816a961">mel::execution::next</a>( [](<span class="keywordtype">string</span>&amp; str) noexcept</div>
@@ -580,7 +582,7 @@ Changing executor</h3>
 <div class="line">        }</div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-<div class="ttc" id="anamespacemel_1_1execution_html_acbcaf139dc87026232b3816d7ecb256e"><div class="ttname"><a href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">mel::execution::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</div><div class="ttdoc">parallel (possibly, depending on executor capabilities) loop</div><div class="ttdef"><b>Definition:</b> Executor.h:221</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_acbcaf139dc87026232b3816d7ecb256e"><div class="ttname"><a href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">mel::execution::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</div><div class="ttdoc">parallel (possibly, depending on executor capabilities) loop</div><div class="ttdef"><b>Definition:</b> Executor.h:219</div></div>
 </div><!-- fragment --><p> The code consists of two diferent executors, one based on a ThreadRunnable and other based on a ThreadPool. The eecutions start in the ThreadRunnable executor and just before the loop, execution is transferred to the other. </p>
 <h3><a class="anchor" id="converging_jobs"></a>
 Converging several job flows</h3>
@@ -635,7 +637,7 @@ Converging several job flows</h3>
 <div class="line">        <span class="keywordflow">try</span></div>
 <div class="line">        {</div>
 <div class="line">            <span class="comment">//on_all need to be executed in a context of some excutor, so one of them is given</span></div>
-<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#a980262925f312c4b3cfbadc7a2882eca">::mel::tasking::waitForFutureMThread</a>(execution::on_all(ex2,job1,job2,job3));</div>
+<div class="line">            <span class="keyword">auto</span> res = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">::mel::tasking::waitForFutureMThread</a>(execution::on_all(ex2,job1,job2,job3));</div>
 <div class="line">            <span class="comment">//the result of the job merging is as a tuple, where each elements corresponds to the job in same position</span></div>
 <div class="line">            <span class="keyword">auto</span>&amp; val = res.value();</div>
 <div class="line">            ::mel::text::info(<span class="stringliteral">&quot;Result value = [{},{},({},{})]&quot;</span>,std::get&lt;0&gt;(val),std::get&lt;1&gt;(val),std::get&lt;0&gt;(std::get&lt;2&gt;(val)),std::get&lt;1&gt;(std::get&lt;2&gt;(val)));</div>
@@ -647,16 +649,104 @@ Converging several job flows</h3>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_html_ae3350d1645cca8cb94f65b1b85dff032"><div class="ttname"><a href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a></div><div class="ttdeci">static ESwitchResult wait(unsigned int msegs) OPTIMIZE_FLAGS</div></div>
-</div><!-- fragment --> <div class="fragment"><div class="line">And the output is:</div>
-<div class="line">second job, t2</div>
-<div class="line">second job, t1</div>
-<div class="line">First job</div>
-<div class="line">Result value = [First Job,10,(5,8.7)]</div>
-</div><!-- fragment --><p> Again, only for educational purposes, some <em>microthread</em> waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, <b>as a tuple</b>. Also, the third job returns a tuple (this is how <a class="el" href="namespacemel_1_1execution.html#a4d64fe832803619def6318b0f715de49">parallel_convert</a> works), and it's shown between parenthesis. </p>
+</div><!-- fragment --><p> And the output is: </p><pre class="fragment">{.cpp} 
+second job, t2
+second job, t1
+First job
+Result value = [First Job,10,(5,8.7)]
+</pre><p> Again, only for educational purposes, some <em>microthread</em> waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, <b>as a tuple</b>. Also, the third job returns a tuple (this is how <a class="el" href="namespacemel_1_1execution.html#a4d64fe832803619def6318b0f715de49">parallel_convert</a> works), and it's shown between parenthesis. </p>
 <h3><a class="anchor" id="advance_example"></a>
 Advanced example</h3>
 <p>We are going to see a more real example with measurements to compare performance in various cases. Follow this <a class="el" href="execution_sample_advance.html">link</a> to explore it</p>
-<p>CONTAR TEMA PERFECT FORWARDING Y COPIAS Y TAL. PONER ALGUN EJMPLO CON CALSE CON CONSTRUCTOR DE COPIA Y QUE SE VEAN LAS COPIAS QUE SE HACEN </p>
+<h2><a class="anchor" id="perfect_forwarding"></a>
+Perfect forwarding</h2>
+<p>Perefect-forwarding is tried to be achieved in every argument agument passing between jobs, so avoiding copies as much as possible. The best way to see that is by showing an example. First, we will have a class <code>TestClass</code> which will log whenever a constructor/assignment is done. This is: </p><div class="fragment"><div class="line"><span class="keyword">struct </span>SampleClass</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordtype">float</span> val;</div>
+<div class="line">    <span class="keyword">explicit</span> SampleClass(<span class="keywordtype">float</span> v = 0.0):val(v)</div>
+<div class="line">    {</div>
+<div class="line">        ::mel::text::info(<span class="stringliteral">&quot;SampleClass constructor&quot;</span>);</div>
+<div class="line">    }   </div>
+<div class="line">    SampleClass(<span class="keyword">const</span> SampleClass&amp; ob)</div>
+<div class="line">    {</div>
+<div class="line">        val = ob.val;</div>
+<div class="line">        ::mel::text::info(<span class="stringliteral">&quot;SampleClass copy constructor&quot;</span>);</div>
+<div class="line">    }</div>
+<div class="line">    SampleClass(SampleClass&amp;&amp; ob)</div>
+<div class="line">    {</div>
+<div class="line">        val = ob.val;</div>
+<div class="line">        ob.val = -1;</div>
+<div class="line">        ::mel::text::info(<span class="stringliteral">&quot;SampleClass move constructor&quot;</span>);      </div>
+<div class="line">    }</div>
+<div class="line">    ~SampleClass()</div>
+<div class="line">    {</div>
+<div class="line">        ::mel::text::info(<span class="stringliteral">&quot;SampleClass destructor&quot;</span>);</div>
+<div class="line">    }</div>
+<div class="line">    SampleClass&amp; operator=(<span class="keyword">const</span> SampleClass&amp; ob)</div>
+<div class="line">    {</div>
+<div class="line">        val = ob.val;</div>
+<div class="line">        ::mel::text::info(<span class="stringliteral">&quot;SampleClass copy operator=&quot;</span>);</div>
+<div class="line">        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line">    }</div>
+<div class="line">    SampleClass&amp; operator=(SampleClass&amp;&amp; ob)</div>
+<div class="line">    {</div>
+<div class="line">        val = ob.val;</div>
+<div class="line">        ob.val = -1;</div>
+<div class="line">        ::mel::text::info(<span class="stringliteral">&quot;SampleClass move operator=&quot;</span>);</div>
+<div class="line">        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line">    }</div>
+<div class="line">};</div>
+</div><!-- fragment --><p> The code will be: </p><div class="fragment"><div class="line">SampleClass cl(5);</div>
+<div class="line"><span class="keyword">auto</span> th = ThreadRunnable::create();</div>
+<div class="line">th-&gt;fireAndForget(</div>
+<div class="line">    [ex,&amp;cl]() <span class="keyword">mutable</span> </div>
+<div class="line">    {</div>
+<div class="line">        <span class="keywordflow">try</span></div>
+<div class="line">        {</div>
+<div class="line">            <span class="keyword">auto</span> ref = <a class="code" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">mel::tasking::waitForFutureMThread</a>(</div>
+<div class="line">                execution::launch(ex, [](SampleClass&amp; input) -&gt; SampleClass&amp;</div>
+<div class="line">                {</div>
+<div class="line">                    <span class="comment">//Job 1</span></div>
+<div class="line">                    input.val++;</div>
+<div class="line">                    <span class="keywordflow">return</span> input;  <span class="comment">//return reference to input argument</span></div>
+<div class="line">                },std::ref(cl))</div>
+<div class="line">                | execution::next( [](SampleClass&amp; input)</div>
+<div class="line">                {</div>
+<div class="line">                    <span class="comment">//Job 2</span></div>
+<div class="line">                    input.val++;</div>
+<div class="line">                    <span class="keywordflow">return</span> input; <span class="comment">//returns a copy, because return type is not specified in lambda</span></div>
+<div class="line">                } )</div>
+<div class="line">                | execution::next( [](SampleClass&amp; input)</div>
+<div class="line">                {</div>
+<div class="line">                    <span class="comment">//Job 3</span></div>
+<div class="line">                    input.val++;</div>
+<div class="line">                    <span class="keywordflow">return</span> std::move(input); <span class="comment">//a move move construction</span></div>
+<div class="line">                })</div>
+<div class="line">            );</div>
+<div class="line">            mel::text::info(<span class="stringliteral">&quot;Result value = {}&quot;</span>,ref.value().val);</div>
+<div class="line">            mel::text::info(<span class="stringliteral">&quot;Original value = {}&quot;</span>,cl.val);</div>
+<div class="line">        }<span class="keywordflow">catch</span>(...)</div>
+<div class="line">        {</div>
+<div class="line">            <span class="comment">//...</span></div>
+<div class="line">            mel::text::error(<span class="stringliteral">&quot;_samplePF unknown error!!!&quot;</span>);</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">    },0,::tasking::Runnable::killFalse</div>
+<div class="line">);</div>
+</div><!-- fragment --><p> And now the out, in which comments are added to explain where every concrete message comes from:</p>
+<pre class="fragment">SampleClass constructor         -&gt; contruction of object 'cl'
+SampleClass copy constructor    -&gt; copy construction as result in Job 2
+SampleClass move constructor    -&gt; moved to the new Job 3
+SampleClass destructor          -&gt; destroyed object returned in Job 2
+SampleClass move constructor    -&gt;
+SampleClass move constructor    -&gt; this and the previous neccesary to return object from Job 3 and set final result
+SampleClass destructor          
+SampleClass destructor           
+Result value = 8                -&gt; end result is a copy of the original 'cl' object
+Original value = 7              -&gt; value of original 'cl.val', which was modified in jobs 1 &amp; 2
+SampleClass destructor          
+SampleClass destructor
+</pre><p>As can be seen, perfect forwarding is trying to be applied when possible. One thing to keep in maind is that, because avery job implies launching a task to target executor, move constructions are impossible to avoid. This is because the asynchronous nature of the system. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

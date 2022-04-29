@@ -17,6 +17,8 @@ var namespacemel_1_1core =
     [ "Future", "classmel_1_1core_1_1_future.html", "classmel_1_1core_1_1_future" ],
     [ "WaitException", "classmel_1_1core_1_1_wait_exception.html", "classmel_1_1core_1_1_wait_exception" ],
     [ "WaitResult", "classmel_1_1core_1_1_wait_result.html", "classmel_1_1core_1_1_wait_result" ],
+    [ "WaitErrorAsException", "structmel_1_1core_1_1_wait_error_as_exception.html", null ],
+    [ "WaitErrorNoException", "structmel_1_1core_1_1_wait_error_no_exception.html", null ],
     [ "Singleton", "classmel_1_1core_1_1_singleton.html", "classmel_1_1core_1_1_singleton" ],
     [ "Singleton_Multithread_Policy", "classmel_1_1core_1_1_singleton___multithread___policy.html", "classmel_1_1core_1_1_singleton___multithread___policy" ],
     [ "Singleton_Singlethread_Policy", "classmel_1_1core_1_1_singleton___singlethread___policy.html", "classmel_1_1core_1_1_singleton___singlethread___policy" ],
@@ -41,11 +43,11 @@ var namespacemel_1_1core =
       [ "TP_HIGHEST", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca7982db93468f0d087376aa8d78e47c3c", null ],
       [ "TP_NONE", "namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123caa3d42242f77431f31bec7a4e1b684104", null ]
     ] ],
-    [ "EWaitError", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0f", [
-      [ "FUTURE_WAIT_OK", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa83986358cd8763d91a67b594a1d5aef5", null ],
-      [ "FUTURE_RECEIVED_KILL_SIGNAL", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa2e9086b6513094ab1122bb5fed496987", null ],
-      [ "FUTURE_WAIT_TIMEOUT", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa3d2caf80bfb6686189b84503219aa230", null ],
-      [ "FUTURE_UNKNOWN_ERROR", "namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa0d30ed04c89c9d65e027912674b4ff33", null ]
+    [ "EWaitError", "namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc", [
+      [ "FUTURE_WAIT_OK", "namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93", null ],
+      [ "FUTURE_RECEIVED_KILL_SIGNAL", "namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c", null ],
+      [ "FUTURE_WAIT_TIMEOUT", "namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcab7393339e32e5c9f190e313d075af9bc", null ],
+      [ "FUTURE_UNKNOWN_ERROR", "namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcac710656fa6f6762bed81f03f94aa54de", null ]
     ] ],
     [ "SubscriptionEmplacement", "namespacemel_1_1core.html#a8cf66608d9b44d5bc8ed22a87a4b2d7b", [
       [ "SE_BACK", "namespacemel_1_1core.html#a8cf66608d9b44d5bc8ed22a87a4b2d7baeac5acaac92d6536333a36ebce3669ee", null ],
@@ -57,7 +59,7 @@ var namespacemel_1_1core =
     [ "makeEvent", "namespacemel_1_1core.html#abf9c56fbb686391f089a68b01c028031", null ],
     [ "setAffinity", "namespacemel_1_1core.html#a7cb07e488de9020e58a113c688f9b76d", null ],
     [ "waitForBarrierThread", "namespacemel_1_1core.html#ad0937af1a6401aa286a06dc047c21d70", null ],
-    [ "waitForFutureThread", "namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091", null ],
+    [ "waitForFutureThread", "namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6", null ],
     [ "use_function", "namespacemel_1_1core.html#a56e0fef63ae272cda09d904b40453073", null ],
     [ "use_functor", "namespacemel_1_1core.html#a6750d6f791ca5f50b06ee08b3aa39f06", null ]
 ];

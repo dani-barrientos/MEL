@@ -139,6 +139,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_wait_result.html">WaitResult</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper for future value after wait.  <a href="classmel_1_1core_1_1_wait_result.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmel_1_1core_1_1_wait_error_as_exception.html">WaitErrorAsException</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Policyt for treating error as exception in future wait functions.  <a href="structmel_1_1core_1_1_wait_error_as_exception.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmel_1_1core_1_1_wait_error_no_exception.html">WaitErrorNoException</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Policyt for not treating error as exception in future wait functions.  <a href="structmel_1_1core_1_1_wait_error_no_exception.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_singleton.html">Singleton</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_singleton___multithread___policy.html">Singleton_Multithread_Policy</a></td></tr>
@@ -172,13 +178,13 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:aa2a125e0f16e14641d995c0675f79992"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type resturned by callbacks subscribed to CallbackSubscriptors. <br /></td></tr>
 <tr class="separator:aa2a125e0f16e14641d995c0675f79992"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78e61657fe4f901a8d397f7288e59a0f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0f">EWaitError</a> { <b>FUTURE_WAIT_OK</b> = 0
-, <a class="el" href="namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa2e9086b6513094ab1122bb5fed496987">FUTURE_RECEIVED_KILL_SIGNAL</a> = -1
-, <a class="el" href="namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa3d2caf80bfb6686189b84503219aa230">FUTURE_WAIT_TIMEOUT</a> = -2
-, <a class="el" href="namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0fa0d30ed04c89c9d65e027912674b4ff33">FUTURE_UNKNOWN_ERROR</a> = -3
+<tr class="memitem:aee1b7838db4746c987db058df234dbbc"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">EWaitError</a> : int { <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93">FUTURE_WAIT_OK</a> = 0
+, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c">FUTURE_RECEIVED_KILL_SIGNAL</a> = -1
+, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcab7393339e32e5c9f190e313d075af9bc">FUTURE_WAIT_TIMEOUT</a> = -2
+, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcac710656fa6f6762bed81f03f94aa54de">FUTURE_UNKNOWN_ERROR</a> = -3
  }</td></tr>
-<tr class="memdesc:a78e61657fe4f901a8d397f7288e59a0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic result error codes for future waiting.  <a href="namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0f">More...</a><br /></td></tr>
-<tr class="separator:a78e61657fe4f901a8d397f7288e59a0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memdesc:aee1b7838db4746c987db058df234dbbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic result error codes for future waiting.  <a href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">More...</a><br /></td></tr>
+<tr class="separator:aee1b7838db4746c987db058df234dbbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8619e3d15e44b60d9d39823e34d2fc3"><td class="memItemLeft" align="right" valign="top"><a id="aa8619e3d15e44b60d9d39823e34d2fc3"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>EFutureState</b> { <b>NOTAVAILABLE</b>
 , <b>VALID</b>
 , <b>INVALID</b>
@@ -213,12 +219,12 @@ MEL_API uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>getProces
 MEL_API bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a7cb07e488de9020e58a113c688f9b76d">setAffinity</a> (uint64_t)</td></tr>
 <tr class="memdesc:a7cb07e488de9020e58a113c688f9b76d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set affinity for current thread. <br /></td></tr>
 <tr class="separator:a7cb07e488de9020e58a113c688f9b76d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d42aa88f8243f26b4acd1d336288091"><td class="memTemplParams" colspan="2"><a id="a6d42aa88f8243f26b4acd1d336288091"></a>
-template&lt;class T &gt; </td></tr>
-<tr class="memitem:a6d42aa88f8243f26b4acd1d336288091"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a6d42aa88f8243f26b4acd1d336288091">waitForFutureThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE)</td></tr>
-<tr class="memdesc:a6d42aa88f8243f26b4acd1d336288091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> from a <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> <br  />
+<tr class="memitem:a104e002cdbc28f6e37b771760742e3b6"><td class="memTemplParams" colspan="2"><a id="a104e002cdbc28f6e37b771760742e3b6"></a>
+template&lt;class ErrorType  = mel::core::WaitErrorAsException, class T &gt; </td></tr>
+<tr class="memitem:a104e002cdbc28f6e37b771760742e3b6"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">waitForFutureThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType,::<a class="el" href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a> &gt;::value)</td></tr>
+<tr class="memdesc:a104e002cdbc28f6e37b771760742e3b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> from a <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> <br  />
  <br /></td></tr>
-<tr class="separator:a6d42aa88f8243f26b4acd1d336288091"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a104e002cdbc28f6e37b771760742e3b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0937af1a6401aa286a06dc047c21d70"><td class="memItemLeft" align="right" valign="top"><a id="ad0937af1a6401aa286a06dc047c21d70"></a>
 MEL_API ::<a class="el" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">mel::core::Event::EWaitCode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#ad0937af1a6401aa286a06dc047c21d70">waitForBarrierThread</a> (const ::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a> &amp;b, unsigned int msecs=Event::EVENT_WAIT_INFINITE)</td></tr>
 <tr class="memdesc:ad0937af1a6401aa286a06dc047c21d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1parallelism_1_1_barrier.html">barrier</a> to activated in the context of a thread. <br /></td></tr>
@@ -273,25 +279,35 @@ static const <a class="el" href="structmel_1_1core_1_1use__function__t.html">use
 
 </div>
 </div>
-<a id="a78e61657fe4f901a8d397f7288e59a0f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a78e61657fe4f901a8d397f7288e59a0f">&#9670;&nbsp;</a></span>EWaitError</h2>
+<a id="aee1b7838db4746c987db058df234dbbc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee1b7838db4746c987db058df234dbbc">&#9670;&nbsp;</a></span>EWaitError</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="namespacemel_1_1core.html#a78e61657fe4f901a8d397f7288e59a0f">mel::core::EWaitError</a></td>
+          <td class="memname">enum <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">mel::core::EWaitError</a> : int</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Generic result error codes for future waiting. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a78e61657fe4f901a8d397f7288e59a0fa2e9086b6513094ab1122bb5fed496987"></a>FUTURE_RECEIVED_KILL_SIGNAL&#160;</td><td class="fielddoc"><p>Wait for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> was interrupted because waiting Process was killed. </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93"></a>FUTURE_WAIT_OK&#160;</td><td class="fielddoc"><p>No error. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a78e61657fe4f901a8d397f7288e59a0fa3d2caf80bfb6686189b84503219aa230"></a>FUTURE_WAIT_TIMEOUT&#160;</td><td class="fielddoc"><p>time out expired while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> </p>
+<tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c"></a>FUTURE_RECEIVED_KILL_SIGNAL&#160;</td><td class="fielddoc"><p>Wait for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> was interrupted because waiting Process was killed. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a78e61657fe4f901a8d397f7288e59a0fa0d30ed04c89c9d65e027912674b4ff33"></a>FUTURE_UNKNOWN_ERROR&#160;</td><td class="fielddoc"><p>Unknow error while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>. </p>
+<tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbcab7393339e32e5c9f190e313d075af9bc"></a>FUTURE_WAIT_TIMEOUT&#160;</td><td class="fielddoc"><p>Time out expired while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbcac710656fa6f6762bed81f03f94aa54de"></a>FUTURE_UNKNOWN_ERROR&#160;</td><td class="fielddoc"><p>Unknow error while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>. </p>
 </td></tr>
 </table>
 

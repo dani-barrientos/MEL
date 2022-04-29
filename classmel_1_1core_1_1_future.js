@@ -16,5 +16,5 @@ var classmel_1_1core_1_1_future =
     [ "setError", "classmel_1_1core_1_1_future.html#a46841220999c3276a917c430594d8554", null ],
     [ "setValue", "classmel_1_1core_1_1_future.html#a15baa10e5f4f22eb710d7e4e1050690d", null ],
     [ "subscribeCallback", "classmel_1_1core_1_1_future.html#a294c69f68d9859f6f7f7d8ea6d09704b", null ],
-    [ "unsubscribeCallback", "classmel_1_1core_1_1_future.html#ac4107546441d367dc5fa7fa81f8b60d6", null ]
+    [ "unsubscribeCallback", "classmel_1_1core_1_1_future.html#a181a3078ad95bffa7660c56415b1ff1e", null ]
 ];

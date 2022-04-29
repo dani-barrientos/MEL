@@ -124,9 +124,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2cd58b9830d3c0c2bc2932b238901546"><td class="memItemLeft" align="right" valign="top"><a id="a2cd58b9830d3c0c2bc2932b238901546"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ExFuture</b> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; aEx)</td></tr>
 <tr class="separator:a2cd58b9830d3c0c2bc2932b238901546"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad80f6ee67ca5e4b28b14095c761b02fd"><td class="memItemLeft" align="right" valign="top"><a id="ad80f6ee67ca5e4b28b14095c761b02fd"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ExFuture</b> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; aEx, ResultType &amp;val)</td></tr>
-<tr class="separator:ad80f6ee67ca5e4b28b14095c761b02fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74f14986bc11f186e52a795820a59af8"><td class="memItemLeft" align="right" valign="top"><a id="a74f14986bc11f186e52a795820a59af8"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ExFuture</b> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; aEx, const ResultType &amp;val)</td></tr>
+<tr class="separator:a74f14986bc11f186e52a795820a59af8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d36a3e6d0f0946a5b053669792a60c4"><td class="memItemLeft" align="right" valign="top"><a id="a5d36a3e6d0f0946a5b053669792a60c4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ExFuture</b> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; aEx, ResultType &amp;&amp;val)</td></tr>
 <tr class="separator:a5d36a3e6d0f0946a5b053669792a60c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,12 +163,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assign</b> (typename 
 <tr class="memitem:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="memTemplItemLeft" align="right" valign="top">int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a> (F &amp;&amp;f) const</td></tr>
 <tr class="memdesc:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe callback to be executed when future is ready (valid or error)  <a href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">More...</a><br /></td></tr>
 <tr class="separator:a294c69f68d9859f6f7f7d8ea6d09704b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4107546441d367dc5fa7fa81f8b60d6"><td class="memTemplParams" colspan="2"><a id="ac4107546441d367dc5fa7fa81f8b60d6"></a>
-template&lt;class F &gt; </td></tr>
-<tr class="memitem:ac4107546441d367dc5fa7fa81f8b60d6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future___common.html#ac4107546441d367dc5fa7fa81f8b60d6">unsubscribeCallback</a> (F &amp;&amp;f) const</td></tr>
-<tr class="memdesc:ac4107546441d367dc5fa7fa81f8b60d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribe given callback <br  />
- <br /></td></tr>
-<tr class="separator:ac4107546441d367dc5fa7fa81f8b60d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a181a3078ad95bffa7660c56415b1ff1e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_future___common.html#a181a3078ad95bffa7660c56415b1ff1e">unsubscribeCallback</a> (int id) const</td></tr>
+<tr class="memdesc:a181a3078ad95bffa7660c56415b1ff1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsubscribe given callback <br  />
+  <a href="classmel_1_1core_1_1_future___common.html#a181a3078ad95bffa7660c56415b1ff1e">More...</a><br /></td></tr>
+<tr class="separator:a181a3078ad95bffa7660c56415b1ff1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -312,6 +310,38 @@ template&lt;class F &gt; </div>
 </dl>
 <dl class="section warning"><dt>Warning</dt><dd>Usually callback is executed in the context of the thread doing setValue, but if Future is already ready callback will be executed in the context of the thread doing subscription. In general, for this and more reasons, callbacks responses should be done buy launchin a task, so decoupliing totally the diferent tasks </dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>callback id </dd></dl>
+
+</div>
+</div>
+<a id="a181a3078ad95bffa7660c56415b1ff1e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a181a3078ad95bffa7660c56415b1ff1e">&#9670;&nbsp;</a></span>unsubscribeCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="classmel_1_1core_1_1_future___common.html">mel::core::Future_Common</a>&lt; T &gt;::unsubscribeCallback </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Unsubscribe given callback <br  />
+ </p>
+<p>because use of lambda, unsubscription can only be done by id (returned by subscribeCallback) </p>
 
 </div>
 </div>

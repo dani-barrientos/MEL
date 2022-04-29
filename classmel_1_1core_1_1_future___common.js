@@ -11,5 +11,5 @@ var classmel_1_1core_1_1_future___common =
     [ "operator=", "classmel_1_1core_1_1_future___common.html#a0180ab27b501fb0fc6efa7e11cd2492a", null ],
     [ "operator=", "classmel_1_1core_1_1_future___common.html#aba28317007a9fa7688c223de1bf18243", null ],
     [ "subscribeCallback", "classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b", null ],
-    [ "unsubscribeCallback", "classmel_1_1core_1_1_future___common.html#ac4107546441d367dc5fa7fa81f8b60d6", null ]
+    [ "unsubscribeCallback", "classmel_1_1core_1_1_future___common.html#a181a3078ad95bffa7660c56415b1ff1e", null ]
 ];

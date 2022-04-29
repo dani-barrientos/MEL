@@ -1,6 +1,6 @@
 var classmel_1_1core_1_1_wait_exception =
 [
-    [ "WaitException", "classmel_1_1core_1_1_wait_exception.html#aaf787be2da4e97726b4f27c077cb81cb", null ],
-    [ "WaitException", "classmel_1_1core_1_1_wait_exception.html#af7efe293dc1f5a8123c848bd4897adbe", null ],
-    [ "getCode", "classmel_1_1core_1_1_wait_exception.html#a51a47b0bdbbc8a004fbb6fb69a48ad0c", null ]
+    [ "WaitException", "classmel_1_1core_1_1_wait_exception.html#a87b5c9a94ab36d3e9e24c7b3a8492372", null ],
+    [ "WaitException", "classmel_1_1core_1_1_wait_exception.html#a7ead31b653b5a837cee7ad540f1f7473", null ],
+    [ "getCode", "classmel_1_1core_1_1_wait_exception.html#aacfa50ae17d38e59a8a1a0def8bd7c3e", null ]
 ];

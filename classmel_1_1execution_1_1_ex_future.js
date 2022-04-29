@@ -4,7 +4,7 @@ var classmel_1_1execution_1_1_ex_future =
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a52965d005012963c3b15f26f4ed7e9f1", null ],
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a9f0cf9c7aa1620cb61d654adfd3af761", null ],
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a2cd58b9830d3c0c2bc2932b238901546", null ],
-    [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#ad80f6ee67ca5e4b28b14095c761b02fd", null ],
+    [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a74f14986bc11f186e52a795820a59af8", null ],
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a5d36a3e6d0f0946a5b053669792a60c4", null ],
     [ "assign", "classmel_1_1execution_1_1_ex_future.html#a09b4c409d89e4d8291505ba513637ecb", null ],
     [ "assign", "classmel_1_1execution_1_1_ex_future.html#a8743050a81a09d25ab3e62201bb3ba41", null ],
@@ -16,6 +16,6 @@ var classmel_1_1execution_1_1_ex_future =
     [ "setError", "classmel_1_1execution_1_1_ex_future.html#a46841220999c3276a917c430594d8554", null ],
     [ "setValue", "classmel_1_1execution_1_1_ex_future.html#a15baa10e5f4f22eb710d7e4e1050690d", null ],
     [ "subscribeCallback", "classmel_1_1execution_1_1_ex_future.html#a294c69f68d9859f6f7f7d8ea6d09704b", null ],
-    [ "unsubscribeCallback", "classmel_1_1execution_1_1_ex_future.html#ac4107546441d367dc5fa7fa81f8b60d6", null ],
+    [ "unsubscribeCallback", "classmel_1_1execution_1_1_ex_future.html#a181a3078ad95bffa7660c56415b1ff1e", null ],
     [ "agent", "classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145", null ]
 ];

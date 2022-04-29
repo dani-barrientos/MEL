@@ -12,7 +12,7 @@ var namespacemel =
     [ "Introduction", "tasking_constructs.html#introduction", null ],
     [ "Futures", "tasking_constructs.html#futures", null ],
     [ "Synchronization mechanisms", "tasking_constructs.html#sync_mechanisms", null ],
-    [ "Synchronized functions macros", "tasking_constructs.html#sync_macros", null ],
+    [ "Synchronized functions", "tasking_constructs.html#sync_macros", null ],
     [ "Usage samples", "execution_system.html#usage_samples", [
       [ "Basic sample", "execution_system.html#basic_sample", null ],
       [ "Using references", "execution_system.html#using_references", null ],
@@ -21,6 +21,7 @@ var namespacemel =
       [ "Converging several job flows", "execution_system.html#converging_jobs", null ],
       [ "Advanced example", "execution_system.html#advance_example", null ]
     ] ],
+    [ "Perfect forwarding", "execution_system.html#perfect_forwarding", null ],
     [ "core", "namespacemel_1_1core.html", "namespacemel_1_1core" ],
     [ "execution", "namespacemel_1_1execution.html", "namespacemel_1_1execution" ],
     [ "mpl", "namespacemel_1_1mpl.html", "namespacemel_1_1mpl" ],

@@ -129,9 +129,13 @@ var hierarchy =
     ] ],
     [ "mel::parallelism::ThreadPool::ExecutionOpts", "structmel_1_1parallelism_1_1_thread_pool_1_1_execution_opts.html", null ],
     [ "mel::execution::Executor< ExecutorAgent >", "classmel_1_1execution_1_1_executor.html", null ],
+    [ "mel::execution::Executor< InlineExecutionAgent >", "classmel_1_1execution_1_1_executor_3_01_inline_execution_agent_01_4.html", null ],
+    [ "mel::execution::Executor< NaiveInlineExecutionAgent >", "classmel_1_1execution_1_1_executor_3_01_naive_inline_execution_agent_01_4.html", null ],
     [ "mel::execution::Executor< Runnable >", "classmel_1_1execution_1_1_executor_3_01_runnable_01_4.html", null ],
     [ "mel::execution::Executor< ThreadPool >", "classmel_1_1execution_1_1_executor_3_01_thread_pool_01_4.html", null ],
     [ "mel::execution::ExecutorTraits< ExecutorType >", "structmel_1_1execution_1_1_executor_traits.html", null ],
+    [ "mel::execution::ExecutorTraits< Executor< InlineExecutionAgent > >", "structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_inline_execution_agent_01_4_01_4.html", null ],
+    [ "mel::execution::ExecutorTraits< Executor< NaiveInlineExecutionAgent > >", "structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_naive_inline_execution_agent_01_4_01_4.html", null ],
     [ "mel::execution::ExecutorTraits< Executor< Runnable > >", "structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_runnable_01_4_01_4.html", null ],
     [ "mel::execution::ExecutorTraits< Executor< ThreadPool > >", "structmel_1_1execution_1_1_executor_traits_3_01_executor_3_01_thread_pool_01_4_01_4.html", null ],
     [ "mel::mpl::typelist::Find< TList, Condition >", "structmel_1_1mpl_1_1typelist_1_1_find.html", null ],
@@ -205,6 +209,7 @@ var hierarchy =
         [ "mel::execution::ExFuture< ExecutorAgent, ResultType >", "classmel_1_1execution_1_1_ex_future.html", null ]
       ] ]
     ] ],
+    [ "mel::execution::InlineExecutionAgent", "structmel_1_1execution_1_1_inline_execution_agent.html", null ],
     [ "mel::mpl::Int2Type< valor >", "structmel_1_1mpl_1_1_int2_type.html", null ],
     [ "mel::mpl::Int2Type< isFunctor >", "structmel_1_1mpl_1_1_int2_type.html", null ],
     [ "mel::mpl::IntTraits< U >", "structmel_1_1mpl_1_1_int_traits.html", null ],
@@ -227,6 +232,7 @@ var hierarchy =
       [ "mel::mpl::MEncapsulate< isConst, T, PointerType, TRet, VARIABLE_ARGS >", "classmel_1_1mpl_1_1_m_encapsulate.html", null ],
       [ "mel::mpl::MEncapsulate< isConst, T, PointerType, TRet >", "classmel_1_1mpl_1_1_m_encapsulate_3_01is_const_00_01_t_00_01_pointer_type_00_01_t_ret_01_4.html", null ]
     ] ],
+    [ "mel::execution::NaiveInlineExecutionAgent", "structmel_1_1execution_1_1_naive_inline_execution_agent.html", null ],
     [ "mel::mpl::typelist::_private::NextPos< TList, Condition, currentPos, bool >", "structmel_1_1mpl_1_1typelist_1_1__private_1_1_next_pos.html", null ],
     [ "mel::mpl::typelist::_private::NextPos< TList, Condition, currentPos, true >", "structmel_1_1mpl_1_1typelist_1_1__private_1_1_next_pos_3_01_t_list_00_01_condition_00_01current_pos_00_01true_01_4.html", null ],
     [ "mel::mpl::typelist::_private::NextPos< TypeList< H, T >, Condition, currentPos, false >", "structmel_1_1mpl_1_1typelist_1_1__private_1_1_next_pos_3_01_type_list_3_01_h_00_01_t_01_4_00_01_3cc3d964085fd60a722f182101f23350.html", null ],
@@ -324,5 +330,7 @@ var hierarchy =
     [ "mel::mpl::VoidTraits< void >", "structmel_1_1mpl_1_1_void_traits_3_01void_01_4.html", null ],
     [ "mel::mpl::VolatileTraits< U >", "structmel_1_1mpl_1_1_volatile_traits.html", null ],
     [ "mel::mpl::VolatileTraits< U volatile >", "structmel_1_1mpl_1_1_volatile_traits_3_01_u_01volatile_01_4.html", null ],
+    [ "mel::core::WaitErrorAsException", "structmel_1_1core_1_1_wait_error_as_exception.html", null ],
+    [ "mel::core::WaitErrorNoException", "structmel_1_1core_1_1_wait_error_no_exception.html", null ],
     [ "mel::core::WaitResult< T >", "classmel_1_1core_1_1_wait_result.html", null ]
 ];
