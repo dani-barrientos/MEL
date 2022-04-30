@@ -82,9 +82,6 @@ $(document).ready(function(){initNavTree('classmel_1_1execution_1_1_executor_3_0
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classmel_1_1execution_1_1_executor_3_01_inline_execution_agent_01_4-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">mel::execution::Executor&lt; InlineExecutionAgent &gt; Class Reference</div>  </div>
 </div><!--header-->
@@ -94,143 +91,10 @@ $(document).ready(function(){initNavTree('classmel_1_1execution_1_1_executor_3_0
  <a href="classmel_1_1execution_1_1_executor_3_01_inline_execution_agent_01_4.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_inline_executor_8h_source.html">InlineExecutor.h</a>&gt;</code></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:ab5ae9c44485dba58e22f6f9fcda78182"><td class="memTemplParams" colspan="2">template&lt;class I , class F &gt; </td></tr>
-<tr class="memitem:ab5ae9c44485dba58e22f6f9fcda78182"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1execution_1_1_executor_3_01_inline_execution_agent_01_4.html#ab5ae9c44485dba58e22f6f9fcda78182">loop</a> (I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment)</td></tr>
-<tr class="memdesc:ab5ae9c44485dba58e22f6f9fcda78182"><td class="mdescLeft">&#160;</td><td class="mdescRight">Concurrent loop Excutes given number of iterations of given functor as independent tasks (up to executor is able to do )  <a href="classmel_1_1execution_1_1_executor_3_01_inline_execution_agent_01_4.html#ab5ae9c44485dba58e22f6f9fcda78182">More...</a><br /></td></tr>
-<tr class="separator:ab5ae9c44485dba58e22f6f9fcda78182"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aacaee0a99725a5de4bb6c6663156e210"><td class="memTemplParams" colspan="2"><a id="aacaee0a99725a5de4bb6c6663156e210"></a>
-template&lt;class TArg , class ... FTypes&gt; </td></tr>
-<tr class="memitem:aacaee0a99725a5de4bb6c6663156e210"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; fut, std::exception_ptr &amp;except, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="separator:aacaee0a99725a5de4bb6c6663156e210"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6679cb7724faa4f852679c7d90b11a9"><td class="memTemplParams" colspan="2"><a id="ae6679cb7724faa4f852679c7d90b11a9"></a>
-template&lt;class ReturnTuple , class TArg , class ... FTypes&gt; </td></tr>
-<tr class="memitem:ae6679cb7724faa4f852679c7d90b11a9"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel_convert</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; fut, std::exception_ptr &amp;except, ReturnTuple &amp;result, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="separator:ae6679cb7724faa4f852679c7d90b11a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader"></div></td></tr>
-<tr class="memitem:a189bf639382b1580d3079705204e0211"><td class="memTemplParams" colspan="2">template&lt;class TRet , class TArg , class F &gt; </td></tr>
-<tr class="memitem:a189bf639382b1580d3079705204e0211"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classmel_1_1execution_1_1_executor_3_01_inline_execution_agent_01_4.html#a189bf639382b1580d3079705204e0211">launch</a> (F &amp;&amp;f, TArg &amp;&amp;arg, <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TRet &gt; output) const noexcept</td></tr>
-<tr class="separator:a189bf639382b1580d3079705204e0211"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5ae9c44485dba58e22f6f9fcda78182"><td class="memTemplParams" colspan="2"><a id="ab5ae9c44485dba58e22f6f9fcda78182"></a>
-template&lt;class I , class F &gt; </td></tr>
-<tr class="memitem:ab5ae9c44485dba58e22f6f9fcda78182"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment)</td></tr>
-<tr class="separator:ab5ae9c44485dba58e22f6f9fcda78182"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45f905c185cccfe02cd1d36810fd8fb9"><td class="memTemplParams" colspan="2"><a id="a45f905c185cccfe02cd1d36810fd8fb9"></a>
-template&lt;class TArg , class ... FTypes&gt; </td></tr>
-<tr class="memitem:a45f905c185cccfe02cd1d36810fd8fb9"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; fut, std::exception_ptr &amp;excpt, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="separator:a45f905c185cccfe02cd1d36810fd8fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af99929e89c75b81c0ebf11894af90ee0"><td class="memTemplParams" colspan="2"><a id="af99929e89c75b81c0ebf11894af90ee0"></a>
-template&lt;class ReturnTuple , class TArg , class ... FTypes&gt; </td></tr>
-<tr class="memitem:af99929e89c75b81c0ebf11894af90ee0"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel_convert</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; fut, std::exception_ptr &amp;excpt, ReturnTuple &amp;result, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="separator:af99929e89c75b81c0ebf11894af90ee0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a> specialization using <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a> as execution agent. </p>
 <p>This executor behaves as if execution is done straightforward in-place. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a189bf639382b1580d3079705204e0211"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a189bf639382b1580d3079705204e0211">&#9670;&nbsp;</a></span>launch()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class TRet , class TArg , class F &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classmel_1_1execution_1_1_executor.html">mel::execution::Executor</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a> &gt;::launch </td>
-          <td>(</td>
-          <td class="paramtype">F &amp;&amp;&#160;</td>
-          <td class="paramname"><em>f</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">TArg &amp;&amp;&#160;</td>
-          <td class="paramname"><em>arg</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TRet &gt;&#160;</td>
-          <td class="paramname"><em>output</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>brief mandatory interface from <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a> </p>
-
-</div>
-</div>
-<a id="ab5ae9c44485dba58e22f6f9fcda78182"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5ae9c44485dba58e22f6f9fcda78182">&#9670;&nbsp;</a></span>loop()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class I , class F &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a> <a class="el" href="classmel_1_1execution_1_1_executor.html">mel::execution::Executor</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a> &gt;::loop </td>
-          <td>(</td>
-          <td class="paramtype">I &amp;&amp;&#160;</td>
-          <td class="paramname"><em>begin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">I &amp;&amp;&#160;</td>
-          <td class="paramname"><em>end</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">F &amp;&amp;&#160;</td>
-          <td class="paramname"><em>functor</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>increment</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Concurrent loop Excutes given number of iterations of given functor as independent tasks (up to executor is able to do ) </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">fut</td><td></td></tr>
-    <tr><td class="paramname">begin</td><td></td></tr>
-    <tr><td class="paramname">end</td><td></td></tr>
-    <tr><td class="paramname">functor</td><td></td></tr>
-    <tr><td class="paramname">increment</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>en new Future whose value is moved from input future </dd></dl>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>/github/workspace/mel/include/execution/<a class="el" href="_inline_executor_8h_source.html">InlineExecutor.h</a></li>
 </ul>
 </div><!-- contents -->

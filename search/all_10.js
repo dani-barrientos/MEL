@@ -1,12 +1,12 @@
 var searchData=
 [
   ['packcondition_284',['PackCondition',['../structmel_1_1mpl_1_1__private_1_1_pack_condition.html',1,'mel::mpl::_private']]],
-  ['parallel_285',['parallel',['../namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6',1,'mel::execution']]],
+  ['parallel_285',['parallel',['../namespacemel_1_1execution.html#a58266470f274681ca8b56c3d5f6d2bb7',1,'mel::execution::parallel(ExFuture&lt; InlineExecutionAgent, void &gt; source, FTypes &amp;&amp;... functions)'],['../namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6',1,'mel::execution::parallel(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes &amp;&amp;... functions)']]],
   ['parallel_5fconvert_286',['parallel_convert',['../namespacemel_1_1execution.html#a4d64fe832803619def6318b0f715de49',1,'mel::execution']]],
   ['paramadder_287',['ParamAdder',['../classmel_1_1mpl_1_1_param_adder.html',1,'mel::mpl']]],
   ['paramadder_5fprev_288',['ParamAdder_prev',['../classmel_1_1mpl_1_1_param_adder__prev.html',1,'mel::mpl::ParamAdder_prev&lt; T, TRet, NewArg, VARIABLE_ARGS &gt;'],['../class_param_adder__prev.html',1,'ParamAdder_prev']]],
   ['pause_289',['pause',['../classmel_1_1tasking_1_1_process.html#a40f9caef9f9b84527468bcb769c792f1',1,'mel::tasking::Process::pause()'],['../classmel_1_1core_1_1_timer.html#a508e2a8d597f5dc45bb4576189feb80a',1,'mel::core::Timer::pause()']]],
-  ['pauseprocesses_290',['pauseProcesses',['../classmel_1_1tasking_1_1_process_scheduler.html#a1e742c3057a16766f5a4cec19be46a09',1,'mel::tasking::ProcessScheduler::pauseProcesses(T &amp;predicate)'],['../classmel_1_1tasking_1_1_process_scheduler.html#ad0cadd6e29886c7ca9f122fe29ed24ff',1,'mel::tasking::ProcessScheduler::pauseProcesses()']]],
+  ['pauseprocesses_290',['pauseProcesses',['../classmel_1_1tasking_1_1_process_scheduler.html#ad0cadd6e29886c7ca9f122fe29ed24ff',1,'mel::tasking::ProcessScheduler::pauseProcesses()'],['../classmel_1_1tasking_1_1_process_scheduler.html#a1e742c3057a16766f5a4cec19be46a09',1,'mel::tasking::ProcessScheduler::pauseProcesses(T &amp;predicate)']]],
   ['pendingoperation_291',['PendingOperation',['../structmel_1_1core_1_1_callback_subscriptor___base_1_1_pending_operation.html',1,'mel::core::CallbackSubscriptor_Base']]],
   ['pointertomembertraits_292',['PointerToMemberTraits',['../structmel_1_1mpl_1_1_pointer_to_member_traits.html',1,'mel::mpl']]],
   ['pointertomembertraits_3c_20u_20v_3a_3a_2a_20_3e_293',['PointerToMemberTraits&lt; U V::* &gt;',['../structmel_1_1mpl_1_1_pointer_to_member_traits_3_01_u_01_v_1_1_5_01_4.html',1,'mel::mpl']]],

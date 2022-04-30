@@ -203,10 +203,9 @@ template&lt;class F , class TArg , class ExecutorAgent &gt; </td></tr>
 <tr class="memitem:a60515a3e4bce7adcf1b7ef51c850d3b7"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</td></tr>
 <tr class="memdesc:a60515a3e4bce7adcf1b7ef51c850d3b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Capture previous error, if any, and execute the function this function works similar to next, but receiving an std::exception_ptr as the parameter and must return same type as input future is no error was raised in previous works of the chain, the functions is not executed. <br /></td></tr>
 <tr class="separator:a60515a3e4bce7adcf1b7ef51c850d3b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d64fe832803619def6318b0f715de49"><td class="memTemplParams" colspan="2"><a id="a4d64fe832803619def6318b0f715de49"></a>
-template&lt;class ResultTuple , class ExecutorAgent , class TArg , class ... FTypes&gt; </td></tr>
+<tr class="memitem:a4d64fe832803619def6318b0f715de49"><td class="memTemplParams" colspan="2">template&lt;class ResultTuple , class ExecutorAgent , class TArg , class ... FTypes&gt; </td></tr>
 <tr class="memitem:a4d64fe832803619def6318b0f715de49"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, ResultTuple &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a4d64fe832803619def6318b0f715de49">parallel_convert</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="memdesc:a4d64fe832803619def6318b0f715de49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as <a class="el" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a> but returning a tuple with the values for each functor So, these functors must return a value, return void is not allowed. <br /></td></tr>
+<tr class="memdesc:a4d64fe832803619def6318b0f715de49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as <a class="el" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a> but returning a tuple with the values for each functor So, these functors must return a value.  <a href="namespacemel_1_1execution.html#a4d64fe832803619def6318b0f715de49">More...</a><br /></td></tr>
 <tr class="separator:a4d64fe832803619def6318b0f715de49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb3e0d12579dd9c19d462ded948ccb68"><td class="memTemplParams" colspan="2">template&lt;class F , class TArg , class ExecutorAgent &gt; </td></tr>
 <tr class="memitem:adb3e0d12579dd9c19d462ded948ccb68"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</td></tr>
@@ -225,6 +224,27 @@ template&lt;class ExecutorAgent , class TRet1 , class U &gt; </td></tr>
 <tr class="memitem:a789d1502a968251fcc5ac40bdb4724b7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">on_all</a> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; ex, FTypes... futs)</td></tr>
 <tr class="memdesc:a789d1502a968251fcc5ac40bdb4724b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">return <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> which will be executed, in the context of the given executor ex, when all the given ExFutures are triggered. The resulting <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> has a std::tuple with the types if the given ExFutures in the same order. So, all of them must return a value, void is not allowed If any of the given input <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> has error, the returned one will have the same error indicating the element who failed  <a href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">More...</a><br /></td></tr>
 <tr class="separator:a789d1502a968251fcc5ac40bdb4724b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplParams" colspan="2"><a id="a5ce2c44a3ac6630c36fc4e9e154d1d61"></a>
+template&lt;class TArg , class I , class F &gt; </td></tr>
+<tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
+<tr class="separator:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38fff4c9b3a95d641b696635c123b742"><td class="memTemplParams" colspan="2"><a id="a38fff4c9b3a95d641b696635c123b742"></a>
+template&lt;class I , class F &gt; </td></tr>
+<tr class="memitem:a38fff4c9b3a95d641b696635c123b742"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
+<tr class="separator:a38fff4c9b3a95d641b696635c123b742"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd3abc585168391c0b622cb5a4728f60"><td class="memTemplParams" colspan="2"><a id="abd3abc585168391c0b622cb5a4728f60"></a>
+template&lt;class TArg , class ... FTypes&gt; </td></tr>
+<tr class="memitem:abd3abc585168391c0b622cb5a4728f60"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, FTypes &amp;&amp;... functions)</td></tr>
+<tr class="separator:abd3abc585168391c0b622cb5a4728f60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58266470f274681ca8b56c3d5f6d2bb7"><td class="memTemplParams" colspan="2"><a id="a58266470f274681ca8b56c3d5f6d2bb7"></a>
+template&lt;class ... FTypes&gt; </td></tr>
+<tr class="memitem:a58266470f274681ca8b56c3d5f6d2bb7"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a58266470f274681ca8b56c3d5f6d2bb7">parallel</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt; source, FTypes &amp;&amp;... functions)</td></tr>
+<tr class="memdesc:a58266470f274681ca8b56c3d5f6d2bb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">void overload <br /></td></tr>
+<tr class="separator:a58266470f274681ca8b56c3d5f6d2bb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9a9ebe2c6b4f379fbb9c71c1cc38aea"><td class="memTemplParams" colspan="2"><a id="ae9a9ebe2c6b4f379fbb9c71c1cc38aea"></a>
+template&lt;class ResultTuple , class TArg , class ... FTypes&gt; </td></tr>
+<tr class="memitem:ae9a9ebe2c6b4f379fbb9c71c1cc38aea"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, ResultTuple &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel_convert</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, FTypes &amp;&amp;... functions)</td></tr>
+<tr class="separator:ae9a9ebe2c6b4f379fbb9c71c1cc38aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b34e3dba9907f5156956cea57856b95"><td class="memTemplParams" colspan="2">template&lt;class F &gt; </td></tr>
 <tr class="memitem:a1b34e3dba9907f5156956cea57856b95"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, std::invoke_result_t&lt; F &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a1b34e3dba9907f5156956cea57856b95">launch</a> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a> &gt; ex, F &amp;&amp;f)</td></tr>
 <tr class="memdesc:a1b34e3dba9907f5156956cea57856b95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Launch given functor in given executor.  <a href="namespacemel_1_1execution.html#a1b34e3dba9907f5156956cea57856b95">More...</a><br /></td></tr>
@@ -237,6 +257,14 @@ template&lt;class ExecutorAgent , class TRet1 , class U &gt; </td></tr>
 template&lt;class F , class TArg &gt; </td></tr>
 <tr class="memitem:ac98fb5ff9f1369880c6a3c09a778308d"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, std::invoke_result_t&lt; F, TArg &amp; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>next</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, F &amp;&amp;f)</td></tr>
 <tr class="separator:ac98fb5ff9f1369880c6a3c09a778308d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cdf4d5e1a0ba09a33815f5033d104ad"><td class="memTemplParams" colspan="2"><a id="a2cdf4d5e1a0ba09a33815f5033d104ad"></a>
+template&lt;class F &gt; </td></tr>
+<tr class="memitem:a2cdf4d5e1a0ba09a33815f5033d104ad"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, std::invoke_result_t&lt; F &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>next</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt; source, F &amp;&amp;f)</td></tr>
+<tr class="separator:a2cdf4d5e1a0ba09a33815f5033d104ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19651af14e62c02d1951c7fc0c8d5526"><td class="memTemplParams" colspan="2"><a id="a19651af14e62c02d1951c7fc0c8d5526"></a>
+template&lt;class TArg , class TRet &gt; </td></tr>
+<tr class="memitem:a19651af14e62c02d1951c7fc0c8d5526"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, typename std::remove_cv&lt; typename std::remove_reference&lt; TRet &gt;::type &gt;::type &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>inmediate</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; fut, TRet &amp;&amp;arg)</td></tr>
+<tr class="separator:a19651af14e62c02d1951c7fc0c8d5526"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>High level execution utilities. </p>
@@ -578,6 +606,39 @@ template&lt;class ExecutorAgent , class TArg , class ... FTypes&gt; </div>
 
 <p>Execute given functions in a (possibly, depending on concrete executor) parallel way If an exception is thrown in any of the callables, and noexcept is no specified, the value of the first exception thrown is set as error in the resulting future, so forwarding the error to the next element (if any) of the chain. </p>
 <dl class="section return"><dt>Returns</dt><dd>A <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> with same value as input future, whose content IS MOVED </dd></dl>
+
+</div>
+</div>
+<a id="a4d64fe832803619def6318b0f715de49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d64fe832803619def6318b0f715de49">&#9670;&nbsp;</a></span>parallel_convert()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class ResultTuple , class ExecutorAgent , class TArg , class ... FTypes&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt;ExecutorAgent,ResultTuple&gt; mel::execution::parallel_convert </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FTypes &amp;&amp;...&#160;</td>
+          <td class="paramname"><em>functions</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Same as <a class="el" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a> but returning a tuple with the values for each functor So, these functors must return a value. </p>
+<dl class="section return"><dt>Returns</dt><dd>a tuple with types for each functor return, in order. Returning void is not allowed </dd></dl>
 
 </div>
 </div>

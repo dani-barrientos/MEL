@@ -727,65 +727,40 @@ $(document).ready(function(){initNavTree('_future_8h_source.html',''); initResiz
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;                <a class="code" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">EWaitError</a> mCode;</div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;        };</div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160; </div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;        <span class="comment">// template &lt;class T&gt; class WaitResult </span></div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;        <span class="comment">// {        </span></div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;        <span class="comment">//  public:</span></div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;        <span class="comment">//      WaitResult(const mel::core::Future&lt;T&gt;&amp; f):mFut(f){}</span></div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;        <span class="comment">//      bool isValid () const</span></div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;        <span class="comment">//      {</span></div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;        <span class="comment">//          return mFut.getValue().isValid();</span></div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;        <span class="comment">//      }</span></div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;        <span class="comment">//      typename mel::core::Future&lt;T&gt;::ValueType::CReturnType value() const</span></div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;        <span class="comment">//      {               </span></div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;        <span class="comment">//          return mFut.getValue().value();         </span></div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;        <span class="comment">//      }</span></div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;        <span class="comment">//      typename mel::core::Future&lt;T&gt;::ValueType::ReturnType value()</span></div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;        <span class="comment">//      {</span></div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;        <span class="comment">//          return mFut.getValue().value();</span></div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;        <span class="comment">//      }</span></div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;        <span class="comment">//      std::exception_ptr error() const{ </span></div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;        <span class="comment">//          return mFut.getValue().error();             </span></div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;        <span class="comment">//      }</span></div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;        <span class="comment">//      //! @brief access internal just if needed to do excepctional things</span></div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;        <span class="comment">//      const mel::core::Future&lt;T&gt;&amp; getFuture() const noexcept{ return mFut;}</span></div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;        <span class="comment">//      core::Future&lt;T&gt;&amp; getFuture() noexcept{ return mFut;}</span></div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;        <span class="comment">//  private:</span></div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;        <span class="comment">//      core::Future&lt;T&gt; mFut;</span></div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;        <span class="comment">// };</span></div>
-<div class="line"><a name="l00765"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_wait_result.html">  765</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">class </span><a class="code" href="classmel_1_1core_1_1_wait_result.html">WaitResult</a> </div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;        {        </div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;            <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;                <a class="code" href="classmel_1_1core_1_1_wait_result.html">WaitResult</a>(<span class="keyword">const</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;</a>&amp; f):mFut(f){}</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;                <span class="keywordtype">bool</span> isValid ()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;<span class="keyword">                </span>{</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;                    <span class="keywordflow">return</span> mFut.getValue().isValid();</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;                }</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;                <span class="keyword">typename</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;::ValueType::CReturnType</a> value()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;<span class="keyword">                </span>{               </div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;                    <span class="keywordflow">return</span> mFut.getValue().value();         </div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;                }</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;                <span class="keyword">typename</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;::ValueType::ReturnType</a> value()</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;                {</div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;                    <span class="keywordflow">return</span> mFut.getValue().value();</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;                }</div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;                std::exception_ptr error()<span class="keyword"> const</span>{ </div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;                    <span class="keywordflow">if</span> ( !mErr )</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;                        <span class="keywordflow">return</span> mFut.getValue().error();             </div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;                    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;                        <span class="keywordflow">return</span> mErr;</div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;                }</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;                <span class="keywordtype">void</span> setError(std::exception_ptr err){mErr = err;}</div>
-<div class="line"><a name="l00789"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">  789</a></span>&#160;                <span class="keyword">const</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;</a>&amp; <a class="code" href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">getFuture</a>() const noexcept{ <span class="keywordflow">return</span> mFut;}</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;                <a class="code" href="classmel_1_1core_1_1_future.html">core::Future&lt;T&gt;</a>&amp; <a class="code" href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">getFuture</a>() noexcept{ <span class="keywordflow">return</span> mFut;}</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;            <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;                <a class="code" href="classmel_1_1core_1_1_future.html">core::Future&lt;T&gt;</a> mFut;</div>
-<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;                std::exception_ptr mErr{<span class="keyword">nullptr</span>}; </div>
-<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;        };</div>
-<div class="line"><a name="l00796"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_wait_error_as_exception.html">  796</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_wait_error_as_exception.html">WaitErrorAsException</a>{};</div>
-<div class="line"><a name="l00798"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_wait_error_no_exception.html">  798</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_wait_error_no_exception.html">WaitErrorNoException</a>{};</div>
-<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160; </div>
-<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;    }</div>
-<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;}</div>
+<div class="line"><a name="l00740"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_wait_result.html">  740</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">class </span><a class="code" href="classmel_1_1core_1_1_wait_result.html">WaitResult</a> </div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;        {        </div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;            <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;                <a class="code" href="classmel_1_1core_1_1_wait_result.html">WaitResult</a>(<span class="keyword">const</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;</a>&amp; f):mFut(f){}</div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;                <span class="keywordtype">bool</span> isValid ()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;<span class="keyword">                </span>{</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;                    <span class="keywordflow">return</span> mFut.getValue().isValid();</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;                }</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;                <span class="keyword">typename</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;::ValueType::CReturnType</a> value()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;<span class="keyword">                </span>{               </div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;                    <span class="keywordflow">return</span> mFut.getValue().value();         </div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;                }</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;                <span class="keyword">typename</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;::ValueType::ReturnType</a> value()</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;                {</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;                    <span class="keywordflow">return</span> mFut.getValue().value();</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;                }</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;                std::exception_ptr error()<span class="keyword"> const</span>{ </div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;                    <span class="keywordflow">if</span> ( !mErr )</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;                        <span class="keywordflow">return</span> mFut.getValue().error();             </div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;                    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;                        <span class="keywordflow">return</span> mErr;</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;                }</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;                <span class="keywordtype">void</span> setError(std::exception_ptr err){mErr = err;}</div>
+<div class="line"><a name="l00764"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">  764</a></span>&#160;                <span class="keyword">const</span> <a class="code" href="classmel_1_1core_1_1_future.html">mel::core::Future&lt;T&gt;</a>&amp; <a class="code" href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">getFuture</a>() const noexcept{ <span class="keywordflow">return</span> mFut;}</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;                <a class="code" href="classmel_1_1core_1_1_future.html">core::Future&lt;T&gt;</a>&amp; <a class="code" href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">getFuture</a>() noexcept{ <span class="keywordflow">return</span> mFut;}</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;            <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;                <a class="code" href="classmel_1_1core_1_1_future.html">core::Future&lt;T&gt;</a> mFut;</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;                std::exception_ptr mErr{<span class="keyword">nullptr</span>}; </div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;        };</div>
+<div class="line"><a name="l00771"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_wait_error_as_exception.html">  771</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_wait_error_as_exception.html">WaitErrorAsException</a>{};</div>
+<div class="line"><a name="l00773"></a><span class="lineno"><a class="line" href="structmel_1_1core_1_1_wait_error_no_exception.html">  773</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1core_1_1_wait_error_no_exception.html">WaitErrorNoException</a>{};</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160; </div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    }</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;}</div>
 <div class="ttc" id="a_type_traits_8h_html"><div class="ttname"><a href="_type_traits_8h.html">TypeTraits.h</a></div><div class="ttdoc">Typical Traits for types.</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_future___common_html"><div class="ttname"><a href="classmel_1_1core_1_1_future___common.html">mel::core::Future_Common</a></div><div class="ttdoc">Common code for Futures that doesn't need to be templated.</div><div class="ttdef"><b>Definition:</b> Future.h:519</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_future___common_html_a181a3078ad95bffa7660c56415b1ff1e"><div class="ttname"><a href="classmel_1_1core_1_1_future___common.html#a181a3078ad95bffa7660c56415b1ff1e">mel::core::Future_Common::unsubscribeCallback</a></div><div class="ttdeci">int unsubscribeCallback(int id) const</div><div class="ttdoc">Unsubscribe given callback</div><div class="ttdef"><b>Definition:</b> Future.h:594</div></div>
@@ -797,8 +772,8 @@ $(document).ready(function(){initNavTree('_future_8h_source.html',''); initResiz
 <div class="ttc" id="aclassmel_1_1core_1_1_future_value_html"><div class="ttname"><a href="classmel_1_1core_1_1_future_value.html">mel::core::FutureValue</a></div><div class="ttdoc">Wrapper for value holded by a Future.</div><div class="ttdef"><b>Definition:</b> Future.h:71</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_future_value_html_a62516243c8dfb3f2887eb57b14b1dbdd"><div class="ttname"><a href="classmel_1_1core_1_1_future_value.html#a62516243c8dfb3f2887eb57b14b1dbdd">mel::core::FutureValue::isValid</a></div><div class="ttdeci">bool isValid() const</div><div class="ttdoc">get if has valid value</div><div class="ttdef"><b>Definition:</b> Future.h:88</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_wait_exception_html"><div class="ttname"><a href="classmel_1_1core_1_1_wait_exception.html">mel::core::WaitException</a></div><div class="ttdoc">Exception class generated by WaitResult when wait for future gets an error.</div><div class="ttdef"><b>Definition:</b> Future.h:728</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_wait_result_html"><div class="ttname"><a href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a></div><div class="ttdoc">Wrapper for future value after wait.</div><div class="ttdef"><b>Definition:</b> Future.h:766</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_wait_result_html_a442254741f67c414b30d9c4d89a811a6"><div class="ttname"><a href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">mel::core::WaitResult::getFuture</a></div><div class="ttdeci">const mel::core::Future&lt; T &gt; &amp; getFuture() const noexcept</div><div class="ttdoc">access internal just if needed to do excepctional things</div><div class="ttdef"><b>Definition:</b> Future.h:789</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_wait_result_html"><div class="ttname"><a href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a></div><div class="ttdoc">Wrapper for future value after wait.</div><div class="ttdef"><b>Definition:</b> Future.h:741</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_wait_result_html_a442254741f67c414b30d9c4d89a811a6"><div class="ttname"><a href="classmel_1_1core_1_1_wait_result.html#a442254741f67c414b30d9c4d89a811a6">mel::core::WaitResult::getFuture</a></div><div class="ttdeci">const mel::core::Future&lt; T &gt; &amp; getFuture() const noexcept</div><div class="ttdoc">access internal just if needed to do excepctional things</div><div class="ttdef"><b>Definition:</b> Future.h:764</div></div>
 <div class="ttc" id="aclassmel_1_1mpl_1_1_type_traits_html"><div class="ttname"><a href="classmel_1_1mpl_1_1_type_traits.html">mel::mpl::TypeTraits</a></div><div class="ttdef"><b>Definition:</b> TypeTraits.h:296</div></div>
 <div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:27</div></div>
 <div class="ttc" id="anamespacemel_1_1core_html_aee1b7838db4746c987db058df234dbbc"><div class="ttname"><a href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">mel::core::EWaitError</a></div><div class="ttdeci">EWaitError</div><div class="ttdoc">Generic result error codes for future waiting.</div><div class="ttdef"><b>Definition:</b> Future.h:27</div></div>
@@ -808,8 +783,8 @@ $(document).ready(function(){initNavTree('_future_8h_source.html',''); initResiz
 <div class="ttc" id="anamespacemel_1_1core_html_aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93"><div class="ttname"><a href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93">mel::core::EWaitError::FUTURE_WAIT_OK</a></div><div class="ttdeci">@ FUTURE_WAIT_OK</div><div class="ttdoc">No error.</div></div>
 <div class="ttc" id="anamespacemel_1_1mpl_html_a375f7059dbc44c7b2098e1efeea78fa2"><div class="ttname"><a href="namespacemel_1_1mpl.html#a375f7059dbc44c7b2098e1efeea78fa2">mel::mpl::operator==</a></div><div class="ttdeci">Small operator==(const AnyType &amp;, const AnyType &amp;)</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
-<div class="ttc" id="astructmel_1_1core_1_1_wait_error_as_exception_html"><div class="ttname"><a href="structmel_1_1core_1_1_wait_error_as_exception.html">mel::core::WaitErrorAsException</a></div><div class="ttdoc">Policyt for treating error as exception in future wait functions.</div><div class="ttdef"><b>Definition:</b> Future.h:796</div></div>
-<div class="ttc" id="astructmel_1_1core_1_1_wait_error_no_exception_html"><div class="ttname"><a href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a></div><div class="ttdoc">Policyt for not treating error as exception in future wait functions.</div><div class="ttdef"><b>Definition:</b> Future.h:798</div></div>
+<div class="ttc" id="astructmel_1_1core_1_1_wait_error_as_exception_html"><div class="ttname"><a href="structmel_1_1core_1_1_wait_error_as_exception.html">mel::core::WaitErrorAsException</a></div><div class="ttdoc">Policyt for treating error as exception in future wait functions.</div><div class="ttdef"><b>Definition:</b> Future.h:771</div></div>
+<div class="ttc" id="astructmel_1_1core_1_1_wait_error_no_exception_html"><div class="ttname"><a href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a></div><div class="ttdoc">Policyt for not treating error as exception in future wait functions.</div><div class="ttdef"><b>Definition:</b> Future.h:773</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
