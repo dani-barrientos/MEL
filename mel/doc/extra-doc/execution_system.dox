@@ -97,8 +97,11 @@ Instead, with the \ref ::mel::execution "execution system", built on top of thos
 \endcode
 As can be seen in the example code, the expresiveness and flexibility of this mechanism is far superior. The used executor can be any executor type, the *only thing* to do 
 (of course, it can be difficult) is to implement the neccesary parts of a new execution system when neccesary (for example, an execution system based on GPU processing).
-Mel provides two types of executors, the ones used in this example: an executor based on \ref mel::tasking::Runnable "runnables" and an executor based on \ref ::mel::core::ThreadPool "a thread pool".
-Both has microthread capabilities, meaning that the tasks executed in any of then can take advange of cooperative multitasking (see ::Tasking::Process).
+Mel provides three types of executors, the ones used in this example: a \ref mel::execution::RunnableExecutor "RunnableExecutor" based on \ref mel::tasking::Runnable "runnables", a \ref ::mel::execution::ThreadPoolExecutor "ThreadPoolExecutor" based on \ref ::mel::parallelism::ThreadPool "a thread pool"
+and an \ref ::mel::execution::InlineExecutor "InlineExecutor" which behavess exactly as if code is written inline  (so, no executor at all). There is another  \ref mel::execution::NaiveInlineExecutor
+included as a demostration: its implementation is straigthforward but not as much efficient as the *InlineExecutor*.
+
+The *RunnableExecutor* and *ThreadPoolExecutor* have microthread capabilities, meaning that the tasks executed in any of them can take advange of mel's cooperative multitasking (see ::Tasking::Process).
 Some examples will be provided in the next sections trying to describe al the functionalities with simple cases, and showing all the power of this system.
 As a note, the examples will be shown using de pipe ('|') operator, but the *classic* form could be used, althoguh is less expresive and hard to read:
 \code
@@ -154,6 +157,9 @@ This functions could be used as:
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});	
 	_sampleBasic(extp); //use same sample with this new executor
+	//now an InlineExecutor, which is roughly the same as executing the code directly
+	execution::InlineExecutor exInline;
+	_sampleBasic(exInline); //use same sample with this new executor
 	
 \endcode
  - [Basic sample](#basic_sample)

@@ -117,6 +117,10 @@ And from the *main* function:
 		
 		_testMeanVector(initFut,test);
 	}
+	{		
+		execution::InlineExecutor ex;
+		_testMeanVector( execution::transfer(initFut,ex),"vector mean: ThreadPoolExecutor",test);
+	}
 \endcode
 In this code, a very big vector is created, and the mean of its values is calculated by:
     - spliting the vector in 4 parts and calculating the mean on each. this is done in using \ref mel::execution::parallel_convert "parallel_convert" 
@@ -125,18 +129,20 @@ In this code, a very big vector is created, and the mean of its values is calcul
 
 Also, at first, a plain calculation is done to compare de results. In the concrete machine uses at this moment, the output is:
 \code
-[2022-04-25 10:15:05.215] [info] vector mean: plain way
-[2022-04-25 10:15:05.224] [info] Mean = 3.167751133310629. Time spent = 0.009
-[2022-04-25 10:15:05.227] [info] vector mean: ThreadPoolExecutor
-[2022-04-25 10:15:05.232] [info] Mean = 3.1677511333276387. Time spent = 0.004 seconds
-[2022-04-25 10:15:05.232] [info] vector mean: RunnableExecutor
-[2022-04-25 10:15:05.243] [info] Mean = 3.1677511333276387. Time spent = 0.01 seconds
+vector mean: plain way
+Mean = 3.1669570700186305. Time spent = 0.086
+vector mean: ThreadPoolExecutor
+Mean = 3.166957070004096. Time spent = 0.043 seconds
+vector mean: RunnableExecutor
+Mean = 3.166957070004096. Time spent = 0.096 seconds
+vector mean: InlineExecutor
+Mean = 3.166957070004096. Time spent = 0.093 seconds
 \endcode
 The results show two very good news:
     - using a \ref mel::execution::ThreadPoolExecutor "ThreadPoolExecutor" is more than double faster than a simple \ref ::mel::execution::RunnableExecutor "RunnableExecutor".
     By default a ThreadPool uses all available cores. In this used machine, the number of cores is 8, so each task in *parallel_convert* is fully independent. Althoguh apparently this 
     should mean that the code should be 4 times faster, other things can affect performance, mainly cache issues.
-    - the direct way takes almost the same time that the *RunnableExecutor* way, meaning that the internals of the execution and microthread system is very,very low
+    - the direct way and the \ref mel::execution::InlineExecutor "InlineExecutor" takes almost the same time that the *RunnableExecutor* way, meaning that the internals of the execution and microthread system is very,very low
 
 In order to do improve the previous code, it had been better to take advantage of concrete parallelism possibilities of the system. Instead of dividing the 
 input vector in 4 different parts, It would be better to divide in as much parts as the system can. The coide could be:

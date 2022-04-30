@@ -421,6 +421,7 @@ struct SampleClass
 		return *this;
 	}
 };
+//perfect forwarding example
 template <class ExecutorType> void _samplePF(ExecutorType ex)
 {
 	SampleClass cl(5);

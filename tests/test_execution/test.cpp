@@ -721,7 +721,7 @@ int _testAdvanceSample(tests::BaseTest* test)
 	auto initFut = execution::launch(exr,[]()
 	{				
 		//int vecSize = std::rand()%1000'000; //generate random big vector
-		constexpr int vecSize = 50'000'000;
+		constexpr int vecSize = 100'000'000;
 		VectorType v(vecSize);
 		for( size_t i = 0; i < vecSize;++i)
 			v[i] = (std::rand()%20)/3.0; //to create a double
@@ -759,6 +759,11 @@ int _testAdvanceSample(tests::BaseTest* test)
 		exr.setOpts({true,false});
 		text::info("vector mean: RunnableExecutor");		
 		_testMeanVector(execution::transfer(initFut,exr),"vector mean: RunnableExecutor",test); //the transfer is not neccesary because initFut is launched in exr, but jsut in case it changes
+	}
+	{		
+		execution::InlineExecutor ex;
+		text::info("vector mean: InlineExecutor");		
+		_testMeanVector( execution::transfer(initFut,ex),"vector mean: InlineExecutor",test);
 	}
 	//now testing different algorithm using execution ::loop
 	{

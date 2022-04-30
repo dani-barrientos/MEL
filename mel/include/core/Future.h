@@ -736,32 +736,7 @@ namespace mel
 
 		/** @brief Wrapper for future value after wait
 		 * 
-		**/
-		// template <class T> class WaitResult 
-		// {        
-		// 	public:
-		// 		WaitResult(const mel::core::Future<T>& f):mFut(f){}
-		// 		bool isValid () const
-		// 		{
-		// 			return mFut.getValue().isValid();
-		// 		}
-		// 		typename mel::core::Future<T>::ValueType::CReturnType value() const
-		// 		{				
-		// 			return mFut.getValue().value();			
-		// 		}
-		// 		typename mel::core::Future<T>::ValueType::ReturnType value()
-		// 		{
-		// 			return mFut.getValue().value();
-		// 		}
-		// 		std::exception_ptr error() const{ 
-		// 			return mFut.getValue().error();				
-		// 		}
-		// 		//! @brief access internal just if needed to do excepctional things
-		// 		const mel::core::Future<T>& getFuture() const noexcept{ return mFut;}
-		// 		core::Future<T>& getFuture() noexcept{ return mFut;}
-		// 	private:
-		// 		core::Future<T> mFut;
-		// };
+		**/		
 		template <class T> class WaitResult 
 		{        
 			public:

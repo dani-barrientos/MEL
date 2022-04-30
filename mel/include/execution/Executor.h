@@ -297,22 +297,45 @@ namespace mel
                     try
                     {   
                         if ( input.isValid() )
-                        {
-                            auto barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
-                            [f = std::forward<F>(functor),source](I idx) mutable
+                        {                        
+                            std::exception_ptr* except = new std::exception_ptr(nullptr);
+                            ::mel::parallelism::Barrier barrier;
+                            if constexpr (std::is_nothrow_invocable<F,I>::value)
                             {
-                                //@todo arreglar el loop para que reciba I&&
-                                //f(std::forward<I>(idx),fut.getValue());
-                                f(idx);
-                            }
-                            , increment);
-                            barrier.subscribeCallback(
-                                std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source](const ::mel::parallelism::BarrierData& ) mutable
+                                barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
+                                [f = std::forward<F>(functor),source](I idx) mutable noexcept
                                 {
-                                    //result.assign(std::move(source.getValue()));
-                                    result.assign(source);
+                                    f(idx);
+                                }
+                                , increment);
+                            }else
+                            {
+                                barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
+                                [f = std::forward<F>(functor),source,except](I idx) mutable
+                                {
+                                    try
+                                    {
+                                        f(idx);
+                                    }catch(...)
+                                    {
+                                        if (!*except)
+                                            *except = std::current_exception();
+                                    }
+                                }
+                                , increment);
+                            }
+
+                            barrier.subscribeCallback(
+                                std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,source,except](const ::mel::parallelism::BarrierData& ) mutable
+                                {                
+                                    if ( *except ) //any exception?
+                                        result.setError(*except);
+                                    else
+                                        //result.assign(std::move(source.getValue())); //@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
+                                        result.assign(source);
+                                    delete except;
                                     return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
-                                }));
+                                }));                          
                         }else
                         {
                             //set error as task in executor
@@ -403,7 +426,8 @@ namespace mel
         }           
         /**
          * @brief Same as @ref parallel but returning a tuple with the values for each functor
-         * So, these functors must return a value, return void is not allowed
+         * So, these functors must return a value
+         * @return a tuple with types for each functor return, in order. Returning void is not allowed
          */
         template <class ResultTuple, class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
         {

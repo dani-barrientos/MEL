@@ -21,7 +21,7 @@ namespace mel
             public:                
                 ///@{ 
                 //! brief mandatory interface from Executor
-                template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<InlineExecutionAgent,TRet> output) const noexcept
+              /*  template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<InlineExecutionAgent,TRet> output) const noexcept
                 {
                     if constexpr (std::is_same<std::invoke_result_t<F,TArg&>,void>::value )
                     {
@@ -57,10 +57,10 @@ namespace mel
                         }                        
                     }
                 }
-                
-                template <class I, class F>	 ::mel::parallelism::Barrier loop( I&& begin, I&& end, F&& functor, int increment);
-                template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
-                template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& excpt,ReturnTuple& result, FTypes&&... functions);
+                */
+                //template <class I, class F>	 ::mel::parallelism::Barrier loop( I&& begin, I&& end, F&& functor, int increment);
+                //template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
+                //template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& excpt,ReturnTuple& result, FTypes&&... functions);
                 ///@}
         };  
         namespace _private
@@ -148,36 +148,168 @@ namespace mel
                 _invokeInline_with_result<n+1>(fut,except,output,std::forward<FTypes>(fs)...);
             }            
         }      
-        /**
-         * @brief Concurrent loop
-         * Excutes given number of iterations of given functor as independent tasks (up to executor is able to do )
-         * 
-         * @param fut 
-         * @param begin 
-         * @param end 
-         * @param functor 
-         * @param increment 
-         * @return en new Future whose value is moved from input future
-         */
-        template <class I, class F>	 ::mel::parallelism::Barrier Executor<InlineExecutionAgent>::loop(I&& begin, I&& end, F&& functor, int increment)
+        
+        // overload for performance reasons
+        template <class TArg, class I, class F>	 ExFuture<InlineExecutionAgent,TArg> loop(ExFuture<InlineExecutionAgent,TArg> source,I&& begin, I&& end, F&& functor, int increment = 1)
         {
-            //@todo no correcto con no random iterators
-            for(auto i = begin; i != end;i+=increment)
+            if ( source.getValid())
             {
-                functor(i);
-            }               
-            return ::mel::parallelism::Barrier((size_t)0);
+                std::exception_ptr except{nullptr};
+                auto& v = source.getValue().value();
+                if constexpr (std::is_nothrow_invocable<F,I,TArg&>::value)
+                {
+                    for(auto i = begin; i != end;i+=increment)
+                    {
+                        functor(i,v);
+                    }   
+                }else
+                {
+                    for(auto i = begin; i != end;i+=increment)
+                    {                    
+                        try
+                        {
+                            functor(i,v);
+                        }catch(...)
+                        {
+                            if ( !except )
+                                except = std::current_exception();
+                        }
+                    }  
+                }
+                if ( !except )                
+                    return ExFuture<InlineExecutionAgent,TArg>(source.agent,v);
+                else
+                {
+                    auto result = ExFuture<InlineExecutionAgent,TArg>(source.agent);
+                    result.setError(except);
+                    return result;
+                }
+            }else
+            {
+                auto result = ExFuture<InlineExecutionAgent,TArg>(source.agent);
+                result.setError(source.getValue().error());
+                return result;
+            }
         }
-        template <class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<InlineExecutionAgent>::parallel( ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,FTypes&&... functions)
+        // voide overload for performance reasons
+        template <class I, class F>	 ExFuture<InlineExecutionAgent,void> loop(ExFuture<InlineExecutionAgent,void> source,I&& begin, I&& end, F&& functor, int increment = 1)
+        {
+            if ( source.getValid())
+            {
+                std::exception_ptr except{nullptr};
+                if constexpr (std::is_nothrow_invocable<F,I>::value)
+                {
+                    for(auto i = begin; i != end;i+=increment)
+                    {
+                        functor(i);
+                    }   
+                }else
+                {
+                    for(auto i = begin; i != end;i+=increment)
+                    {                    
+                        try
+                        {
+                            functor(i);
+                        }catch(...)
+                        {
+                            if ( !except )
+                                except = std::current_exception();
+                        }
+                    }  
+                }
+                if ( !except )                
+                    return ExFuture<InlineExecutionAgent,void>(source.agent,1);
+                else
+                {
+                    auto result = ExFuture<InlineExecutionAgent,void>(source.agent);
+                    result.setError(except);
+                    return result;
+                }
+            }else
+            {
+                auto result = ExFuture<InlineExecutionAgent,void>(source.agent);
+                result.setError(source.getValue().error());
+                return result;
+            }
+        }
+        template <class TArg,class ...FTypes> ExFuture<InlineExecutionAgent,TArg> parallel(ExFuture<InlineExecutionAgent,TArg> source, FTypes&&... functions)
         {            
-            _private::_invokeInline(fut,except,functions...);
-            return ::mel::parallelism::Barrier((size_t)0);
+            std::exception_ptr except{nullptr};
+            if ( source.getValid() )
+            {
+                _private::_invokeInline(source,except,functions...);
+                if ( !except)
+                    return ExFuture<InlineExecutionAgent,TArg>(source.agent,source.getValue().value());
+                else
+                {
+                    auto result = ExFuture<InlineExecutionAgent,TArg>(source.agent);
+                    result.setError(except);
+                    return result;
+                }
+            }
+            else
+            {
+                auto result = ExFuture<InlineExecutionAgent,TArg>(source.agent);
+                result.setError(source.getValue().error());
+                return result;
+            }
         }    
-        template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<InlineExecutionAgent>::parallel_convert(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
+        ///void overload
+        template <class ...FTypes> ExFuture<InlineExecutionAgent,void> parallel(ExFuture<InlineExecutionAgent,void> source, FTypes&&... functions)  
+        {            
+            std::exception_ptr except{nullptr};
+            if ( source.getValid() )
+            {
+                _private::_invokeInline(source,except,functions...);
+                if ( !except)
+                    return ExFuture<InlineExecutionAgent,void>(source.agent,1);
+                else
+                {
+                    auto result = ExFuture<InlineExecutionAgent,void>(source.agent);
+                    result.setError(except);
+                    return result;
+                }
+            }
+            else
+            {
+                auto result = ExFuture<InlineExecutionAgent,void>(source.agent);
+                result.setError(source.getValue().error());
+                return result;
+            }
+
+        }   
+        //overload for performance reasons
+        template <class ResultTuple, class TArg,class ...FTypes> ExFuture<InlineExecutionAgent,ResultTuple> parallel_convert(ExFuture<InlineExecutionAgent,TArg> source, FTypes&&... functions)
+        {            
+            std::exception_ptr except{nullptr};
+            if ( source.getValid() )
+            {
+             
+                ExFuture<InlineExecutionAgent,ResultTuple> result(source.agent);
+                ResultTuple resultTuple;
+                _private::_invokeInline_with_result<0>(source,except,resultTuple,functions...);
+                if ( !except)
+                    result.setValue(std::move(resultTuple));
+                else
+                {
+                    result.setError(except);
+                }
+                return result;
+            }
+            else
+            {
+                auto result = ExFuture<InlineExecutionAgent,ResultTuple>(source.agent);
+                result.setError(source.getValue().error());
+                return result;
+            }
+        }    
+        
+        
+        /*template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<InlineExecutionAgent>::parallel_convert(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
         {
             _private::_invokeInline_with_result<0>(fut,except,result,functions...);
             return ::mel::parallelism::Barrier((size_t)0);
-        }
+        }*/
         /**
          * @brief Launch given functor in given executor
          * @return ExFuture with return type of function
@@ -278,7 +410,7 @@ namespace mel
             
         }
 
-        //reimplementation of base next for InlineExecutionAgent to improve better performance compared to NaiveInlineExecutor
+        //reimplementation of base next for InlineExecutionAgent to improve performance compared to NaiveInlineExecutor
         template <class F,class TArg> ExFuture<InlineExecutionAgent,std::invoke_result_t<F,TArg&>> 
             next(ExFuture<InlineExecutionAgent,TArg> source, F&& f)
         {   
@@ -286,23 +418,48 @@ namespace mel
             typedef std::invoke_result_t<F,TArg&> TRet;
             if ( source.getValid() )
             {
-                if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
-                {                            
-                    return ExFuture<InlineExecutionAgent,TRet>(source.agent,f(source.getValue().value()));                   
-                }
-                else
+                if constexpr (std::is_same<TRet,void>::value )
                 {
-                    try
-                    {
-                        return ExFuture<InlineExecutionAgent,TRet>(source.agent,f(source.getValue().value()));
-                    }catch(...)
-                    {
-                        //output.setError(std::current_exception());
-                        auto result = ExFuture<InlineExecutionAgent,TRet>(source.agent);
-                        result.setError(std::current_exception());
-                        return result;
+                    if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                    {                            
+                        f(source.getValue().value());
+                        return ExFuture<InlineExecutionAgent,TRet>(source.agent,1);                   
                     }
-                }  
+                    else
+                    {
+                        try
+                        {
+                            f(source.getValue().value());
+                            return ExFuture<InlineExecutionAgent,TRet>(source.agent,1);
+                        }catch(...)
+                        {
+                            //output.setError(std::current_exception());
+                            auto result = ExFuture<InlineExecutionAgent,TRet>(source.agent);
+                            result.setError(std::current_exception());
+                            return result;
+                        }
+                    }  
+                }else
+                {
+                    if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                    {                            
+                        return ExFuture<InlineExecutionAgent,TRet>(source.agent,f(source.getValue().value()));                   
+                    }
+                    else
+                    {
+                        try
+                        {
+                            return ExFuture<InlineExecutionAgent,TRet>(source.agent,f(source.getValue().value()));
+                        }catch(...)
+                        {
+                            //output.setError(std::current_exception());
+                            auto result = ExFuture<InlineExecutionAgent,TRet>(source.agent);
+                            result.setError(std::current_exception());
+                            return result;
+                        }
+                    }  
+                }
+                
             }else
             {
                // return ExFuture<InlineExecutionAgent,TRet>(source.agent,source.getValue().error());
@@ -311,6 +468,73 @@ namespace mel
                return result;
             }          
         }
+        // void overload
+        template <class F> ExFuture<InlineExecutionAgent,std::invoke_result_t<F>> 
+            next(ExFuture<InlineExecutionAgent,void> source, F&& f)
+        {                
+            typedef std::invoke_result_t<F> TRet;
+            if ( source.getValid() )
+            {
+                if constexpr (std::is_same<TRet,void>::value )
+                {
+                    if constexpr (std::is_nothrow_invocable<F>::value)
+                    {                            
+                        f();
+                        return ExFuture<InlineExecutionAgent,TRet>(source.agent,1);                   
+                    }
+                    else
+                    {
+                        try
+                        {
+                            f();
+                            return ExFuture<InlineExecutionAgent,TRet>(source.agent,1);
+                        }catch(...)
+                        {
+                            //output.setError(std::current_exception());
+                            auto result = ExFuture<InlineExecutionAgent,TRet>(source.agent);
+                            result.setError(std::current_exception());
+                            return result;
+                        }
+                    }  
+                }else
+                {
+                    if constexpr (std::is_nothrow_invocable<F>::value)
+                    {                            
+                        return ExFuture<InlineExecutionAgent,TRet>(source.agent,f());                   
+                    }
+                    else
+                    {
+                        try
+                        {
+                            return ExFuture<InlineExecutionAgent,TRet>(source.agent,f());
+                        }catch(...)
+                        {
+                            //output.setError(std::current_exception());
+                            auto result = ExFuture<InlineExecutionAgent,TRet>(source.agent);
+                            result.setError(std::current_exception());
+                            return result;
+                        }
+                    }  
+                }
+            }else
+            {
+                // return ExFuture<InlineExecutionAgent,TRet>(source.agent,source.getValue().error());
+                auto result = ExFuture<InlineExecutionAgent,TRet>(source.agent);
+                result.setError(source.getValue().error());
+                return result;   
+            }        
+        }
+
+        //inmediate overload for performance reasons
+        template <class TArg,class TRet> 
+            ExFuture<InlineExecutionAgent,typename std::remove_cv<typename std::remove_reference<TRet>::type>::type> inmediate( ExFuture<InlineExecutionAgent,TArg> fut,TRet&& arg)
+        {
+            static_assert( !std::is_lvalue_reference<TRet>::value ||
+                            std::is_const< typename std::remove_reference<TRet>::type>::value,"execution::inmediate. Use std::ref() to pass argument as reference");
+            using NewType = typename std::remove_cv<typename std::remove_reference<TRet>::type>::type;
+            return ExFuture<InlineExecutionAgent,NewType>(fut.agent,std::forward<TRet>(arg));           
+        }
+
         /**
          * @brief Executor Traits for InlineExecutionAgent Executor
          */

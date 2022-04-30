@@ -13,6 +13,7 @@ using tests::TestManager;
 using mel::tasking::Process;
 #include <tasking/utilities.h>
 #include <execution/InlineExecutor.h>
+#include <execution/NaiveInlineExecutor.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
 #include <vector>
@@ -38,31 +39,32 @@ int _testDebug(tests::BaseTest* test)
 	extp.setOpts({true,true});   
 	sCurrentTest = test;
     {
-        execution::InlineExecutor ex;
+        execution::InlineExecutor exInl;
+		execution::NaiveInlineExecutor exNaive;
         float a = 1.f;
 
-        execution::launch(ex,[]()->float
-		{
-			//throw std::runtime_error("Err en launch");
-			return 2.f;
-		});
-        execution::launch(ex,[]() noexcept
-		{
-			//throw std::runtime_error("Err en launch");
-            ::mel::text::info("UNO");
-		});
-        execution::launch(ex,[](float& v)
-		{
-			//throw std::runtime_error("Err en launch");
-			v+= 2.f;
-		},std::ref(a));
+        // execution::launch(ex,[]()->float
+		// {
+		// 	//throw std::runtime_error("Err en launch");
+		// 	return 2.f;
+		// });
+        // execution::launch(ex,[]() noexcept
+		// {
+		// 	//throw std::runtime_error("Err en launch");
+        //     ::mel::text::info("UNO");
+		// });
+        // execution::launch(ex,[](float& v)
+		// {
+		// 	//throw std::runtime_error("Err en launch");
+		// 	v+= 2.f;
+		// },std::ref(a));
         
-        auto res = execution::launch(ex,[](float& v) noexcept -> float&
+        auto res = execution::launch(exNaive,[](float& v) noexcept -> float&
 		{
 			//throw std::runtime_error("Err en launch");
 			v+= 2.f;
 			return v;
-		},std::ref(a))
+		},std::ref(a))        
         | execution::next([](float& res) ->float&
 		{
 
@@ -78,13 +80,80 @@ int _testDebug(tests::BaseTest* test)
 			mel::text::info("Primer next {}",res);
             res += 2.f;
 			return res+1;
-        });
+        })
+        | execution::next( [](float&){})
+        | execution::next( [](){})
+        | execution::loop(0,10,[](int idx)  noexcept
+        {            
+            mel::text::info("Loop. It {}",idx);            
+            //throw std::runtime_error("err en loop");
+         })
+        | execution::parallel(
+            []() noexcept
+            {
+                mel::text::info("T1");
+            },
+            []() 
+            {
+        //        throw std::runtime_error("err en T2");
+                mel::text::info("T2");
+            }
+        )
+        | execution::parallel_convert<std::tuple<int,string>>(
+			[]() noexcept
+			{
+				mel::text::info("T1");
+                return 11;
+			},
+            []()
+			{
+                throw std::runtime_error("T2");
+				mel::text::info("T2");
+                return "dani2"s;
+			})    
+        
+        //version with input parameter
+        // | execution::loop(0,10,[](int idx,float& v) noexcept
+        // {            
+        //     //throw std::runtime_error("err en loop");
+        //     mel::text::info("Loop. It {}",idx);            
+        //     v++;
+        // })
+        // | execution::parallel(
+        //     [](float& v) noexcept
+        //     {
+        //         mel::text::info("T1 {}",v);
+        //     },
+        //     [](float& v) 
+        //     {
+        //        // throw std::runtime_error("err en T2");
+        //         mel::text::info("T2 {}",v);
+        //     }
+        // )
+        // | execution::parallel_convert<std::tuple<int,string>>(
+		// 	[](float& v) noexcept
+		// 	{
+		// 		mel::text::info("T1 {}",v);
+        //         v++;
+        //         return 10;
+		// 	},
+        //     [](float& v) 
+		// 	{
+        //      //   throw std::runtime_error("T2");
+		// 		mel::text::info("T2 {}",v);
+        //         v++;
+        //         return "dani"s;
+		// 	})    
+        
+        
+        //| execution::inmediate( 20.f)
         ;
         
         try
 		{
 			auto val = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(res);            
-			mel::text::info("Value = {}",val.value());
+            mel::text::info("Value = {} {}",std::get<0>(val.value()),std::get<1>(val.value()));
+		//	mel::text::info("Value = {}",val.value());
 			//mel::text::info("Value = {}");
 			mel::text::info("Original Value = {}",a);
 		}
@@ -99,7 +168,7 @@ int _testDebug(tests::BaseTest* test)
 		mel::text::info("HECHO");
     }
 	{
-		execution::InlineExecutor ex;        
+		execution::NaiveInlineExecutor ex;        
 
 		float a = 1.f;
 		auto res = execution::launch(exr,[](float& v) noexcept -> float& 

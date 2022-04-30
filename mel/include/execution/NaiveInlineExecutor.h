@@ -199,6 +199,7 @@ namespace mel
         template <class I, class F>	 ::mel::parallelism::Barrier Executor<NaiveInlineExecutionAgent>::loop(I&& begin, I&& end, F&& functor, int increment)
         {
             //@todo no correcto con no random iterators
+            //@todo falta gestionar error
             for(auto i = begin; i != end;i+=increment)
             {
                 functor(i);
