@@ -16,6 +16,7 @@ using mel::tasking::Process;
 #include <execution/NaiveInlineExecutor.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <execution/Flow.h>
 #include <vector>
 using std::vector;
 
@@ -107,7 +108,7 @@ int _testDebug(tests::BaseTest* test)
 			},
             []()
 			{
-                throw std::runtime_error("T2");
+                //throw std::runtime_error("T2");
 				mel::text::info("T2");
                 return "dani2"s;
 			})    
@@ -148,13 +149,25 @@ int _testDebug(tests::BaseTest* test)
         
         //| execution::inmediate( 20.f)
         ;
-        
+        auto res2 = mel::execution::condition<float>(res,[](std::tuple<int,string>& v)
+		{
+			return std::make_pair(2,std::move(v));
+		},
+		[](auto& v)
+		{
+			::mel::text::info("Option 1");
+		},
+		[](auto& v)
+		{
+			::mel::text::info("Option 2");
+		}
+		);
         try
 		{
-			auto val = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(res);            
-            mel::text::info("Value = {} {}",std::get<0>(val.value()),std::get<1>(val.value()));
+			auto val = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(res2);            
+           // mel::text::info("Value = {} {}",std::get<0>(val.value()),std::get<1>(val.value()));
 		//	mel::text::info("Value = {}",val.value());
-			//mel::text::info("Value = {}");
+			mel::text::info("Value = {}");
 			mel::text::info("Original Value = {}",a);
 		}
 		catch(std::exception& e)

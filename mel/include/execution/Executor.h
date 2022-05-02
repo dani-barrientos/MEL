@@ -365,6 +365,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
+                //@note in C++20 I could have done fs... = std::forward<FTypes>(functions)..., but not in C++17
                 std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
@@ -429,7 +430,7 @@ namespace mel
          * So, these functors must return a value
          * @return a tuple with types for each functor return, in order. Returning void is not allowed
          */
-        template <class ResultTuple, class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
+        template <class ResultTuple, class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
         {
             //@todo tratar de dedudir la tupla de los resultados de cada funcion
             static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
@@ -605,7 +606,7 @@ namespace mel
                 std::tuple<FTypes...> mFuncs;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return parallel_convert<ReturnTuple>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                    return parallel_convert<ReturnTuple,TArg>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
             };
         }
