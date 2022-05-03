@@ -67,7 +67,7 @@ namespace mel
         {
             template <class F,class TArg> void _invokeInline(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,F&& f)
             {
-                if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     f(fut.getValue().value());                    
                 }else
@@ -107,7 +107,7 @@ namespace mel
             }
             template <int n,class ResultTuple, class F,class TArg> void _invokeInline_with_result(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,ResultTuple& output,F&& f)
             {
-                if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     std::get<n>(output) = f(fut.getValue().value());                    
                 }else
@@ -156,7 +156,7 @@ namespace mel
             {
                 std::exception_ptr except{nullptr};
                 auto& v = source.getValue().value();
-                if constexpr (std::is_nothrow_invocable<F,I,TArg&>::value)
+                if constexpr (std::is_nothrow_invocable<F,I,TArg>::value)
                 {
                     for(auto i = begin; i != end;i+=increment)
                     {
@@ -372,7 +372,7 @@ namespace mel
             //return ExFuture<InlineExecutionAgent,TRet>(ex,f(std::forward<TArg>(arg)));
             if constexpr (std::is_same<TRet,void>::value )
             {
-                if constexpr (std::is_nothrow_invocable<F>::value)
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     f(std::forward<TArg>(arg));
                     return ExFuture<InlineExecutionAgent,TRet>(ex,1);
@@ -392,7 +392,7 @@ namespace mel
                 }  
             }else
             {
-                if constexpr (std::is_nothrow_invocable<F>::value)
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                     return ExFuture<InlineExecutionAgent,TRet>(ex,f(std::forward<TArg>(arg)));
                 else
                 {
@@ -420,7 +420,7 @@ namespace mel
             {
                 if constexpr (std::is_same<TRet,void>::value )
                 {
-                    if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                    if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                     {                            
                         f(source.getValue().value());
                         return ExFuture<InlineExecutionAgent,TRet>(source.agent,1);                   
@@ -441,7 +441,7 @@ namespace mel
                     }  
                 }else
                 {
-                    if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                    if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                     {                            
                         return ExFuture<InlineExecutionAgent,TRet>(source.agent,f(source.getValue().value()));                   
                     }

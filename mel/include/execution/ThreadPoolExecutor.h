@@ -50,7 +50,7 @@ namespace mel
                         th->execute<TRet>(
                                 [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept(std::is_nothrow_invocable<F,TArg>::value) ->TRet
                                 {
-                                    return f(arg);
+                                    return f(std::forward<TArg>(arg));
                                 },
                                 static_cast<Future<TRet>>(output)
                             ,mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);                  

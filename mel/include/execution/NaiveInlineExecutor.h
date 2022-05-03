@@ -25,9 +25,9 @@ namespace mel
                 //! brief mandatory interface from Executor
                 template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<NaiveInlineExecutionAgent,TRet> output) const noexcept
                 {
-                    if constexpr (std::is_same<std::invoke_result_t<F,TArg&>,void>::value )
+                    if constexpr (std::is_same<std::invoke_result_t<F,TArg>,void>::value )
                     {
-                        if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                        if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                         {                            
                             f(std::forward<TArg>(arg));
                             output.setValue();                            
@@ -45,7 +45,7 @@ namespace mel
                         }  
                     }else
                     {
-                        if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                        if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                             output.setValue(f(std::forward<TArg>(arg)));
                         else
                         {

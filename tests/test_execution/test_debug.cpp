@@ -24,6 +24,36 @@ using namespace mel;
 namespace test_execution
 {
 //funcion para pruebas a lo cerdo
+struct MyPepe
+{
+	int val = 10;
+	MyPepe()
+	{
+		mel::text::info("MyPepe");
+	}
+	MyPepe( const MyPepe& ob2)
+	{
+		mel::text::info("MyPepe(const MyPepe& ob2)");
+	}
+	MyPepe( MyPepe&& ob2)
+	{
+		mel::text::info("MyPepe(MyPepe&& ob2)");
+		val = ob2.val;
+		ob2.val = -1;
+	}
+	MyPepe& operator=(const MyPepe& ob2)
+	{
+		mel::text::info("operator= (const MyPepe& ob2)");
+		return *this;
+	}
+	MyPepe& operator=(MyPepe&& ob2)
+	{
+		mel::text::info("operator= (MyPepe&& ob2)");
+		val = ob2.val;
+		ob2.val = -1;
+		return *this;
+	}
+};
 static tests::BaseTest* sCurrentTest = nullptr;
 int _testDebug(tests::BaseTest* test)
 {
@@ -43,7 +73,7 @@ int _testDebug(tests::BaseTest* test)
         execution::InlineExecutor exInl;
 		execution::NaiveInlineExecutor exNaive;
         float a = 1.f;
-
+		MyPepe mp;
         // execution::launch(ex,[]()->float
 		// {
 		// 	//throw std::runtime_error("Err en launch");
@@ -60,7 +90,7 @@ int _testDebug(tests::BaseTest* test)
 		// 	v+= 2.f;
 		// },std::ref(a));
         
-        auto res = execution::launch(exNaive,[](float& v) noexcept -> float&
+        auto res = execution::launch(exInl,[](float& v) noexcept -> float&
 		{
 			//throw std::runtime_error("Err en launch");
 			v+= 2.f;
@@ -74,7 +104,7 @@ int _testDebug(tests::BaseTest* test)
             res += 2.f;
 			return res;
         })
-         | execution::next([](float& res)
+         | execution::next([](float& res) noexcept
 		{
 
 //			throw std::runtime_error("err en next");
@@ -82,7 +112,8 @@ int _testDebug(tests::BaseTest* test)
             res += 2.f;
 			return res+1;
         })
-        | execution::next( [](float&){})
+		//version quitando el input parameter
+        /*| execution::next( [](float&){})
         | execution::next( [](){})
         | execution::loop(0,10,[](int idx)  noexcept
         {            
@@ -112,61 +143,90 @@ int _testDebug(tests::BaseTest* test)
 				mel::text::info("T2");
                 return "dani2"s;
 			})    
-        
+        */
         //version with input parameter
-        // | execution::loop(0,10,[](int idx,float& v) noexcept
-        // {            
-        //     //throw std::runtime_error("err en loop");
-        //     mel::text::info("Loop. It {}",idx);            
-        //     v++;
-        // })
-        // | execution::parallel(
-        //     [](float& v) noexcept
-        //     {
-        //         mel::text::info("T1 {}",v);
-        //     },
-        //     [](float& v) 
-        //     {
-        //        // throw std::runtime_error("err en T2");
-        //         mel::text::info("T2 {}",v);
-        //     }
-        // )
-        // | execution::parallel_convert<std::tuple<int,string>>(
-		// 	[](float& v) noexcept
-		// 	{
-		// 		mel::text::info("T1 {}",v);
-        //         v++;
-        //         return 10;
-		// 	},
-        //     [](float& v) 
-		// 	{
-        //      //   throw std::runtime_error("T2");
-		// 		mel::text::info("T2 {}",v);
-        //         v++;
-        //         return "dani"s;
-		// 	})    
-        
-        
-        //| execution::inmediate( 20.f)
+        | execution::loop(0,10,[](int idx,float v) noexcept
+        {            
+            //throw std::runtime_error("err en loop");
+            mel::text::info("Loop. It {}",idx);            
+            //v++;
+        })
+        | execution::parallel(
+            [](float& v) noexcept
+            {
+                mel::text::info("T1 {}",v);
+            },
+            [](float& v) 
+            {
+               // throw std::runtime_error("err en T2");
+                mel::text::info("T2 {}",v);
+            }
+        )
+        | execution::parallel_convert<std::tuple<int,string>>(
+			[](float& v) noexcept
+			{
+				mel::text::info("T1 {}",v);
+                v++;
+                return 10;
+			},
+            [](float& v) 
+			{
+             //   throw std::runtime_error("T2");
+				mel::text::info("T2 {}",v);
+                v++;
+                return "dani"s;
+			}
+		)                    
+        | mel::execution::condition<float>([](std::tuple<int,string>& v)
+			{
+				return std::make_pair(0,MyPepe());
+			},
+			[&mp](const MyPepe& v) noexcept
+			{
+				//el problema es que  con este argumento no pilla el noexcept..
+			//	::mel::text::info("Option 1. {} {}",std::get<0>(v),std::get<1>(v));
+				::mel::text::info("Option 1. {} ",v.val);
+				return 1.4f;
+			},
+			[](const MyPepe& v)
+			{
+				//mel::tasking::Process::wait(1000);
+				::mel::text::info("Option 2. {} ",v.val);
+				throw std::runtime_error("Err opt 2");
+				return 6.8f;
+			}
+		)
         ;
+/*
+	//la idea del pair es poder hacer que los jobs reciban otra cosa->¿por qué no uso mismo tipo que la entrada?->podría hacerlo de forma que cada job empezase con 
+	//YA VERÉ, IGUAL LO QUITO
+
         auto res2 = mel::execution::condition<float>(res,[](std::tuple<int,string>& v)
 		{
-			return std::make_pair(2,std::move(v));
+			return std::make_pair(0,MyPepe());
 		},
-		[](auto& v)
+		//[&mp](MyPepe v) noexcept    esta version no detecta el noexcept
+		[&mp](const MyPepe& v) noexcept
 		{
-			::mel::text::info("Option 1");
+			//el problema es que  con argumento por copia no piulla el noexcept no pilla el noexcept..
+		//	::mel::text::info("Option 1. {} {}",std::get<0>(v),std::get<1>(v));
+			::mel::text::info("Option 1. {} ",v.val);
+			return 1.4f;
 		},
-		[](auto& v)
+		[](const MyPepe& v)
 		{
-			::mel::text::info("Option 2");
+			//mel::tasking::Process::wait(1000);
+			::mel::text::info("Option 2. {} ",v.val);
+			throw std::runtime_error("Err opt 2");
+			return 6.8f;
 		}
-		);
+		);*/
         try
 		{
-			auto val = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(res2);            
+			auto val = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(res);            
            // mel::text::info("Value = {} {}",std::get<0>(val.value()),std::get<1>(val.value()));
 		//	mel::text::info("Value = {}",val.value());
+			auto& value = val.value();
 			mel::text::info("Value = {}");
 			mel::text::info("Original Value = {}",a);
 		}

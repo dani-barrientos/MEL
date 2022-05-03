@@ -135,7 +135,7 @@ namespace mel
                 {       
                     if ( input.isValid() )
                     {                            
-                        source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg&>::value)->TRet 
+                        source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
                         {                                          
                             return f(arg.getValue().value());                         
                         },source,result);                                                          
@@ -229,7 +229,7 @@ namespace mel
                         {
                             std::exception_ptr* except = new std::exception_ptr(nullptr);
                             ::mel::parallelism::Barrier barrier;
-                            if constexpr (std::is_nothrow_invocable<F,I,TArg&>::value)
+                            if constexpr (std::is_nothrow_invocable<F,I,TArg>::value)
                             {
                                 barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
                                 [f = std::forward<F>(functor),source](I idx) mutable noexcept
@@ -521,9 +521,15 @@ namespace mel
                 ApplyNext(F&& f):mFunc(std::forward<F>(f)){}
                 ApplyNext(const F& f):mFunc(f){}
                 F mFunc;
-                template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
+                template <class TArg,class ExecutorAgent> auto operator()(const ExFuture<ExecutorAgent,TArg>& inputFut)
                 {
                     return next(inputFut,std::forward<F>(mFunc));
+                }
+                template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg>&& inputFut)
+                {
+                   // return next(std::move(inputFut),std::forward<F>(mFunc));
+                   //@todo hacer las versiones &&
+                   return next(inputFut,std::forward<F>(mFunc));
                 }
             };
             template <class I,class F> struct ApplyLoop
