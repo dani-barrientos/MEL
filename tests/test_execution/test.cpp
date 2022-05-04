@@ -206,13 +206,13 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				execution::start(ex)
 				| mel::execution::inmediate(TestClass(initVal,ll)) 				
 				| mel::execution::parallel(
-					[](TestClass& v) noexcept
+					[](TestClass v) noexcept
 					{
 						text::debug("Bulk 1");					
 						auto prevVal = v.val;
-						v.val = 1;  //race condition
+						//v.val = 1;  //race condition
 						tasking::Process::wait(1000);
-						v.val = prevVal + 5;
+						//v.val = prevVal + 5;
 					},
 					[](TestClass& v) 
 					{

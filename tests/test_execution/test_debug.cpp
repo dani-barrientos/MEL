@@ -69,6 +69,17 @@ int _testDebug(tests::BaseTest* test)
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	sCurrentTest = test;
+	{
+		float a = 5.f;
+		auto res = execution::launch(exr,[](float v) noexcept
+		{
+			//throw std::runtime_error("Err en launch");
+		//	v+= 2.f;
+			return v;
+		},6);
+		hasta aqui bien. Ahora el next
+		mel::core::waitForFutureThread(res);
+	}
     {
         execution::InlineExecutor exInl;
 		execution::NaiveInlineExecutor exNaive;

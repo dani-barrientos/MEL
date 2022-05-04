@@ -86,7 +86,7 @@ namespace mel
                 }else
                 {
                     mel::execution::launch(fut.agent,
-                    [f = std::forward<F>(f),b,&except](ExFuture<Runnable,TArg>& fut) mutable
+                    [f = std::forward<F>(f),b,&except](ExFuture<Runnable,TArg> fut) mutable
                     {                               
                         try
                         {
@@ -256,7 +256,7 @@ namespace mel
         template <class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<Runnable>::parallel( ExFuture<Runnable,TArg> fut,std::exception_ptr& except,FTypes&&... functions)
         {
             ::mel::parallelism::Barrier barrier(sizeof...(functions));
-            _private::_invoke(fut,barrier,except,functions...);
+            _private::_invoke(fut,barrier,except,std::forward<FTypes>(functions)...);
             return barrier;        
         }    
         template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<Runnable>::parallel_convert(ExFuture<Runnable,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
