@@ -17,56 +17,13 @@ namespace mel
          * @details This executor behaves as if execution is done straightforward in-place.
          */        
         template <> class Executor<InlineExecutionAgent>
-        {
-            public:                
-                ///@{ 
-                //! brief mandatory interface from Executor
-              /*  template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<InlineExecutionAgent,TRet> output) const noexcept
-                {
-                    if constexpr (std::is_same<std::invoke_result_t<F,TArg&>,void>::value )
-                    {
-                        if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
-                        {                            
-                            f(std::forward<TArg>(arg));
-                            output.setValue();                            
-                        }
-                        else
-                        {
-                            try
-                            {
-                                f(std::forward<TArg>(arg));
-                                output.setValue();
-                            }catch(...)
-                            {
-                                output.setError(std::current_exception());
-                            }
-                        }  
-                    }else
-                    {
-                        if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
-                            output.setValue(f(std::forward<TArg>(arg)));
-                        else
-                        {
-                            try
-                            {
-                                output.setValue(f(std::forward<TArg>(arg)));
-                            }catch(...)
-                            {
-                                output.setError(std::current_exception());
-                            }
-                        }                        
-                    }
-                }
-                */
-                //template <class I, class F>	 ::mel::parallelism::Barrier loop( I&& begin, I&& end, F&& functor, int increment);
-                //template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
-                //template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& excpt,ReturnTuple& result, FTypes&&... functions);
-                ///@}
+        {                           
         };  
         namespace _private
         {
             template <class F,class TArg> void _invokeInline(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,F&& f)
             {
+                static_assert( std::is_invocable<F,TArg>::value, "inlineExecutor::_invokeInline bad signature");
                 if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     f(fut.getValue().value());                    
@@ -85,6 +42,7 @@ namespace mel
             //void overload
             template <class F> void _invokeInline(ExFuture<InlineExecutionAgent,void> fut,std::exception_ptr& except,F&& f)
             {
+
                 if constexpr (std::is_nothrow_invocable<F>::value)
                 {
                     f();                    
@@ -107,6 +65,7 @@ namespace mel
             }
             template <int n,class ResultTuple, class F,class TArg> void _invokeInline_with_result(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,ResultTuple& output,F&& f)
             {
+                static_assert( std::is_invocable<F,TArg>::value, "inlineExecutor::_invokeInline_with_result bad signature");
                 if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     std::get<n>(output) = f(fut.getValue().value());                    
@@ -152,6 +111,7 @@ namespace mel
         // overload for performance reasons
         template <class TArg, class I, class F>	 ExFuture<InlineExecutionAgent,TArg> loop(ExFuture<InlineExecutionAgent,TArg> source,I&& begin, I&& end, F&& functor, int increment = 1)
         {
+            static_assert( std::is_invocable<F,I,TArg>::value, "InlineExecutor::loop bad signature");
             if ( source.getValid())
             {
                 std::exception_ptr except{nullptr};
@@ -237,7 +197,7 @@ namespace mel
             std::exception_ptr except{nullptr};
             if ( source.getValid() )
             {
-                _private::_invokeInline(source,except,functions...);
+                _private::_invokeInline(source,except,std::forward<FTypes>(functions)...);
                 if ( !except)
                     return ExFuture<InlineExecutionAgent,TArg>(source.agent,source.getValue().value());
                 else
@@ -260,7 +220,7 @@ namespace mel
             std::exception_ptr except{nullptr};
             if ( source.getValid() )
             {
-                _private::_invokeInline(source,except,functions...);
+                _private::_invokeInline(source,except,std::forward<FTypes>(functions)...);
                 if ( !except)
                     return ExFuture<InlineExecutionAgent,void>(source.agent,1);
                 else
@@ -287,7 +247,7 @@ namespace mel
              
                 ExFuture<InlineExecutionAgent,ResultTuple> result(source.agent);
                 ResultTuple resultTuple;
-                _private::_invokeInline_with_result<0>(source,except,resultTuple,functions...);
+                _private::_invokeInline_with_result<0>(source,except,resultTuple,std::forward<FTypes>(functions)...);
                 if ( !except)
                     result.setValue(std::move(resultTuple));
                 else
@@ -367,7 +327,8 @@ namespace mel
             but same rules as for "inmediate" should be followed
             static_assert( !std::is_lvalue_reference<TArg>::value ||
                 std::is_const< typename std::remove_reference<TArg>::type>::value,"execution::launch. Use std::ref() to pass argument as reference");
-                */
+                */            
+            static_assert( std::is_invocable<F,TArg>::value, "InlineExecutor::launch. Bad signature");               
             typedef std::invoke_result_t<F,TArg> TRet;
             //return ExFuture<InlineExecutionAgent,TRet>(ex,f(std::forward<TArg>(arg)));
             if constexpr (std::is_same<TRet,void>::value )
@@ -411,11 +372,11 @@ namespace mel
         }
 
         //reimplementation of base next for InlineExecutionAgent to improve performance compared to NaiveInlineExecutor
-        template <class F,class TArg> ExFuture<InlineExecutionAgent,std::invoke_result_t<F,TArg&>> 
+        template <class F,class TArg> ExFuture<InlineExecutionAgent,std::invoke_result_t<F,TArg>> 
             next(ExFuture<InlineExecutionAgent,TArg> source, F&& f)
         {   
-            
-            typedef std::invoke_result_t<F,TArg&> TRet;
+            static_assert( std::is_invocable<F,TArg>::value, "InlineExecutor::next. Bad signature");
+            typedef std::invoke_result_t<F,TArg> TRet;
             if ( source.getValid() )
             {
                 if constexpr (std::is_same<TRet,void>::value )
@@ -471,7 +432,7 @@ namespace mel
         // void overload
         template <class F> ExFuture<InlineExecutionAgent,std::invoke_result_t<F>> 
             next(ExFuture<InlineExecutionAgent,void> source, F&& f)
-        {                
+        {                            
             typedef std::invoke_result_t<F> TRet;
             if ( source.getValid() )
             {

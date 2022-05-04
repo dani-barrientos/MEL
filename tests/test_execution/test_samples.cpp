@@ -7,6 +7,7 @@ using std::string;
 #include <memory>
 using namespace mel;
 using namespace std::literals::string_literals;
+#ifdef KK
 //code for the samples in the documentation
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
@@ -462,6 +463,7 @@ template <class ExecutorType> void _samplePF(ExecutorType ex)
 		},0,::tasking::Runnable::killFalse
 	);
 }
+#endif
 void test_execution::samples()
 {
 	text::set_level(text::level::info);
@@ -482,5 +484,5 @@ void test_execution::samples()
 	//_sampleTransfer();
    // _sampleSeveralFlows(exr,extp);
   // _sampleCallables(extp);
-  	_samplePF(exr);	
+  	//_samplePF(exr);	
 }

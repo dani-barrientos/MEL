@@ -123,11 +123,12 @@ namespace mel
          * input parameter is always pass as reference
          * @return An ExFuture with type given by functor result.
          */
-        template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg&>> 
+        template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg>> 
             next(ExFuture<ExecutorAgent,TArg> source, F&& f)
         {                
+            static_assert( std::is_invocable<F,TArg>::value, "execution::next bad functor signature");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
-            typedef std::invoke_result_t<F,TArg&> TRet;
+            typedef std::invoke_result_t<F,TArg> TRet;
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
@@ -156,7 +157,7 @@ namespace mel
         //overload for void arg
         template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>> 
             next(ExFuture<ExecutorAgent,void> source, F&& f)
-        {                
+        {                            
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             typedef std::invoke_result_t<F> TRet;
             ExFuture<ExecutorAgent,TRet> result(source.agent);
@@ -218,6 +219,7 @@ namespace mel
          */
         template <class ExecutorAgent,class TArg, class I, class F>	 ExFuture<ExecutorAgent,TArg> loop(ExFuture<ExecutorAgent,TArg> source,I&& begin, I&& end, F&& functor, int increment = 1)
         {
+            static_assert( std::is_invocable<F,int,TArg>::value, "execution::loop bad functor signature");
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(
@@ -289,6 +291,7 @@ namespace mel
         //void argument overload
         template <class ExecutorAgent,class I, class F>	 ExFuture<ExecutorAgent,void> loop(ExFuture<ExecutorAgent,void> source,I&& begin, I&& end, F&& functor, int increment = 1)
         {
+            static_assert( std::is_invocable<F,int>::value, "execution::loop bad functor signature");
             ExFuture<ExecutorAgent,void> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             source.subscribeCallback(
@@ -388,7 +391,7 @@ namespace mel
                         //set error as task in executor
                         launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
                         {
-                        result.setError(std::move(err));
+                            result.setError(std::move(err));
                         });
                     }
                 }

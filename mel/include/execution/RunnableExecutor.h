@@ -74,6 +74,7 @@ namespace mel
         {
             template <class F,class TArg> void _invoke(ExFuture<Runnable,TArg> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,F&& f)
             {
+                static_assert( std::is_invocable<F,TArg>::value, "_invoke bad signature");
                 if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     //use the exception pointer hasn't sense here because noexcept was specified
@@ -135,6 +136,7 @@ namespace mel
             }
             template <int n,class ResultTuple, class F,class TArg> void _invoke_with_result(ExFuture<Runnable,TArg> fut,::mel::parallelism::Barrier& b,std::exception_ptr& except,ResultTuple& output,F&& f)
             {
+                static_assert( std::is_invocable<F,TArg>::value, "_invoke_with_result bad signature");
                 if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     mel::execution::launch(fut.agent,
@@ -262,7 +264,7 @@ namespace mel
         template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<Runnable>::parallel_convert(ExFuture<Runnable,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
         {
             ::mel::parallelism::Barrier barrier(sizeof...(functions));
-            _private::_invoke_with_result<0>(fut,barrier,except,result,functions...);
+            _private::_invoke_with_result<0>(fut,barrier,except,result,std::forward<FTypes>(functions)...);
             return barrier;        
         }
         /**

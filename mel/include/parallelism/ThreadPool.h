@@ -126,22 +126,23 @@ namespace mel
 					func(std::forward<TArg>(arg));
 					output.set();			
 				}*/
-				_execute(opts,except, output, arg,std::forward<F>(func));
-				_execute(opts,except, output, arg,std::forward<FTypes>(functions)...);
+				_execute(opts,except, output, std::forward<TArg>(arg),std::forward<F>(func));
+				_execute(opts,except, output, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 			}		
 			//base case
 			template <class F,class TArg> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,TArg&& arg, F&& func)
 			{
+				static_assert( std::is_invocable<F,TArg>::value, "ThreadPool::_execute bad fnuctor signature");
 				if ( opts.useCallingThread || mNThreads == 0 )
 				{
 					if constexpr (std::is_nothrow_invocable<F,TArg>::value)
 					{
-						func(arg);
+						func(std::forward<TArg>(arg));
 					}else
 					{
 						try
 						{
-							func(arg);
+							func(std::forward<TArg>(arg));
 						}catch(...)
 						{
 							std::scoped_lock<std::mutex> lck(mExceptionLock);
@@ -161,7 +162,7 @@ namespace mel
 						mPool[mLastIndex]->post(
 						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg](uint64_t, Process*) mutable
 						{
-							func(arg);
+							func(std::forward<TArg>(arg));
 							output.set();
 							return mel::tasking::EGenericProcessResult::KILL;
 						})
@@ -173,7 +174,7 @@ namespace mel
 							{
 									try
 									{
-										func(arg);
+										func(std::forward<TArg>(arg));
 									}catch(...)
 									{
 										std::scoped_lock<std::mutex> lck(mExceptionLock);
@@ -189,22 +190,23 @@ namespace mel
 			}		
 			template <int n,class ReturnTuple,class F,class TArg,class ... FTypes> void _executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func,FTypes&&... functions)
 			{
-				_executeWithResult<n,ReturnTuple>(opts,except, output,result, arg,std::forward<F>(func));
-				_executeWithResult<n+1,ReturnTuple>(opts,except, output,result, arg,std::forward<FTypes>(functions)...);
+				_executeWithResult<n,ReturnTuple>(opts,except, output,result, std::forward<TArg>(arg),std::forward<F>(func));
+				_executeWithResult<n+1,ReturnTuple>(opts,except, output,result, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 			}				
 			//base case
 			template <int n,class ReturnTuple,class F,class TArg> void _executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func)
 			{
+				static_assert( std::is_invocable<F,TArg>::value, "ThreadPool::_executeWithResult bad fnuctor signature");
 				if ( opts.useCallingThread || mNThreads == 0 )
 				{
 					if constexpr (std::is_nothrow_invocable<F,TArg>::value)
 					{
-						std::get<n>(result) = func(arg);
+						std::get<n>(result) = func(std::forward<TArg>(arg));
 					}else
 					{
 						try
 						{
-							std::get<n>(result) = func(arg);
+							std::get<n>(result) = func(std::forward<TArg>(arg));
 						}catch(...)
 						{
 							std::scoped_lock<std::mutex> lck(mExceptionLock);
@@ -222,7 +224,7 @@ namespace mel
 						mPool[mLastIndex]->post(
 						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg,&result](uint64_t, Process*) mutable
 						{
-							std::get<n>(result) = func(arg);
+							std::get<n>(result) = func(std::forward<TArg>(arg));
 							output.set();
 							return mel::tasking::EGenericProcessResult::KILL;
 						})
@@ -234,7 +236,7 @@ namespace mel
 						{
 							try
 							{
-								std::get<n>(result) = func(arg);
+								std::get<n>(result) = func(std::forward<TArg>(arg));
 							}catch(...)
 							{
 								std::scoped_lock<std::mutex> lck(mExceptionLock);

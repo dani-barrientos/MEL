@@ -76,6 +76,7 @@ namespace mel
         };    
         template <class I, class F>	 ::mel::parallelism::Barrier Executor<ThreadPool>::loop(I&& begin, I&& end, F&& functor, int increment)
         {
+            static_assert( std::is_invocable<F,I>::value, "ThreadPoolExecutor::loop bad functor signature");
             ThreadPool::ExecutionOpts exopts;
             exopts.useCallingThread = false;
             exopts.groupTasks = !getOpts().independentTasks;
@@ -84,6 +85,7 @@ namespace mel
         ///@cond HIDDEN_SYMBOLS
         namespace _private
         {
+            //helper class to use ThreadPool::execute
             template <class T> class ValueWrapper
             {
                 typedef typename mel::execution::ExFuture<ThreadPool,T> FutType;

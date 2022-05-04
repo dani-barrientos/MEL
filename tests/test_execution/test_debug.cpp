@@ -69,20 +69,103 @@ int _testDebug(tests::BaseTest* test)
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	sCurrentTest = test;
+	execution::InlineExecutor exInl;
+	execution::NaiveInlineExecutor exNaive;
 	{
 		float a = 5.f;
-		auto res = execution::launch(exr,[](float v) noexcept
+		auto fut1 = execution::launch(exInl,[](float& v) noexcept
 		{
+			//@todo este caso no me gusta, porque me deja poner referencia pero es copia
 			//throw std::runtime_error("Err en launch");
 		//	v+= 2.f;
+			return ++v;
+		},a)
+		| execution::next([]( const float& v) noexcept
+		{		
+			return v+1;
+		})
+		| execution::parallel(
+			[](float v) noexcept
+			{
+				mel::text::info("T2");
+			},
+			[](const float& v) noexcept
+			{
+				mel::text::info("T2");
+			},
+			[](const float& v)
+			{
+				mel::text::info("T3");
+			}
+		)
+		| execution::parallel_convert<std::tuple<int,string>>(
+			[](float v) noexcept
+			{
+				mel::text::info("T2");
+				return 2;
+			},
+			[](const float& v) noexcept
+			{
+				mel::text::info("T2");
+				return "dani"s;
+			}
+		)
+		| execution::loop(0,10,
+			[](int idx, const std::tuple<int,string>& v) noexcept
+			{
+				text::info("LOOP");
+			})
+
+		;
+		auto res = mel::core::waitForFutureThread(fut1);
+		auto& val = res.value();
+		mel::text::info("VALUE = {} {}",std::get<0>(val),std::get<1>(val));
+		auto fut2 = execution::launch(exr,[](float& v) noexcept -> float&
+		{
+			//throw std::runtime_error("Err en launch");
+			v+= 2.f;
 			return v;
-		},6);
-		hasta aqui bien. Ahora el next
-		mel::core::waitForFutureThread(res);
+		},std::ref(a))
+		| execution::next([](float& v) noexcept -> float&
+		{
+			return ++v;
+		})
+		| execution::parallel(
+			[](float& v) noexcept
+			{
+				mel::text::info("T2");
+				v++;
+			},
+			[](const float& v) 
+			{
+				mel::text::info("T2");
+			}
+		)
+		| execution::parallel_convert<std::tuple<int,string>>(
+			[](float& v) noexcept
+			{
+				mel::text::info("T2");
+				return 3;
+			},
+			[](const float& v) noexcept
+			{
+				mel::text::info("T2");
+				return "barri"s;
+			}
+		)
+		| execution::loop(0,10,
+			[](int idx, std::tuple<int,string> v) noexcept
+			{
+				text::info("LOOP");
+			})
+		;
+		auto res2 = mel::core::waitForFutureThread(fut2);
+		auto& val2 = res2.value();
+		mel::text::info("YA");
 	}
+	return 0;
     {
-        execution::InlineExecutor exInl;
-		execution::NaiveInlineExecutor exNaive;
+        
         float a = 1.f;
 		MyPepe mp;
         // execution::launch(ex,[]()->float
@@ -101,7 +184,7 @@ int _testDebug(tests::BaseTest* test)
 		// 	v+= 2.f;
 		// },std::ref(a));
         
-        auto res = execution::launch(exInl,[](float& v) noexcept -> float&
+        auto res = execution::launch(exr,[](float& v) noexcept -> float&
 		{
 			//throw std::runtime_error("Err en launch");
 			v+= 2.f;
@@ -163,24 +246,24 @@ int _testDebug(tests::BaseTest* test)
             //v++;
         })
         | execution::parallel(
-            [](float& v) noexcept
+            [](float v) noexcept
             {
                 mel::text::info("T1 {}",v);
             },
-            [](float& v) 
+            [](const float& v) 
             {
                // throw std::runtime_error("err en T2");
                 mel::text::info("T2 {}",v);
             }
         )
         | execution::parallel_convert<std::tuple<int,string>>(
-			[](float& v) noexcept
+			[](const float& v) noexcept
 			{
 				mel::text::info("T1 {}",v);
-                v++;
+                //v++;
                 return 10;
 			},
-            [](float& v) 
+            [](float v) 
 			{
              //   throw std::runtime_error("T2");
 				mel::text::info("T2 {}",v);

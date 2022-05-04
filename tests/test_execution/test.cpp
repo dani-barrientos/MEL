@@ -436,7 +436,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				{				
 					return vector<TestClass>();
 				})
-					| mel::execution::next([test,ll](vector<TestClass>& v) noexcept
+					| mel::execution::next([test,ll](vector<TestClass>&& v) noexcept
 					{				
 						//fill de vector with a simple case for the result to be predecible
 						//I don't want out to log the initial constructions, oncly constructons and after this function
@@ -691,7 +691,7 @@ int _testLaunch( tests::BaseTest* test)
 			execution::Executor<Runnable> exr(th1);
 			exr.setOpts({true,false});
 			text::info("\n\tBasicTests with RunnableExecutor");
-			_basicTests(exr,th1.get(),test);
+			//_basicTests(exr,th1.get(),test);
 			text::info("\n\tFinished BasicTests with RunnableExecutor");
 		}
 		{
@@ -702,7 +702,7 @@ int _testLaunch( tests::BaseTest* test)
 			execution::Executor<parallelism::ThreadPool> extp(myPool);
 			extp.setOpts({true,true});
 			text::info("\n\tBasicTests with ThreadPoolExecutor");
-			_basicTests(extp,th1.get(),test);
+			//_basicTests(extp,th1.get(),test);
 			text::info("\n\tFinished BasicTests with ThreadPoolExecutor");
 		}
 	}	
@@ -732,7 +732,9 @@ int _testAdvanceSample(tests::BaseTest* test)
 	text::info("vector mean: plain way");
 	Timer timer;
 	uint64_t t0 = timer.getMilliseconds();
-	auto mean = core::waitForFutureThread( initFut | 
+	//en realidad esot no es "play way", ya que ejecuto en el runnable. Tengo que esperar y simplemente meter yo el bucle
+	auto mean = core::waitForFutureThread( initFut /*
+	| 
 	execution::next([](VectorType& v) noexcept
 	{
 		double mean = 0.0;
@@ -741,9 +743,10 @@ int _testAdvanceSample(tests::BaseTest* test)
 			mean+=v[i];
 		mean/=v.size();
 		return mean;
-	}));
+	})*/
+	);
 	uint64_t t1 = timer.getMilliseconds();
-	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
+//	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
 	tests::BaseTest::addMeasurement("vector mean: plain way time:",(float)((t1-t0)/1000.f));
 	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;
@@ -753,17 +756,17 @@ int _testAdvanceSample(tests::BaseTest* test)
 		execution::Executor<parallelism::ThreadPool> extp(myPool);
 		extp.setOpts({true,true});
 		text::info("vector mean: ThreadPoolExecutor");
-		_testMeanVector( execution::transfer(initFut,extp),"vector mean: ThreadPoolExecutor",test);
+	//	_testMeanVector( execution::transfer(initFut,extp),"vector mean: ThreadPoolExecutor",test);
 	}
 	{
 		exr.setOpts({true,false});
 		text::info("vector mean: RunnableExecutor");		
-		_testMeanVector(execution::transfer(initFut,exr),"vector mean: RunnableExecutor",test); //the transfer is not neccesary because initFut is launched in exr, but jsut in case it changes
+	//	_testMeanVector(execution::transfer(initFut,exr),"vector mean: RunnableExecutor",test); //the transfer is not neccesary because initFut is launched in exr, but jsut in case it changes
 	}
 	{		
 		execution::InlineExecutor ex;
 		text::info("vector mean: InlineExecutor");		
-		_testMeanVector( execution::transfer(initFut,ex),"vector mean: InlineExecutor",test);
+	//	_testMeanVector( execution::transfer(initFut,ex),"vector mean: InlineExecutor",test);
 	}
 	//now testing different algorithm using execution ::loop
 	{
@@ -774,12 +777,12 @@ int _testAdvanceSample(tests::BaseTest* test)
 		execution::Executor<parallelism::ThreadPool> extp(myPool);
 		extp.setOpts({true,true});
 		text::info("vector mean(loop): ThreadPoolExecutor");
-		_testMeanVectorLoop( execution::transfer(initFut,extp),"vector mean(loop): ThreadPoolExecutor",test);		
+	//	_testMeanVectorLoop( execution::transfer(initFut,extp),"vector mean(loop): ThreadPoolExecutor",test);		
 	}
 	{
 		exr.setOpts({true,false});
 		text::info("vector mean(loop): RunnableExecutor");		
-		_testMeanVectorLoop(execution::transfer(initFut,exr),"vector mean(loop): RunnableExecutor",test);
+	//	_testMeanVectorLoop(execution::transfer(initFut,exr),"vector mean(loop): RunnableExecutor",test);
 	}
 
 	//comparar resultados?
