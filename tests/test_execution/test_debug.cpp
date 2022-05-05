@@ -72,8 +72,44 @@ int _testDebug(tests::BaseTest* test)
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;
 	{
+		auto res = mel::core::waitForFutureThread(
+				execution::start(exr) 
+				| mel::execution::next([]
+				{				
+					return vector<MyPepe>();
+				})
+				| mel::execution::next([](vector<MyPepe> v) noexcept
+					{				
+						//fill de vector with a simple case for the result to be predecible
+						//I don't want out to log the initial constructions, oncly constructons and after this function
+						v.resize(100);	
+						for(auto& elem:v)
+						{
+							elem.val = 2;
+						}
+						return std::move(v); 
+					})
+					| mel::execution::next([](vector<MyPepe> v) noexcept
+					{
+					//@todo ahora estos ejemplos no vale, porque no es referencia
+						size_t s = v.size();
+						for(auto& elem:v)
+							++elem.val;						
+						return std::move(v);	
+					})| mel::execution::parallel(
+						[](vector<MyPepe> v) 
+						{								
+							
+						},
+						[](const vector<MyPepe>& v) noexcept
+						{
+						
+						})
+		);
+	}
+	{
 		float a = 5.f;
-		auto fut1 = execution::launch(exInl,[](float& v) noexcept
+		auto fut1 = execution::launch(exr,[](float& v) noexcept
 		{
 			//@todo este caso no me gusta, porque me deja poner referencia pero es copia
 			//throw std::runtime_error("Err en launch");
@@ -119,7 +155,7 @@ int _testDebug(tests::BaseTest* test)
 		;
 		auto res = mel::core::waitForFutureThread(fut1);
 		auto& val = res.value();
-		mel::text::info("VALUE = {} {}",std::get<0>(val),std::get<1>(val));
+	//	mel::text::info("VALUE = {} {}",std::get<0>(val),std::get<1>(val));
 		auto fut2 = execution::launch(exr,[](float& v) noexcept -> float&
 		{
 			//throw std::runtime_error("Err en launch");

@@ -183,44 +183,42 @@ as function template parameter, but in a real example the job couldn't know anyt
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
 	auto th = ThreadRunnable::create();
-	th->fireAndForget([ex] () mutable
-	{
-		auto res = ::mel::tasking::waitForFutureMThread(
-			execution::launch(ex,[](float param) noexcept
-			{	
-				return param+6.f;
-			},10.5f)
-			| mel::execution::next( [](float& param) noexcept
-			{
-				return std::to_string(param);
-			})
-			|
-				mel::execution::getExecutor([](auto ex) noexcept {
-					if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
-						mel::text::info("Current executor supports true parallelism. Next job will be executed parallelized");
-					else
-						mel::text::info("Current executor doesn't support true parallelism. Next job will be executed sequentially");
-				})
-			| mel::execution::parallel() 
-				[](string& str) noexcept
-				{					
-					text::info("Parallel 1. {}",str+" hello!");
-				},
-				[](string& str) noexcept
-				{
-					text::info("Parallel 2. {}",str+" hi!");
-				},
-				[](string& str) noexcept
-				{
-					text::info("Parallel 2. {}",str+" whats up!");
-				}
-			)
-		);
-		if (res.isValid())
-		{
-			::text::info("Result value = {}",res.value());
-		}
-	},0,::tasking::Runnable::killFalse);
+    th->fireAndForget(
+            [ex]() mutable {
+              try {
+                auto res = ::mel::tasking::waitForFutureMThread(
+                    mel::execution::launch(
+                        ex, [](float param) noexcept { return param + 6.f; },
+                        10.5f) |
+                    mel::execution::next([](float param) noexcept {
+                      return std::to_string(param);
+                    }) |
+					mel::execution::getExecutor([](auto ex) noexcept {
+						if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
+							mel::text::info("Current executor supports true parallelism. Next job will be executed parallelized");
+						else
+							mel::text::info("Current executor doesn't support true parallelism. Next job will be executed sequentially");
+                    }) |
+                    mel::execution::parallel(
+                        [](const string &str) noexcept{
+                          mel::text::info("Parallel 1. {}", str + " hello!");
+                        },
+                        [](const string &str) noexcept{
+                          mel::text::info("Parallel 2. {}", str + " hi!");
+                        },
+                        [](const string &str) noexcept{
+                          mel::text::info("Parallel 2. {}", str + " whats up!");
+                        }));
+                if (res.isValid()) {
+                  ::mel::text::info("Result value = {}", res.value());
+                }
+              } catch (core::WaitException &e) {
+                ::mel::text::error("Error while waiting: Reason={}", e.what());
+              } catch (...) {
+                ::mel::text::error("Error while waiting: Unknown reason={}");
+              }
+            },
+            0, ::mel::tasking::Runnable::killFalse);
 }
 \endcode
 Output will be:
@@ -242,11 +240,11 @@ class MyClass
 		{
 			return p1+p2;
 		};
-		string f2(float& p) noexcept
+		string f2(float p) noexcept
 		{
 			return std::to_string(p);
 		}
-		void operator()(string& str)
+		void operator()(const string& str) noexcept
 		{
 			text::info("Parallel operator() {}",str+" hi!");
 		}
@@ -262,15 +260,14 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 		auto res = ::mel::tasking::waitForFutureMThread(
 			execution::launch(ex,
 				std::bind(&MyClass::f1,&obj,6.7f,_1),10.5f)
-			| mel::execution::next(std::bind(&MyClass::f2,&obj,_1))
-	
+			| mel::execution::next(std::bind(&MyClass::f2,&obj,_1))	
 			| mel::execution::parallel( 
 				MyClass(),
-				[](string& str)
+				[](const string& str)
 				{
 					text::info("Parallel 2. {}",str+" hi!");
 				},
-				[](string& str)
+				[](const string& str)
 				{
 					text::info("Parallel 2. {}",str+" whats up!");
 				}
@@ -325,7 +322,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 				str += "Bye!";
 				return str;
 			})
-			| mel::execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string str ) noexcept
 			{
 				//Fourth job
 				str += "See you!";
@@ -350,33 +347,38 @@ As can be seen, the original string is modified, but only until third job. becau
 Also just as a way to better understanding, the previous code is **functionally equivalent** to this other (redundant parts are removed):
 \code{.cpp}
 auto res = ::mel::tasking::waitForFutureMThread(
-    mel::execution::start(ex)
-    | mel::execution::inmediate(std::ref(str))
-    | mel::execution::next([](string& str) noexcept ->string&
-    {	
-        //First job
-        str += " Dani.";
-        return str;
-    })
-    | mel::execution::next( [](string& str) noexcept -> string&
-    {
-        //Second job 
-        str+= " How are you?";
-        return str;
-    })
-    | mel::execution::next( [](string& str ) noexcept
-    {
-        //Third job
-        str += "Bye!";
-        return str;
-    })
-    | mel::execution::next( [](string& str ) noexcept
-    {
-        //Fourth job
-        str += "See you!";
-        return str;
-    })
+	execution::start(ex)
+	| mel::execution::inmediate(std::ref(str))
+	| mel::execution::next([](string& str) noexcept ->string&
+	{	
+		//First job
+		str += " Dani.";
+		return str;
+	})
+	| mel::execution::next( [](string& str) noexcept -> string&
+	{
+		//Second job 
+		str+= " How are you?";
+		return str;
+	})
+	| mel::execution::next( [](string& str ) noexcept
+	{
+		//Third job
+		str += "Bye!";
+		return str;
+	})
+	| mel::execution::next( [](string str ) noexcept
+	{
+		//Fourth job
+		str += "See you!";
+		return str;
+	})
 );
+if (res.isValid())
+{
+	::text::info("Result value = {}",res.value());
+	::text::info("Original str = {}",str);
+});
 \endcode
 Instead of launching a callable intially, the chain of execution is started with a \ref ::mel::execution::start "start", followed by a \ref ::mel::execution::inmediate "inmediate".
 Although in this example this doesn't improves anything, can be usefull in other situations.
@@ -417,7 +419,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
                     str += "Bye!";
                     return str;
                 })
-                | mel::execution::next( [](string& str ) noexcept
+                | mel::execution::next( [](string str ) noexcept
                 {
                     //Fourth job. Will never be executed
                     str += "See you!";
@@ -488,7 +490,7 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 				{
 					return "Error caught!! ";
 				})
-				| mel::execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](string str ) noexcept
 				{
 					//Fourth job. 
 					str += "See you!";
@@ -517,51 +519,45 @@ Because the error was captured in the job chain, no exception was thrown. The \r
 and *must return the same type* as the previous job in the chain (because this type is what that job expects . If no exception was launched *before* the catchError call,
 this function will be ignored.
 
+DOCUMENTAR EL TEMA DE ERORES SIN EXCEPCIONES
+
 ### Changing executor	{#chaging_executor}
 In this example we will show how to tranfer execution from one executor to another in the same flow. This is acomplished by the function \ref ::mel::execution::transfer "transfer".
 It's better seen with an example:
 \code{.cpp}
-void _sampleTransfer()
+template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 {	
 	auto th = ThreadRunnable::create();
-	execution::Executor<Runnable> exr(th);
-	exr.setOpts({true,false});
-	parallelism::ThreadPool::ThreadPoolOpts opts;
-	auto myPool = make_shared<parallelism::ThreadPool>(opts);
-	parallelism::ThreadPool::ExecutionOpts exopts;
-	execution::Executor<parallelism::ThreadPool> extp(myPool);
-	extp.setOpts({true,false});
-	th->fireAndForget([exr,extp] () mutable
-	{
-		
+	th->fireAndForget([ex1,ex2] () mutable
+	{		
 		try
 		{
 			auto res = ::mel::tasking::waitForFutureMThread(
-				execution::start(exr)
+
+				execution::start(ex1)
 				| mel::execution::inmediate("Hello "s)
-				| mel::execution::next( [](string& str) noexcept
+				| mel::execution::next( [](const string& str) noexcept
 				{
 					//Second job 
 					text::info("NEXT: {}",str);
 					return str + ". How are you?";
 				})
-				| mel::execution::transfer(extp)  //now transfer execution to the other executor!!
-				| mel::execution::loop(0,10, [](int idx, string& str) noexcept
+				| mel::execution::transfer(ex2)
+				| mel::execution::loop(0,10, [](int idx, const string& str) noexcept
 				{
 					text::info("Iteration {}", str + std::to_string(idx));
 				})
-				| mel::execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](const string& str ) noexcept
 				{
 					//Fourth job. 
-					str += "See you!";
-					return str;
+					return "See you!";
 				})
 			);
 			::text::info("Result value = {}",res.value());
 		}
 		catch(core::WaitException& e)
 		{
-			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}catch(std::exception& e)
 		{
 			::text::error("Some error occured!! Reason: {}",e.what());
@@ -569,9 +565,9 @@ void _sampleTransfer()
 	},0,::tasking::Runnable::killFalse);
 }
 \endcode
-The code consists of two diferent executors, one based on a ThreadRunnable and other based on a ThreadPool. The eecutions start in
-the ThreadRunnable executor and just before the loop, execution is transferred to the other. 
+In this code the execution starts in the executor `ex1` and just before the loop, execution is transferred to the other (`ex2`). 
 ### Converging several job flows	{#converging_jobs}
+MAL HASTA ARREGLAR CODIGO
 Here an example on how to create several execution flows and merge their work.
 \code{.cpp}
 template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
@@ -715,8 +711,9 @@ The code will be:
 					| execution::next( [](SampleClass& input)
 					{
 						//Job 3
-						input.val++;
-						return std::move(input); //a move move construction
+						auto ret = input;
+						ret.val++;
+						return ret; 
 					})
 				);
 				mel::text::info("Result value = {}",ref.value().val);
@@ -733,17 +730,19 @@ The code will be:
 And now the out, in which comments are added to explain where every concrete message comes from:
 
 \verbatim
-SampleClass constructor 		-> contruction of object 'cl'
+SampleClass constructor			-> contruction of object 'cl'
 SampleClass copy constructor	-> copy construction as result in Job 2
 SampleClass move constructor	-> moved to the new Job 3
 SampleClass destructor			-> destroyed object returned in Job 2
-SampleClass move constructor	->
-SampleClass move constructor 	-> this and the previous neccesary to return object from Job 3 and set final result
-SampleClass destructor			
-SampleClass destructor			 
-Result value = 8				-> end result is a copy of the original 'cl' object
-Original value = 7 				-> value of original 'cl.val', which was modified in jobs 1 & 2
-SampleClass destructor			
+SampleClass copy constructor	-> creation of `ret`in Job3
+SampleClass move constructor	-> return from Job3
+SampleClass destructor
+SampleClass move constructor	->move to final result
+SampleClass destructor
+SampleClass destructor
+Result value = 7
+Original value = 7
+SampleClass destructor
 SampleClass destructor
 \endverbatim
 

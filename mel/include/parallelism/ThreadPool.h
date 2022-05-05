@@ -132,7 +132,7 @@ namespace mel
 			//base case
 			template <class F,class TArg> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,TArg&& arg, F&& func)
 			{
-				static_assert( std::is_invocable<F,TArg>::value, "ThreadPool::_execute bad fnuctor signature");
+				static_assert( std::is_invocable<F,TArg>::value, "ThreadPool::_execute bad functor signature");
 				if ( opts.useCallingThread || mNThreads == 0 )
 				{
 					if constexpr (std::is_nothrow_invocable<F,TArg>::value)

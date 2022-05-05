@@ -16,7 +16,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 		auto res5 = mel::core::waitForFutureThread(	
 		fut
 		| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -26,7 +26,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			},
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -37,7 +37,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			},
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -48,7 +48,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			},
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -59,7 +59,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			}
-		) | mel::execution::next( [](std::tuple<double,double,double,double>& means)
+		) | mel::execution::next( [](const std::tuple<double,double,double,double>& means)
 		{
 			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
 		}));

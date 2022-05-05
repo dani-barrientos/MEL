@@ -615,7 +615,7 @@ namespace mel
                 std::tuple<FTypes...> mFuncs;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return parallel_convert<ReturnTuple,TArg>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                    return parallel_convert<ReturnTuple>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
             };
         }

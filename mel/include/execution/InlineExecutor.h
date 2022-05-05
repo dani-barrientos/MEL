@@ -213,7 +213,8 @@ namespace mel
                 result.setError(source.getValue().error());
                 return result;
             }
-        }    
+        } 
+        /*   
         ///void overload
         template <class ...FTypes> ExFuture<InlineExecutionAgent,void> parallel(ExFuture<InlineExecutionAgent,void> source, FTypes&&... functions)  
         {            
@@ -236,15 +237,14 @@ namespace mel
                 result.setError(source.getValue().error());
                 return result;
             }
-
         }   
+        */
         //overload for performance reasons
         template <class ResultTuple, class TArg,class ...FTypes> ExFuture<InlineExecutionAgent,ResultTuple> parallel_convert(ExFuture<InlineExecutionAgent,TArg> source, FTypes&&... functions)
         {            
             std::exception_ptr except{nullptr};
             if ( source.getValid() )
-            {
-             
+            {             
                 ExFuture<InlineExecutionAgent,ResultTuple> result(source.agent);
                 ResultTuple resultTuple;
                 _private::_invokeInline_with_result<0>(source,except,resultTuple,std::forward<FTypes>(functions)...);
