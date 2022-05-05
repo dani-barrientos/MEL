@@ -147,8 +147,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 				/*if ( ::mel::tasking::Process::wait(1000) != ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 					return str;*/
 				str+= " How are you?";
-				throw std::runtime_error("This is an error");
-				//return str;
+				throw std::runtime_error("This is an error");				
 			})
 			| mel::execution::next( [](string& str ) noexcept
 			{
@@ -197,7 +196,6 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 					//Second job 
 					str+= " How are you?";
 					throw std::runtime_error("This is an error");
-					//return str;
 				})
 				| mel::execution::next( [](string& str ) noexcept
 				{
@@ -228,6 +226,61 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 		::text::info("Original str = {}",str);
 	},0,::tasking::Runnable::killFalse);
 }
+template <class ExecutorType> void _sampleErrorNoException(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		auto res = ::mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+			execution::launch(ex,[](string& str) noexcept ->string&
+			{	
+				//First job
+				str += " Dani.";
+				return str;
+			},std::ref(str))
+			| mel::execution::next( [](string& str) -> string&
+			{
+				//Second job 
+				str+= " How are you?";
+				throw std::runtime_error("This is an error");
+				return str;
+			})
+			| mel::execution::next( [](string& str ) noexcept
+			{
+				//Third job. Will never be executed!!!
+				str += "Bye!";
+				return str;
+			})
+			| mel::execution::next( [](string str ) noexcept
+			{
+				//Fourth job. 
+				str += "See you!";
+				return str;
+			})
+		);
+		//need to check if some error occurred
+		if (res.isValid())
+			::text::info("Result value = {}",res.value());
+		else
+		{  
+			//error branch.
+			try
+			{
+				std::rethrow_exception(res.error());
+			}
+			catch(core::WaitException& e)
+			{
+				::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
+			}catch(std::exception& e)
+			{
+				::text::error("Some error occured!! Reason: {}",e.what());
+			}
+			::text::info("Original str = {}",str);
+		}
+	},0,::tasking::Runnable::killFalse);
+}
+
 template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 {	
 	auto th = ThreadRunnable::create();
@@ -473,6 +526,7 @@ void test_execution::samples()
  	_sampleReference(exr);
  	_sampleError1(exr);
  	_sampleError2(extp);
+	_sampleErrorNoException(extp);
  	_sampleTransfer(exr,extp);
     //_sampleSeveralFlows(exr,extp);
     _sampleCallables(extp);

@@ -767,9 +767,9 @@ namespace mel
 				core::Future<T> mFut;
 				std::exception_ptr mErr{nullptr}; 
 		};
-		//! @brief Policyt for treating error as exception in future wait functions
+		//! @brief Policy for treating error as exception in future wait functions
 		struct WaitErrorAsException{};
-		//! @brief Policyt for not treating error as exception in future wait functions
+		//! @brief Policy for not treating error as exception in future wait functions
         struct WaitErrorNoException{};
 
 	}
