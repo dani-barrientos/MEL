@@ -223,7 +223,7 @@ namespace mel
 				break;
 			}
 			*/
-	        template<class ErrorType = mel::core::WaitErrorAsException,class T> ::mel::core::WaitResult<T> waitForFutureThread(  const mel::core::Future<T>& f,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same<ErrorType,::mel::core::WaitErrorNoException>::value)
+	    template<class ErrorType = mel::core::WaitErrorAsException,class T> ::mel::core::WaitResult<T> waitForFutureThread(  const mel::core::Future<T>& f,unsigned int msecs = ::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same<ErrorType,::mel::core::WaitErrorNoException>::value)
         {
             constexpr bool NotuseException = std::is_same<ErrorType,::mel::core::WaitErrorNoException>::value;
             constexpr bool UseException = std::is_same<ErrorType,::mel::core::WaitErrorAsException>::value;

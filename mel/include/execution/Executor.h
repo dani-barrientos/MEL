@@ -123,11 +123,12 @@ namespace mel
          * input parameter is always pass as reference
          * @return An ExFuture with type given by functor result.
          */
-        template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg&>> 
+        template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg>> 
             next(ExFuture<ExecutorAgent,TArg> source, F&& f)
         {                
+            static_assert( std::is_invocable<F,TArg>::value, "execution::next bad functor signature");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
-            typedef std::invoke_result_t<F,TArg&> TRet;
+            typedef std::invoke_result_t<F,TArg> TRet;
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
@@ -135,7 +136,7 @@ namespace mel
                 {       
                     if ( input.isValid() )
                     {                            
-                        source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg&>::value)->TRet 
+                        source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
                         {                                          
                             return f(arg.getValue().value());                         
                         },source,result);                                                          
@@ -156,7 +157,7 @@ namespace mel
         //overload for void arg
         template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>> 
             next(ExFuture<ExecutorAgent,void> source, F&& f)
-        {                
+        {                            
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             typedef std::invoke_result_t<F> TRet;
             ExFuture<ExecutorAgent,TRet> result(source.agent);
@@ -218,6 +219,7 @@ namespace mel
          */
         template <class ExecutorAgent,class TArg, class I, class F>	 ExFuture<ExecutorAgent,TArg> loop(ExFuture<ExecutorAgent,TArg> source,I&& begin, I&& end, F&& functor, int increment = 1)
         {
+            static_assert( std::is_invocable<F,int,TArg>::value, "execution::loop bad functor signature");
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(
@@ -229,7 +231,7 @@ namespace mel
                         {
                             std::exception_ptr* except = new std::exception_ptr(nullptr);
                             ::mel::parallelism::Barrier barrier;
-                            if constexpr (std::is_nothrow_invocable<F,I,TArg&>::value)
+                            if constexpr (std::is_nothrow_invocable<F,I,TArg>::value)
                             {
                                 barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
                                 [f = std::forward<F>(functor),source](I idx) mutable noexcept
@@ -289,6 +291,7 @@ namespace mel
         //void argument overload
         template <class ExecutorAgent,class I, class F>	 ExFuture<ExecutorAgent,void> loop(ExFuture<ExecutorAgent,void> source,I&& begin, I&& end, F&& functor, int increment = 1)
         {
+            static_assert( std::is_invocable<F,int>::value, "execution::loop bad functor signature");
             ExFuture<ExecutorAgent,void> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             source.subscribeCallback(
@@ -365,6 +368,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
+                //@note in C++20 I could have done fs... = std::forward<FTypes>(functions)..., but not in C++17
                 std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
@@ -387,7 +391,7 @@ namespace mel
                         //set error as task in executor
                         launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
                         {
-                        result.setError(std::move(err));
+                            result.setError(std::move(err));
                         });
                     }
                 }
@@ -429,7 +433,7 @@ namespace mel
          * So, these functors must return a value
          * @return a tuple with types for each functor return, in order. Returning void is not allowed
          */
-        template <class ResultTuple, class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
+        template <class ResultTuple, class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
         {
             //@todo tratar de dedudir la tupla de los resultados de cada funcion
             static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
@@ -520,9 +524,15 @@ namespace mel
                 ApplyNext(F&& f):mFunc(std::forward<F>(f)){}
                 ApplyNext(const F& f):mFunc(f){}
                 F mFunc;
-                template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
+                template <class TArg,class ExecutorAgent> auto operator()(const ExFuture<ExecutorAgent,TArg>& inputFut)
                 {
                     return next(inputFut,std::forward<F>(mFunc));
+                }
+                template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg>&& inputFut)
+                {
+                   // return next(std::move(inputFut),std::forward<F>(mFunc));
+                   //@todo hacer las versiones &&
+                   return next(inputFut,std::forward<F>(mFunc));
                 }
             };
             template <class I,class F> struct ApplyLoop

@@ -16,6 +16,7 @@ using mel::tasking::Process;
 #include <execution/NaiveInlineExecutor.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <execution/Flow.h>
 #include <vector>
 using std::vector;
 
@@ -23,6 +24,36 @@ using namespace mel;
 namespace test_execution
 {
 //funcion para pruebas a lo cerdo
+struct MyPepe
+{
+	int val = 10;
+	MyPepe()
+	{
+		mel::text::info("MyPepe");
+	}
+	MyPepe( const MyPepe& ob2)
+	{
+		mel::text::info("MyPepe(const MyPepe& ob2)");
+	}
+	MyPepe( MyPepe&& ob2)
+	{
+		mel::text::info("MyPepe(MyPepe&& ob2)");
+		val = ob2.val;
+		ob2.val = -1;
+	}
+	MyPepe& operator=(const MyPepe& ob2)
+	{
+		mel::text::info("operator= (const MyPepe& ob2)");
+		return *this;
+	}
+	MyPepe& operator=(MyPepe&& ob2)
+	{
+		mel::text::info("operator= (MyPepe&& ob2)");
+		val = ob2.val;
+		ob2.val = -1;
+		return *this;
+	}
+};
 static tests::BaseTest* sCurrentTest = nullptr;
 int _testDebug(tests::BaseTest* test)
 {
@@ -38,11 +69,141 @@ int _testDebug(tests::BaseTest* test)
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});   
 	sCurrentTest = test;
-    {
-        execution::InlineExecutor exInl;
-		execution::NaiveInlineExecutor exNaive;
-        float a = 1.f;
+	execution::InlineExecutor exInl;
+	execution::NaiveInlineExecutor exNaive;
+	{
+		auto res = mel::core::waitForFutureThread(
+				execution::start(exr) 
+				| mel::execution::next([]
+				{				
+					return vector<MyPepe>();
+				})
+				| mel::execution::next([](vector<MyPepe> v) noexcept
+					{				
+						//fill de vector with a simple case for the result to be predecible
+						//I don't want out to log the initial constructions, oncly constructons and after this function
+						v.resize(100);	
+						for(auto& elem:v)
+						{
+							elem.val = 2;
+						}
+						return std::move(v); 
+					})
+					| mel::execution::next([](vector<MyPepe> v) noexcept
+					{
+					//@todo ahora estos ejemplos no vale, porque no es referencia
+						size_t s = v.size();
+						for(auto& elem:v)
+							++elem.val;						
+						return std::move(v);	
+					})| mel::execution::parallel(
+						[](vector<MyPepe> v) 
+						{								
+							
+						},
+						[](const vector<MyPepe>& v) noexcept
+						{
+						
+						})
+		);
+	}
+	{
+		float a = 5.f;
+		auto fut1 = execution::launch(exr,[](float& v) noexcept
+		{
+			//@todo este caso no me gusta, porque me deja poner referencia pero es copia
+			//throw std::runtime_error("Err en launch");
+		//	v+= 2.f;
+			return ++v;
+		},a)
+		| execution::next([]( const float& v) noexcept
+		{		
+			return v+1;
+		})
+		| execution::parallel(
+			[](float v) noexcept
+			{
+				mel::text::info("T2");
+			},
+			[](const float& v) noexcept
+			{
+				mel::text::info("T2");
+			},
+			[](const float& v)
+			{
+				mel::text::info("T3");
+			}
+		)
+		| execution::parallel_convert<std::tuple<int,string>>(
+			[](float v) noexcept
+			{
+				mel::text::info("T2");
+				return 2;
+			},
+			[](const float& v) noexcept
+			{
+				mel::text::info("T2");
+				return "dani"s;
+			}
+		)
+		| execution::loop(0,10,
+			[](int idx, const std::tuple<int,string>& v) noexcept
+			{
+				text::info("LOOP");
+			})
 
+		;
+		auto res = mel::core::waitForFutureThread(fut1);
+		auto& val = res.value();
+	//	mel::text::info("VALUE = {} {}",std::get<0>(val),std::get<1>(val));
+		auto fut2 = execution::launch(exr,[](float& v) noexcept -> float&
+		{
+			//throw std::runtime_error("Err en launch");
+			v+= 2.f;
+			return v;
+		},std::ref(a))
+		| execution::next([](float& v) noexcept -> float&
+		{
+			return ++v;
+		})
+		| execution::parallel(
+			[](float& v) noexcept
+			{
+				mel::text::info("T2");
+				v++;
+			},
+			[](const float& v) 
+			{
+				mel::text::info("T2");
+			}
+		)
+		| execution::parallel_convert<std::tuple<int,string>>(
+			[](float& v) noexcept
+			{
+				mel::text::info("T2");
+				return 3;
+			},
+			[](const float& v) noexcept
+			{
+				mel::text::info("T2");
+				return "barri"s;
+			}
+		)
+		| execution::loop(0,10,
+			[](int idx, std::tuple<int,string> v) noexcept
+			{
+				text::info("LOOP");
+			})
+		;
+		auto res2 = mel::core::waitForFutureThread(fut2);
+		auto& val2 = res2.value();
+		mel::text::info("YA");
+	}
+	return 0;
+    {
+        
+        float a = 1.f;
+		MyPepe mp;
         // execution::launch(ex,[]()->float
 		// {
 		// 	//throw std::runtime_error("Err en launch");
@@ -59,7 +220,7 @@ int _testDebug(tests::BaseTest* test)
 		// 	v+= 2.f;
 		// },std::ref(a));
         
-        auto res = execution::launch(exNaive,[](float& v) noexcept -> float&
+        auto res = execution::launch(exr,[](float& v) noexcept -> float&
 		{
 			//throw std::runtime_error("Err en launch");
 			v+= 2.f;
@@ -73,7 +234,7 @@ int _testDebug(tests::BaseTest* test)
             res += 2.f;
 			return res;
         })
-         | execution::next([](float& res)
+         | execution::next([](float& res) noexcept
 		{
 
 //			throw std::runtime_error("err en next");
@@ -81,7 +242,8 @@ int _testDebug(tests::BaseTest* test)
             res += 2.f;
 			return res+1;
         })
-        | execution::next( [](float&){})
+		//version quitando el input parameter
+        /*| execution::next( [](float&){})
         | execution::next( [](){})
         | execution::loop(0,10,[](int idx)  noexcept
         {            
@@ -107,54 +269,95 @@ int _testDebug(tests::BaseTest* test)
 			},
             []()
 			{
-                throw std::runtime_error("T2");
+                //throw std::runtime_error("T2");
 				mel::text::info("T2");
                 return "dani2"s;
 			})    
-        
+        */
         //version with input parameter
-        // | execution::loop(0,10,[](int idx,float& v) noexcept
-        // {            
-        //     //throw std::runtime_error("err en loop");
-        //     mel::text::info("Loop. It {}",idx);            
-        //     v++;
-        // })
-        // | execution::parallel(
-        //     [](float& v) noexcept
-        //     {
-        //         mel::text::info("T1 {}",v);
-        //     },
-        //     [](float& v) 
-        //     {
-        //        // throw std::runtime_error("err en T2");
-        //         mel::text::info("T2 {}",v);
-        //     }
-        // )
-        // | execution::parallel_convert<std::tuple<int,string>>(
-		// 	[](float& v) noexcept
-		// 	{
-		// 		mel::text::info("T1 {}",v);
-        //         v++;
-        //         return 10;
-		// 	},
-        //     [](float& v) 
-		// 	{
-        //      //   throw std::runtime_error("T2");
-		// 		mel::text::info("T2 {}",v);
-        //         v++;
-        //         return "dani"s;
-		// 	})    
-        
-        
-        //| execution::inmediate( 20.f)
+        | execution::loop(0,10,[](int idx,float v) noexcept
+        {            
+            //throw std::runtime_error("err en loop");
+            mel::text::info("Loop. It {}",idx);            
+            //v++;
+        })
+        | execution::parallel(
+            [](float v) noexcept
+            {
+                mel::text::info("T1 {}",v);
+            },
+            [](const float& v) 
+            {
+               // throw std::runtime_error("err en T2");
+                mel::text::info("T2 {}",v);
+            }
+        )
+        | execution::parallel_convert<std::tuple<int,string>>(
+			[](const float& v) noexcept
+			{
+				mel::text::info("T1 {}",v);
+                //v++;
+                return 10;
+			},
+            [](float v) 
+			{
+             //   throw std::runtime_error("T2");
+				mel::text::info("T2 {}",v);
+                v++;
+                return "dani"s;
+			}
+		)                    
+        | mel::execution::condition<float>([](std::tuple<int,string>& v)
+			{
+				return std::make_pair(0,MyPepe());
+			},
+			[&mp](const MyPepe& v) noexcept
+			{
+				//el problema es que  con este argumento no pilla el noexcept..
+			//	::mel::text::info("Option 1. {} {}",std::get<0>(v),std::get<1>(v));
+				::mel::text::info("Option 1. {} ",v.val);
+				return 1.4f;
+			},
+			[](const MyPepe& v)
+			{
+				//mel::tasking::Process::wait(1000);
+				::mel::text::info("Option 2. {} ",v.val);
+				throw std::runtime_error("Err opt 2");
+				return 6.8f;
+			}
+		)
         ;
-        
+/*
+	//la idea del pair es poder hacer que los jobs reciban otra cosa->¿por qué no uso mismo tipo que la entrada?->podría hacerlo de forma que cada job empezase con 
+	//YA VERÉ, IGUAL LO QUITO
+
+        auto res2 = mel::execution::condition<float>(res,[](std::tuple<int,string>& v)
+		{
+			return std::make_pair(0,MyPepe());
+		},
+		//[&mp](MyPepe v) noexcept    esta version no detecta el noexcept
+		[&mp](const MyPepe& v) noexcept
+		{
+			//el problema es que  con argumento por copia no piulla el noexcept no pilla el noexcept..
+		//	::mel::text::info("Option 1. {} {}",std::get<0>(v),std::get<1>(v));
+			::mel::text::info("Option 1. {} ",v.val);
+			return 1.4f;
+		},
+		[](const MyPepe& v)
+		{
+			//mel::tasking::Process::wait(1000);
+			::mel::text::info("Option 2. {} ",v.val);
+			throw std::runtime_error("Err opt 2");
+			return 6.8f;
+		}
+		);*/
         try
 		{
 			auto val = mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(res);            
-            mel::text::info("Value = {} {}",std::get<0>(val.value()),std::get<1>(val.value()));
+           // mel::text::info("Value = {} {}",std::get<0>(val.value()),std::get<1>(val.value()));
 		//	mel::text::info("Value = {}",val.value());
-			//mel::text::info("Value = {}");
+			auto& value = val.value();
+			mel::text::info("Value = {}");
 			mel::text::info("Original Value = {}",a);
 		}
 		catch(std::exception& e)

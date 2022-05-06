@@ -25,9 +25,10 @@ namespace mel
                 //! brief mandatory interface from Executor
                 template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<NaiveInlineExecutionAgent,TRet> output) const noexcept
                 {
-                    if constexpr (std::is_same<std::invoke_result_t<F,TArg&>,void>::value )
+                    static_assert( std::is_invocable<F,TArg>::value, "NaiveExecutor::next bad functor signature");
+                    if constexpr (std::is_same<std::invoke_result_t<F,TArg>,void>::value )
                     {
-                        if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                        if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                         {                            
                             f(std::forward<TArg>(arg));
                             output.setValue();                            
@@ -45,7 +46,7 @@ namespace mel
                         }  
                     }else
                     {
-                        if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                        if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                             output.setValue(f(std::forward<TArg>(arg)));
                         else
                         {
@@ -104,7 +105,8 @@ namespace mel
         {
             template <class F,class TArg> void _invokeInline(ExFuture<NaiveInlineExecutionAgent,TArg> fut,std::exception_ptr& except,F&& f)
             {
-                if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                static_assert( std::is_invocable<F,TArg>::value, "_invokeInline bad functor signature");
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     f(fut.getValue().value());                    
                 }else
@@ -144,7 +146,8 @@ namespace mel
             }
             template <int n,class ResultTuple, class F,class TArg> void _invokeInline_with_result(ExFuture<NaiveInlineExecutionAgent,TArg> fut,std::exception_ptr& except,ResultTuple& output,F&& f)
             {
-                if constexpr (std::is_nothrow_invocable<F,TArg&>::value)
+                static_assert( std::is_invocable<F,TArg>::value, "_invokeInline_with_result bad functor signature");
+                if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
                     std::get<n>(output) = f(fut.getValue().value());                    
                 }else
@@ -208,12 +211,12 @@ namespace mel
         }
         template <class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<NaiveInlineExecutionAgent>::parallel( ExFuture<NaiveInlineExecutionAgent,TArg> fut,std::exception_ptr& except,FTypes&&... functions)
         {            
-            _naive::_private::_invokeInline(fut,except,functions...);
+            _naive::_private::_invokeInline(fut,except,std::forward<FTypes>(functions)...);
             return ::mel::parallelism::Barrier((size_t)0);
         }    
         template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<NaiveInlineExecutionAgent>::parallel_convert(ExFuture<NaiveInlineExecutionAgent,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
         {
-            _naive::_private::_invokeInline_with_result<0>(fut,except,result,functions...);
+            _naive::_private::_invokeInline_with_result<0>(fut,except,result,std::forward<FTypes>(functions)...);
             return ::mel::parallelism::Barrier((size_t)0);
         }
         

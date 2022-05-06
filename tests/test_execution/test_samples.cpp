@@ -7,6 +7,7 @@ using std::string;
 #include <memory>
 using namespace mel;
 using namespace std::literals::string_literals;
+
 //code for the samples in the documentation
 template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 {	
@@ -18,7 +19,7 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
                     mel::execution::launch(
                         ex, [](float param) noexcept { return param + 6.f; },
                         10.5f) |
-                    mel::execution::next([](float &param) noexcept {
+                    mel::execution::next([](float param) noexcept {
                       return std::to_string(param);
                     }) |
 					mel::execution::getExecutor([](auto ex) noexcept {
@@ -28,13 +29,13 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
 							mel::text::info("Current executor doesn't support true parallelism. Next job will be executed sequentially");
                     }) |
                     mel::execution::parallel(
-                        [](string &str) noexcept{
+                        [](const string &str) noexcept{
                           mel::text::info("Parallel 1. {}", str + " hello!");
                         },
-                        [](string &str) noexcept{
+                        [](const string &str) noexcept{
                           mel::text::info("Parallel 2. {}", str + " hi!");
                         },
-                        [](string &str) noexcept{
+                        [](const string &str) noexcept{
                           mel::text::info("Parallel 2. {}", str + " whats up!");
                         }));
                 if (res.isValid()) {
@@ -110,7 +111,7 @@ template <class ExecutorType> void _sampleReference(ExecutorType ex)
 				str += "Bye!";
 				return str;
 			})
-			| mel::execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string str ) noexcept
 			{
 				//Fourth job
 				str += "See you!";
@@ -146,8 +147,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 				/*if ( ::mel::tasking::Process::wait(1000) != ::mel::tasking::Process::ESwitchResult::ESWITCH_OK)
 					return str;*/
 				str+= " How are you?";
-				throw std::runtime_error("This is an error");
-				//return str;
+				throw std::runtime_error("This is an error");				
 			})
 			| mel::execution::next( [](string& str ) noexcept
 			{
@@ -155,7 +155,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 				str += "Bye!";
 				return str;
 			})
-			| mel::execution::next( [](string& str ) noexcept
+			| mel::execution::next( [](string str ) noexcept
 			{
 				//Fourth job. Will never be executed
 				str += "See you!";
@@ -167,7 +167,7 @@ template <class ExecutorType> void _sampleError1(ExecutorType ex)
 		}
 		catch(core::WaitException& e)
 		{
-			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}
 		catch(std::exception& e)
 		{
@@ -196,7 +196,6 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 					//Second job 
 					str+= " How are you?";
 					throw std::runtime_error("This is an error");
-					//return str;
 				})
 				| mel::execution::next( [](string& str ) noexcept
 				{
@@ -208,7 +207,7 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 				{
 					return "Error caught!! ";
 				})
-				| mel::execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](string str ) noexcept
 				{
 					//Fourth job. 
 					str += "See you!";
@@ -219,7 +218,7 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 		}
 		catch(core::WaitException& e)
 		{
-			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}catch(std::exception& e)
 		{
 			::text::error("Some error occured!! Reason: {}",e.what());
@@ -227,40 +226,87 @@ template <class ExecutorType> void _sampleError2(ExecutorType ex)
 		::text::info("Original str = {}",str);
 	},0,::tasking::Runnable::killFalse);
 }
-void _sampleTransfer()
+template <class ExecutorType> void _sampleErrorNoException(ExecutorType ex)
+{	
+	string str = "Hello";
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex,&str] () mutable
+	{
+		auto res = ::mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+			execution::launch(ex,[](string& str) noexcept ->string&
+			{	
+				//First job
+				str += " Dani.";
+				return str;
+			},std::ref(str))
+			| mel::execution::next( [](string& str) -> string&
+			{
+				//Second job 
+				str+= " How are you?";
+				throw std::runtime_error("This is an error");
+				return str;
+			})
+			| mel::execution::next( [](string& str ) noexcept
+			{
+				//Third job. Will never be executed!!!
+				str += "Bye!";
+				return str;
+			})
+			| mel::execution::next( [](string str ) noexcept
+			{
+				//Fourth job. 
+				str += "See you!";
+				return str;
+			})
+		);
+		//need to check if some error occurred
+		if (res.isValid())
+			::text::info("Result value = {}",res.value());
+		else
+		{  
+			//error branch.
+			try
+			{
+				std::rethrow_exception(res.error());
+			}
+			catch(core::WaitException& e)
+			{
+				::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
+			}catch(std::exception& e)
+			{
+				::text::error("Some error occured!! Reason: {}",e.what());
+			}
+			::text::info("Original str = {}",str);
+		}
+	},0,::tasking::Runnable::killFalse);
+}
+
+template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 {	
 	auto th = ThreadRunnable::create();
-	execution::Executor<Runnable> exr(th);
-	exr.setOpts({true,false});
-	parallelism::ThreadPool::ThreadPoolOpts opts;
-	auto myPool = std::make_shared<parallelism::ThreadPool>(opts);
-	parallelism::ThreadPool::ExecutionOpts exopts;
-	execution::Executor<parallelism::ThreadPool> extp(myPool);
-	extp.setOpts({true,false});
-	th->fireAndForget([exr,extp] () mutable
+	th->fireAndForget([ex1,ex2] () mutable
 	{		
 		try
 		{
 			auto res = ::mel::tasking::waitForFutureMThread(
 
-				execution::start(exr)
+				execution::start(ex1)
 				| mel::execution::inmediate("Hello "s)
-				| mel::execution::next( [](string& str) noexcept
+				| mel::execution::next( [](const string& str) noexcept
 				{
 					//Second job 
 					text::info("NEXT: {}",str);
 					return str + ". How are you?";
 				})
-				| mel::execution::transfer(extp)
-				| mel::execution::loop(0,10, [](int idx, string& str) noexcept
+				| mel::execution::transfer(ex2)
+				| mel::execution::loop(0,10, [](int idx, const string& str) noexcept
 				{
 					text::info("Iteration {}", str + std::to_string(idx));
 				})
-				| mel::execution::next( [](string& str ) noexcept
+				| mel::execution::next( [](const string& str ) noexcept
 				{
 					//Fourth job. 
-					str += "See you!";
-					return str;
+					return "See you!";
 				})
 			);
 			::text::info("Result value = {}",res.value());
@@ -279,17 +325,17 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 	auto th = ThreadRunnable::create();
 	th->fireAndForget([ex1,ex2] () mutable
 	{
-        //first flow in one of the executors
+        //First flow in one of the executors
         auto job1 = mel::execution::start(ex1)
-        | mel::execution::next( []()
+        | mel::execution::next( []() noexcept
         {
             ::mel::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
             mel::text::info("First job");
             return "First Job";
         });
 
-        //second job in the other executor
-        auto job2 = mel::execution::start(ex1)
+        //Second job in the other executor
+        auto job2 = mel::execution::start(ex2)
         | mel::execution::parallel( []() noexcept
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
@@ -299,28 +345,29 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         {
             ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
             mel::text::info("second job, t2");
-
-        })
+        }
+		)
         | mel::execution::next( []() noexcept
         {
             return 10;
         });
-        //third job in the same executor as before
-        //second job in the other executor
-        auto job3 = mel::execution::start(ex1)
+
+        //Third job in the same executor as before
+        auto job3 = mel::execution::start(ex2)
         | mel::execution::parallel_convert<std::tuple<int,float>>(
          []() noexcept
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
-            mel::text::info("second job, t1");
+            mel::text::info("third job, t1");
             return 5;
         },
         []() noexcept
         {
             ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
-            mel::text::info("second job, t2");
+            mel::text::info("third job, t2");
             return 8.7f;
-        });
+        }
+		);
        
 		try
 		{
@@ -328,11 +375,16 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
             auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
             //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
             auto& val = res.value();
-            ::mel::text::info("Result value = [{},{},({},{})]",std::get<0>(val),std::get<1>(val),std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val)));
+            ::mel::text::info("Result value = [{},{},({},{})]",
+					std::get<0>(val),  //first job result
+					std::get<1>(val),   //second job result
+					std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val))  //third job result
+			);
+			
         }
 		catch(core::WaitException& e)
 		{
-			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}
 	},0,::tasking::Runnable::killFalse);
 }
@@ -343,11 +395,11 @@ class MyClass
 		{
 			return p1+p2;
 		};
-		string f2(float& p) noexcept
+		string f2(float p) noexcept
 		{
 			return std::to_string(p);
 		}
-		void operator()(string& str)
+		void operator()(const string& str) noexcept
 		{
 			text::info("Parallel operator() {}",str+" hi!");
 		}
@@ -364,15 +416,14 @@ template <class ExecutorType> void _sampleCallables(ExecutorType ex)
 		auto res = ::mel::tasking::waitForFutureMThread(
 			execution::launch(ex,
 				std::bind(&MyClass::f1,&obj,6.7f,_1),10.5f)
-			| mel::execution::next(std::bind(&MyClass::f2,&obj,_1))
-	
+			| mel::execution::next(std::bind(&MyClass::f2,&obj,_1))	
 			| mel::execution::parallel( 
 				MyClass(),
-				[](string& str)
+				[](const string& str) noexcept
 				{
 					text::info("Parallel 2. {}",str+" hi!");
 				},
-				[](string& str)
+				[](const string& str) noexcept
 				{
 					text::info("Parallel 2. {}",str+" whats up!");
 				}
@@ -444,11 +495,12 @@ template <class ExecutorType> void _samplePF(ExecutorType ex)
 						input.val++;
 						return input; //returns a copy, because return type is not specified in lambda
 					} )
-					| execution::next( [](SampleClass& input)
+					| execution::next( [](const SampleClass& input)
 					{
 						//Job 3
-						input.val++;
-						return std::move(input); //a move move construction
+						auto ret = input;
+						ret.val++;
+						return ret;
 					})
 				);
 				mel::text::info("Result value = {}",ref.value().val);
@@ -462,6 +514,7 @@ template <class ExecutorType> void _samplePF(ExecutorType ex)
 		},0,::tasking::Runnable::killFalse
 	);
 }
+
 void test_execution::samples()
 {
 	text::set_level(text::level::info);
@@ -474,13 +527,14 @@ void test_execution::samples()
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});
     
-	//_sampleBasic(exr);	
-	//_sampleBasic(extp);
-//	_sampleReference(exr);
-	//_sampleError1(exr);
-	//_sampleError2(extp);
-	//_sampleTransfer();
-   // _sampleSeveralFlows(exr,extp);
-  // _sampleCallables(extp);
-  	_samplePF(exr);	
+	_sampleBasic(exr);	
+	_sampleBasic(extp);
+ 	_sampleReference(exr);
+ 	_sampleError1(exr);
+ 	_sampleError2(extp);
+	_sampleErrorNoException(extp);
+ 	_sampleTransfer(exr,extp);
+    _sampleSeveralFlows(exr,extp);
+    _sampleCallables(extp);
+   	_samplePF(exr);	
 }

@@ -17,6 +17,7 @@ using mel::tasking::Process;
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
 #include <execution/InlineExecutor.h>
+#include <execution/NaiveInlineExecutor.h>
 #include <vector>
 using std::vector;
 #include "test_samples.h"
@@ -200,58 +201,70 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->clearTextBuffer();
 		constexpr int initVal = 8;		
 		{		
-			auto th2 = ThreadRunnable::create();			
+			auto th2 = ThreadRunnable::create();					
 			execution::Executor<Runnable> ex2(th2);		
 			auto res1_1 = 
+				// execution::launch(ex,[]()
+				// {
+				// 	auto r = TestClass(initVal,ll);
+				// 	return r;
+				// })
 				execution::start(ex)
-				| mel::execution::inmediate(TestClass(initVal,ll)) 				
+				| mel::execution::inmediate(TestClass(initVal,ll)) 	// move constructor ¿@why 3?
 				| mel::execution::parallel(
-					[](TestClass& v) noexcept
+					[]( TestClass v) noexcept   //one copy and "some" moves ¿why?
 					{
 						text::debug("Bulk 1");					
 						auto prevVal = v.val;
-						v.val = 1;  //race condition
 						tasking::Process::wait(1000);
-						v.val = prevVal + 5;
+						v.val = prevVal + 5; //should has effect, for testing purposes
 					},
-					[](TestClass& v) 
+					[](const TestClass& v) 
 					{
 						text::debug("Bulk 2");
 						tasking::Process::wait(300);
-						v.val = 12; //Bulk 1 should be the last to execute its assignment 
 					})  
 				| mel::execution::transfer(ex2)  //transfer execution to a different executor
-				| mel::execution::next([test,ll](TestClass& v) noexcept
+				| mel::execution::next([test,ll]( const TestClass& v) noexcept
 				{
 					//text::info("Val = {}",v.value().val);
-					v.val+= 3;
-					return std::move(v); //avoid copy constructor			
-				});
+					const_cast<TestClass&>(v).val+= 3; //very bad practice. It will change passed value, For testing purposes
+					//v.val+= 3;
+					return v; //@why a lot of moves after here, maybe because of the on_all
+				})
+				;
+			const string strR = "pepe";
 			//very simple second job
-			auto res1_2 = mel::execution::launch(ex2,[]() noexcept
+			auto res1_2 = mel::execution::launch(ex2,[strR]() noexcept
 			{
-				return "pepe";
+				return strR;
 			});
 			//use on_all to launch two "simultaneus" jobs and wait for both
 			try
 			{
 				auto res1 = mel::tasking::waitForFutureMThread( mel::execution::on_all(ex,res1_1,res1_2) );
-				int finalVal = std::get<0>(res1.value()).val;
-				int expectedVal = initVal + 5+3;
+				auto& finalResult = res1.value();
+				int finalVal = std::get<0>(finalResult).val;
+				int expectedVal = initVal + 3; //because the "forced" const_cast
 				text::debug("Finish Val = {}",finalVal);
+				std::stringstream ss;
 				if (finalVal != expectedVal)
 				{
-					std::stringstream ss;
-					ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;
-					test->setFailed(ss.str());
+					ss << " final value after chain of execution is no correct. Expected "<<expectedVal << " got "<<finalVal;					
 				}
+				if (std::get<1>(finalResult) != strR)
+				{
+					ss << " final second element in value after chain of execution is no correct. Expected "<< strR << " got "<<std::get<1>(finalResult);					
+				}
+				if ( ss.rdbuf()->in_avail() != 0)
+					test->setFailed(ss.str());
 			}catch(std::exception& e)
 			{
 				text::info("Error = {}",e.what());
 			}
 		}		
 		test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		test->checkOccurrences("TestClass copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 			
 		// 	base form to do the same
@@ -421,8 +434,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),vec.size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		
+		/*
+		este método ya no tiene snetido ya que al no pasar referencia no puede modificar entrada
 		text::info("Same process as the previous without using reference");
-		//ss.str(""s); //empty stream
+		//this method will produce a lot of copies, movements		
 		test->clearTextBuffer();
 		try
 		{			
@@ -432,34 +447,29 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 				wasError = false;
 			auto res4 = mel::tasking::waitForFutureMThread(
 				execution::start(ex) 
-				| mel::execution::next([test,ll]
+				| mel::execution::next([test,ll]() noexcept
 				{				
-					return vector<TestClass>();
-				})
-					| mel::execution::next([test,ll](vector<TestClass>& v) noexcept
-					{				
-						//fill de vector with a simple case for the result to be predecible
-						//I don't want out to log the initial constructions, oncly constructons and after this function
-						auto t = TestClass(INITIAL_VALUE,tests::BaseTest::LogLevel::None,false);
-						v.resize(LOOP_SIZE,t);	
-						for(auto& elem:v)
-						{
-							elem.setLogLevel(ll);
-							elem.addToBuffer = true;
-						}
-						return std::move(v); 
-					}
-					)
-					| mel::execution::next([](vector<TestClass>& v) noexcept
+					auto t = TestClass(INITIAL_VALUE,tests::BaseTest::LogLevel::None,false);
+					vector<TestClass> v(LOOP_SIZE,t);
+					for(auto& elem:v)
 					{
-					
+						elem.setLogLevel(ll);
+						elem.addToBuffer = true;
+					}
+					return std::move(v); 
+				})
+					| mel::execution::next([](vector<TestClass> v) noexcept
+					{
+					//@todo ahora estos ejemplos no vale, porque no es referencia
 						size_t s = v.size();
 						for(auto& elem:v)
 							++elem.val;						
 						return std::move(v);	
 					})
+					ahora el parallel no tiene sentido porque no puede modificar la entrada
+					si uso un convert tiene que devovler tupla
 					| mel::execution::parallel(
-						[](vector<TestClass>& v) 
+						[](const vector<TestClass>& v) 
 						{		
 							//randomly throw exception												
 							if ( wasError )
@@ -470,23 +480,23 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 							size_t endIdx = v.size()/2;	
 							for(size_t i = 0; i < endIdx;++i )
 							{
-								v[i].val = v[i].val*2.f;	
+								//v[i].val = v[i].val*2.f;	
 							}
 						},
-						[](vector<TestClass>& v) noexcept
+						[]( const vector<TestClass>& v) noexcept
 						{
 							//multiply by 3 the second half
-
 							size_t startIdx = v.size()/2;
 							for(size_t i = startIdx; i < v.size();++i )
-							{
+							{					
+								//@todo el problema ahora es que el bulk no vale para mucho, no??			
 								v[i].val = v[i].val*3.f;
 							}
 						}
 					) 
 					| mel::execution::loop(
 						0,LOOP_SIZE,
-						[](int idx,vector<TestClass>& v) noexcept
+						[](int idx,const vector<TestClass>& v) noexcept
 						{
 							tasking::Process::wait(100);
 							v[idx].val+=5.f;
@@ -512,11 +522,11 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						return newVector;
 					})
 					| mel::execution::next(
-						[](vector<TestClass>& v) noexcept
+						[](const vector<TestClass>& v) noexcept
 						{					
 							for(auto& elem:v)
 							{
-								++elem.val;		
+								//++elem.val;		
 								tasking::Process::wait(10);
 							}
 							return std::move(v);				
@@ -548,7 +558,7 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 		
 		test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);				
-
+*/
 		
 		
 		//ss.str(""s); //empty stream
@@ -578,7 +588,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 		*/
 		fut
 		| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -588,7 +598,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			},
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -599,7 +609,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			},
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -610,7 +620,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			},
-			[](VectorType& v) noexcept
+			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
 				size_t tam = v.size()/4;
@@ -621,7 +631,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			}
-		) | mel::execution::next( [](std::tuple<double,double,double,double>& means)
+		) | mel::execution::next( [](const std::tuple<double,double,double,double>& means)
 		{
 			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
 		}));
@@ -644,11 +654,10 @@ template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFutur
 		int numParts = ExecutorTraits<Executor<ExecutorType>>::has_parallelism?mel::core::getNumProcessors():1;
 		vector<double> means(numParts);
 		auto res5 = mel::core::waitForFutureThread(
-		//todo obtener numero de cores
 		fut
 		| mel::execution::loop(
 						0,(int)numParts,
-						[&means,numParts](int idx,VectorType& v) noexcept
+						[&means,numParts](int idx,const VectorType& v) noexcept
 						{
 							double mean = 0.f;
 							size_t tam = v.size()/numParts;  //size of each sub-vector
@@ -664,7 +673,7 @@ template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFutur
 							means[idx] = mean;
 						},1
 					)
-		 | mel::execution::next( [&means](VectorType&)
+		 | mel::execution::next( [&means](const VectorType&)
 		 {
 			double mean = 0.0;
 			for(size_t i = 0; i < means.size();++i)
@@ -705,6 +714,23 @@ int _testLaunch( tests::BaseTest* test)
 			_basicTests(extp,th1.get(),test);
 			text::info("\n\tFinished BasicTests with ThreadPoolExecutor");
 		}
+		{
+			auto th1 = ThreadRunnable::create(true);
+			execution::NaiveInlineExecutor ex;
+			text::info("\n\tBasicTests with NaiveInlineExecutor");
+			_basicTests(ex,th1.get(),test);
+			text::info("\n\tFinished BasicTests with NaiveInlineExecutor");
+		}
+		/*
+		InlinExecutor doesn't do any copy because it's customized for this specific case
+		{
+			auto th1 = ThreadRunnable::create(true);
+			execution::InlineExecutor ex;
+			text::info("\n\tBasicTests with InlineExecutor");
+			_basicTests(ex,th1.get(),test);
+			text::info("\n\tFinished BasicTests with InlineExecutor");
+		}
+		*/
 	}	
 	return result;
 }
@@ -728,22 +754,22 @@ int _testAdvanceSample(tests::BaseTest* test)
 		return v;
 	});
 	core::waitForFutureThread(initFut); //wait for completion of vector creation to not interfere in time measurement
-	//plain version
-	text::info("vector mean: plain way");
+	auto initRes = core::waitForFutureThread<mel::core::WaitErrorNoException>( initFut );
 	Timer timer;
 	uint64_t t0 = timer.getMilliseconds();
-	auto mean = core::waitForFutureThread( initFut | 
-	execution::next([](VectorType& v) noexcept
+	
+	//plain version
+	text::info("vector mean: plain way");
+	double mean = 0.0;
 	{
-		double mean = 0.0;
+		auto& v = initRes.value();
 		size_t endIdx = v.size();
 		for(size_t i = 0; i < endIdx;++i)
 			mean+=v[i];
-		mean/=v.size();
-		return mean;
-	}));
+		mean/=v.size();	
+	}	
 	uint64_t t1 = timer.getMilliseconds();
-	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
+	mel::text::info("Mean = {}. Time spent = {}",mean,(float)((t1-t0)/1000.f));	
 	tests::BaseTest::addMeasurement("vector mean: plain way time:",(float)((t1-t0)/1000.f));
 	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;

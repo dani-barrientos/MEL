@@ -50,7 +50,7 @@ namespace mel
                         th->execute<TRet>(
                                 [f = std::forward<F>(f),arg = std::forward<TArg>(arg)]() mutable noexcept(std::is_nothrow_invocable<F,TArg>::value) ->TRet
                                 {
-                                    return f(arg);
+                                    return f(std::forward<TArg>(arg));
                                 },
                                 static_cast<Future<TRet>>(output)
                             ,mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);                  
@@ -76,6 +76,7 @@ namespace mel
         };    
         template <class I, class F>	 ::mel::parallelism::Barrier Executor<ThreadPool>::loop(I&& begin, I&& end, F&& functor, int increment)
         {
+            static_assert( std::is_invocable<F,I>::value, "ThreadPoolExecutor::loop bad functor signature");
             ThreadPool::ExecutionOpts exopts;
             exopts.useCallingThread = false;
             exopts.groupTasks = !getOpts().independentTasks;
@@ -84,6 +85,7 @@ namespace mel
         ///@cond HIDDEN_SYMBOLS
         namespace _private
         {
+            //helper class to use ThreadPool::execute
             template <class T> class ValueWrapper
             {
                 typedef typename mel::execution::ExFuture<ThreadPool,T> FutType;
@@ -93,7 +95,7 @@ namespace mel
                     ValueWrapper(ValueWrapper&& vw):mFut(std::move(vw.mFut)){}
                     ValueWrapper(const ValueWrapper& vw):mFut(vw.mFut){}
                     bool isValid() const{ return mFut.getValue().isValid();}
-                    bool isAvailable() const{ return mFut.getValue().isVailable();}
+                    bool isAvailable() const{ return mFut.getValue().isAvailable();}
                     // wrapper for std::get.  Same rules as std::Get, so bad_variant_access is thrown if not a valid value
                     typename FutType::ValueType::ReturnType value()
                     {
@@ -112,7 +114,7 @@ namespace mel
 
                 private:
                 FutType mFut;
-            };
+            };           
         }
         ///@endcond
         template <class TArg,class ... FTypes> ::mel::parallelism::Barrier Executor<ThreadPool>::parallel(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except, FTypes&&... functions)
@@ -120,14 +122,20 @@ namespace mel
             ThreadPool::ExecutionOpts exopts;
             exopts.useCallingThread = false;
             exopts.groupTasks = !getOpts().independentTasks;
-            return getPool().lock()->execute(exopts,except,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
-        }
+            if constexpr (std::is_same<TArg,void>::value )
+                return getPool().lock()->execute(exopts,except,std::forward<FTypes>(functions)...);    
+            else
+                return getPool().lock()->execute(exopts,_private::ValueWrapper<TArg>(fut),except,std::forward<FTypes>(functions)...);    
+        }        
         template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<ThreadPool>::parallel_convert(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
         {            
             ThreadPool::ExecutionOpts exopts;
             exopts.useCallingThread = false;
             exopts.groupTasks = !getOpts().independentTasks;    
-            return getPool().lock()->executeWithResult(exopts,except,result,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);
+            if constexpr (std::is_same<TArg,void>::value )
+                return getPool().lock()->executeWithResult(exopts,result,except,std::forward<FTypes>(functions)...);
+            else
+                return getPool().lock()->executeWithResult(exopts,result,_private::ValueWrapper<TArg>(fut),except,std::forward<FTypes>(functions)...);
         }
         /**
          * @brief Executor Traits for ThreadPool Executor
