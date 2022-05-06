@@ -149,7 +149,7 @@ The results show two very good news:
     - the direct way and the \ref mel::execution::InlineExecutor "InlineExecutor" takes almost the same time that the *RunnableExecutor* way, meaning that the internals of the execution and microthread system has very,very low penalty.
 
 In order to do improve the previous code, it had been better to take advantage of concrete parallelism possibilities of the system. Instead of dividing the 
-input vector in 4 different parts, It would be better to divide in as much parts as the system can. The coide could be:
+input vector in 4 different parts, It would be better to divide in as much parts as the system can. The code could be:
 \code
 try
 	{
