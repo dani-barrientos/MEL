@@ -148,7 +148,7 @@ $(document).ready(function(){initNavTree('_for_8h_source.html',''); initResizabl
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                <span class="keywordtype">bool</span> finish = ((i == end) || (cont &gt; nIterations));</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                <span class="keywordflow">while</span> (!finish)</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                {</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                    tp-&gt;execute(newOpts,except, barrier, i,std::function&lt;<span class="keywordtype">void</span>(I)&gt;([ divisionSize, functor, increment, cont, nIterations, leftOver](I i) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                    tp-&gt;execute(newOpts,barrier,i,except,std::function&lt;<span class="keywordtype">void</span>(I)&gt;([ divisionSize, functor, increment, cont, nIterations, leftOver](I i) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                    {</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                        I j = i;</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                        <span class="keywordtype">int</span> size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;</div>
@@ -194,7 +194,7 @@ $(document).ready(function(){initNavTree('_for_8h_source.html',''); initResizabl
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                std::exception_ptr except; <span class="comment">//@todo para que compile, pero hay que pasarselo</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                <span class="keywordflow">while</span> (cont &lt;= nIterations)</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                {</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                    tp-&gt;execute(newOpts,except, barrier,cont,</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                    tp-&gt;execute(newOpts,barrier,cont,except, </div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                        std::function&lt;<span class="keywordtype">void</span>()&gt;([divisionSize, functor, increment, vCopy, nIterations, leftOver](<span class="keywordtype">int</span> cont) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                    {</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                        <span class="keywordtype">int</span> size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;</div>
@@ -244,7 +244,7 @@ $(document).ready(function(){initNavTree('_for_8h_source.html',''); initResizabl
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;                    <span class="keywordflow">while</span> (!finish)</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                    {</div>
 <div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;                        <span class="comment">//tp-&gt;execute(newOpts, mBarrier, false, std::bind(typename std::decay&lt;F&gt;::type(functor), std::ref(GetElement&lt;isArithIterator&gt;::get(i)))); //@todo notengo claro que deba usar ref???</span></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;                        tp-&gt;execute(newOpts,except, result, i,<span class="keyword">typename</span> std::decay&lt;F&gt;::type(functor)); </div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;                        tp-&gt;execute(newOpts, result,i,except, <span class="keyword">typename</span> std::decay&lt;F&gt;::type(functor)); </div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;                        <span class="keywordflow">if</span> (++cont &lt; nElements)</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;                        {</div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;                            Advance&lt;isArithIterator &gt;::get(i, increment);</div>

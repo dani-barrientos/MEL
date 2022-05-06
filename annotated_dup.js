@@ -29,6 +29,9 @@ var annotated_dup =
         [ "TLS", "classmel_1_1core_1_1_t_l_s.html", "classmel_1_1core_1_1_t_l_s" ]
       ] ],
       [ "execution", "namespacemel_1_1execution.html", [
+        [ "_private", null, [
+          [ "ApplyCondition", "structmel_1_1execution_1_1__private_1_1_apply_condition.html", "structmel_1_1execution_1_1__private_1_1_apply_condition" ]
+        ] ],
         [ "Executor", "classmel_1_1execution_1_1_executor.html", null ],
         [ "ExecutorTraits", "structmel_1_1execution_1_1_executor_traits.html", null ],
         [ "OnAllException", "classmel_1_1execution_1_1_on_all_exception.html", "classmel_1_1execution_1_1_on_all_exception" ],

@@ -16,11 +16,11 @@ var namespacemel =
     [ "Usage samples", "execution_system.html#usage_samples", [
       [ "Basic sample", "execution_system.html#basic_sample", null ],
       [ "Using references", "execution_system.html#using_references", null ],
-      [ "Error management", "execution_system.html#error_management", null ],
       [ "Changing executor", "execution_system.html#chaging_executor", null ],
       [ "Converging several job flows", "execution_system.html#converging_jobs", null ],
       [ "Advanced example", "execution_system.html#advance_example", null ]
     ] ],
+    [ "Error management", "execution_system.html#error_management", null ],
     [ "Perfect forwarding", "execution_system.html#perfect_forwarding", null ],
     [ "core", "namespacemel_1_1core.html", "namespacemel_1_1core" ],
     [ "execution", "namespacemel_1_1execution.html", "namespacemel_1_1execution" ],
