@@ -654,7 +654,6 @@ template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFutur
 		int numParts = ExecutorTraits<Executor<ExecutorType>>::has_parallelism?mel::core::getNumProcessors():1;
 		vector<double> means(numParts);
 		auto res5 = mel::core::waitForFutureThread(
-		//todo obtener numero de cores
 		fut
 		| mel::execution::loop(
 						0,(int)numParts,
@@ -755,25 +754,22 @@ int _testAdvanceSample(tests::BaseTest* test)
 		return v;
 	});
 	core::waitForFutureThread(initFut); //wait for completion of vector creation to not interfere in time measurement
-	//plain version
-	text::info("vector mean: plain way");
+	auto initRes = core::waitForFutureThread<mel::core::WaitErrorNoException>( initFut );
 	Timer timer;
 	uint64_t t0 = timer.getMilliseconds();
-	//en realidad esot no es "play way", ya que ejecuto en el runnable. Tengo que esperar y simplemente meter yo el bucle
-	auto mean = core::waitForFutureThread( initFut /*
-	| 
-	execution::next([](VectorType& v) noexcept
+	
+	//plain version
+	text::info("vector mean: plain way");
+	double mean = 0.0;
 	{
-		double mean = 0.0;
+		auto& v = initRes.value();
 		size_t endIdx = v.size();
 		for(size_t i = 0; i < endIdx;++i)
 			mean+=v[i];
-		mean/=v.size();
-		return mean;
-	})*/
-	);
+		mean/=v.size();	
+	}	
 	uint64_t t1 = timer.getMilliseconds();
-//	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
+	mel::text::info("Mean = {}. Time spent = {}",mean,(float)((t1-t0)/1000.f));	
 	tests::BaseTest::addMeasurement("vector mean: plain way time:",(float)((t1-t0)/1000.f));
 	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;

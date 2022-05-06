@@ -73,34 +73,38 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 \endcode
 And from the *main* function:
 \code
-    auto th1 = ThreadRunnable::create(true);
+   	Runnable::RunnableCreationOptions opts;
+	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+	auto th1 = ThreadRunnable::create(true,opts);
 	execution::Executor<Runnable> exr(th1);
 	typedef vector<double> VectorType;
 	auto initFut = execution::launch(exr,[]()
 	{				
-		constexpr int vecSize = 10'000'000;
+		//int vecSize = std::rand()%1000'000; //generate random big vector
+		constexpr int vecSize = 100'000'000;
 		VectorType v(vecSize);
 		for( size_t i = 0; i < vecSize;++i)
 			v[i] = (std::rand()%20)/3.0; //to create a double
 		return v;
 	});
 	core::waitForFutureThread(initFut); //wait for completion of vector creation to not interfere in time measurement
+	auto initRes = core::waitForFutureThread<mel::core::WaitErrorNoException>( initFut );
+	Timer timer;
+	uint64_t t0 = timer.getMilliseconds();
+	
 	//plain version
 	text::info("vector mean: plain way");
-    Timer timer;
-	uint64_t t0 = timer.getMilliseconds();
-	auto mean = core::waitForFutureThread( initFut | 
-	execution::next([](VectorType& v) noexcept
+	double mean = 0.0;
 	{
-		double mean = 0.0;
+		auto& v = initRes.value();
 		size_t endIdx = v.size();
 		for(size_t i = 0; i < endIdx;++i)
 			mean+=v[i];
-		mean/=v.size();
-		return mean;
-	}));
+		mean/=v.size();	
+	}	
 	uint64_t t1 = timer.getMilliseconds();
-	mel::text::info("Mean = {}. Time spent = {}",mean.value(),(float)((t1-t0)/1000.f));	
+	mel::text::info("Mean = {}. Time spent = {}",mean,(float)((t1-t0)/1000.f));	
+	tests::BaseTest::addMeasurement("vector mean: plain way time:",(float)((t1-t0)/1000.f));
 	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;
 		opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
@@ -109,17 +113,17 @@ And from the *main* function:
 		execution::Executor<parallelism::ThreadPool> extp(myPool);
 		extp.setOpts({true,true});
 		text::info("vector mean: ThreadPoolExecutor");
-		_testMeanVector( execution::transfer(initFut,extp),test);
+		_testMeanVector( execution::transfer(initFut,extp),"vector mean: ThreadPoolExecutor",test);
 	}
 	{
 		exr.setOpts({true,false});
-		text::info("vector mean: RunnableExecutor");
-		
-		_testMeanVector(initFut,test);
+		text::info("vector mean: RunnableExecutor");		
+		_testMeanVector(execution::transfer(initFut,exr),"vector mean: RunnableExecutor",test); //the transfer is not neccesary because initFut is launched in exr, but jsut in case it changes
 	}
 	{		
 		execution::InlineExecutor ex;
-		_testMeanVector( execution::transfer(initFut,ex),"vector mean: ThreadPoolExecutor",test);
+		text::info("vector mean: InlineExecutor");		
+		_testMeanVector( execution::transfer(initFut,ex),"vector mean: InlineExecutor",test);
 	}
 \endcode
 In this code, a very big vector is created, and the mean of its values is calculated by:
@@ -128,21 +132,21 @@ In this code, a very big vector is created, and the mean of its values is calcul
     - passing the previous tuple with \ref mel::execution::next "next" to a callable which sums the four measurements.
 
 Also, at first, a plain calculation is done to compare de results. In the concrete machine uses at this moment, the output is:
-\code
+\verbatim
 vector mean: plain way
-Mean = 3.1669570700186305. Time spent = 0.086
+	Mean = 3.1669570700186305. Time spent = 0.092
 vector mean: ThreadPoolExecutor
-Mean = 3.166957070004096. Time spent = 0.043 seconds
+	Mean = 3.166957070004096. Time spent = 0.044 seconds
 vector mean: RunnableExecutor
-Mean = 3.166957070004096. Time spent = 0.096 seconds
+	Mean = 3.166957070004096. Time spent = 0.093 seconds
 vector mean: InlineExecutor
-Mean = 3.166957070004096. Time spent = 0.093 seconds
-\endcode
+	Mean = 3.166957070004096. Time spent = 0.091 seconds
+\endverbatim
 The results show two very good news:
     - using a \ref mel::execution::ThreadPoolExecutor "ThreadPoolExecutor" is more than double faster than a simple \ref ::mel::execution::RunnableExecutor "RunnableExecutor".
-    By default a ThreadPool uses all available cores. In this used machine, the number of cores is 8, so each task in *parallel_convert* is fully independent. Althoguh apparently this 
+    By default a ThreadPool uses all available cores. In this used machine, the number of cores is 8, so each task in *parallel_convert* is fully independent. Although apparently this 
     should mean that the code should be 4 times faster, other things can affect performance, mainly cache issues.
-    - the direct way and the \ref mel::execution::InlineExecutor "InlineExecutor" takes almost the same time that the *RunnableExecutor* way, meaning that the internals of the execution and microthread system is very,very low
+    - the direct way and the \ref mel::execution::InlineExecutor "InlineExecutor" takes almost the same time that the *RunnableExecutor* way, meaning that the internals of the execution and microthread system has very,very low penalty.
 
 In order to do improve the previous code, it had been better to take advantage of concrete parallelism possibilities of the system. Instead of dividing the 
 input vector in 4 different parts, It would be better to divide in as much parts as the system can. The coide could be:
@@ -154,7 +158,6 @@ try
 		int numParts = ExecutorTraits<Executor<ExecutorType>>::has_parallelism?mel::core::getNumProcessors():1;
 		vector<double> means(numParts);
 		auto res5 = mel::core::waitForFutureThread(
-		//todo obtener numero de cores
 		fut
 		| mel::execution::loop(
 						0,(int)numParts,

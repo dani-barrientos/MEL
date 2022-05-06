@@ -62,7 +62,7 @@ namespace mel
 				bool finish = ((i == end) || (cont > nIterations));
 				while (!finish)
 				{
-					tp->execute(newOpts,except, barrier, i,std::function<void(I)>([ divisionSize, functor, increment, cont, nIterations, leftOver](I i) mutable
+					tp->execute(newOpts,barrier,i,except,std::function<void(I)>([ divisionSize, functor, increment, cont, nIterations, leftOver](I i) mutable
 					{
 						I j = i;
 						int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
@@ -109,7 +109,7 @@ namespace mel
 				std::exception_ptr except; //@todo para que compile, pero hay que pasarselo
 				while (cont <= nIterations)
 				{
-					tp->execute(newOpts,except, barrier,cont,
+					tp->execute(newOpts,barrier,cont,except, 
 						std::function<void()>([divisionSize, functor, increment, vCopy, nIterations, leftOver](int cont) mutable
 					{
 						int size = (cont == nIterations) ? divisionSize + leftOver : divisionSize;
@@ -160,7 +160,7 @@ namespace mel
 					while (!finish)
 					{
 						//tp->execute(newOpts, mBarrier, false, std::bind(typename std::decay<F>::type(functor), std::ref(GetElement<isArithIterator>::get(i)))); //@todo notengo claro que deba usar ref???
-						tp->execute(newOpts,except, result, i,typename std::decay<F>::type(functor)); 
+						tp->execute(newOpts, result,i,except, typename std::decay<F>::type(functor)); 
 						if (++cont < nElements)
 						{
 							Advance<isArithIterator >::get(i, increment);

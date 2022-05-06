@@ -430,7 +430,6 @@ template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 \endcode
 In this code the execution starts in the executor `ex1` and just before the loop, execution is transferred to the other (`ex2`). 
 ### Converging several job flows	{#converging_jobs}
-MAL HASTA ARREGLAR CODIGO
 Here an example on how to create several execution flows and merge their work.
 \code{.cpp}
 template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(ExecutorType1 ex1,ExecutorType2 ex2)
@@ -438,17 +437,17 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 	auto th = ThreadRunnable::create();
 	th->fireAndForget([ex1,ex2] () mutable
 	{
-        //first flow in one of the executors
+        //First flow in one of the executors
         auto job1 = mel::execution::start(ex1)
-        | mel::execution::next( []()
+        | mel::execution::next( []() noexcept
         {
             ::mel::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
             mel::text::info("First job");
             return "First Job";
         });
 
-        //second job in the other executor
-        auto job2 = mel::execution::start(ex1)
+        //Second job in the other executor
+        auto job2 = mel::execution::start(ex2)
         | mel::execution::parallel( []() noexcept
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
@@ -458,28 +457,29 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         {
             ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
             mel::text::info("second job, t2");
-
-        })
+        }
+		)
         | mel::execution::next( []() noexcept
         {
             return 10;
         });
-        //third job in the same executor as before
-        //second job in the other executor
-        auto job3 = mel::execution::start(ex1)
+
+        //Third job in the same executor as before
+        auto job3 = mel::execution::start(ex2)
         | mel::execution::parallel_convert<std::tuple<int,float>>(
          []() noexcept
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
-            mel::text::info("second job, t1");
+            mel::text::info("third job, t1");
             return 5;
         },
         []() noexcept
         {
             ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
-            mel::text::info("second job, t2");
+            mel::text::info("third job, t2");
             return 8.7f;
-        });
+        }
+		);
        
 		try
 		{
@@ -487,11 +487,16 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
             auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
             //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
             auto& val = res.value();
-            ::mel::text::info("Result value = [{},{},({},{})]",std::get<0>(val),std::get<1>(val),std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val)));
+            ::mel::text::info("Result value = [{},{},({},{})]",
+					std::get<0>(val),  //first job result
+					std::get<1>(val),   //second job result
+					std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val))  //third job result
+			);
+			
         }
 		catch(core::WaitException& e)
 		{
-			::text::error("Some error occured!! Code= {}, Reason: {}",e.getCode(),e.what());
+			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}
 	},0,::tasking::Runnable::killFalse);
 }

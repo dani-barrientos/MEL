@@ -114,26 +114,7 @@ namespace mel
 
                 private:
                 FutType mFut;
-            };
-            //  //void overload
-            // template <> class ValueWrapper<void>
-            // {
-            //     typedef typename mel::execution::ExFuture<ThreadPool,void> FutType;
-            //     public:
-            //         ValueWrapper(const FutType& fut):mFut(fut){}
-            //         ValueWrapper(FutType&& fut):mFut(std::move(fut)){}
-            //         ValueWrapper(ValueWrapper&& vw):mFut(std::move(vw.mFut)){}
-            //         ValueWrapper(const ValueWrapper& vw):mFut(vw.mFut){}
-            //         bool isValid() const{ return mFut.getValue().isValid();}
-            //         bool isAvailable() const{ return mFut.getValue().isAvailable();}
-                    
-            //         std::exception_ptr error() const
-            //         {
-            //             return mFut.getValue().error();
-            //         }                    
-            //     private:
-            //     FutType mFut;
-            // };
+            };           
         }
         ///@endcond
         template <class TArg,class ... FTypes> ::mel::parallelism::Barrier Executor<ThreadPool>::parallel(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except, FTypes&&... functions)
@@ -142,18 +123,19 @@ namespace mel
             exopts.useCallingThread = false;
             exopts.groupTasks = !getOpts().independentTasks;
             if constexpr (std::is_same<TArg,void>::value )
-                //no vale solo son sobrecargar el execute, porque no distinguiría con una de las funciones. tiene que tener otro nombre o cambiar orden de cosas
-                //return getPool().lock()->execute(exopts,except,std::forward<FTypes>(functions)...);    
-                throw "TODO!!";
+                return getPool().lock()->execute(exopts,except,std::forward<FTypes>(functions)...);    
             else
-                return getPool().lock()->execute(exopts,except,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);    
+                return getPool().lock()->execute(exopts,_private::ValueWrapper<TArg>(fut),except,std::forward<FTypes>(functions)...);    
         }        
         template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<ThreadPool>::parallel_convert(ExFuture<ThreadPool,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
         {            
             ThreadPool::ExecutionOpts exopts;
             exopts.useCallingThread = false;
             exopts.groupTasks = !getOpts().independentTasks;    
-            return getPool().lock()->executeWithResult(exopts,except,result,_private::ValueWrapper<TArg>(fut),std::forward<FTypes>(functions)...);
+            if constexpr (std::is_same<TArg,void>::value )
+                return getPool().lock()->executeWithResult(exopts,result,except,std::forward<FTypes>(functions)...);
+            else
+                return getPool().lock()->executeWithResult(exopts,result,_private::ValueWrapper<TArg>(fut),except,std::forward<FTypes>(functions)...);
         }
         /**
          * @brief Executor Traits for ThreadPool Executor

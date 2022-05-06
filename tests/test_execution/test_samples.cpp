@@ -325,16 +325,16 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 	auto th = ThreadRunnable::create();
 	th->fireAndForget([ex1,ex2] () mutable
 	{
-        //first flow in one of the executors
+        //First flow in one of the executors
         auto job1 = mel::execution::start(ex1)
-        | mel::execution::next( []()
+        | mel::execution::next( []() noexcept
         {
             ::mel::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
             mel::text::info("First job");
             return "First Job";
         });
 
-        //second job in the other executor
+        //Second job in the other executor
         auto job2 = mel::execution::start(ex2)
         | mel::execution::parallel( []() noexcept
         {
@@ -345,13 +345,14 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         {
             ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
             mel::text::info("second job, t2");
-
-        })
+        }
+		)
         | mel::execution::next( []() noexcept
         {
             return 10;
         });
-        //third job in the same executor as before
+
+        //Third job in the same executor as before
         auto job3 = mel::execution::start(ex2)
         | mel::execution::parallel_convert<std::tuple<int,float>>(
          []() noexcept
@@ -365,16 +366,21 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
             ::mel::tasking::Process::wait(100); //only possible if the executor as microthreading behaviour
             mel::text::info("third job, t2");
             return 8.7f;
-        });
+        }
+		);
        
 		try
 		{
             //on_all need to be executed in a context of some excutor, so one of them is given
-           /* auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
+            auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
             //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
             auto& val = res.value();
-            ::mel::text::info("Result value = [{},{},({},{})]",std::get<0>(val),std::get<1>(val),std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val)));
-			*/
+            ::mel::text::info("Result value = [{},{},({},{})]",
+					std::get<0>(val),  //first job result
+					std::get<1>(val),   //second job result
+					std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val))  //third job result
+			);
+			
         }
 		catch(core::WaitException& e)
 		{
@@ -528,7 +534,7 @@ void test_execution::samples()
  	_sampleError2(extp);
 	_sampleErrorNoException(extp);
  	_sampleTransfer(exr,extp);
-    //_sampleSeveralFlows(exr,extp);
+    _sampleSeveralFlows(exr,extp);
     _sampleCallables(extp);
    	_samplePF(exr);	
 }

@@ -62,31 +62,53 @@ namespace mel
 				SchedulingPolicy schedPolicy = SchedulingPolicy::SP_ROUNDROBIN;
 				size_t threadIndex = 0; //set thread index to use when schedPolicy is SP_EXPLICIT
 			};
-			template <class TArg,class ... FTypes> void execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& barrier,TArg&& arg,FTypes ... functions)
+			template <class TArg,class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,TArg&& arg,std::exception_ptr& except,FTypes ... functions)
 			{
 				constexpr int nTasks = sizeof...(functions);
-				_execute(opts,except, barrier, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
+				_execute(opts,except,barrier,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 			}
-			template <class TArg,class ... FTypes> Barrier execute(const ExecutionOpts& opts,std::exception_ptr& except, TArg&& arg,FTypes ... functions)
+			//void argument overload
+			template <class ... FTypes> void execute(const ExecutionOpts& opts, Barrier& barrier,std::exception_ptr& except,FTypes ... functions)
+			{
+				constexpr int nTasks = sizeof...(functions);
+				_execute_void(opts,except,barrier,std::forward<FTypes>(functions)...);
+			}
+			template <class TArg,class ... FTypes> Barrier execute(const ExecutionOpts& opts,TArg&& arg,std::exception_ptr& except, FTypes ... functions)
 			{
 				constexpr int nTasks = sizeof...(functions);
 				Barrier result(nTasks);
 				_execute(opts,except,result,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
 				return result;
 			}
+			//void argument overload
+			template <class ... FTypes> Barrier execute(const ExecutionOpts& opts,std::exception_ptr& except,FTypes ... functions)
+			{
+				constexpr int nTasks = sizeof...(functions);
+				Barrier result(nTasks);
+				_execute_void(opts,except,result,std::forward<FTypes>(functions)...);		
+				return result;
+			}
 			/**
 			 * @brief execute given functions and return result in the tuple		 
 			 */
-			template <class ReturnTuple,class TArg,class ... FTypes> void executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& barrier,ReturnTuple& output,TArg&& arg,FTypes ... functions)
+			template <class ReturnTuple,class TArg,class ... FTypes> void executeWithResult(const ExecutionOpts& opts,Barrier& barrier,ReturnTuple& output,TArg&& arg,std::exception_ptr& except, FTypes ... functions)
 			{
 				constexpr int nTasks = sizeof...(functions);
 				_executeWithResult<0,ReturnTuple>(opts, except,barrier, output,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
 			}
-			template <class ReturnTuple, class TArg,class ... FTypes> Barrier executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except,ReturnTuple& output, TArg&& arg,FTypes ... functions)
+			template <class ReturnTuple, class TArg,class ... FTypes> Barrier executeWithResult(const ExecutionOpts& opts,ReturnTuple& output, TArg&& arg,std::exception_ptr& except,FTypes ... functions)
 			{
 				constexpr int nTasks = sizeof...(functions);
 				Barrier result(nTasks);
 				_executeWithResult<0,ReturnTuple>(opts,except,result,output,std::forward<TArg>(arg),std::forward<FTypes>(functions)...);		
+				return result;
+			}
+			//void argument overload
+			template <class ReturnTuple, class ... FTypes> Barrier executeWithResult(const ExecutionOpts& opts,ReturnTuple& output,std::exception_ptr& except, FTypes ... functions)
+			{
+				constexpr int nTasks = sizeof...(functions);
+				Barrier result(nTasks);
+				_executeWithResult_void<0,ReturnTuple>(opts,except,result,output,std::forward<FTypes>(functions)...);		
 				return result;
 			}
 			/**
@@ -106,7 +128,7 @@ namespace mel
 			* @note because this function doesn't wait for completion, input argument need to be bound and so copied
 			* to be able to provide it to the function when this is executed.
 			*/
-			template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output, TArg&& arg,F&& func,FTypes&&... functions)
+			template <class F,class TArg,class ... FTypes> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,TArg&& arg, F&& func,FTypes&&... functions)
 			{
 				/*
 			//@todo	tengo que resolver aqui el tema de no bindear el arg..
@@ -126,8 +148,8 @@ namespace mel
 					func(std::forward<TArg>(arg));
 					output.set();			
 				}*/
-				_execute(opts,except, output, std::forward<TArg>(arg),std::forward<F>(func));
-				_execute(opts,except, output, std::forward<TArg>(arg),std::forward<FTypes>(functions)...);
+				_execute(opts,except, output,std::forward<TArg>(arg), std::forward<F>(func));
+				_execute(opts,except, output,std::forward<TArg>(arg), std::forward<FTypes>(functions)...);
 			}		
 			//base case
 			template <class F,class TArg> void _execute(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,TArg&& arg, F&& func)
@@ -188,6 +210,88 @@ namespace mel
 					}
 				}
 			}		
+			//void overload
+			template <class F,class ... FTypes> void _execute_void(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output, F&& func,FTypes&&... functions)
+			{
+				/*
+			//@todo	tengo que resolver aqui el tema de no bindear el arg..
+				if (mNThreads != 0)
+				{
+					selectThread(opts)->post(
+						std::function<tasking::EGenericProcessResult (uint64_t, Process*)>([func, output,arg](uint64_t, Process*) mutable
+					{
+						func(arg);
+						output.set();
+						return mel::tasking::EGenericProcessResult::KILL;
+					})
+					);
+				}
+				else // no threads in pool, use calling thread
+				{
+					func(std::forward<TArg>(arg));
+					output.set();			
+				}*/
+				_execute_void(opts,except, output, std::forward<F>(func));
+				_execute_void(opts,except, output, std::forward<FTypes>(functions)...);
+			}		
+			//base case for void overload
+			template <class F> void _execute_void(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output, F&& func)
+			{
+				if ( opts.useCallingThread || mNThreads == 0 )
+				{
+					if constexpr (std::is_nothrow_invocable<F>::value)
+					{
+						func();
+					}else
+					{
+						try
+						{
+							func();
+						}catch(...)
+						{
+							std::scoped_lock<std::mutex> lck(mExceptionLock);
+							if ( !except )
+								except = std::current_exception();
+						}						
+					}
+					output.set();
+				}
+				else
+				{
+					mLastIndex = _chooseIndex(opts);
+					//@todo	tengo que resolver aqui el tema de no bindear el arg..
+					//if constexpr (std::is_nothrow_invocable<F,typename std::remove_reference<TArg>::type>::value)
+					if constexpr (std::is_nothrow_invocable<F>::value)
+					{
+						mPool[mLastIndex]->post(
+						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output](uint64_t, Process*) mutable
+						{
+							func();
+							output.set();
+							return mel::tasking::EGenericProcessResult::KILL;
+						})
+						);
+					}else
+					{
+						mPool[mLastIndex]->post(
+							std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([&except,this,func = std::forward<F>(func),output](uint64_t, Process*) mutable
+							{
+									try
+									{
+										func();
+									}catch(...)
+									{
+										std::scoped_lock<std::mutex> lck(mExceptionLock);
+										if ( !except )
+											except = std::current_exception();
+									}
+									output.set();
+									return mel::tasking::EGenericProcessResult::KILL;
+							})
+					);
+					}
+				}
+			}
 			template <int n,class ReturnTuple,class F,class TArg,class ... FTypes> void _executeWithResult(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, TArg&& arg,F&& func,FTypes&&... functions)
 			{
 				_executeWithResult<n,ReturnTuple>(opts,except, output,result, std::forward<TArg>(arg),std::forward<F>(func));
@@ -237,6 +341,69 @@ namespace mel
 							try
 							{
 								std::get<n>(result) = func(std::forward<TArg>(arg));
+							}catch(...)
+							{
+								std::scoped_lock<std::mutex> lck(mExceptionLock);
+								if ( !except )
+									except = std::current_exception();
+							}		
+							output.set();
+							return mel::tasking::EGenericProcessResult::KILL;
+						})
+						);
+					}
+					
+				}
+			}	
+			//void overload
+			template <int n,class ReturnTuple,class F,class ... FTypes> void _executeWithResult_void(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, F&& func,FTypes&&... functions)
+			{
+				_executeWithResult_void<n,ReturnTuple>(opts,except, output,result, std::forward<F>(func));
+				_executeWithResult_void<n+1,ReturnTuple>(opts,except, output,result, std::forward<FTypes>(functions)...);
+			}				
+			//base case
+			template <int n,class ReturnTuple,class F> void _executeWithResult_void(const ExecutionOpts& opts,std::exception_ptr& except, Barrier& output,ReturnTuple& result, F&& func)
+			{
+				if ( opts.useCallingThread || mNThreads == 0 )
+				{
+					if constexpr (std::is_nothrow_invocable<F>::value)
+					{
+						std::get<n>(result) = func();
+					}else
+					{
+						try
+						{
+							std::get<n>(result) = func();
+						}catch(...)
+						{
+							std::scoped_lock<std::mutex> lck(mExceptionLock);
+							if ( !except )
+								except = std::current_exception();
+						}		
+					}
+					output.set();
+				}
+				else
+				{
+					mLastIndex = _chooseIndex(opts);
+					if constexpr (std::is_nothrow_invocable<F>::value)
+					{
+						mPool[mLastIndex]->post(
+						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,&result](uint64_t, Process*) mutable
+						{
+							std::get<n>(result) = func();
+							output.set();
+							return mel::tasking::EGenericProcessResult::KILL;
+						})
+						);
+					}else
+					{
+						mPool[mLastIndex]->post(
+						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([&except,this,func = std::forward<F>(func),output,&result](uint64_t, Process*) mutable
+						{
+							try
+							{
+								std::get<n>(result) = func();
 							}catch(...)
 							{
 								std::scoped_lock<std::mutex> lck(mExceptionLock);
