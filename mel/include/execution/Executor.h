@@ -530,9 +530,7 @@ namespace mel
                 }
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg>&& inputFut)
                 {
-                   // return next(std::move(inputFut),std::forward<F>(mFunc));
-                   //@todo hacer las versiones &&
-                   return next(inputFut,std::forward<F>(mFunc));
+                   return next(std::move(inputFut),std::forward<F>(mFunc));
                 }
             };
             template <class I,class F> struct ApplyLoop

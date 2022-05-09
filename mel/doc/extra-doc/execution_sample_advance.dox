@@ -104,7 +104,6 @@ And from the *main* function:
 	}	
 	uint64_t t1 = timer.getMilliseconds();
 	mel::text::info("Mean = {}. Time spent = {}",mean,(float)((t1-t0)/1000.f));	
-	tests::BaseTest::addMeasurement("vector mean: plain way time:",(float)((t1-t0)/1000.f));
 	{		
 		parallelism::ThreadPool::ThreadPoolOpts opts;
 		opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
@@ -187,7 +186,6 @@ try
 		);
 		uint64_t t1 = timer.getMilliseconds();
 		text::info("Using loop. Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
-		tests::BaseTest::addMeasurement(title+" time:",(float)((t1-t0)/1000.f));
 	}catch(std::exception& e)
 	{
 		text::info("Error = {}",e.what());

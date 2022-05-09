@@ -54,6 +54,50 @@ struct MyPepe
 		return *this;
 	}
 };
+namespace _private
+{
+	template <class F> struct ApplyFlow
+	{
+		ApplyFlow(F&& f):mFunc(std::forward<F>(f)){}
+		ApplyFlow(const F& f):mFunc(f){}
+		F mFunc;
+		template <class TArg,class ExecutorAgent> auto operator()(const execution::ExFuture<ExecutorAgent,TArg>& inputFut)
+		{
+			//return next(inputFut,std::forward<F>(mFunc));
+		}		
+	};
+}
+template <class F> class Flow
+{
+	public:
+		Flow(F&& f):mFunct(std::move(f)){
+		}
+		Flow(const F& f):mFunct(f){
+		}
+		//cuado lo tenga claro, ya poner tipos bien
+		//template <class TRet,class SourceType,class TArg> TRet operator()(SourceType source, TArg&& v,bool directExecution = false )
+		template <class TRet,class SourceType,class TArg> TRet execute(SourceType source, TArg&& v,bool directExecution = false )
+		{
+			if (!directExecution)
+			{
+				typedef typename SourceType::ValueType  ValueType;            
+				TRet result(source.agent);
+				//@todo no entiendo por qué necesito el function!!!
+				source.subscribeCallback(std::function<void( ValueType&)>([result,v = std::forward<TArg>(v),this]( ValueType& input) mutable 
+				{
+					result.assign(mFunct(result.agent,std::forward<TArg>(v)));
+				}));
+				return result;
+			}else
+			{
+				return mFunct(source.agent,std::forward<TArg>(v));
+			}
+		}
+	private:		
+		F mFunct;
+};
+
+
 static tests::BaseTest* sCurrentTest = nullptr;
 int _testDebug(tests::BaseTest* test)
 {
@@ -71,6 +115,58 @@ int _testDebug(tests::BaseTest* test)
 	sCurrentTest = test;
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;
+	{
+		auto flow1 = Flow([](auto executor,const vector<int>& v)
+			{
+				return execution::launch(executor, [](const vector<int>& val)
+				{
+					mel::text::info("Flow launch");
+					return std::to_string(val[0]) + " dani";
+				},v);
+			}
+		);
+		auto flow2 = Flow([](auto ex, vector<int> v)
+		{
+			//mel::tasking::Process::wait(1000);
+			// ::mel::text::info("Option 2. {} ",v.val);
+			// throw std::runtime_error("Err opt 2");
+			// return 6.8f;
+			return execution::start(ex)
+			|execution::inmediate("Barrientos"s);
+		});
+		try
+		{
+			auto res = mel::core::waitForFutureThread(
+				execution::launch(exr,[]() noexcept
+				{
+					//throw std::runtime_error("Err en launch");		
+					return 5.2f;
+				})    
+				| mel::execution::condition<string>([](const float& v)
+					{
+						vector<int> arg{(int)v};
+						return std::make_pair(0,arg);
+					},
+					flow1,flow2)	
+				| mel::execution::next( [](const string& str)
+					{
+						return str + " fin";
+					}
+				)				
+			);
+			mel::text::info("Result = {}",res.value());
+		}
+		catch(std::exception& e)
+		{
+			mel::text::info("ERROR. Cause = {}",e.what());
+		}
+		catch(...)
+		{
+			mel::text::info("ERROR");
+		}
+		mel::text::info("FIN");
+		return 0;
+	}
 	{
 		auto res = mel::core::waitForFutureThread(
 				execution::start(exr) 
@@ -107,114 +203,32 @@ int _testDebug(tests::BaseTest* test)
 						})
 		);
 	}
-	// {
-	// 	float a = 5.f;
-	// 	auto fut1 = execution::launch(exr,[](float& v) noexcept
-	// 	{
-	// 		//@todo este caso no me gusta, porque me deja poner referencia pero es copia
-	// 		//throw std::runtime_error("Err en launch");
-	// 	//	v+= 2.f;
-	// 		return ++v;
-	// 	},a)
-	// 	| execution::next([]( const float& v) noexcept
-	// 	{		
-	// 		return v+1;
-	// 	})
-	// 	| execution::parallel(
-	// 		[](float v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 		},
-	// 		[](const float& v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 		},
-	// 		[](const float& v)
-	// 		{
-	// 			mel::text::info("T3");
-	// 		}
-	// 	)
-	// 	| execution::parallel_convert<std::tuple<int,string>>(
-	// 		[](float v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 			return 2;
-	// 		},
-	// 		[](const float& v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 			return "dani"s;
-	// 		}
-	// 	)
-	// 	| execution::loop(0,10,
-	// 		[](int idx, const std::tuple<int,string>& v) noexcept
-	// 		{
-	// 			text::info("LOOP");
-	// 		})
-
-	// 	;
-	// 	auto res = mel::core::waitForFutureThread(fut1);
-	// 	auto& val = res.value();
-	// //	mel::text::info("VALUE = {} {}",std::get<0>(val),std::get<1>(val));
-	// 	auto fut2 = execution::launch(exr,[](float& v) noexcept -> float&
-	// 	{
-	// 		//throw std::runtime_error("Err en launch");
-	// 		v+= 2.f;
-	// 		return v;
-	// 	},std::ref(a))
-	// 	| execution::next([](float& v) noexcept -> float&
-	// 	{
-	// 		return ++v;
-	// 	})
-	// 	| execution::parallel(
-	// 		[](float& v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 			v++;
-	// 		},
-	// 		[](const float& v) 
-	// 		{
-	// 			mel::text::info("T2");
-	// 		}
-	// 	)
-	// 	| execution::parallel_convert<std::tuple<int,string>>(
-	// 		[](float& v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 			return 3;
-	// 		},
-	// 		[](const float& v) noexcept
-	// 		{
-	// 			mel::text::info("T2");
-	// 			return "barri"s;
-	// 		}
-	// 	)
-	// 	| execution::loop(0,10,
-	// 		[](int idx, std::tuple<int,string> v) noexcept
-	// 		{
-	// 			text::info("LOOP");
-	// 		})
-	// 	;
-	// 	auto res2 = mel::core::waitForFutureThread(fut2);
-	// 	auto& val2 = res2.value();
-	// 	mel::text::info("YA");
-	// }
+	
 	
     {
+		
         
         float a = 1.f;
-		MyPepe mp;		
-		auto flow1 = [](const MyPepe& v)
+		MyPepe mp;	
+		//yo l oque quiero es que esto ahora sea una cadena 	
+		/*auto flow1 = [](auto ex,const MyPepe& v)
+		{
+			return execution::start(ex)
+			|execution::inmediate(1.4f);
+		};*/
+		/*auto flow1 = [](const MyPepe& v)
 		{
 			::mel::text::info("Option 1. {} ",v.val);
 			return 1.4f;
-		};
-		auto flow2 = [](const MyPepe& v)
+		};*/
+		auto flow2 = [](auto ex, const MyPepe& v)
 		{
 			//mel::tasking::Process::wait(1000);
-			::mel::text::info("Option 2. {} ",v.val);
-			throw std::runtime_error("Err opt 2");
-			return 6.8f;
+			// ::mel::text::info("Option 2. {} ",v.val);
+			// throw std::runtime_error("Err opt 2");
+			// return 6.8f;
+			return execution::start(ex)
+			|execution::inmediate(6.8);
 		};
 
         // execution::launch(ex,[]()->float
@@ -255,6 +269,7 @@ int _testDebug(tests::BaseTest* test)
             res += 2.f;
 			return res+1;
         })
+	
 		//version quitando el input parameter
         /*| execution::next( [](float&){})
         | execution::next( [](){})
@@ -319,15 +334,7 @@ int _testDebug(tests::BaseTest* test)
                 v++;
                 return "dani"s;
 			}
-		)                    
-        | mel::execution::condition<float>([](std::tuple<int,string>& v)
-			{
-				return std::make_pair(1,MyPepe());
-			},
-			flow1
-			,
-			flow2
-		)
+		)                           
         ;
 /*
 	//la idea del pair es poder hacer que los jobs reciban otra cosa->¿por qué no uso mismo tipo que la entrada?->podría hacerlo de forma que cada job empezase con 

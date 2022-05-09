@@ -522,19 +522,7 @@ namespace mel
 			{
 				mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>());
 			};
-			Future_Common( const Future_Common& f ): _private::Future_Base( f ){}
-			Future_Common( Future_Common&& f ): _private::Future_Base( std::move(f) ){}
-			Future_Common& operator= ( const Future_Common& f )
-			{
-				_private::Future_Base::operator=(f);
-				return *this;
-			};		
-			Future_Common& operator= (  Future_Common&& f )
-			{
-				_private::Future_Base::operator=( std::move(f));
-				return *this;
-			};
-		public:
+		public:			
 			/**
 			 * @brief Get the Value object
 			 * @return const ::mel::core::FutureValue
@@ -558,7 +546,7 @@ namespace mel
 			 * @details This ways, both futures will share the same value/error. If input Future is already set at that moment, 
 			 * callbacks are triggered as usual. It's important to note that *all futures* sharing same data will change
 			 */
-			void assign( Future_Common<T>& val)
+			void assign( Future_Common<T> val)
 			{				
 				auto ptr = mData->getPtr(); //to avoid destruction before unlock
 				std::scoped_lock<std::recursive_mutex,std::recursive_mutex> lck(val.getData().getMutex(),getData().getMutex());
@@ -595,6 +583,18 @@ namespace mel
 			{
 				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( id );
 			}
+			Future_Common( const Future_Common& f ): _private::Future_Base( f ){}
+			Future_Common( Future_Common&& f ): _private::Future_Base( std::move(f) ){}
+			Future_Common& operator= ( const Future_Common& f )
+			{
+				_private::Future_Base::operator=(f);
+				return *this;
+			};		
+			Future_Common& operator= (  Future_Common&& f )
+			{
+				_private::Future_Base::operator=( std::move(f));
+				return *this;
+			};
 		private:
 			inline const _private::FutureData<T>& getData() const{ return *static_cast<_private::FutureData<T>*>(mData->getPtr().get()); }
 			inline _private::FutureData<T>& getData(){ return *static_cast<_private::FutureData<T>*>(mData->getPtr().get()); }

@@ -890,7 +890,7 @@ int _testFor(tests::BaseTest* test)
 		);
 		plainThread = nullptr;
 	},1,0);
-	_measureTest("Plain thread, create/destroy ",[]
+	_measureTest("Plain thread, create/destroy",[]
 	{	
 		auto plainThread = std::make_unique<Thread>(
 			[]() OPTIMIZE_FLAGS 

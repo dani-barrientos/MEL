@@ -6,15 +6,12 @@
 #endif
 #include <MelLibType.h>
 #include <mpl/TypeTraits.h>
+
+///@cond HIDDEN_SYMBOLS
 namespace mel
 {
 	namespace core
 	{
-		/**
-		* @class TLS
-		* @brief Thread Local Storage
-		* @todo EN OBRAS
-		*/
 		class MEL_API TLS
 		{
 		public:
@@ -24,7 +21,7 @@ namespace mel
 		typedef pthread_key_t TLSKey;
 	#endif
 
-		/**
+		/*
 		* create new Key in TLS for all threads. Each threads will bind a different value for this key
 		* @param[out] key New key create
 		* @return true if the key was created successfully. false otherwise
@@ -51,3 +48,4 @@ namespace mel
 		};
 	};
 }
+///@endcond
