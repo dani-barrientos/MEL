@@ -302,7 +302,6 @@ var hierarchy =
     [ "mel::mpl::typelist::_private::TListFindPos< TList, Condition, currentPos >", "structmel_1_1mpl_1_1typelist_1_1__private_1_1_t_list_find_pos.html", null ],
     [ "mel::mpl::typelist::_private::TListFindPos< NullType, Condition, currentPos >", "structmel_1_1mpl_1_1typelist_1_1__private_1_1_t_list_find_pos_3_01_null_type_00_01_condition_00_01current_pos_01_4.html", null ],
     [ "mel::mpl::typelist::_private::TListFindPos< TypeList< H, T >, Condition, currentPos >", "structmel_1_1mpl_1_1typelist_1_1__private_1_1_t_list_find_pos_3_01_type_list_3_01_h_00_01_t_01_435179c7b506d385c0064817d475a2855.html", null ],
-    [ "mel::core::TLS", "classmel_1_1core_1_1_t_l_s.html", null ],
     [ "mel::mpl::_private::Tuple_Base< TListPos, TListSorted, size >", "classmel_1_1mpl_1_1__private_1_1_tuple___base.html", null ],
     [ "mel::mpl::_private::Tuple_Base< TTypes, mel::mpl::typelist::Sort< TTypes, _private::PackCondition >::Result, Length< TTypes >::result >", "classmel_1_1mpl_1_1__private_1_1_tuple___base.html", [
       [ "mel::mpl::Tuple< TTypes >", "classmel_1_1mpl_1_1_tuple.html", null ]

@@ -186,7 +186,6 @@ $(document).ready(function(){initNavTree('execution_sample_advance.html',''); in
 <div class="line">}   </div>
 <div class="line">uint64_t t1 = timer.getMilliseconds();</div>
 <div class="line">mel::text::info(<span class="stringliteral">&quot;Mean = {}. Time spent = {}&quot;</span>,mean,(<span class="keywordtype">float</span>)((t1-t0)/1000.f)); </div>
-<div class="line">tests::BaseTest::addMeasurement(<span class="stringliteral">&quot;vector mean: plain way time:&quot;</span>,(<span class="keywordtype">float</span>)((t1-t0)/1000.f));</div>
 <div class="line">{       </div>
 <div class="line">    parallelism::ThreadPool::ThreadPoolOpts opts;</div>
 <div class="line">    opts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};</div>
@@ -259,7 +258,6 @@ vector mean: InlineExecutor
 <div class="line">        );</div>
 <div class="line">        uint64_t t1 = timer.getMilliseconds();</div>
 <div class="line">        text::info(<span class="stringliteral">&quot;Using loop. Mean = {}. Time spent = {} seconds&quot;</span>,res5.value(),(<span class="keywordtype">float</span>)((t1-t0)/1000.f));</div>
-<div class="line">        tests::BaseTest::addMeasurement(title+<span class="stringliteral">&quot; time:&quot;</span>,(<span class="keywordtype">float</span>)((t1-t0)/1000.f));</div>
 <div class="line">    }<span class="keywordflow">catch</span>(std::exception&amp; e)</div>
 <div class="line">    {</div>
 <div class="line">        text::info(<span class="stringliteral">&quot;Error = {}&quot;</span>,e.what());</div>

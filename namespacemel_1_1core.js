@@ -24,7 +24,6 @@ var namespacemel_1_1core =
     [ "Singleton_Singlethread_Policy", "classmel_1_1core_1_1_singleton___singlethread___policy.html", "classmel_1_1core_1_1_singleton___singlethread___policy" ],
     [ "Thread", "classmel_1_1core_1_1_thread.html", "classmel_1_1core_1_1_thread" ],
     [ "Timer", "classmel_1_1core_1_1_timer.html", "classmel_1_1core_1_1_timer" ],
-    [ "TLS", "classmel_1_1core_1_1_t_l_s.html", "classmel_1_1core_1_1_t_l_s" ],
     [ "ThreadId", "namespacemel_1_1core.html#aaaa799cfe87d0ebf1e6451095140b3a7", null ],
     [ "ECallbackResult", "namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992", [
       [ "NO_UNSUBSCRIBE", "namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992aa380c42c2ea2e2c80e5221f471550590", null ],

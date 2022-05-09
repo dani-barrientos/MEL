@@ -224,10 +224,10 @@ template&lt;class ExecutorAgent , class TRet1 , class U &gt; </td></tr>
 <tr class="memitem:a789d1502a968251fcc5ac40bdb4724b7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">on_all</a> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; ex, FTypes... futs)</td></tr>
 <tr class="memdesc:a789d1502a968251fcc5ac40bdb4724b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">return <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> which will be executed, in the context of the given executor ex, when all the given ExFutures are triggered. The resulting <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> has a std::tuple with the types if the given ExFutures in the same order. So, all of them must return a value, void is not allowed If any of the given input <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> has error, the returned one will have the same error indicating the element who failed  <a href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">More...</a><br /></td></tr>
 <tr class="separator:a789d1502a968251fcc5ac40bdb4724b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62cba59dfd4f1eb9a16f5e32bab89e6d"><td class="memTemplParams" colspan="2">template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... Jobs&gt; </td></tr>
-<tr class="memitem:a62cba59dfd4f1eb9a16f5e32bab89e6d"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TRet &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a62cba59dfd4f1eb9a16f5e32bab89e6d">condition</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;selector, Jobs &amp;&amp;... jobs)</td></tr>
-<tr class="memdesc:a62cba59dfd4f1eb9a16f5e32bab89e6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select functor to execute.  <a href="namespacemel_1_1execution.html#a62cba59dfd4f1eb9a16f5e32bab89e6d">More...</a><br /></td></tr>
-<tr class="separator:a62cba59dfd4f1eb9a16f5e32bab89e6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d2a46315db71fc8924966a00e94f7ef"><td class="memTemplParams" colspan="2">template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... Flows&gt; </td></tr>
+<tr class="memitem:a6d2a46315db71fc8924966a00e94f7ef"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TRet &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a6d2a46315db71fc8924966a00e94f7ef">condition</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;selector, Flows &amp;&amp;... flows)</td></tr>
+<tr class="memdesc:a6d2a46315db71fc8924966a00e94f7ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select functor to execute.  <a href="namespacemel_1_1execution.html#a6d2a46315db71fc8924966a00e94f7ef">More...</a><br /></td></tr>
+<tr class="separator:a6d2a46315db71fc8924966a00e94f7ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a66d6567aaa926dabceed4bccbd093d"><td class="memTemplParams" colspan="2"><a id="a9a66d6567aaa926dabceed4bccbd093d"></a>
 template&lt;class TRet , class F , class ... FTypes&gt; </td></tr>
 <tr class="memitem:a9a66d6567aaa926dabceed4bccbd093d"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1__private_1_1_apply_condition.html">_private::ApplyCondition</a>&lt; TRet, F, FTypes... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a9a66d6567aaa926dabceed4bccbd093d">condition</a> (F &amp;&amp;selector, FTypes &amp;&amp;... functions)</td></tr>
@@ -274,13 +274,13 @@ template&lt;class TArg , class TRet &gt; </td></tr>
 <div class="textblock"><p>High level execution utilities. </p>
 <p>This namespace contains class, functions..to give a consistent execution interface independent of the underliying execution system See <a class="el" href="execution_system.html">Execution System</a> for detailed explanations and examples </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a62cba59dfd4f1eb9a16f5e32bab89e6d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a62cba59dfd4f1eb9a16f5e32bab89e6d">&#9670;&nbsp;</a></span>condition()</h2>
+<a id="a6d2a46315db71fc8924966a00e94f7ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d2a46315db71fc8924966a00e94f7ef">&#9670;&nbsp;</a></span>condition()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... Jobs&gt; </div>
+template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... Flows&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt;ExecutorAgent,TRet&gt; mel::execution::condition </td>
@@ -297,8 +297,8 @@ template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Jobs &amp;&amp;...&#160;</td>
-          <td class="paramname"><em>jobs</em>&#160;</td>
+          <td class="paramtype">Flows &amp;&amp;...&#160;</td>
+          <td class="paramname"><em>flows</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

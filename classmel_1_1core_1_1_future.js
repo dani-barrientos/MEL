@@ -7,7 +7,7 @@ var classmel_1_1core_1_1_future =
     [ "Future", "classmel_1_1core_1_1_future.html#a87f6166f54533681309b373a6dee8fa8", null ],
     [ "Future", "classmel_1_1core_1_1_future.html#a988be166fee261be4da888bd9735702a", null ],
     [ "assign", "classmel_1_1core_1_1_future.html#a09b4c409d89e4d8291505ba513637ecb", null ],
-    [ "assign", "classmel_1_1core_1_1_future.html#a8743050a81a09d25ab3e62201bb3ba41", null ],
+    [ "assign", "classmel_1_1core_1_1_future.html#aca794c846301c1a1d7c907e7d69fc1d6", null ],
     [ "assign", "classmel_1_1core_1_1_future.html#a87864cadc54dec7a1579ee6748487755", null ],
     [ "getValue", "classmel_1_1core_1_1_future.html#aba2dbf5844e243c0a3d8bbf738df11d2", null ],
     [ "getValue", "classmel_1_1core_1_1_future.html#a663f1cf52f685b2a8e93e3d00f16ebf3", null ],

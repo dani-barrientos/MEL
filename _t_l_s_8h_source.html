@@ -94,36 +94,40 @@ $(document).ready(function(){initNavTree('_t_l_s_8h_source.html',''); initResiza
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;MelLibType.h&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="_type_traits_8h.html">mpl/TypeTraits.h</a>&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;{</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <span class="keyword">namespace </span>core</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    {</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_t_l_s.html">   18</a></span>&#160;        <span class="keyword">class </span>MEL_API <a class="code" href="classmel_1_1core_1_1_t_l_s.html">TLS</a></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">    #ifdef _WINDOWS </span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keyword">typedef</span> DWORD TLSKey;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">    #elif defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS)</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="keyword">typedef</span> pthread_key_t TLSKey;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">    #endif</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_t_l_s.html#ab3583c9f5d4867cada26cfb7b6aaefaa">   33</a></span>&#160;        <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code" href="classmel_1_1core_1_1_t_l_s.html#ab3583c9f5d4867cada26cfb7b6aaefaa">createKey</a>(TLSKey&amp; key );</div>
-<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_t_l_s.html#a9d004fc5f75c73b3bb598176fc119d70">   38</a></span>&#160;        <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code" href="classmel_1_1core_1_1_t_l_s.html#a9d004fc5f75c73b3bb598176fc119d70">deleteKey</a>(mpl::TypeTraits&lt;TLSKey&gt;::ParameterType key);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <span class="comment">/*</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">        * @param key the key to set tehe value for</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">        * @param value the value to be set</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">        * @return true if the value was successfully set. false otherwise</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">        */</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <span class="keyword">static</span> <span class="keywordtype">bool</span> setValue(mpl::TypeTraits&lt;TLSKey&gt;::ParameterType key, <span class="keyword">const</span> <span class="keywordtype">void</span>* value );</div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_t_l_s.html#a707d63456b7d5028ad2b878799b7027f">   50</a></span>&#160;        <span class="keyword">static</span> <span class="keywordtype">void</span>* <a class="code" href="classmel_1_1core_1_1_t_l_s.html#a707d63456b7d5028ad2b878799b7027f">getValue</a>(mpl::TypeTraits&lt;TLSKey&gt;::ParameterType key );</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        };</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    };</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;}</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;{</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <span class="keyword">namespace </span>core</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    {</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;        <span class="keyword">class </span>MEL_API TLS</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;        {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;        <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">    #ifdef _WINDOWS </span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="keyword">typedef</span> DWORD TLSKey;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">    #elif defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS)</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="keyword">typedef</span> pthread_key_t TLSKey;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">    #endif</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="comment">/*</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="comment">        * create new Key in TLS for all threads. Each threads will bind a different value for this key</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="comment">        * @param[out] key New key create</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="comment">        * @return true if the key was created successfully. false otherwise</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">        * @remarks usually key is created at application begin and will be save in a static variable</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">        */</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        <span class="keyword">static</span> <span class="keywordtype">bool</span> createKey(TLSKey&amp; key );</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        <span class="keyword">static</span> <span class="keywordtype">bool</span> deleteKey(mpl::TypeTraits&lt;TLSKey&gt;::ParameterType key);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        <span class="comment">/*</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">        * @param key the key to set tehe value for</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">        * @param value the value to be set</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">        * @return true if the value was successfully set. false otherwise</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">        */</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keyword">static</span> <span class="keywordtype">bool</span> setValue(mpl::TypeTraits&lt;TLSKey&gt;::ParameterType key, <span class="keyword">const</span> <span class="keywordtype">void</span>* value );</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keyword">static</span> <span class="keywordtype">void</span>* getValue(mpl::TypeTraits&lt;TLSKey&gt;::ParameterType key );</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        };</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    };</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;}</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="comment">///@endcond</span></div>
 <div class="ttc" id="a_type_traits_8h_html"><div class="ttname"><a href="_type_traits_8h.html">TypeTraits.h</a></div><div class="ttdoc">Typical Traits for types.</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_t_l_s_html"><div class="ttname"><a href="classmel_1_1core_1_1_t_l_s.html">mel::core::TLS</a></div><div class="ttdoc">Thread Local Storage.</div><div class="ttdef"><b>Definition:</b> TLS.h:19</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_t_l_s_html_a707d63456b7d5028ad2b878799b7027f"><div class="ttname"><a href="classmel_1_1core_1_1_t_l_s.html#a707d63456b7d5028ad2b878799b7027f">mel::core::TLS::getValue</a></div><div class="ttdeci">static void * getValue(mpl::TypeTraits&lt; TLSKey &gt;::ParameterType key)</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_t_l_s_html_a9d004fc5f75c73b3bb598176fc119d70"><div class="ttname"><a href="classmel_1_1core_1_1_t_l_s.html#a9d004fc5f75c73b3bb598176fc119d70">mel::core::TLS::deleteKey</a></div><div class="ttdeci">static bool deleteKey(mpl::TypeTraits&lt; TLSKey &gt;::ParameterType key)</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_t_l_s_html_ab3583c9f5d4867cada26cfb7b6aaefaa"><div class="ttname"><a href="classmel_1_1core_1_1_t_l_s.html#ab3583c9f5d4867cada26cfb7b6aaefaa">mel::core::TLS::createKey</a></div><div class="ttdeci">static bool createKey(TLSKey &amp;key)</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

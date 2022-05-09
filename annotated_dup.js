@@ -25,8 +25,7 @@ var annotated_dup =
         [ "Singleton_Multithread_Policy", "classmel_1_1core_1_1_singleton___multithread___policy.html", "classmel_1_1core_1_1_singleton___multithread___policy" ],
         [ "Singleton_Singlethread_Policy", "classmel_1_1core_1_1_singleton___singlethread___policy.html", "classmel_1_1core_1_1_singleton___singlethread___policy" ],
         [ "Thread", "classmel_1_1core_1_1_thread.html", "classmel_1_1core_1_1_thread" ],
-        [ "Timer", "classmel_1_1core_1_1_timer.html", "classmel_1_1core_1_1_timer" ],
-        [ "TLS", "classmel_1_1core_1_1_t_l_s.html", "classmel_1_1core_1_1_t_l_s" ]
+        [ "Timer", "classmel_1_1core_1_1_timer.html", "classmel_1_1core_1_1_timer" ]
       ] ],
       [ "execution", "namespacemel_1_1execution.html", [
         [ "_private", null, [
