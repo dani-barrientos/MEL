@@ -58,49 +58,152 @@ namespace _private
 {
 	template <class F> struct ApplyFlow
 	{
-		ApplyFlow(F&& f):mFunc(std::forward<F>(f)){}
-		ApplyFlow(const F& f):mFunc(f){}
-		F mFunc;
-		template <class TArg,class ExecutorAgent> auto operator()(const execution::ExFuture<ExecutorAgent,TArg>& inputFut)
+		ApplyFlow(F&& f):mFlow(std::forward<F>(f)){}
+		ApplyFlow(const F& f):mFlow(f){}
+		F mFlow;
+		template <class TArg,class ExecutorAgent> auto operator()(execution::ExFuture<ExecutorAgent,TArg> inputFut)
 		{
 			//return next(inputFut,std::forward<F>(mFunc));
+		//	mFlow.execute(inputFut) no tengo parámetro de entrada
 		}		
 	};
 }
-template <class F> class Flow
-{
-	public:
-		Flow(F&& f):mFunct(std::move(f)){
-		}
-		Flow(const F& f):mFunct(f){
-		}
-		//cuado lo tenga claro, ya poner tipos bien
-		//template <class TRet,class SourceType,class TArg> TRet operator()(SourceType source, TArg&& v,bool directExecution = false )
-		template <class TRet,class SourceType,class TArg> TRet execute(SourceType source, TArg&& v,bool directExecution = false )
+		using execution::ExFuture;
+		using execution::Executor;
+		template <class F> class Flow
 		{
-			if (!directExecution)
-			{
-				typedef typename SourceType::ValueType  ValueType;            
-				TRet result(source.agent);
-				//@todo no entiendo por qué necesito el function!!!
-				source.subscribeCallback(std::function<void( ValueType&)>([result,v = std::forward<TArg>(v),this]( ValueType& input) mutable 
+			public:
+				Flow(F&& f):mFunct(std::move(f)){
+				}
+				Flow(const F& f):mFunct(f){
+				}
+				//cuado lo tenga claro, ya poner tipos bien
+				//template <class TRet,class SourceType,class TArg> TRet operator()(SourceType source, TArg&& v,bool directExecution = false )				
+				template <class TArg,class ExecutorAgent> std::invoke_result_t<F,Executor<ExecutorAgent>,TArg> operator()(ExFuture<ExecutorAgent,TArg> source)
 				{
-					result.assign(mFunct(result.agent,std::forward<TArg>(v)));
-				}));
-				return result;
-			}else
-			{
-				return mFunct(source.agent,std::forward<TArg>(v));
-			}
-		}
-	private:		
-		F mFunct;
-};
-
+					//static_assert( std::is_invocable<F,TArg>::value, "execution::Flow bad functor signature");
+					typedef std::invoke_result_t<F,Executor<ExecutorAgent>,TArg> TRet;  //it's an ExFuture
+					typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;            
+					TRet result(source.agent);
+					//@todo no tengo claro ahora por qué necesito el function!!!
+					source.subscribeCallback(std::function<void( ValueType&)>(
+						[source,result,this]( ValueType& input) mutable 
+						{
+							if ( input.isValid() )
+							{
+								//@todo no tengo nada claro que pueda hacerlo sin tarea
+								result.assign(mFunct(source.agent,source.getValue().value()));
+								/*launch(source.agent,[result,source,this]( ) mutable noexcept
+								{
+									auto val = mFunct(source.agent,source.getValue().value());
+									result.assign(std::move(val));
+								});
+								*/
+							}else
+							{
+                                //set error as task in executor
+								launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
+								{
+									result.setError(std::move(err));
+								});
+								
+							}				
+						})
+					);
+					return result;
+				}
+				// template <class SourceType> auto operator()(SourceType source)
+				// {
+				// 	return ::_private::ApplyFlow()
+				// }
+				//template <class TRet,class SourceType,class TArg> TRet operator()(SourceType source, TArg&& v,bool directExecution = false )
+			private:		
+				F mFunct;
+		};
+		// template <class F> Flow flow(F&& functor)
+		// {
+		// 	return Flow(std::forward(functor));
+		// }
 
 static tests::BaseTest* sCurrentTest = nullptr;
+auto f = [](auto exec)
+		{
+		/*	auto res = execution::launch(exec,[]() 
+				{
+				//	throw std::runtime_error("Err en launch");		
+					return 5.2f;
+				})    
+				| execution::next( [](float v)
+				{
+					return std::to_string(v);
+				})
+				// | execution::catchError2( [](std::exception_ptr) noexcept
+				// {
+				// 	return "cachiporrez"s;
+				// })
+				| mel::execution::next( [](const string& str) noexcept
+					{
+						//throw std::runtime_error("Err en next");		
+						return str + " fin";
+					}
+				) 
+				| mel::execution::next( [](const string& str)
+					{
+						return 7.8f;
+					}
+				);
+				*/
+			auto g = [](std::exception_ptr){};
+			//mel::execution::catchError2(res,[](std::exception_ptr){});
+			//return res;
+		};
+
+template <class ExecutorAgent,class TArg> auto flow1 (ExFuture<ExecutorAgent,TArg> source)  //es un ExFuture<ExecutorAgent,float>
+{
+	return execution::next(source, [](float val) noexcept
+	{
+		
+		::mel::text::info("Flow launch");
+		return std::to_string(val) + " dani";
+	})
+	| execution::catchError( [](std::exception_ptr err)
+		{
+			return "pepito por error"s;
+		}
+	)
+	| execution::next( []( string str)
+	{
+		return "Next"s;
+	}
+	)
+	;
+};
+auto g = [](auto executor,const float& v)
+{	return execution::launch(executor, [](float val) noexcept
+	{
+		
+		::mel::text::info("Flow launch");
+		return std::to_string(val) + " dani";
+	},v)
+	// | execution::catchError( [](std::exception_ptr err)
+	// 	{
+	// 		return "pepito por error"s;
+	// 	}
+	// )
+	| execution::next( []( string str)
+	{
+		return "Next"s;
+	}
+	);
+};	
+// prpoblema grave con el functor templatico. 
+// el problema es que no sé el tipo de executor
+// igual con funcion templaitca que cree el Flow con el agent concreto??
+// auto flow1 = Flow(g1);
+
 int _testDebug(tests::BaseTest* test)
 {
+
 	int result = 0;	
 	auto th1 = ThreadRunnable::create(true);	
 	//auto th2 = ThreadRunnable::create(true);	
@@ -114,45 +217,97 @@ int _testDebug(tests::BaseTest* test)
 	extp.setOpts({true,true});   
 	sCurrentTest = test;
 	execution::InlineExecutor exInl;
-	execution::NaiveInlineExecutor exNaive;
-	{
-		auto flow1 = Flow([](auto executor,const vector<int>& v)
-			{
-				return execution::launch(executor, [](const vector<int>& val)
-				{
-					mel::text::info("Flow launch");
-					return std::to_string(val[0]) + " dani";
-				},v);
-			}
-		);
-		auto flow2 = Flow([](auto ex, vector<int> v)
+	execution::NaiveInlineExecutor exNaive;	
+	{	
+		// auto flow1 = [](auto source)  //es un ExFuture<ExecutorAgent,float>
+		// 	{
+		// 		return execution::next(source, [](float val) noexcept
+		// 		{
+					
+		// 			::mel::text::info("Flow launch");
+		// 			return std::to_string(val) + " dani";
+		// 		})
+		// 		| execution::catchError( [](std::exception_ptr err)
+		// 			{
+		// 				return "pepito por error"s;
+		// 			}
+		// 		)
+		// 		| execution::next( []( string str)
+		// 		{
+		// 			return "Next"s;
+		// 		}
+		// 		)
+		// 		;
+		// 	};
+		// f(exr,5);
+		// auto flow1 = Flow(
+		// 	[](auto executor,const float& v)
+		// 	{
+		// 		return execution::launch(executor, [](float val) noexcept
+		// 		{
+					
+		// 			::mel::text::info("Flow launch");
+		// 			return std::to_string(val) + " dani";
+		// 		},v)
+		// 		| execution::catchError( [](std::exception_ptr err)
+		// 			{
+		// 				return "pepito por error"s;
+		// 			}
+		// 		)
+		// 		| execution::next( []( string str)
+		// 		{
+		// 			return "Next"s;
+		// 		}
+		// 		)
+		// 		;
+		// 	}
+		// );		
+		auto flow2 = Flow([](auto ex, float v)
 		{
 			//mel::tasking::Process::wait(1000);
 			// ::mel::text::info("Option 2. {} ",v.val);
 			// throw std::runtime_error("Err opt 2");
 			// return 6.8f;
 			return execution::start(ex)
-			|execution::inmediate("Barrientos"s);
+			|execution::inmediate("Barrientos"s)
+			// | execution::catchError( [](std::exception_ptr err)
+			// 	{
+			// 		return "cachiporrez"s;
+			// 	})
+			;
 		});
 		try
 		{
 			auto res = mel::core::waitForFutureThread(
-				execution::launch(exr,[]() noexcept
+				execution::launch(exr,[]() /*noexcept*/
 				{
-					//throw std::runtime_error("Err en launch");		
+				//	throw std::runtime_error("Err en launch");		
 					return 5.2f;
 				})    
-				| mel::execution::condition<string>([](const float& v)
+				//| flow1
+				| mel::execution::condition<string>(
+					[](const float& v)
 					{
-						vector<int> arg{(int)v};
-						return std::make_pair(0,arg);
+						return 0;
 					},
-					flow1,flow2)	
-				| mel::execution::next( [](const string& str)
+					/*flow1,*/flow2
+				)
+				// | execution::catchError( [](std::exception_ptr err)
+				// {
+				// 	return "cachiporrez"s;
+				// })
+				| mel::execution::next( [](const string& str) noexcept
 					{
+						//throw std::runtime_error("Err en next");		
 						return str + " fin";
 					}
-				)				
+				) 
+				| mel::execution::next( [](const string& str)
+					{
+						return 7.8f;
+					}
+				) 
+				//| flow2
 			);
 			mel::text::info("Result = {}",res.value());
 		}
@@ -320,7 +475,7 @@ int _testDebug(tests::BaseTest* test)
                 mel::text::info("T2 {}",v);
             }
         )
-        | execution::parallel_convert<std::tuple<int,string>>(
+        | execution::parallel_convert(
 			[](const float& v) noexcept
 			{
 				mel::text::info("T1 {}",v);
@@ -444,7 +599,7 @@ int _testDebug(tests::BaseTest* test)
 		// 		mel::text::info("T2");
         //         return "dani"s;
 		// 	})  
-        | execution::parallel_convert<std::tuple<int,string>>(
+        | execution::parallel_convert(
 			[](float& v) noexcept
 			{
 				mel::text::info("T1 {}",v);

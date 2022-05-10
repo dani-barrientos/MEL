@@ -354,7 +354,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 
         //Third job in the same executor as before
         auto job3 = mel::execution::start(ex2)
-        | mel::execution::parallel_convert<std::tuple<int,float>>(
+        | mel::execution::parallel_convert(
          []() noexcept
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour

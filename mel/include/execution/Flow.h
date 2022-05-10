@@ -12,23 +12,21 @@ namespace mel
     namespace execution
     {      
         //for internal use by condition function
+//@todo revisar bien el forwarding del flow
     #define CONDITION_SELECT_JOB(idx) \
             if constexpr (tsize>idx) \
             { \
-                using FlowType = std::tuple_element_t<idx,TupleType>; \
-                launch(source.agent,[source,flow = std::forward<FlowType>(std::get<idx>(flows)),result]( ArgType&& arg) mutable noexcept {  \
-                    result.assign(flow.template execute<ResultType>(source,std::forward<ArgType>(arg),true)); \
-                  },std::forward<ArgType>(selResult.second)); \
+                result.assign(std::get<idx>(flows)(source)); \
             }else{ \
                  launch(source.agent,[result]( ) mutable noexcept {  \
-                    result.setError(std::out_of_range("execution::condition. Index '" TOSTRING(idx) "' is greater than maximum case index " TOSTRING(tsize)));\
+                    result.setError(std::out_of_range("execution::condition. Index '" TOSTRING(idx) "' is greater than maximum case index " TOSTRING(tsize))); \
                   }); \
             }        
         /**
          * @brief Select functor to execute
          * @details callable \p selector return an unsigned int with is the index of de callable in \p jobs
          * If index is greater thatn available callables, an std::out_of_range error is set
-         * @param selector callable with signature pair<size_t,T> f(TArg) wich select the given job and pass argument of type T to selected jobs
+         * @param selector callable with signature size_t f(TArg) which select the given job
          */                
         template <class TRet,class ExecutorAgent,class TArg,class F,class ...Flows> ExFuture<ExecutorAgent,TRet> 
             condition(ExFuture<ExecutorAgent,TArg> source, F&& selector,Flows&&... flows)
@@ -43,23 +41,23 @@ namespace mel
                     if ( input.isValid() )
                     {  
                         //Evaluate index
-                        auto selResult = selector(input.value());  
-                        size_t idx = selResult.first;
+                        size_t idx = selector(input.value());  
                         using TupleType = decltype(flows);
-                        typedef typename decltype(selResult)::second_type ArgType; 
                         constexpr size_t tsize = std::tuple_size<TupleType>::value;
                         switch(idx)
                         {
                             case 0:                                       
                             // if constexpr (tsize>0) 
                             // { 
-                            //     using JobType = std::tuple_element_t<0,TupleType>; 
-                            //     launch(source.agent,[source,flow = std::forward<JobType>(std::get<0>(flows)),result]( ArgType&& arg) mutable noexcept {  
+                            //     /*using JobType = std::tuple_element_t<0,TupleType>; 
+                            //     launch(source.agent,[source,flow = std::forward<JobType>(std::get<0>(flows)),result]( ) mutable noexcept {  
                             //         //auto r = job(executor,std::forward<TArg>(arg)); //así sí me funciona
                             //         //result.assign(r); 
-                            //         result.assign(flow.template execute<ResultType>(source,std::forward<ArgType>(arg)));
+                            //         result.assign(flow(source));
                             //         //result.assign(job(source,arg));
-                            //     },std::forward<ArgType>(selResult.second));
+                            //     });
+                            //     */
+                            //    result.assign(std::get<0>(flows)(source));
                             // }else{ 
                             //     launch(source.agent,[result]( ) mutable noexcept {  
                             //         result.setError(std::out_of_range("execution::condition. Index '" TOSTRING(idx) "' is greater than maximum case index " TOSTRING(tsize)));
@@ -71,7 +69,7 @@ namespace mel
                             case 1:
                                 CONDITION_SELECT_JOB(1)
                                 break;
-                            case 2:
+                            case 2:                           
                                 CONDITION_SELECT_JOB(2)
                                 break;
                              case 3:

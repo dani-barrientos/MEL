@@ -9,8 +9,10 @@
 #include <mpl/TypeTraits.h>
 namespace mel
 {
+    
     namespace execution
     {                   
+        using namespace mel::execution;
         struct InlineExecutionAgent{};
         /**
          * @brief Executor specialization using InlineExecutionAgent as execution agent
@@ -240,8 +242,9 @@ namespace mel
         }   
         */
         //overload for performance reasons
-        template <class ResultTuple, class TArg,class ...FTypes> ExFuture<InlineExecutionAgent,ResultTuple> parallel_convert(ExFuture<InlineExecutionAgent,TArg> source, FTypes&&... functions)
+        template <class TArg,class ...FTypes> ExFuture<InlineExecutionAgent,typename mel::execution::_private::GetReturn<TArg,FTypes...>::type> parallel_convert(ExFuture<InlineExecutionAgent,TArg> source, FTypes&&... functions)
         {            
+            typedef typename mel::execution::_private::GetReturn<TArg,FTypes...>::type ResultTuple;
             std::exception_ptr except{nullptr};
             if ( source.getValid() )
             {             
@@ -263,13 +266,7 @@ namespace mel
                 return result;
             }
         }    
-        
-        
-        /*template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier Executor<InlineExecutionAgent>::parallel_convert(ExFuture<InlineExecutionAgent,TArg> fut,std::exception_ptr& except,ReturnTuple& result, FTypes&&... functions)
-        {
-            _private::_invokeInline_with_result<0>(fut,except,result,functions...);
-            return ::mel::parallelism::Barrier((size_t)0);
-        }*/
+                
         /**
          * @brief Launch given functor in given executor
          * @return ExFuture with return type of function

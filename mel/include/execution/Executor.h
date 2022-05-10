@@ -23,11 +23,11 @@ namespace mel
         template <class ExecutorAgent> class Executor    
         {
             //mandatory interface to imlement in specializations
-            template <class TRet,class F> void launch( F&& f,ExFuture<ExecutorAgent,TRet> output) const;
-            template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ExecutorAgent,TRet> output) const;
-            template <class I, class F>	 ::mel::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
-            template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<ExecutorAgent,TArg> fut, FTypes&&... functions);
-            template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg> fut,ReturnTuple& result, FTypes&&... functions);
+            //template <class TRet,class F> void launch( F&& f,ExFuture<ExecutorAgent,TRet> output) const;
+            //template <class TRet,class TArg,class F> void launch( F&& f,TArg&& arg,ExFuture<ExecutorAgent,TRet> output) const;
+            //template <class I, class F>	 ::mel::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);
+            //template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<ExecutorAgent,TArg> fut, FTypes&&... functions);
+            //template <class ReturnTuple,class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel_convert(ExFuture<ExecutorAgent,TArg> fut,ReturnTuple& result, FTypes&&... functions);
         };
         /**
          * @brief Default traits for any executor
@@ -40,6 +40,7 @@ namespace mel
             //! Support true parallelism?
             enum {has_parallelism = false}; //!< support true parallelism?
         };
+       
         /**
          * @brief Launch given functor in given executor
          * @return ExFuture with return type of function
@@ -401,9 +402,8 @@ namespace mel
     
         /**
          * @brief Capture previous error, if any, and execute the function
-         * this function works similar to next, but receiving an std::exception_ptr as the parameter and must return
-         * same type as input future is
-         * no error was raised in previous works of the chain, the functions is not executed
+         * @details This function works similar to next, but receiving an std::exception_ptr as the parameter and must return
+         * same type as input future if no error was raised in previous works of the chain, the function is not executed
          */    
         template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TArg> 
             catchError(ExFuture<ExecutorAgent,TArg> source, F&& f)
@@ -428,22 +428,72 @@ namespace mel
             );
             return result;
         }           
+        
+        namespace _private
+        {
+            template <class F,class TArg> struct inv_res
+            {
+                using type = std::invoke_result_t<F,TArg>;
+            };
+            template <class F> struct inv_res<F,void>
+            {
+                using type = std::invoke_result_t<F>;
+            };
+             //return deduction for parallel_convert
+            template <class TArg,class F1 = void,class F2 = void,class F3=void,class F4=void,class F5=void,class F6=void,class F7=void,class F8=void,class F9=void> struct GetReturn
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type,typename inv_res<F4,TArg>::type,typename inv_res<F5,TArg>::type,typename inv_res<F6,TArg>::type,typename inv_res<F7,TArg>::type,typename inv_res<F8,TArg>::type,typename inv_res<F9,TArg>::type>;
+            };
+            template <class TArg,class F1,class F2,class F3,class F4,class F5,class F6,class F7,class F8> struct GetReturn<TArg,F1,F2,F3,F4,F5,F6,F7,F8,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type,typename inv_res<F4,TArg>::type,typename inv_res<F5,TArg>::type,typename inv_res<F6,TArg>::type,typename inv_res<F7,TArg>::type,typename inv_res<F8,TArg>::type>;
+            };
+            template <class TArg,class F1,class F2,class F3,class F4,class F5,class F6,class F7> struct GetReturn<TArg,F1,F2,F3,F4,F5,F6,F7,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type,typename inv_res<F4,TArg>::type,typename inv_res<F5,TArg>::type,typename inv_res<F6,TArg>::type,typename inv_res<F7,TArg>::type>;
+            };
+            template <class TArg,class F1,class F2,class F3,class F4,class F5,class F6> struct GetReturn<TArg,F1,F2,F3,F4,F5,F6,void,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type,typename inv_res<F4,TArg>::type,typename inv_res<F5,TArg>::type,typename inv_res<F6,TArg>::type>;
+            };
+            template <class TArg,class F1,class F2,class F3,class F4,class F5> struct GetReturn<TArg,F1,F2,F3,F4,F5,void,void,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type,typename inv_res<F4,TArg>::type,typename inv_res<F5,TArg>::type>;
+            };
+            template <class TArg,class F1,class F2,class F3,class F4> struct GetReturn<TArg,F1,F2,F3,F4,void,void,void,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type,typename inv_res<F4,TArg>::type>;
+            };
+            template <class TArg,class F1 ,class F2,class F3> struct GetReturn<TArg,F1,F2,F3,void,void,void,void,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type,typename inv_res<F3,TArg>::type>;
+            };
+            template <class TArg,class F1 ,class F2> struct GetReturn<TArg,F1,F2,void,void,void,void,void,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type,typename inv_res<F2,TArg>::type>;
+                
+            };
+            template <class TArg,class F1> struct GetReturn<TArg,F1,void,void,void,void,void,void,void,void>
+            {
+                using type = std::tuple<typename inv_res<F1,TArg>::type>;
+            };
+        }
         /**
          * @brief Same as @ref parallel but returning a tuple with the values for each functor
-         * So, these functors must return a value
+         * @details So, these functors must return a value. Until 10 callables can be 
          * @return a tuple with types for each functor return, in order. Returning void is not allowed
+         * @note limit in callables is because a bug in gcc < 10.2 where template overload resolution it's buggy
          */
-        template <class ResultTuple, class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
-        {
-            //@todo tratar de dedudir la tupla de los resultados de cada funcion
+        template <class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,typename ::mel::execution::_private::GetReturn<TArg,FTypes...>::type> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
+        {            
+            typedef typename ::mel::execution::_private::GetReturn<TArg,FTypes...>::type ResultTuple;
             static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
-            ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
+            ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
             source.subscribeCallback(            
                 std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
                 {
-                    if ( input.isValid() )
-                    {                       
+                    if ( input.isValid() ){
                         std::exception_ptr* except = new std::exception_ptr(nullptr);
                         ResultTuple* output = new ResultTuple; //para que compile
                         auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
@@ -470,6 +520,44 @@ namespace mel
             ));
             return result;
         }
+        /*
+        template <class ResultTuple, class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
+        {
+            //@todo tratar de dedudir la tupla de los resultados de cada funcion
+            static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
+            ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
+            typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
+            source.subscribeCallback(            
+                std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                {
+                    if ( input.isValid() ){                       
+                        std::exception_ptr* except = new std::exception_ptr(nullptr);
+                        ResultTuple* output = new ResultTuple; //para que compile
+                        auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                        barrier.subscribeCallback(
+                            std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,output,except](const ::mel::parallelism::BarrierData& ) mutable
+                            {      
+                                if ( *except ) //any exception?
+                                    result.setError(*except);
+                                else
+                                    result.setValue(std::move(*output));
+                                delete output;    
+                                delete except;              
+                                return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
+                            }));
+                    }else
+                    {
+                        //set error as task in executor
+                        launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
+                        {
+                        result.setError(std::move(err));
+                        });
+                    }
+                }
+            ));
+            return result;
+        }*/
+       
         /**
          * @brief Get the Executor used in the chaing of execution
          * @details It returns an ExFuture moved from source, so transferring previous value to the next element in chain.
@@ -567,6 +655,7 @@ namespace mel
                     return catchError(inputFut,std::forward<F>(mFunc));
                 }
             };
+            
             template <class F> struct ApplyGetExecutor
             {
                 ApplyGetExecutor(F&& f):mFunc(std::forward<F>(f)){}
@@ -606,16 +695,29 @@ namespace mel
                 }
                 return std::nullopt;
             }
+            /*
             template <class ReturnTuple, class ...FTypes> struct ApplyParallelConvert
             {
                 ApplyParallelConvert(FTypes&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
                 ApplyParallelConvert(const FTypes&... fs):mFuncs(fs...){}           
                 std::tuple<FTypes...> mFuncs;
-                template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
+                template <class ExecutorAgent,class TArg> ExFuture<ExecutorAgent,ReturnTuple> operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return parallel_convert<ReturnTuple>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                    return parallel_convert<ReturnTuple,TArg>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                }
+            };*/
+            //@todo PRUEBAS
+            template < class ...FTypes> struct ApplyParallelConvert
+            {
+                ApplyParallelConvert(FTypes&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
+                ApplyParallelConvert(const FTypes&... fs):mFuncs(fs...){}           
+                std::tuple<FTypes...> mFuncs;
+                template <class ExecutorAgent,class TArg> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
+                {
+                    return parallel_convert(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
             };
+           
         }
         //@brief version for use with operator |
         template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
@@ -650,11 +752,13 @@ namespace mel
         {
             return _private::ApplyError<F>(std::forward<F>(f));
         }
+        
         ///@brief version for use with operator |
-        template <class ReturnTuple,class ...FTypes> _private::ApplyParallelConvert<ReturnTuple,FTypes...> parallel_convert(FTypes&&... functions)
+        template <class ...FTypes> _private::ApplyParallelConvert<FTypes...> parallel_convert(FTypes&&... functions)
         {
-            return _private::ApplyParallelConvert<ReturnTuple,FTypes...>(std::forward<FTypes>(functions)...);
+            return _private::ApplyParallelConvert<FTypes...>(std::forward<FTypes>(functions)...);
         }
+        
         ///@brief version for use with operator |
         template <class F> _private::ApplyGetExecutor<F> getExecutor(F&& f)
         {

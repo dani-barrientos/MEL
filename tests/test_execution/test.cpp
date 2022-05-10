@@ -16,8 +16,8 @@ using mel::tasking::Process;
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
-#include <execution/InlineExecutor.h>
 #include <execution/NaiveInlineExecutor.h>
+#include <execution/InlineExecutor.h>
 #include <vector>
 using std::vector;
 #include "test_samples.h"
@@ -587,7 +587,8 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 		},std::ref(*values))
 		*/
 		fut
-		| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+		//| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+		| mel::execution::parallel_convert(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
 			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;
@@ -631,10 +632,13 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 				mean /= v.size();
 				return mean;
 			}
-		) | mel::execution::next( [](const std::tuple<double,double,double,double>& means)
-		{
-			return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
-		}));
+		)
+		| mel::execution::next( [](const std::tuple<double,double,double,double>& means)
+			{
+				return (std::get<0>(means)+std::get<1>(means)+std::get<2>(means)+std::get<3>(means));
+			}
+		)
+		);
 		uint64_t t1 = timer.getMilliseconds();
 		text::info("Mean = {}. Time spent = {} seconds",res5.value(),(float)((t1-t0)/1000.f));
 		tests::BaseTest::addMeasurement(title+" time:",(float)((t1-t0)/1000.f));
@@ -689,6 +693,7 @@ template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFutur
 		text::info("Error = {}",e.what());
 	}
 }
+
 //basic test for launching task in execution agents
 int _testLaunch( tests::BaseTest* test)
 {
@@ -734,6 +739,7 @@ int _testLaunch( tests::BaseTest* test)
 	}	
 	return result;
 }
+
 int _testAdvanceSample(tests::BaseTest* test)
 {
 	int result = 0;	
@@ -743,6 +749,12 @@ int _testAdvanceSample(tests::BaseTest* test)
 	opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
 	auto th1 = ThreadRunnable::create(true,opts);
 	execution::Executor<Runnable> exr(th1);
+	parallelism::ThreadPool::ThreadPoolOpts tpopts;
+	tpopts.threadOpts.schedulerOpts = ProcessScheduler::LockFreeOptions{};
+	auto myPool = make_shared<parallelism::ThreadPool>(tpopts);
+	parallelism::ThreadPool::ExecutionOpts exopts;
+	execution::Executor<parallelism::ThreadPool> extp(myPool);
+	extp.setOpts({true,true});
 	typedef vector<double> VectorType;
 	auto initFut = execution::launch(exr,[]()
 	{				
@@ -787,7 +799,9 @@ int _testAdvanceSample(tests::BaseTest* test)
 		_testMeanVector(execution::transfer(initFut,exr),"vector mean: RunnableExecutor",test); //the transfer is not neccesary because initFut is launched in exr, but jsut in case it changes
 	}
 	{		
-		execution::InlineExecutor ex;
+		//en GCC 9 esto no compila, tiene algún bug en resolucion de overloads con templates
+		execution::InlineExecutor ex;		
+		//execution::NaiveInlineExecutor ex;		
 		text::info("vector mean: InlineExecutor");		
 		_testMeanVector( execution::transfer(initFut,ex),"vector mean: InlineExecutor",test);
 	}
