@@ -223,15 +223,15 @@ template&lt;class ExecutorAgent , class TRet1 , class U &gt; </td></tr>
 <tr class="memitem:a789d1502a968251fcc5ac40bdb4724b7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">on_all</a> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; ex, FTypes... futs)</td></tr>
 <tr class="memdesc:a789d1502a968251fcc5ac40bdb4724b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">return <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> which will be executed, in the context of the given executor ex, when all the given ExFutures are triggered. The resulting <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> has a std::tuple with the types if the given ExFutures in the same order. So, all of them must return a value, void is not allowed If any of the given input <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> has error, the returned one will have the same error indicating the element who failed  <a href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">More...</a><br /></td></tr>
 <tr class="separator:a789d1502a968251fcc5ac40bdb4724b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d2a46315db71fc8924966a00e94f7ef"><td class="memTemplParams" colspan="2">template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... Flows&gt; </td></tr>
-<tr class="memitem:a6d2a46315db71fc8924966a00e94f7ef"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TRet &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a6d2a46315db71fc8924966a00e94f7ef">condition</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;selector, Flows &amp;&amp;... flows)</td></tr>
-<tr class="memdesc:a6d2a46315db71fc8924966a00e94f7ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select functor to execute.  <a href="namespacemel_1_1execution.html#a6d2a46315db71fc8924966a00e94f7ef">More...</a><br /></td></tr>
-<tr class="separator:a6d2a46315db71fc8924966a00e94f7ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a66d6567aaa926dabceed4bccbd093d"><td class="memTemplParams" colspan="2"><a id="a9a66d6567aaa926dabceed4bccbd093d"></a>
-template&lt;class TRet , class F , class ... FTypes&gt; </td></tr>
-<tr class="memitem:a9a66d6567aaa926dabceed4bccbd093d"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1__private_1_1_apply_condition.html">_private::ApplyCondition</a>&lt; TRet, F, FTypes... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a9a66d6567aaa926dabceed4bccbd093d">condition</a> (F &amp;&amp;selector, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="memdesc:a9a66d6567aaa926dabceed4bccbd093d"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
-<tr class="separator:a9a66d6567aaa926dabceed4bccbd093d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68fa05394a05321a0a85c1cf60764b67"><td class="memTemplParams" colspan="2">template&lt;class ExecutorAgent , class TArg , class F , class ... Flows&gt; </td></tr>
+<tr class="memitem:a68fa05394a05321a0a85c1cf60764b67"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a68fa05394a05321a0a85c1cf60764b67">condition</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;selector, Flows &amp;&amp;... flows)</td></tr>
+<tr class="memdesc:a68fa05394a05321a0a85c1cf60764b67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select functor to execute.  <a href="namespacemel_1_1execution.html#a68fa05394a05321a0a85c1cf60764b67">More...</a><br /></td></tr>
+<tr class="separator:a68fa05394a05321a0a85c1cf60764b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1978a02174062e6e8df036e826e15dc"><td class="memTemplParams" colspan="2"><a id="af1978a02174062e6e8df036e826e15dc"></a>
+template&lt;class F , class ... FTypes&gt; </td></tr>
+<tr class="memitem:af1978a02174062e6e8df036e826e15dc"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1__private_1_1_apply_condition.html">_private::ApplyCondition</a>&lt; F, FTypes... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#af1978a02174062e6e8df036e826e15dc">condition</a> (F &amp;&amp;selector, FTypes &amp;&amp;... functions)</td></tr>
+<tr class="memdesc:af1978a02174062e6e8df036e826e15dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
+<tr class="separator:af1978a02174062e6e8df036e826e15dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplParams" colspan="2"><a id="a5ce2c44a3ac6630c36fc4e9e154d1d61"></a>
 template&lt;class TArg , class I , class F &gt; </td></tr>
 <tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
@@ -306,16 +306,16 @@ template&lt;class F , class TArg , class ExecutorAgent &gt; </div>
 
 </div>
 </div>
-<a id="a6d2a46315db71fc8924966a00e94f7ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d2a46315db71fc8924966a00e94f7ef">&#9670;&nbsp;</a></span>condition()</h2>
+<a id="a68fa05394a05321a0a85c1cf60764b67"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a68fa05394a05321a0a85c1cf60764b67">&#9670;&nbsp;</a></span>condition()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class TRet , class ExecutorAgent , class TArg , class F , class ... Flows&gt; </div>
+template&lt;class ExecutorAgent , class TArg , class F , class ... Flows&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt;ExecutorAgent,TRet&gt; mel::execution::condition </td>
+          <td class="memname">auto mel::execution::condition </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td>
           <td class="paramname"><em>source</em>, </td>
@@ -718,8 +718,8 @@ template&lt;class TArg , class ExecutorAgent , class ... FTypes&gt; </div>
 </div><div class="memdoc">
 
 <p>Same as <a class="el" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a> but returning a tuple with the values for each functor. </p>
-<p>So, these functors must return a value. Until 10 callables can be </p><dl class="section return"><dt>Returns</dt><dd>a tuple with types for each functor return, in order. Returning void is not allowed </dd></dl>
-<dl class="section note"><dt>Note</dt><dd>limit in callables is because a bug in gcc &lt; 10.2 where template overload resolution it's buggy </dd></dl>
+<p>So, these functors must return a value. Until 10 callables can be used </p><dl class="section return"><dt>Returns</dt><dd>A tuple with types for each functor return, in order. Returning void is not allowed </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The limit in callables is because a bug in gcc &lt; 10.2 where template overload resolution is buggy </dd></dl>
 
 </div>
 </div>
