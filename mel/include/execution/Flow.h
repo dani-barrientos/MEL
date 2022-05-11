@@ -16,7 +16,20 @@ namespace mel
     #define CONDITION_SELECT_JOB(idx) \
             if constexpr (tsize>idx) \
             { \
-                result.assign(std::get<idx>(flows)(source)); \
+                using FlowType = std::tuple_element_t<idx,TupleType>; \
+                static_assert(      std::is_invocable<FlowType,ExFuture<ExecutorAgent,TArg>>::value, "execution::condition bad functor signature"); \
+                if constexpr (std::is_nothrow_invocable<FlowType,ExFuture<ExecutorAgent,TArg>>::value) \
+                    result.assign(std::get<idx>(flows)(source)); \
+                else \
+                { \
+                    try \
+                    { \
+                        result.assign(std::get<idx>(flows)(source)); \
+                    }catch(...) \
+                    { \
+                        result.setError(std::current_exception()); \
+                    } \
+                } \
             }else{ \
                  launch(source.agent,[result]( ) mutable noexcept {  \
                     result.setError(std::out_of_range("execution::condition. Index '" TOSTRING(idx) "' is greater than maximum case index " TOSTRING(tsize))); \
@@ -28,11 +41,14 @@ namespace mel
          * If index is greater thatn available callables, an std::out_of_range error is set
          * @param selector callable with signature size_t f(TArg) which select the given job
          */                
-        template <class TRet,class ExecutorAgent,class TArg,class F,class ...Flows> ExFuture<ExecutorAgent,TRet> 
-            condition(ExFuture<ExecutorAgent,TArg> source, F&& selector,Flows&&... flows)
+        template </*class TRet,*/class ExecutorAgent,class TArg,class F,class ...Flows>
+         auto condition(ExFuture<ExecutorAgent,TArg> source, F&& selector,Flows&&... flows)
         {                
-            typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;            
-            typedef ExFuture<ExecutorAgent,TRet> ResultType;
+
+            typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
+            typedef typename ::mel::execution::_private::GetReturn<ExFuture<ExecutorAgent,TArg>,Flows...>::type ResultTuple;
+            using ResultType = std::tuple_element_t<0,ResultTuple>;
+            //typedef ExFuture<ExecutorAgent,TRet> ResultType;
             ResultType result(source.agent);            
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
@@ -40,31 +56,36 @@ namespace mel
                 {       
                     if ( input.isValid() )
                     {  
+                        using TupleType = decltype(flows);
                         //Evaluate index
                         size_t idx = selector(input.value());  
-                        using TupleType = decltype(flows);
                         constexpr size_t tsize = std::tuple_size<TupleType>::value;
                         switch(idx)
                         {
-                            case 0:                                       
-                            // if constexpr (tsize>0) 
-                            // { 
-                            //     /*using JobType = std::tuple_element_t<0,TupleType>; 
-                            //     launch(source.agent,[source,flow = std::forward<JobType>(std::get<0>(flows)),result]( ) mutable noexcept {  
-                            //         //auto r = job(executor,std::forward<TArg>(arg)); //así sí me funciona
-                            //         //result.assign(r); 
-                            //         result.assign(flow(source));
-                            //         //result.assign(job(source,arg));
-                            //     });
-                            //     */
-                            //    result.assign(std::get<0>(flows)(source));
-                            // }else{ 
-                            //     launch(source.agent,[result]( ) mutable noexcept {  
-                            //         result.setError(std::out_of_range("execution::condition. Index '" TOSTRING(idx) "' is greater than maximum case index " TOSTRING(tsize)));
-                            //     }); 
-                            // }
-            
-                                CONDITION_SELECT_JOB(0)
+                            case 0:                                                                   
+                                if constexpr (tsize>0)
+                                { 
+                                    using FlowType = std::tuple_element_t<0,TupleType>;
+                                    static_assert(      std::is_invocable<FlowType,ExFuture<ExecutorAgent,TArg>>::value, "execution::condition bad functor signature");
+                                    if constexpr (std::is_nothrow_invocable<FlowType,ExFuture<ExecutorAgent,TArg>>::value)                                                                        
+                                        result.assign(std::get<0>(flows)(source)); 
+                                    else
+                                    {
+                                        try
+                                        {
+                                            result.assign(std::get<0>(flows)(source)); 
+                                        }catch(...)
+                                        {
+                                            result.setError(std::current_exception());   
+                                        }
+                                    }
+
+                                }else{ 
+                                    launch(source.agent,[result]( ) mutable noexcept {  
+                                        result.setError(std::out_of_range("triqui"));
+                                    }); 
+                                }     
+                                //CONDITION_SELECT_JOB(0)
                                 break;
                             case 1:
                                 CONDITION_SELECT_JOB(1)
@@ -110,7 +131,7 @@ namespace mel
         }  
         namespace _private
         {
-            template <class TRet,class F, class ...FTypes> struct ApplyCondition
+            template </*class TRet,*/class F, class ...FTypes> struct ApplyCondition
             {
                 ApplyCondition(F&& selector,FTypes&&... fs):mSelector(std::forward<F>(selector)), mFuncs(std::forward<FTypes>(fs)...){}
                 //ApplyCondition(const FTypes&... fs):mFuncs(fs...){}           
@@ -118,15 +139,15 @@ namespace mel
                 std::tuple<FTypes...> mFuncs;                
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return condition<TRet>(inputFut,std::forward<F>(mSelector),std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                    return condition(inputFut,std::forward<F>(mSelector),std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
             };
         }
         
         ///@brief version for use with operator |
-        template <class TRet,class F,class ...FTypes> _private::ApplyCondition<TRet,F,FTypes...> condition(F&& selector,FTypes&&... functions)
+        template </*class TRet,*/class F,class ...FTypes> _private::ApplyCondition</*TRet,*/F,FTypes...> condition(F&& selector,FTypes&&... functions)
         {
-            return _private::ApplyCondition<TRet,F,FTypes...>(std::forward<F>(selector),std::forward<FTypes>(functions)...);
+            return _private::ApplyCondition</*TRet,*/F,FTypes...>(std::forward<F>(selector),std::forward<FTypes>(functions)...);
         }
     }
 }

@@ -188,7 +188,7 @@ namespace mel
                         //set error as task in executor
                         launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
                         {
-                        result.setError(std::move(err));
+                            result.setError(std::move(err));
                         });
                     }
                 })
@@ -415,13 +415,23 @@ namespace mel
                 std::function<void( ValueType&)>([source,f = std::forward<F>(f),result]( ValueType& input) mutable
                 {       
                     if ( !input.isValid() )
-                    {                
-                        source.agent. template launch<TArg>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,std::exception_ptr>::value) -> TArg
-                        {                                          
-                            return f(arg.getValue().error());
-                        },source,result);
+                    {   
+                        launch(source.agent,[result,source,f=std::forward<F>(f)]() mutable noexcept
+                        {
+                            if constexpr (std::is_nothrow_invocable<F,std::exception_ptr>::value)
+                                result.setValue(f(source.getValue().error()));
+                            else
+                            {
+                                try
+                                {
+                                    result.setValue(f(source.getValue().error()));
+                                }catch(...)
+                                {
+                                    result.setError(std::current_exception());
+                                }
+                            }
+                        });
                     }else
-                        //result.assign(std::move(input));
                         result.assign(source);
                     
                 })
@@ -480,9 +490,9 @@ namespace mel
         }
         /**
          * @brief Same as @ref parallel but returning a tuple with the values for each functor
-         * @details So, these functors must return a value. Until 10 callables can be 
-         * @return a tuple with types for each functor return, in order. Returning void is not allowed
-         * @note limit in callables is because a bug in gcc < 10.2 where template overload resolution it's buggy
+         * @details So, these functors must return a value. Until 10 callables can be used
+         * @return A tuple with types for each functor return, in order. Returning void is not allowed
+         * @note The limit in callables is because a bug in gcc < 10.2 where template overload resolution is buggy
          */
         template <class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,typename ::mel::execution::_private::GetReturn<TArg,FTypes...>::type> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
         {            
