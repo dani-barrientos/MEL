@@ -358,7 +358,7 @@ $(document).ready(function(){initNavTree('_future_8h_source.html',''); initResiz
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;                        f(mValue);</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;                    }<span class="keywordflow">else</span></div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;                    {                                               </div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;                        result = Subscriptor::subscribeCallback( std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a> (ValueType&amp;)&gt;([f = std::forward&lt;F&gt;(f)](ValueType&amp; vt)</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;                        result = Subscriptor::subscribeCallback( std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a> (ValueType&amp;)&gt;([f = std::forward&lt;F&gt;(f)](ValueType&amp; vt) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;                            {</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;                                f(vt);</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                                return ::mel::core::ECallbackResult::UNSUBSCRIBE;</div>
@@ -412,7 +412,7 @@ $(document).ready(function(){initNavTree('_future_8h_source.html',''); initResiz
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;                    }<span class="keywordflow">else</span></div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;                    {</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;                        result = Subscriptor::subscribeCallback( std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a>(ValueType&amp;)&gt;(</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;                            [f = std::forward&lt;F&gt;(f)](ValueType&amp; vt)</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;                            [f = std::forward&lt;F&gt;(f)](ValueType&amp; vt) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;                            {</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;                                f(vt);</div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;                                return ::mel::core::ECallbackResult::UNSUBSCRIBE;</div>

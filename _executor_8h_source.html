@@ -152,7 +152,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,NewType&gt;</a> result(fut.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            fut.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([fut,result,arg = std::forward&lt;TRet&gt;(arg)](  ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                [fut,result,arg = std::forward&lt;TRet&gt;(arg)](  ValueType&amp; input) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                {                                 </div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                    <span class="comment">//launch tasks as response for callback for two reasons: manage the case when Future is already available when checked, so callback is trigered</span></div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                    <span class="comment">//on calling thread and to decouple tasks and no saturate execution resource and independence tasks</span></div>
@@ -171,7 +171,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                            result.setError(std::move(err));</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                        });</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                    }   </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                })</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                }</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            );</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;            <span class="keywordflow">return</span> result;  </div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        }</div>
@@ -185,7 +185,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TRet&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,f = std::forward&lt;F&gt;(f),result](  ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                [source,f = std::forward&lt;F&gt;(f),result](  ValueType&amp; input) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                {       </div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;                    <span class="keywordflow">if</span> ( input.isValid() )</div>
 <div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;                    {                            </div>
@@ -202,7 +202,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;                            result.setError(std::move(err));</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;                        });</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                    }                                        </div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                })</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                }</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;            );</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;        }</div>
@@ -215,7 +215,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;            ExFuture&lt;ExecutorAgent,TRet&gt; result(source.agent);</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;            source.subscribeCallback(</div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;                std::function&lt;<span class="keywordtype">void</span>(ValueType&amp;)&gt;([source,f = std::forward&lt;F&gt;(f),result](  ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;                [source,f = std::forward&lt;F&gt;(f),result](  ValueType&amp; input) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;                {       </div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;                    <span class="keywordflow">if</span> ( input.isValid() )</div>
@@ -242,7 +242,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;                            result.setError(std::move(err));</div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;                        });</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;                    }</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;                })</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;                }</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;            );</div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        }</div>
@@ -252,11 +252,11 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;NewExecutorAgent,TRet&gt;</a> result(newAgent);</div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;OldExecutorAgent,TRet&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([result,source](ValueType&amp; input) <span class="keyword">mutable</span> </div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                [result,source](ValueType&amp; input) <span class="keyword">mutable</span> </div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                {</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;                    <span class="comment">//result.assign(std::move(input));</span></div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;                    result.assign(source);</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;                })</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;                }</div>
 <div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;            );</div>
 <div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;        }   </div>
@@ -266,7 +266,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,functor = std::forward&lt;F&gt;(functor),result,begin = std::forward&lt;I&gt;(begin),end = std::forward&lt;I&gt;(end),increment](ValueType&amp; input)  <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;                [source,functor = std::forward&lt;F&gt;(functor),result,begin = std::forward&lt;I&gt;(begin),end = std::forward&lt;I&gt;(end),increment](ValueType&amp; input)  <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;                {</div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;                    <span class="keywordflow">try</span></div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;                    {   </div>
@@ -325,7 +325,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;                    {</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;                        result.setError( std::current_exception() );    </div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;                    }</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;                }));</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;                });</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        }</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160; </div>
@@ -337,7 +337,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;            ExFuture&lt;ExecutorAgent,void&gt; result(source.agent);</div>
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,void&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;            source.subscribeCallback(</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;                std::function&lt;<span class="keywordtype">void</span>(ValueType&amp;)&gt;([source,functor = std::forward&lt;F&gt;(functor),result,begin = std::forward&lt;I&gt;(begin),end = std::forward&lt;I&gt;(end),increment](ValueType&amp; input)  <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;                [source,functor = std::forward&lt;F&gt;(functor),result,begin = std::forward&lt;I&gt;(begin),end = std::forward&lt;I&gt;(end),increment](ValueType&amp; input)  <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;                {</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;                    <span class="keywordflow">try</span></div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;                    {   </div>
@@ -395,7 +395,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;                    {</div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;                        result.setError( std::current_exception() );    </div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                    }</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;                }));</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;                });</div>
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        }</div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160; </div>
@@ -405,7 +405,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(            </div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                <span class="comment">//@note in C++20 I could have done fs... = std::forward&lt;FTypes&gt;(functions)..., but not in C++17</span></div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,result,fs = std::make_tuple(std::forward&lt;FTypes&gt;(functions)... )](ValueType&amp; input)  <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                [source,result,fs = std::make_tuple(std::forward&lt;FTypes&gt;(functions)... )](ValueType&amp; input)  <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;                {</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;                    <span class="keywordflow">if</span> ( input.isValid() )</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;                    {</div>
@@ -431,7 +431,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;                        });</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;                    }</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;                }</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;            ));</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;            );</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;        }</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    </div>
@@ -442,7 +442,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,f = std::forward&lt;F&gt;(f),result]( ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                [source,f = std::forward&lt;F&gt;(f),result]( ValueType&amp; input) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;                {       </div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;                    <span class="keywordflow">if</span> ( !input.isValid() )</div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;                    {   </div>
@@ -464,7 +464,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;                    }<span class="keywordflow">else</span></div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;                        result.assign(source);</div>
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;                    </div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;                })</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;                }</div>
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;            );</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;        }           </div>
@@ -525,7 +525,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,ResultTuple&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(            </div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,result,fs = std::make_tuple(std::forward&lt;FTypes&gt;(functions)... )](ValueType&amp; input)  <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;                [source,result,fs = std::make_tuple(std::forward&lt;FTypes&gt;(functions)... )](ValueType&amp; input)  <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;                {</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;                    <span class="keywordflow">if</span> ( input.isValid() ){</div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;                        std::exception_ptr* except = new std::exception_ptr(nullptr);</div>
@@ -551,7 +551,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;                        });</div>
 <div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;                    }</div>
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;                }</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;            ));</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;            );</div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;        }               </div>
 <div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F,<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; ExFuture&lt;ExecutorAgent,TArg&gt; </div>
@@ -563,12 +563,12 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);            </div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,f = std::forward&lt;F&gt;(f),result]( ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                [source,f = std::forward&lt;F&gt;(f),result]( ValueType&amp; input) <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;                {       </div>
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;                    f(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                    <span class="comment">//result.assign(std::move(input));</span></div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;                    result.assign(source);</div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;                })</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;                }</div>
 <div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;            );</div>
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;        }</div>
@@ -657,11 +657,11 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class</span> TupleType,<span class="keyword">class</span> FType&gt; <span class="keywordtype">void</span> _on_all(TupleType* tup,::<a class="code" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&amp; barrier, FType fut)</div>
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;            {</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;                fut.subscribeCallback(</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;                    std::function&lt;<span class="keywordtype">void</span>( <span class="keyword">typename</span> FType::ValueType&amp;)&gt;([tup,barrier](<span class="keyword">typename</span> FType::ValueType&amp; input)  <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;                    [tup,barrier](<span class="keyword">typename</span> FType::ValueType&amp; input)  <span class="keyword">mutable</span></div>
 <div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;                    {</div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;                        std::get&lt;n&gt;(*tup) = std::move(input);</div>
 <div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;                        barrier.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;                    }));</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;                    });</div>
 <div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;            }</div>
 <div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160; </div>
 <div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class </span>TupleType,<span class="keyword">class </span>FType,<span class="keyword">class </span>...FTypes&gt; <span class="keywordtype">void</span> _on_all(TupleType* tup, ::<a class="code" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&amp; barrier,FType fut,FTypes... rest)</div>

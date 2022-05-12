@@ -129,7 +129,7 @@ $(document).ready(function(){initNavTree('_flow_8h_source.html',''); initResizab
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            ResultType result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);            </div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,selector = std::forward&lt;F&gt;(selector),flows = std::make_tuple(std::forward&lt;Flows&gt;(flows)...),result](  ValueType&amp; input) <span class="keyword">mutable</span> noexcept(std::is_nothrow_invocable&lt;F,TArg&gt;::value)</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                 [source,selector = std::forward&lt;F&gt;(selector),flows = std::make_tuple(std::forward&lt;Flows&gt;(flows)...),result](  ValueType&amp; input) <span class="keyword">mutable</span> noexcept(std::is_nothrow_invocable&lt;F,TArg&gt;::value)</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                {       </div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                    <span class="keywordflow">if</span> ( input.isValid() )</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                    {  </div>
@@ -204,7 +204,7 @@ $(document).ready(function(){initNavTree('_flow_8h_source.html',''); initResizab
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                            result.setError(std::move(err));</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;                        });                        </div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                    }                                        </div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                })</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                }</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            );</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        }  </div>
