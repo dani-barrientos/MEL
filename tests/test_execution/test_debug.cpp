@@ -178,40 +178,68 @@ auto flow_lambda  = [](auto source) ->auto //es un ExFuture<ExecutorAgent,const 
 	;
 };
 	using namespace mel::execution;
-	template <class ExecutorAgent,class TArg,class Flow>
-         auto doWhile(ExFuture<ExecutorAgent,TArg> source, Flow&& flow)
+	template <class ExecutorAgent,class TArg,class Flow,class Predicate>
+         auto doWhile(ExFuture<ExecutorAgent,TArg> source, Flow&& flow, Predicate&& p)
 		 {
 			static_assert( std::is_invocable<Flow,ExFuture<ExecutorAgent,TArg>>::value, "execution::doWhile bad flow signature");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             typedef std::invoke_result_t<Flow,ExFuture<ExecutorAgent,TArg>> TRet;
-            ExFuture<ExecutorAgent,TRet> result(source.agent);
+            TRet result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<void( ValueType&)>([source,flow = std::forward<Flow>(flow),result](  ValueType& input) mutable
+                std::function<void( ValueType&)>([source,flow = std::forward<Flow>(flow),p = std::forward<Predicate>(p),result](  ValueType& input) mutable
                 {   
-					//result.assign(flow(source));                                                   
+					if ( input.isValid())
+					{
+						// launch(source.agent,[source,result,p = std::forward<Predicate>(p),flow = std::forward<Flow>(flow)]( ) mutable noexcept 
+						// {  
+						// 	auto ret = flow(source);		
+						// 	problemas gordos:
+						// 	 - subscripcion, necesito un function
+						// 	ret.subscribeCallback(                
+                		// 		std::function<void(auto&)>([ret,p = std::forward<Predicate>(p),result](auto& input) mutable
+						// 		{
+						// 			//check error
+									
+						// 			// //this callback comes always from current executor, so it's not needed to launch task
+						// 			// bool repeat = p();
+						// 			// if ( !repeat )
+						// 			// {						
+						// 			// 	result.assign();
+						// 			// }
+						// 		}
+						// 		));
+						// }); 
+					}else
+					{
+						launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept {  
+							result.setError(std::move(err));
+						}); 
+					}
+				
                 })
             );
             return result;
 		 }
  	namespace _private
         {
-            template <class Flow> struct ApplyWhile
+            template <class Flow,class Predicate> struct ApplyWhile
             {
-                ApplyWhile(Flow&& flow):mFlow(std::move(flow)){}
-				ApplyWhile(const Flow& flow):mFlow(flow){}
-                Flow mFlow;                
+				template <class F,class P>
+                ApplyWhile(F&& flow,P&& p):mFlow(std::forward<F>(flow),mPred(std::forward<P>(p))){}
+                Flow mFlow;              
+				Predicate mPred;  
 				template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
 				{
-					return doWhile(inputFut,mFlow);
+					return doWhile(inputFut,mFlow,mPred);
 				}
             };
         }
         
         
-    template <class Flow> _private::ApplyWhile<std::decay_t<Flow>> doWhile(Flow&& flow)
+    template <class Flow,class Predicate> _private::ApplyWhile<std::decay_t<Flow>,std::decay_t<Predicate>> doWhile(Flow&& flow,Predicate&& pred)
         {
-            return _private::ApplyWhile<std::decay_t<Flow>>(std::forward<Flow>(flow));
+            return _private::ApplyWhile<std::decay_t<Flow>,std::decay_t<Predicate>>(std::forward<Flow>(flow),std::forward<Predicate>(pred));
         }		 
 
 
@@ -238,23 +266,33 @@ int _testDebug(tests::BaseTest* test)
 	{
 		auto localFlow = [](auto input)
 		{
-			return input | next([](const string& str)->auto
+			return input | next([](const string& str) noexcept->auto
 			{
-				return "HOLA"s;
+				string result = str+ " HOLA" ;
+				return result;
 			}
 			);
 		};
-		execution::start(exr)
-		| execution::inmediate("Dani"s)
-		//| doWhile(localFlow);
-		| doWhile([](auto input){
-			return input | next([](const string& str)->auto
-			{
-				return "HOLA"s;
-			}
-			);
-		})
-		;
+		auto res = 
+		mel::core::waitForFutureThread(
+			execution::start(exr)
+			| execution::inmediate("Dani"s)
+			// | doWhile(localFlow,[]()
+			// 	{
+			// 		//@todo ¿deberia pasar algo al while, como un contador?
+			// 		//@todo cómo sé que el while termina? 					
+			// 		return true;	
+			// 	}
+			// )
+			// | doWhile([](auto input){
+			// 	return input | next([](const string& str) noexcept ->auto
+			// 	{
+			// 		return "HOLA"s;
+			// 	}
+			// 	);
+			// })
+		);
+		mel::text::info("Value = {}",res.value());
 	}
 	{		
 		auto flow_lambda_local = [](auto source) ->auto //es un ExFuture<ExecutorAgent,string>    can only be templated in C++ 20

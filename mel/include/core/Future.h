@@ -309,7 +309,7 @@ namespace mel
 						f(mValue);
 					}else
 					{												
-						result = Subscriptor::subscribeCallback( std::function<::mel::core::ECallbackResult (ValueType&)>([f = std::forward<F>(f)](ValueType& vt)
+						result = Subscriptor::subscribeCallback( std::function<::mel::core::ECallbackResult (ValueType&)>([f = std::forward<F>(f)](ValueType& vt) mutable
 							{
 								f(vt);
 								return ::mel::core::ECallbackResult::UNSUBSCRIBE;
@@ -363,7 +363,7 @@ namespace mel
 					}else
 					{
 						result = Subscriptor::subscribeCallback( std::function<::mel::core::ECallbackResult(ValueType&)>(
-							[f = std::forward<F>(f)](ValueType& vt)
+							[f = std::forward<F>(f)](ValueType& vt) mutable
 							{
 								f(vt);
 								return ::mel::core::ECallbackResult::UNSUBSCRIBE;

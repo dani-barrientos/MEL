@@ -53,7 +53,7 @@ namespace mel
             ResultType result(source.agent);            
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<void( ValueType&)>([source,selector = std::forward<F>(selector),flows = std::make_tuple(std::forward<Flows>(flows)...),result](  ValueType& input) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)
+                 [source,selector = std::forward<F>(selector),flows = std::make_tuple(std::forward<Flows>(flows)...),result](  ValueType& input) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)
                 {       
                     if ( input.isValid() )
                     {  
@@ -128,7 +128,7 @@ namespace mel
                             result.setError(std::move(err));
                         });                        
                     }                                        
-                })
+                }
             );
             return result;
         }  
