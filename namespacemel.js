@@ -6,8 +6,8 @@ var namespacemel =
     [ "Customized task types", "tasking_system.html#custom_tasks", null ],
     [ "Runnable specialization", "tasking_system.html#runnable_specialization", null ],
     [ "Known limitations", "tasking_system.html#limitations", [
-      [ "Careful with local variables and microthreads", "tasking_system.html#autotoc_md2", null ],
-      [ "Careful with executing tasks in a Runnable", "tasking_system.html#autotoc_md3", null ]
+      [ "Careful with local variables and microthreads", "tasking_system.html#autotoc_md3", null ],
+      [ "Careful with executing tasks in a Runnable", "tasking_system.html#autotoc_md4", null ]
     ] ],
     [ "Introduction", "tasking_constructs.html#introduction", null ],
     [ "Futures", "tasking_constructs.html#futures", null ],
@@ -22,6 +22,8 @@ var namespacemel =
     ] ],
     [ "Error management", "execution_system.html#error_management", null ],
     [ "Perfect forwarding", "execution_system.html#perfect_forwarding", null ],
+    [ "Work flows", "execution_system.html#work_flows", null ],
+    [ "Conditions", "execution_flows.html#autotoc_md2", null ],
     [ "core", "namespacemel_1_1core.html", "namespacemel_1_1core" ],
     [ "execution", "namespacemel_1_1execution.html", "namespacemel_1_1execution" ],
     [ "mpl", "namespacemel_1_1mpl.html", "namespacemel_1_1mpl" ],

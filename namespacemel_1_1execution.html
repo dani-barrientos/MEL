@@ -227,11 +227,11 @@ template&lt;class ExecutorAgent , class TRet1 , class U &gt; </td></tr>
 <tr class="memitem:a68fa05394a05321a0a85c1cf60764b67"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a68fa05394a05321a0a85c1cf60764b67">condition</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;selector, Flows &amp;&amp;... flows)</td></tr>
 <tr class="memdesc:a68fa05394a05321a0a85c1cf60764b67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select functor to execute.  <a href="namespacemel_1_1execution.html#a68fa05394a05321a0a85c1cf60764b67">More...</a><br /></td></tr>
 <tr class="separator:a68fa05394a05321a0a85c1cf60764b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1978a02174062e6e8df036e826e15dc"><td class="memTemplParams" colspan="2"><a id="af1978a02174062e6e8df036e826e15dc"></a>
+<tr class="memitem:a3cc3090e9420a20d0bbbe3d427066670"><td class="memTemplParams" colspan="2"><a id="a3cc3090e9420a20d0bbbe3d427066670"></a>
 template&lt;class F , class ... FTypes&gt; </td></tr>
-<tr class="memitem:af1978a02174062e6e8df036e826e15dc"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1__private_1_1_apply_condition.html">_private::ApplyCondition</a>&lt; F, FTypes... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#af1978a02174062e6e8df036e826e15dc">condition</a> (F &amp;&amp;selector, FTypes &amp;&amp;... functions)</td></tr>
-<tr class="memdesc:af1978a02174062e6e8df036e826e15dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
-<tr class="separator:af1978a02174062e6e8df036e826e15dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cc3090e9420a20d0bbbe3d427066670"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1__private_1_1_apply_condition.html">_private::ApplyCondition</a>&lt; std::decay_t&lt; F &gt;, std::decay_t&lt; FTypes &gt;... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a3cc3090e9420a20d0bbbe3d427066670">condition</a> (F &amp;&amp;selector, FTypes &amp;&amp;... functions)</td></tr>
+<tr class="memdesc:a3cc3090e9420a20d0bbbe3d427066670"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
+<tr class="separator:a3cc3090e9420a20d0bbbe3d427066670"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplParams" colspan="2"><a id="a5ce2c44a3ac6630c36fc4e9e154d1d61"></a>
 template&lt;class TArg , class I , class F &gt; </td></tr>
 <tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
@@ -341,9 +341,10 @@ template&lt;class ExecutorAgent , class TArg , class F , class ... Flows&gt; </d
 </div><div class="memdoc">
 
 <p>Select functor to execute. </p>
-<p>callable <code>selector</code> return an unsigned int with is the index of de callable in <code>jobs</code> If index is greater thatn available callables, an std::out_of_range error is set </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Callable <code>selector</code> return an unsigned int with is the index of de callable in <code>jobs</code> If index is greater than available callables, an std::out_of_range error is set </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">selector</td><td>callable with signature size_t f(TArg) which select the given job </td></tr>
+    <tr><td class="paramname">selector</td><td>callable with signature 'size_t f(TArg)' which select the given job </td></tr>
+    <tr><td class="paramname">flows</td><td>variable number of callables to choose in <code>selector</code> </td></tr>
   </table>
   </dd>
 </dl>

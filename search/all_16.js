@@ -10,5 +10,6 @@ var searchData=
   ['waitforfuturemthread_430',['waitForFutureMThread',['../namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b',1,'mel::tasking']]],
   ['waitforfuturethread_431',['waitForFutureThread',['../namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6',1,'mel::core']]],
   ['waitresult_432',['WaitResult',['../classmel_1_1core_1_1_wait_result.html',1,'mel::core']]],
-  ['wakeup_433',['wakeUp',['../classmel_1_1tasking_1_1_process.html#a0e9ead0504f6ebf9ae784ea39128536f',1,'mel::tasking::Process']]]
+  ['wakeup_433',['wakeUp',['../classmel_1_1tasking_1_1_process.html#a0e9ead0504f6ebf9ae784ea39128536f',1,'mel::tasking::Process']]],
+  ['work_20flows_434',['Work flows',['../execution_flows.html',1,'']]]
 ];

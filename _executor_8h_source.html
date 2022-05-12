@@ -553,289 +553,239 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;                }</div>
 <div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;            ));</div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;            <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;        }</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;        <span class="comment">/*</span></div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;<span class="comment">        template &lt;class ResultTuple, class TArg,class ExecutorAgent,class ...FTypes&gt; ExFuture&lt;ExecutorAgent,ResultTuple&gt; parallel_convert(ExFuture&lt;ExecutorAgent,TArg&gt; source, FTypes&amp;&amp;... functions)</span></div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;<span class="comment">        {</span></div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;<span class="comment">            //@todo tratar de dedudir la tupla de los resultados de cada funcion</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;<span class="comment">            static_assert(std::is_default_constructible&lt;ResultTuple&gt;::value,&quot;All types returned by the input ExFutures must be DefaultConstructible&quot;);</span></div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;<span class="comment">            ExFuture&lt;ExecutorAgent,ResultTuple&gt; result(source.agent);</span></div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;<span class="comment">            typedef typename ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</span></div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;<span class="comment">            source.subscribeCallback(            </span></div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;<span class="comment">                std::function&lt;void( ValueType&amp;)&gt;([source,result,fs = std::make_tuple(std::forward&lt;FTypes&gt;(functions)... )](ValueType&amp; input)  mutable</span></div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;<span class="comment">                {</span></div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;<span class="comment">                    if ( input.isValid() ){                       </span></div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;<span class="comment">                        std::exception_ptr* except = new std::exception_ptr(nullptr);</span></div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;<span class="comment">                        ResultTuple* output = new ResultTuple; //para que compile</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;<span class="comment">                        auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward&lt;FTypes&gt;(std::get&lt;FTypes&gt;(fs))...);</span></div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;<span class="comment">                        barrier.subscribeCallback(</span></div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;<span class="comment">                            std::function&lt;::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&amp;)&gt;([result,output,except](const ::mel::parallelism::BarrierData&amp; ) mutable</span></div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;<span class="comment">                            {      </span></div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;<span class="comment">                                if ( *except ) //any exception?</span></div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;<span class="comment">                                    result.setError(*except);</span></div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;<span class="comment">                                else</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;<span class="comment">                                    result.setValue(std::move(*output));</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;<span class="comment">                                delete output;    </span></div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;<span class="comment">                                delete except;              </span></div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;<span class="comment">                                return ::mel::core::ECallbackResult::UNSUBSCRIBE; </span></div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;<span class="comment">                            }));</span></div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;<span class="comment">                    }else</span></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<span class="comment">                    {</span></div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;<span class="comment">                        //set error as task in executor</span></div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;<span class="comment">                        launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept</span></div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;<span class="comment">                        {</span></div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;<span class="comment">                        result.setError(std::move(err));</span></div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;<span class="comment">                        });</span></div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;<span class="comment">                    }</span></div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;<span class="comment">                }</span></div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;<span class="comment">            ));</span></div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<span class="comment">            return result;</span></div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;<span class="comment">        }*/</span></div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;       </div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F,<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; ExFuture&lt;ExecutorAgent,TArg&gt; </div>
-<div class="line"><a name="l00579"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">  579</a></span>&#160;            <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a>(<a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> source, F&amp;&amp; f)</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;        {                </div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;            static_assert(std::is_same&lt;std::invoke_result_t&lt;F,<a class="code" href="classmel_1_1execution_1_1_executor.html">Executor&lt;ExecutorAgent&gt;</a>&gt;,<span class="keywordtype">void</span>&gt;::value,</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;                          <span class="stringliteral">&quot;return value for callbable in &#39;getExecutor&#39; must be void&quot;</span>);</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);            </div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,f = std::forward&lt;F&gt;(f),result]( ValueType&amp; input) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;                {       </div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;                    f(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;                    <span class="comment">//result.assign(std::move(input));</span></div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;                    result.assign(source);</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;                })</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;            );</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;            <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;        }</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      </div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;        <span class="keyword">namespace </span>_private</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;        {</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet&gt; <span class="keyword">struct </span>ApplyInmediate</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;            {</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;                ApplyInmediate(T&amp;&amp; a):arg(std::forward&lt;T&gt;(a)){}</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;                TRet arg;</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; fut)</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;                {</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;                    <span class="keywordflow">return</span> inmediate(fut,std::forward&lt;TRet&gt;(arg));</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;                }</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;            };</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> NewExecutionAgent&gt; <span class="keyword">struct </span>ApplyTransfer</div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;        }               </div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F,<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; ExFuture&lt;ExecutorAgent,TArg&gt; </div>
+<div class="line"><a name="l00541"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">  541</a></span>&#160;            <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a>(<a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> source, F&amp;&amp; f)</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;        {                </div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;            static_assert(std::is_same&lt;std::invoke_result_t&lt;F,<a class="code" href="classmel_1_1execution_1_1_executor.html">Executor&lt;ExecutorAgent&gt;</a>&gt;,<span class="keywordtype">void</span>&gt;::value,</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;                          <span class="stringliteral">&quot;return value for callbable in &#39;getExecutor&#39; must be void&quot;</span>);</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;            <span class="keyword">typedef</span> <span class="keyword">typename</span> ExFuture&lt;ExecutorAgent,TArg&gt;::ValueType  ValueType;</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);            </div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;            source.<a class="code" href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">subscribeCallback</a>(</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;                <span class="comment">//need to bind de source future to not get lost and input pointing to unknown place                </span></div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                std::function&lt;<span class="keywordtype">void</span>( ValueType&amp;)&gt;([source,f = std::forward&lt;F&gt;(f),result]( ValueType&amp; input) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;                {       </div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;                    f(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                    <span class="comment">//result.assign(std::move(input));</span></div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;                    result.assign(source);</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;                })</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;            );</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;            <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;        }</div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      </div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;        <span class="keyword">namespace </span>_private</div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;        {</div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet&gt; <span class="keyword">struct </span>ApplyInmediate</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;            {</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;                ApplyInmediate(T&amp;&amp; a):arg(std::forward&lt;T&gt;(a)){}</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;                TRet arg;</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; fut)</div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;                {</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;                    <span class="keywordflow">return</span> inmediate(fut,std::forward&lt;TRet&gt;(arg));</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;                }</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;            };</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> NewExecutionAgent&gt; <span class="keyword">struct </span>ApplyTransfer</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;            {</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;                ApplyTransfer(Executor&lt;NewExecutionAgent&gt;&amp;&amp; a):newAgent(std::move(a)){}</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;                ApplyTransfer(<span class="keyword">const</span> Executor&lt;NewExecutionAgent&gt;&amp; a):newAgent(a){}</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;                Executor&lt;NewExecutionAgent&gt; newAgent;</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet,<span class="keyword">class</span> OldExecutionAgent&gt; ExFuture&lt;NewExecutionAgent,TRet&gt; operator()(ExFuture&lt;OldExecutionAgent,TRet&gt; fut)</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;                {</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">transfer</a>(fut,newAgent);</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;                }</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;            };</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyNext</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;            {</div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;                ApplyNext(F&amp;&amp; f):mFunc(std::move(f)){}</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;                ApplyNext(<span class="keyword">const</span> F&amp; f):mFunc(f){}</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;                F mFunc;</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(<span class="keyword">const</span> ExFuture&lt;ExecutorAgent,TArg&gt;&amp; inputFut)</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;                {</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">next</a>(inputFut,std::forward&lt;F&gt;(mFunc));</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;                }</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt;&amp;&amp; inputFut)</div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;                {</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;                   <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">next</a>(std::move(inputFut),std::forward&lt;F&gt;(mFunc));</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;                }</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;            };</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyLoop</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;            {</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;                ApplyLoop(I b, I e,F&amp;&amp; f,<span class="keywordtype">int</span> inc):mFunc(std::move(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;                ApplyLoop(I b, I e,<span class="keyword">const</span> F&amp; f,<span class="keywordtype">int</span> inc):mFunc(f),begin(std::move(b)),end(std::move(e)),increment(inc){}</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;                F mFunc;</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;                I begin;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;                I end;</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;                <span class="keywordtype">int</span> increment;</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;                {</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a>(inputFut,begin,end,std::forward&lt;F&gt;(mFunc));</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;                }</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;            };</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;            </div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class </span>...FTypes&gt; <span class="keyword">struct </span>ApplyBulk</div>
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;            {</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;                ApplyTransfer(Executor&lt;NewExecutionAgent&gt;&amp;&amp; a):newAgent(std::forward&lt;Executor&lt;NewExecutionAgent&gt;&gt;(a)){}</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;                ApplyTransfer(<span class="keyword">const</span> Executor&lt;NewExecutionAgent&gt;&amp; a):newAgent(a){}</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;                Executor&lt;NewExecutionAgent&gt; newAgent;</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet,<span class="keyword">class</span> OldExecutionAgent&gt; ExFuture&lt;NewExecutionAgent,TRet&gt; operator()(ExFuture&lt;OldExecutionAgent,TRet&gt; fut)</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class </span>...Fs&gt;</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;                ApplyBulk(Fs&amp;&amp;... fs):mFuncs(std::forward&lt;FTypes&gt;(fs)...){}                </div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;                std::tuple&lt;FTypes...&gt; mFuncs;</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;                {</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">transfer</a>(fut,newAgent);</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a>(inputFut,std::forward&lt;FTypes&gt;(std::get&lt;FTypes&gt;(mFuncs))...);</div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;                }</div>
 <div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;            };</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyNext</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyError</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;            {</div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;                ApplyNext(F&amp;&amp; f):mFunc(std::forward&lt;F&gt;(f)){}</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;                ApplyNext(<span class="keyword">const</span> F&amp; f):mFunc(f){}</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;                ApplyError(F&amp;&amp; f):mFunc(std::move(f)){}</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;                ApplyError(<span class="keyword">const</span> F&amp; f):mFunc(f){}</div>
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;                F mFunc;</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(<span class="keyword">const</span> ExFuture&lt;ExecutorAgent,TArg&gt;&amp; inputFut)</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;                {</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">next</a>(inputFut,std::forward&lt;F&gt;(mFunc));</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a>(inputFut,std::forward&lt;F&gt;(mFunc));</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;                }</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt;&amp;&amp; inputFut)</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;                {</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                   <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">next</a>(std::move(inputFut),std::forward&lt;F&gt;(mFunc));</div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;                }</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;            };</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyLoop</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;            {</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;                ApplyLoop(I b, I e,F&amp;&amp; f,<span class="keywordtype">int</span> inc):mFunc(std::forward&lt;F&gt;(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;                ApplyLoop(I b, I e,<span class="keyword">const</span> F&amp; f,<span class="keywordtype">int</span> inc):mFunc(f),begin(std::move(b)),end(std::move(e)),increment(inc){}</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;                F mFunc;</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;                I begin;</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;                I end;</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;                <span class="keywordtype">int</span> increment;</div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;                {</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a>(inputFut,begin,end,std::forward&lt;F&gt;(mFunc));</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;                }</div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;            };</div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;            </div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class </span>...FTypes&gt; <span class="keyword">struct </span>ApplyBulk</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;            {</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;                ApplyBulk(FTypes&amp;&amp;... fs):mFuncs(std::forward&lt;FTypes&gt;(fs)...){}</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;                ApplyBulk(<span class="keyword">const</span> FTypes&amp;... fs):mFuncs(fs...){}           </div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;                std::tuple&lt;FTypes...&gt; mFuncs;</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;                {</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a>(inputFut,std::forward&lt;FTypes&gt;(std::get&lt;FTypes&gt;(mFuncs))...);</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;                }</div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;            };</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyError</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;            {</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;                ApplyError(F&amp;&amp; f):mFunc(std::forward&lt;F&gt;(f)){}</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;                ApplyError(<span class="keyword">const</span> F&amp; f):mFunc(f){}</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;                F mFunc;</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;                {</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a>(inputFut,std::forward&lt;F&gt;(mFunc));</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;                }</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;            };</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;            </div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyGetExecutor</div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;            {</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;                ApplyGetExecutor(F&amp;&amp; f):mFunc(std::forward&lt;F&gt;(f)){}</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;                ApplyGetExecutor(<span class="keyword">const</span> F&amp; f):mFunc(f){}</div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;                F mFunc;</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;                {</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a>(inputFut,std::forward&lt;F&gt;(mFunc));</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;                }</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;            };            </div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class</span> TupleType,<span class="keyword">class</span> FType&gt; <span class="keywordtype">void</span> _on_all(TupleType* tup,::<a class="code" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&amp; barrier, FType fut)</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;            {</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;                fut.subscribeCallback(</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;                    std::function&lt;<span class="keywordtype">void</span>( <span class="keyword">typename</span> FType::ValueType&amp;)&gt;([tup,barrier](<span class="keyword">typename</span> FType::ValueType&amp; input)  <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;                    {</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;                        std::get&lt;n&gt;(*tup) = std::move(input);</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;                        barrier.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;                    }));</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;            }</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160; </div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class </span>TupleType,<span class="keyword">class </span>FType,<span class="keyword">class </span>...FTypes&gt; <span class="keywordtype">void</span> _on_all(TupleType* tup, ::<a class="code" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&amp; barrier,FType fut,FTypes... rest)</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;            {</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;                _on_all&lt;n&gt;(tup,barrier,fut);</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;                _on_all&lt;n+1&gt;(tup,barrier,rest...);</div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;            }</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class</span> SourceTuple, <span class="keyword">class</span> TargetTuple&gt; std::optional&lt;std::pair&lt;int,std::exception_ptr&gt;&gt; _moveValue(SourceTuple&amp; st,TargetTuple&amp; tt)</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;            {</div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;                <span class="keywordflow">if</span> constexpr (n != std::tuple_size&lt;SourceTuple&gt;::value)</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;                {</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;                    <span class="keyword">auto</span>&amp; val = std::get&lt;n&gt;(st);</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;                    <span class="keywordflow">if</span> ( val.isValid() )</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;                    {</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;                        std::get&lt;n&gt;(tt) = std::move(val.value());</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;                        <span class="keywordflow">return</span> _moveValue&lt;n+1&gt;(st,tt);</div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;                    }<span class="keywordflow">else</span></div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;                        <span class="keywordflow">return</span> std::make_pair(n,std::move(val.error()));</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;                }</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;                <span class="keywordflow">return</span> std::nullopt;</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;            }</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;            <span class="comment">/*</span></div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;<span class="comment">            template &lt;class ReturnTuple, class ...FTypes&gt; struct ApplyParallelConvert</span></div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;<span class="comment">            {</span></div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;<span class="comment">                ApplyParallelConvert(FTypes&amp;&amp;... fs):mFuncs(std::forward&lt;FTypes&gt;(fs)...){}</span></div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;<span class="comment">                ApplyParallelConvert(const FTypes&amp;... fs):mFuncs(fs...){}           </span></div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;<span class="comment">                std::tuple&lt;FTypes...&gt; mFuncs;</span></div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;<span class="comment">                template &lt;class ExecutorAgent,class TArg&gt; ExFuture&lt;ExecutorAgent,ReturnTuple&gt; operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</span></div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;<span class="comment">                {</span></div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;<span class="comment">                    return parallel_convert&lt;ReturnTuple,TArg&gt;(inputFut,std::forward&lt;FTypes&gt;(std::get&lt;FTypes&gt;(mFuncs))...);</span></div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;<span class="comment">                }</span></div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;<span class="comment">            };*/</span></div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;            <span class="comment">//@todo PRUEBAS</span></div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;            <span class="keyword">template</span> &lt; <span class="keyword">class </span>...FTypes&gt; <span class="keyword">struct </span>ApplyParallelConvert</div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;            {</div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;                ApplyParallelConvert(FTypes&amp;&amp;... fs):mFuncs(std::forward&lt;FTypes&gt;(fs)...){}</div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;                ApplyParallelConvert(<span class="keyword">const</span> FTypes&amp;... fs):mFuncs(fs...){}           </div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;                std::tuple&lt;FTypes...&gt; mFuncs;</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> TArg&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;                {</div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a34720de187eb00f270e0867b9b663ce6">parallel_convert</a>(inputFut,std::forward&lt;FTypes&gt;(std::get&lt;FTypes&gt;(mFuncs))...);</div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;                }</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;            };</div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;           </div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;        }</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;        <span class="comment">//@brief version for use with operator |</span></div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet&gt; _private::ApplyInmediate&lt;TRet&gt; <a class="code" href="namespacemel_1_1execution.html#a26bfe70c6773c309cd8b411db27f115f">inmediate</a>( TRet&amp;&amp; arg)</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;        {</div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;            <span class="keywordflow">return</span> _private::ApplyInmediate&lt;TRet&gt;(std::forward&lt;TRet&gt;(arg));</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;        }</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> NewExecutionAgent&gt; _private::ApplyTransfer&lt;NewExecutionAgent&gt; <a class="code" href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">transfer</a>(Executor&lt;NewExecutionAgent&gt; newAgent)</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;        {</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;            <span class="keywordflow">return</span> _private::ApplyTransfer&lt;NewExecutionAgent&gt;(newAgent);</div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;        }</div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;        </div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; _private::ApplyNext&lt;F&gt; <a class="code" href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">next</a>(F&amp;&amp; f)</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;            };</div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;            </div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; <span class="keyword">struct </span>ApplyGetExecutor</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;            {</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;                ApplyGetExecutor(F&amp;&amp; f):mFunc(std::move(f)){}</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;                ApplyGetExecutor(<span class="keyword">const</span> F&amp; f):mFunc(f){}</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;                F mFunc;</div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;                {</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a>(inputFut,std::forward&lt;F&gt;(mFunc));</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;                }</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;            };            </div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class</span> TupleType,<span class="keyword">class</span> FType&gt; <span class="keywordtype">void</span> _on_all(TupleType* tup,::<a class="code" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&amp; barrier, FType fut)</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;            {</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;                fut.subscribeCallback(</div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;                    std::function&lt;<span class="keywordtype">void</span>( <span class="keyword">typename</span> FType::ValueType&amp;)&gt;([tup,barrier](<span class="keyword">typename</span> FType::ValueType&amp; input)  <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;                    {</div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;                        std::get&lt;n&gt;(*tup) = std::move(input);</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;                        barrier.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;                    }));</div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;            }</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160; </div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class </span>TupleType,<span class="keyword">class </span>FType,<span class="keyword">class </span>...FTypes&gt; <span class="keywordtype">void</span> _on_all(TupleType* tup, ::<a class="code" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a>&amp; barrier,FType fut,FTypes... rest)</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;            {</div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;                _on_all&lt;n&gt;(tup,barrier,fut);</div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;                _on_all&lt;n+1&gt;(tup,barrier,rest...);</div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;            }</div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;            <span class="keyword">template</span> &lt;<span class="keywordtype">int</span> n,<span class="keyword">class</span> SourceTuple, <span class="keyword">class</span> TargetTuple&gt; std::optional&lt;std::pair&lt;int,std::exception_ptr&gt;&gt; _moveValue(SourceTuple&amp; st,TargetTuple&amp; tt)</div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;            {</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;                <span class="keywordflow">if</span> constexpr (n != std::tuple_size&lt;SourceTuple&gt;::value)</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;                {</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;                    <span class="keyword">auto</span>&amp; val = std::get&lt;n&gt;(st);</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;                    <span class="keywordflow">if</span> ( val.isValid() )</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;                    {</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;                        std::get&lt;n&gt;(tt) = std::move(val.value());</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;                        <span class="keywordflow">return</span> _moveValue&lt;n+1&gt;(st,tt);</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;                    }<span class="keywordflow">else</span></div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;                        <span class="keywordflow">return</span> std::make_pair(n,std::move(val.error()));</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;                }</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;                <span class="keywordflow">return</span> std::nullopt;</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;            }            </div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;            <span class="keyword">template</span> &lt; <span class="keyword">class </span>...FTypes&gt; <span class="keyword">struct </span>ApplyParallelConvert</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;            {</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class </span>...Fs&gt;</div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;                ApplyParallelConvert(Fs... fs):mFuncs(std::forward&lt;FTypes&gt;(fs)...){}</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;                std::tuple&lt;FTypes...&gt; mFuncs;</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> TArg&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;                {</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#a34720de187eb00f270e0867b9b663ce6">parallel_convert</a>(inputFut,std::forward&lt;FTypes&gt;(std::get&lt;FTypes&gt;(mFuncs))...);</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;                }</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;            };</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;           </div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;        }</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;        <span class="comment">//@brief version for use with operator |</span></div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet&gt; _private::ApplyInmediate&lt;TRet&gt; <a class="code" href="namespacemel_1_1execution.html#a26bfe70c6773c309cd8b411db27f115f">inmediate</a>( TRet&amp;&amp; arg)</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;        {</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;            <span class="keywordflow">return</span> _private::ApplyInmediate&lt;std::decay_t&lt;TRet&gt;&gt;(std::forward&lt;TRet&gt;(arg));</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;        }</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> NewExecutionAgent&gt; _private::ApplyTransfer&lt;std::decay_t&lt;NewExecutionAgent&gt;&gt; <a class="code" href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">transfer</a>(Executor&lt;NewExecutionAgent&gt; newAgent)</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;        {</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;            <span class="keywordflow">return</span> _private::ApplyTransfer&lt;std::decay_t&lt;NewExecutionAgent&gt;&gt;(newAgent);</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;        }</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;        </div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; _private::ApplyNext&lt;std::decay_t&lt;F&gt;&gt; <a class="code" href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">next</a>(F&amp;&amp; f)</div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;        {</div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;            <span class="keywordflow">return</span> _private::ApplyNext&lt;std::decay_t&lt;F&gt;&gt;(std::forward&lt;F&gt;(f));</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;        }</div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; _private::ApplyLoop&lt;I,std::decay_t&lt;F&gt;&gt; <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a>(I&amp;&amp; begin, I&amp;&amp; end, F&amp;&amp; functor, <span class="keywordtype">int</span> increment = 1)</div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;        {</div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;            <span class="keywordflow">return</span> _private::ApplyLoop&lt;I,std::decay_t&lt;F&gt;&gt;(begin,end,std::forward&lt;F&gt;(functor),increment);</div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;        }</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class </span>...FTypes&gt; _private::ApplyBulk&lt;std::decay_t&lt;FTypes&gt;...&gt; <a class="code" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a>(FTypes&amp;&amp;... functions)</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;        {</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;            <span class="keywordflow">return</span> _private::ApplyBulk&lt;std::decay_t&lt;FTypes&gt;...&gt;(std::forward&lt;FTypes&gt;(functions)...);</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;        }</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; _private::ApplyError&lt;std::decay_t&lt;F&gt;&gt; <a class="code" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a>(F&amp;&amp; f)</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;        {</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;            <span class="keywordflow">return</span> _private::ApplyError&lt;std::decay_t&lt;F&gt;&gt;(std::forward&lt;F&gt;(f));</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;        }</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;        </div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class </span>...FTypes&gt; _private::ApplyParallelConvert&lt;std::decay_t&lt;FTypes&gt;...&gt; <a class="code" href="namespacemel_1_1execution.html#a34720de187eb00f270e0867b9b663ce6">parallel_convert</a>(FTypes&amp;&amp;... functions)</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;        {</div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;            <span class="keywordflow">return</span> _private::ApplyParallelConvert&lt;std::decay_t&lt;FTypes&gt;...&gt;(std::forward&lt;FTypes&gt;(functions)...);</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;        }</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;        </div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; _private::ApplyGetExecutor&lt;std::decay_t&lt;F&gt;&gt; <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a>(F&amp;&amp; f)</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;        {</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;            <span class="keywordflow">return</span> _private::ApplyGetExecutor&lt;std::decay_t&lt;F&gt;&gt;(std::forward&lt;F&gt;(f));</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;        }</div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160; </div>
+<div class="line"><a name="l00732"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html#af4e85e887b63e7541e16123e1cf7cc8f">  732</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> TRet1,<span class="keyword">class</span> U&gt; <span class="keyword">auto</span> operator | (<span class="keyword">const</span> <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TRet1&gt;</a>&amp; input,U&amp;&amp; u)</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;        {</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;            <span class="keywordflow">return</span> u(input);</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;        } </div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> TRet1,<span class="keyword">class</span> U&gt; <span class="keyword">auto</span> operator | (ExFuture&lt;ExecutorAgent,TRet1&gt;&amp;&amp; input,U&amp;&amp; u)</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;        {</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;            <span class="keywordflow">return</span> u(std::move(input));</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;        } </div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160; </div>
+<div class="line"><a name="l00746"></a><span class="lineno"><a class="line" href="classmel_1_1execution_1_1_on_all_exception.html">  746</a></span>&#160;        <span class="keyword">class </span><a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a> : <span class="keyword">public</span> std::runtime_error</div>
 <div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;        {</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;            <span class="keywordflow">return</span> _private::ApplyNext&lt;F&gt;(std::forward&lt;F&gt;(f));</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;        }</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; _private::ApplyLoop&lt;I,F&gt; <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a>(I&amp;&amp; begin, I&amp;&amp; end, F&amp;&amp; functor, <span class="keywordtype">int</span> increment = 1)</div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;        {</div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;            <span class="keywordflow">return</span> _private::ApplyLoop&lt;I,F&gt;(begin,end,std::forward&lt;F&gt;(functor),increment);</div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;        }</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class </span>...FTypes&gt; _private::ApplyBulk&lt;FTypes...&gt; <a class="code" href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">parallel</a>(FTypes&amp;&amp;... functions)</div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;        {</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;            <span class="keywordflow">return</span> _private::ApplyBulk&lt;FTypes...&gt;(std::forward&lt;FTypes&gt;(functions)...);</div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;        }</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; _private::ApplyError&lt;F&gt; <a class="code" href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">catchError</a>(F&amp;&amp; f)</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;        {</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;            <span class="keywordflow">return</span> _private::ApplyError&lt;F&gt;(std::forward&lt;F&gt;(f));</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;        }</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;        </div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class </span>...FTypes&gt; _private::ApplyParallelConvert&lt;FTypes...&gt; <a class="code" href="namespacemel_1_1execution.html#a34720de187eb00f270e0867b9b663ce6">parallel_convert</a>(FTypes&amp;&amp;... functions)</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;        {</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;            <span class="keywordflow">return</span> _private::ApplyParallelConvert&lt;FTypes...&gt;(std::forward&lt;FTypes&gt;(functions)...);</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;        }</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;        </div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> F&gt; _private::ApplyGetExecutor&lt;F&gt; <a class="code" href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">getExecutor</a>(F&amp;&amp; f)</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;        {</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;            <span class="keywordflow">return</span> _private::ApplyGetExecutor&lt;F&gt;(std::forward&lt;F&gt;(f));</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;        }</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160; </div>
-<div class="line"><a name="l00782"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html#af4e85e887b63e7541e16123e1cf7cc8f">  782</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> TRet1,<span class="keyword">class</span> U&gt; <span class="keyword">auto</span> operator | (<span class="keyword">const</span> <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TRet1&gt;</a>&amp; input,U&amp;&amp; u)</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;        {</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;            <span class="keywordflow">return</span> u(input);</div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;        } </div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> TRet1,<span class="keyword">class</span> U&gt; <span class="keyword">auto</span> operator | (ExFuture&lt;ExecutorAgent,TRet1&gt;&amp;&amp; input,U&amp;&amp; u)</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;        {</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;            <span class="keywordflow">return</span> u(std::move(input));</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;        } </div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160; </div>
-<div class="line"><a name="l00796"></a><span class="lineno"><a class="line" href="classmel_1_1execution_1_1_on_all_exception.html">  796</a></span>&#160;        <span class="keyword">class </span><a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a> : <span class="keyword">public</span> std::runtime_error</div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;        {</div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;            <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;                <a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a>(<span class="keywordtype">int</span> idx,std::exception_ptr source,<span class="keyword">const</span> std::string&amp; msg):mElementIdx(idx),mSource(source),std::runtime_error(msg){}</div>
-<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;                <a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a>(<span class="keywordtype">int</span> idx,std::exception_ptr source,std::string&amp;&amp; msg):mElementIdx(idx),mSource(source),std::runtime_error(std::move(msg)){}</div>
-<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;                <span class="keyword">inline</span> <span class="keywordtype">int</span> getWrongElement() <span class="keyword">const</span> noexcept{ <span class="keywordflow">return</span> mElementIdx;}</div>
-<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;                std::exception_ptr getCause() noexcept{ <span class="keywordflow">return</span> mSource;}</div>
-<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;            <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;                <span class="keywordtype">int</span>  mElementIdx;</div>
-<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;                std::exception_ptr mSource;</div>
-<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;        };</div>
-<div class="line"><a name="l00814"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">  814</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class </span>ExecutorAgent,<span class="keyword">class </span>...FTypes&gt; <span class="keyword">auto</span> <a class="code" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">on_all</a>(<a class="code" href="classmel_1_1execution_1_1_executor.html">Executor&lt;ExecutorAgent&gt;</a> ex,FTypes... futs)</div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;        {                </div>
-<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;            <span class="keyword">typedef</span> std::tuple&lt;<span class="keyword">typename</span> FTypes::ValueType::Type...&gt; ReturnType;</div>
-<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;            static_assert(std::is_default_constructible&lt;ReturnType&gt;::value,<span class="stringliteral">&quot;All types returned by the input ExFutures must be DefaultConstructible&quot;</span>);</div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,ReturnType&gt;</a> result(ex);</div>
-<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;            <a class="code" href="classmel_1_1parallelism_1_1_barrier.html">::mel::parallelism::Barrier</a> barrier(<span class="keyword">sizeof</span>...(futs));</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;            <span class="keyword">typedef</span> std::tuple&lt;<span class="keyword">typename</span> FTypes::ValueType...&gt;  _ttype;</div>
-<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;            _ttype* tupleRes = <span class="keyword">new</span> _ttype;</div>
-<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160; </div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;            barrier.subscribeCallback(</div>
-<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;            std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a>( const ::mel::parallelism::BarrierData&amp;)&gt;([result,tupleRes](const ::mel::parallelism::BarrierData&amp; ) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;            {</div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;                ReturnType resultVal;           </div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;                <span class="keyword">auto</span> r = ::mel::execution::_private::_moveValue&lt;0&gt;(*tupleRes,resultVal);</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;                <span class="keywordflow">if</span> ( r == std::nullopt)</div>
-<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;                {</div>
-<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;                    result.setValue(std::move(resultVal));</div>
-<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;                }<span class="keywordflow">else</span></div>
-<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;                {</div>
-<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;                    result.setError( std::make_exception_ptr(<a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a>(r.value().first,r.value().second,<span class="stringliteral">&quot;Error in tuple element&quot;</span>))); </div>
-<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;                }</div>
-<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;                <span class="keyword">delete</span> tupleRes;</div>
-<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;                return ::mel::core::ECallbackResult::UNSUBSCRIBE; </div>
-<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;            }));</div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;            ::mel::execution::_private::_on_all&lt;0,_ttype&gt;(tupleRes,barrier,futs...);  <span class="comment">//la idea es pasar una barrera o lo que sea y devolver resultado al activarse</span></div>
-<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;            <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;        }           </div>
-<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;    }</div>
-<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;}</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;            <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;                <a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a>(<span class="keywordtype">int</span> idx,std::exception_ptr source,<span class="keyword">const</span> std::string&amp; msg):mElementIdx(idx),mSource(source),std::runtime_error(msg){}</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;                <a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a>(<span class="keywordtype">int</span> idx,std::exception_ptr source,std::string&amp;&amp; msg):mElementIdx(idx),mSource(source),std::runtime_error(std::move(msg)){}</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;                <span class="keyword">inline</span> <span class="keywordtype">int</span> getWrongElement() <span class="keyword">const</span> noexcept{ <span class="keywordflow">return</span> mElementIdx;}</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;                std::exception_ptr getCause() noexcept{ <span class="keywordflow">return</span> mSource;}</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;            <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;                <span class="keywordtype">int</span>  mElementIdx;</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;                std::exception_ptr mSource;</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;        };</div>
+<div class="line"><a name="l00764"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">  764</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class </span>ExecutorAgent,<span class="keyword">class </span>...FTypes&gt; <span class="keyword">auto</span> <a class="code" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">on_all</a>(<a class="code" href="classmel_1_1execution_1_1_executor.html">Executor&lt;ExecutorAgent&gt;</a> ex,FTypes... futs)</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;        {                </div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;            <span class="keyword">typedef</span> std::tuple&lt;<span class="keyword">typename</span> FTypes::ValueType::Type...&gt; ReturnType;</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;            static_assert(std::is_default_constructible&lt;ReturnType&gt;::value,<span class="stringliteral">&quot;All types returned by the input ExFutures must be DefaultConstructible&quot;</span>);</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;            <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,ReturnType&gt;</a> result(ex);</div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;            <a class="code" href="classmel_1_1parallelism_1_1_barrier.html">::mel::parallelism::Barrier</a> barrier(<span class="keyword">sizeof</span>...(futs));</div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;            <span class="keyword">typedef</span> std::tuple&lt;<span class="keyword">typename</span> FTypes::ValueType...&gt;  _ttype;</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;            _ttype* tupleRes = <span class="keyword">new</span> _ttype;</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160; </div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;            barrier.subscribeCallback(</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;            std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a>( const ::mel::parallelism::BarrierData&amp;)&gt;([result,tupleRes](const ::mel::parallelism::BarrierData&amp; ) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;            {</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;                ReturnType resultVal;           </div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;                <span class="keyword">auto</span> r = ::mel::execution::_private::_moveValue&lt;0&gt;(*tupleRes,resultVal);</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;                <span class="keywordflow">if</span> ( r == std::nullopt)</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;                {</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;                    result.setValue(std::move(resultVal));</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;                }<span class="keywordflow">else</span></div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;                {</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;                    result.setError( std::make_exception_ptr(<a class="code" href="classmel_1_1execution_1_1_on_all_exception.html">OnAllException</a>(r.value().first,r.value().second,<span class="stringliteral">&quot;Error in tuple element&quot;</span>))); </div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;                }</div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;                <span class="keyword">delete</span> tupleRes;</div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;                return ::mel::core::ECallbackResult::UNSUBSCRIBE; </div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;            }));</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;            ::mel::execution::_private::_on_all&lt;0,_ttype&gt;(tupleRes,barrier,futs...);  <span class="comment">//la idea es pasar una barrera o lo que sea y devolver resultado al activarse</span></div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;            <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;        }           </div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    }</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;}</div>
 <div class="ttc" id="aclassmel_1_1core_1_1_future___common_html_a294c69f68d9859f6f7f7d8ea6d09704b"><div class="ttname"><a href="classmel_1_1core_1_1_future___common.html#a294c69f68d9859f6f7f7d8ea6d09704b">mel::core::Future_Common::subscribeCallback</a></div><div class="ttdeci">int subscribeCallback(F &amp;&amp;f) const</div><div class="ttdoc">Subscribe callback to be executed when future is ready (valid or error)</div><div class="ttdef"><b>Definition:</b> Future.h:573</div></div>
 <div class="ttc" id="aclassmel_1_1execution_1_1_ex_future_html"><div class="ttname"><a href="classmel_1_1execution_1_1_ex_future.html">mel::execution::ExFuture</a></div><div class="ttdoc">Extension of mel::core::Future to apply to executors.</div><div class="ttdef"><b>Definition:</b> ExFuture.h:20</div></div>
 <div class="ttc" id="aclassmel_1_1execution_1_1_ex_future_html_abd5310d697bdce3c5f531115d40d8145"><div class="ttname"><a href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">mel::execution::ExFuture::agent</a></div><div class="ttdeci">Executor&lt; ExecutorAgent &gt; agent</div><div class="ttdoc">execution agent associated with this instance</div><div class="ttdef"><b>Definition:</b> ExFuture.h:39</div></div>
 <div class="ttc" id="aclassmel_1_1execution_1_1_executor_html"><div class="ttname"><a href="classmel_1_1execution_1_1_executor.html">mel::execution::Executor</a></div><div class="ttdef"><b>Definition:</b> Executor.h:24</div></div>
-<div class="ttc" id="aclassmel_1_1execution_1_1_on_all_exception_html"><div class="ttname"><a href="classmel_1_1execution_1_1_on_all_exception.html">mel::execution::OnAllException</a></div><div class="ttdoc">Excepcion thrown by on_all when some of the futures raise error.</div><div class="ttdef"><b>Definition:</b> Executor.h:797</div></div>
+<div class="ttc" id="aclassmel_1_1execution_1_1_on_all_exception_html"><div class="ttname"><a href="classmel_1_1execution_1_1_on_all_exception.html">mel::execution::OnAllException</a></div><div class="ttdoc">Excepcion thrown by on_all when some of the futures raise error.</div><div class="ttdef"><b>Definition:</b> Executor.h:747</div></div>
 <div class="ttc" id="aclassmel_1_1parallelism_1_1_barrier_html"><div class="ttname"><a href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a></div><div class="ttdoc">Multithread barrier.</div><div class="ttdef"><b>Definition:</b> Barrier.h:43</div></div>
 <div class="ttc" id="aclassmel_1_1parallelism_1_1_barrier_html_a3cacc6b65bb36b2d766663a93329f0f7"><div class="ttname"><a href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">mel::parallelism::Barrier::set</a></div><div class="ttdeci">void set()</div><div class="ttdef"><b>Definition:</b> Barrier.h:59</div></div>
 <div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:27</div></div>
@@ -844,12 +794,12 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="ttc" id="anamespacemel_1_1execution_html_a34720de187eb00f270e0867b9b663ce6"><div class="ttname"><a href="namespacemel_1_1execution.html#a34720de187eb00f270e0867b9b663ce6">mel::execution::parallel_convert</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, typename ::mel::execution::_private::GetReturn&lt; TArg, FTypes... &gt;::type &gt; parallel_convert(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes &amp;&amp;... functions)</div><div class="ttdoc">Same as parallel but returning a tuple with the values for each functor.</div><div class="ttdef"><b>Definition:</b> Executor.h:497</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_a40a64bdbc54577344ba83fba6dad1f35"><div class="ttname"><a href="namespacemel_1_1execution.html#a40a64bdbc54577344ba83fba6dad1f35">mel::execution::next</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F, TArg &gt; &gt; next(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Attach a functor to execute when input fut is complete Given functor will be executed inf the input E...</div><div class="ttdef"><b>Definition:</b> Executor.h:128</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_a60515a3e4bce7adcf1b7ef51c850d3b7"><div class="ttname"><a href="namespacemel_1_1execution.html#a60515a3e4bce7adcf1b7ef51c850d3b7">mel::execution::catchError</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; catchError(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Capture previous error, if any, and execute the function.</div><div class="ttdef"><b>Definition:</b> Executor.h:409</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a789d1502a968251fcc5ac40bdb4724b7"><div class="ttname"><a href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">mel::execution::on_all</a></div><div class="ttdeci">auto on_all(Executor&lt; ExecutorAgent &gt; ex, FTypes... futs)</div><div class="ttdoc">return ExFuture which will be executed, in the context of the given executor ex, when all the given E...</div><div class="ttdef"><b>Definition:</b> Executor.h:814</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_a789d1502a968251fcc5ac40bdb4724b7"><div class="ttname"><a href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">mel::execution::on_all</a></div><div class="ttdeci">auto on_all(Executor&lt; ExecutorAgent &gt; ex, FTypes... futs)</div><div class="ttdoc">return ExFuture which will be executed, in the context of the given executor ex, when all the given E...</div><div class="ttdef"><b>Definition:</b> Executor.h:764</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_a80bf4bcc9121c697abfe89240f2c5de6"><div class="ttname"><a href="namespacemel_1_1execution.html#a80bf4bcc9121c697abfe89240f2c5de6">mel::execution::parallel</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; parallel(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes &amp;&amp;... functions)</div><div class="ttdoc">Execute given functions in a (possibly, depending on concrete executor) parallel way If an exception ...</div><div class="ttdef"><b>Definition:</b> Executor.h:367</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_a9c2d394e1f670743253c44823c2e26fc"><div class="ttname"><a href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">mel::execution::transfer</a></div><div class="ttdeci">ExFuture&lt; NewExecutorAgent, TRet &gt; transfer(ExFuture&lt; OldExecutorAgent, TRet &gt; source, Executor&lt; NewExecutorAgent &gt; newAgent)</div><div class="ttdoc">Transfer given ExFuture to a different executor This way, continuations can be chained but executed i...</div><div class="ttdef"><b>Definition:</b> Executor.h:203</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_aa15811b945ee6be8ccbfb93fdd66baa7"><div class="ttname"><a href="namespacemel_1_1execution.html#aa15811b945ee6be8ccbfb93fdd66baa7">mel::execution::launch</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F &gt; &gt; launch(Executor&lt; ExecutorAgent &gt; ex, F &amp;&amp;f)</div><div class="ttdoc">Launch given functor in given executor.</div><div class="ttdef"><b>Definition:</b> Executor.h:48</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_html_acbcaf139dc87026232b3816d7ecb256e"><div class="ttname"><a href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">mel::execution::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</div><div class="ttdoc">parallel (possibly, depending on executor capabilities) loop</div><div class="ttdef"><b>Definition:</b> Executor.h:221</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_adb3e0d12579dd9c19d462ded948ccb68"><div class="ttname"><a href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">mel::execution::getExecutor</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; getExecutor(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Get the Executor used in the chaing of execution.</div><div class="ttdef"><b>Definition:</b> Executor.h:579</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_adb3e0d12579dd9c19d462ded948ccb68"><div class="ttname"><a href="namespacemel_1_1execution.html#adb3e0d12579dd9c19d462ded948ccb68">mel::execution::getExecutor</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; getExecutor(ExFuture&lt; ExecutorAgent, TArg &gt; source, F &amp;&amp;f)</div><div class="ttdoc">Get the Executor used in the chaing of execution.</div><div class="ttdef"><b>Definition:</b> Executor.h:541</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
 <div class="ttc" id="astructmel_1_1execution_1_1__private_1_1_get_return_html"><div class="ttname"><a href="structmel_1_1execution_1_1__private_1_1_get_return.html">mel::execution::_private::GetReturn</a></div><div class="ttdef"><b>Definition:</b> Executor.h:454</div></div>
 <div class="ttc" id="astructmel_1_1execution_1_1__private_1_1inv__res_html"><div class="ttname"><a href="structmel_1_1execution_1_1__private_1_1inv__res.html">mel::execution::_private::inv_res</a></div><div class="ttdef"><b>Definition:</b> Executor.h:445</div></div>

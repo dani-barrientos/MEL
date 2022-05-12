@@ -434,7 +434,7 @@ Runnable specialization</h2>
 </div><!-- fragment --><p> The only thing the Runnable specialization (MyRunnable) has to do, is to call <code>Runnable::processTasks</code> which is a protected function not exposed publicy to avoid calling it by the users.</p>
 <h2><a class="anchor" id="limitations"></a>
 Known limitations</h2>
-<h3><a class="anchor" id="autotoc_md2"></a>
+<h3><a class="anchor" id="autotoc_md3"></a>
 Careful with local variables and microthreads</h3>
 <p>The <em>stackless</em> nature of the microthreads (in the sense that, by default, the don't use its own stack) implies a confusing limitation, that can be overcame very easily. This techniques have been in use since earlies 2000s and this limitation is not really important, but is neccesary to explain it. Let's see an example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span> _sampleLimitation()</div>
 <div class="line">{</div>
@@ -460,7 +460,7 @@ Careful with local variables and microthreads</h3>
 <div class="line"><span class="charliteral">&#39;a&#39;</span> = 32767</div>
 <div class="line">At end <span class="charliteral">&#39;a&#39;</span> = 5</div>
 </div><!-- fragment --><p> The reason is that, when first task does the <em>wait</em>, the stack has been unwund, so the reference to variable <code>a</code> is no more valid. So,careful have to be taken when passing local variables to a function and a context switch is done. </p>
-<h3><a class="anchor" id="autotoc_md3"></a>
+<h3><a class="anchor" id="autotoc_md4"></a>
 Careful with executing tasks in a Runnable</h3>
 <p>If we change the code in <a href="#runnable_specialization">this section</a> and do the following: </p><div class="fragment"><div class="line"><span class="keyword">auto</span> f1 = [&amp;r]</div>
 <div class="line">{</div>
