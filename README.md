@@ -19,8 +19,23 @@ Issues/facts:
    - I was unable to set VCPKG_ROOT environment variable in my machine. So I set the **CMAKE_TOOLCHAIN_FILE** variable in section *chacheVariables in CMakeUserPresets.json pointing to the vcpkg path (in my case /Users/dani/vcpkg/scripts/buildsystems/vcpkg.cmake)
 - Android:
    - Android Studio project in folder [android](/android/main).
-   - Because Android Studio is based on cmake, integration is quite straight, but symbolic links to source code need to be because proyect structure requirement in Adnroid Studio
+   - Because Android Studio is based on cmake, integration is quite straight, but symbolic links to source code need to be because proyect structure requirement in Android Studio
    - If you want to use *spdlog*, concrete android triplet need to be installed (https://vcpkg.readthedocs.io/en/latest/users/android/#android-build-requirements)
+- Visual Studio: a bug in lambda processing with /Zc:lambda option (which is neccesary) for MSVC previous to 19.31 (Visual Studio 2022 17.1) generate error in some cases with nested lambdas. For example:
+      ```
+      #include <exception>
+      auto test_lambda  = [](auto ex) 
+      {
+
+         auto g = [](std::exception_ptr err){};	
+      };
+
+      void exec()
+      {
+         test_lambda(1);
+      }
+      ```
+   At the present moment this error has only be shown with a case as that, using exception_ptr, but could possibly appear in other situations.
   
  # Testing
  if using Visual Studio Code, execute *Run CTest*,or execute ctest from commandline in out/build/[required configuration]/tests

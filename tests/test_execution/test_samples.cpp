@@ -2,6 +2,7 @@
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
+#include <execution/Flow.h>
 #include <functional>
 using std::string;
 #include <memory>
@@ -267,7 +268,7 @@ template <class ExecutorType> void _sampleErrorNoException(ExecutorType ex)
 			//error branch.
 			try
 			{
-				std::rethrow_exception(res.error());
+				
 			}
 			catch(core::WaitException& e)
 			{
@@ -515,7 +516,127 @@ template <class ExecutorType> void _samplePF(ExecutorType ex)
 		},0,::tasking::Runnable::killFalse
 	);
 }
+template <class ExecutorType> void _sampleFlows1(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
 
+	//create a flow. input paramter is an ExFuture depending on given executor
+	auto flow1 = [](/*execution::ExFuture<ExecutorType,string> */auto input)
+	{
+		return input | execution::next(
+			[](const string& str)
+			{
+				return str+" Dani";
+			}
+		);
+	};
+
+	th->fireAndForget([ex,flow1] () mutable
+	{
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::launch(ex,[]()
+				{
+					return "Hello"s;
+				}
+			)
+			| flow1
+			| execution::next([](const string& str)
+				{
+					return 	str + " Barrientos";
+				}
+			)
+			| 
+			[](auto input)
+			{
+				return input | execution::next([](const string& str)
+					{
+						return str + ". Bye!!";
+					}
+				);
+			}
+		);
+		if ( res.isValid())
+		{
+			text::info("Result = {}",res.value());
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+template <class ExecutorType> void _sampleFlowsCondition(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+
+	//create a flow. input paramter is an ExFuture depending on given executor
+	auto flow0 = [](/*execution::ExFuture<ExecutorType,string> */auto input)
+	{
+		return input | execution::next(
+			[](int val)
+			{
+				return "Flow0";
+			}
+		);
+	};
+	auto flow1 = [](auto input)
+	{
+		return input | execution::next(
+			[](int val)
+			{
+				return "Flow1";
+			}
+		);
+	};
+
+	th->fireAndForget([ex,flow0,flow1] () mutable
+	{
+		srand(time(NULL));
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::launch(ex,[]()
+				{
+					return rand()%10;
+				}
+			)
+			| execution::condition(
+				[](int val)
+				{
+					int result = val<5?0:1;
+					text::info("Input value = {}. Selecting flow {}",val,result);
+					return result;
+				},
+				flow0,flow1
+			)
+			| execution::next( [](const string& str)
+			{
+				return str+" End!";
+			})
+			
+		);
+		if ( res.isValid())
+		{
+			text::info("Result = {}",res.value());
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
 void test_execution::samples()
 {
 	text::set_level(text::level::info);
@@ -528,14 +649,16 @@ void test_execution::samples()
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});
     
-	_sampleBasic(exr);	
-	_sampleBasic(extp);
- 	_sampleReference(exr);
- 	_sampleError1(exr);
- 	_sampleError2(extp);
-	_sampleErrorNoException(extp);
- 	_sampleTransfer(exr,extp);
-    _sampleSeveralFlows(exr,extp);
-    _sampleCallables(extp);
-   	_samplePF(exr);	
+	// _sampleBasic(exr);	
+	// _sampleBasic(extp);
+ 	// _sampleReference(exr);
+ 	// _sampleError1(exr);
+ 	// _sampleError2(extp);
+	// _sampleErrorNoException(extp);
+ 	// _sampleTransfer(exr,extp);
+    // _sampleSeveralFlows(exr,extp);
+    // _sampleCallables(extp);
+   	// _samplePF(exr);	
+	//_sampleFlows1(extp);
+	_sampleFlowsCondition(extp);
 }

@@ -6,6 +6,7 @@ Contents of this section:
 - [Usage samples] (#usage_samples)
 - [Error management](#error_management)
 - [Perfect forwarding] (#perfect_forwarding)
+- [Work flows] (#work_flows)
 
 ## Introduction {#introduction}
 The goal of this module is to provide a very high level API for task execution in a generic way, such that is not neccesary to know the underlying execution system.
@@ -813,4 +814,10 @@ SampleClass destructor
 
 As can be seen, perfect forwarding is trying to be applied when possible. One thing to keep in maind is that, because avery job implies launching a task
 to target executor, move constructions are impossible to avoid. This is because the asynchronous nature of the system.
+
+quiero que cuando se pinche en la opcion de menu, directametne vaya a la pagina, no a eta seccion
+
+## Work flows {#work_flows} 
+It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". Follow the \ref execution_flows "link" 
+for a more in deep explanation,
 */

@@ -588,7 +588,7 @@ template <class ExecutorType> void _testMeanVector(::mel::execution::ExFuture<Ex
 		*/
 		fut
 		//| mel::execution::parallel_convert<std::tuple<double,double,double,double>>(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
-		| mel::execution::parallel_convert(  //calculate mean in 4 parts @todo ¿cómo podrái devolver este resultado a siguiente funcion?
+		| mel::execution::parallel_convert(  //calculate mean in 4 parts
 			[](const VectorType& v) noexcept
 			{
 				double mean = 0.f;

@@ -529,45 +529,7 @@ namespace mel
                 }
             ));
             return result;
-        }
-        /*
-        template <class ResultTuple, class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,ResultTuple> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
-        {
-            //@todo tratar de dedudir la tupla de los resultados de cada funcion
-            static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
-            ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
-            typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
-            source.subscribeCallback(            
-                std::function<void( ValueType&)>([source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
-                {
-                    if ( input.isValid() ){                       
-                        std::exception_ptr* except = new std::exception_ptr(nullptr);
-                        ResultTuple* output = new ResultTuple; //para que compile
-                        auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
-                        barrier.subscribeCallback(
-                            std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,output,except](const ::mel::parallelism::BarrierData& ) mutable
-                            {      
-                                if ( *except ) //any exception?
-                                    result.setError(*except);
-                                else
-                                    result.setValue(std::move(*output));
-                                delete output;    
-                                delete except;              
-                                return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
-                            }));
-                    }else
-                    {
-                        //set error as task in executor
-                        launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
-                        {
-                        result.setError(std::move(err));
-                        });
-                    }
-                }
-            ));
-            return result;
-        }*/
-       
+        }               
         /**
          * @brief Get the Executor used in the chaing of execution
          * @details It returns an ExFuture moved from source, so transferring previous value to the next element in chain.
@@ -609,7 +571,7 @@ namespace mel
             };
             template <class NewExecutionAgent> struct ApplyTransfer
             {
-                ApplyTransfer(Executor<NewExecutionAgent>&& a):newAgent(std::forward<Executor<NewExecutionAgent>>(a)){}
+                ApplyTransfer(Executor<NewExecutionAgent>&& a):newAgent(std::move(a)){}
                 ApplyTransfer(const Executor<NewExecutionAgent>& a):newAgent(a){}
                 Executor<NewExecutionAgent> newAgent;
                 template <class TRet,class OldExecutionAgent> ExFuture<NewExecutionAgent,TRet> operator()(ExFuture<OldExecutionAgent,TRet> fut)
@@ -619,7 +581,7 @@ namespace mel
             };
             template <class F> struct ApplyNext
             {
-                ApplyNext(F&& f):mFunc(std::forward<F>(f)){}
+                ApplyNext(F&& f):mFunc(std::move(f)){}
                 ApplyNext(const F& f):mFunc(f){}
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(const ExFuture<ExecutorAgent,TArg>& inputFut)
@@ -633,7 +595,7 @@ namespace mel
             };
             template <class I,class F> struct ApplyLoop
             {
-                ApplyLoop(I b, I e,F&& f,int inc):mFunc(std::forward<F>(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
+                ApplyLoop(I b, I e,F&& f,int inc):mFunc(std::move(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
                 ApplyLoop(I b, I e,const F& f,int inc):mFunc(f),begin(std::move(b)),end(std::move(e)),increment(inc){}
                 F mFunc;
                 I begin;
@@ -647,8 +609,8 @@ namespace mel
             
             template <class ...FTypes> struct ApplyBulk
             {
-                ApplyBulk(FTypes&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
-                ApplyBulk(const FTypes&... fs):mFuncs(fs...){}           
+                template <class ...Fs>
+                ApplyBulk(Fs&&... fs):mFuncs(std::forward<FTypes>(fs)...){}                
                 std::tuple<FTypes...> mFuncs;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
@@ -657,7 +619,7 @@ namespace mel
             };
             template <class F> struct ApplyError
             {
-                ApplyError(F&& f):mFunc(std::forward<F>(f)){}
+                ApplyError(F&& f):mFunc(std::move(f)){}
                 ApplyError(const F& f):mFunc(f){}
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
@@ -668,7 +630,7 @@ namespace mel
             
             template <class F> struct ApplyGetExecutor
             {
-                ApplyGetExecutor(F&& f):mFunc(std::forward<F>(f)){}
+                ApplyGetExecutor(F&& f):mFunc(std::move(f)){}
                 ApplyGetExecutor(const F& f):mFunc(f){}
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
@@ -704,23 +666,11 @@ namespace mel
                         return std::make_pair(n,std::move(val.error()));
                 }
                 return std::nullopt;
-            }
-            /*
-            template <class ReturnTuple, class ...FTypes> struct ApplyParallelConvert
-            {
-                ApplyParallelConvert(FTypes&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
-                ApplyParallelConvert(const FTypes&... fs):mFuncs(fs...){}           
-                std::tuple<FTypes...> mFuncs;
-                template <class ExecutorAgent,class TArg> ExFuture<ExecutorAgent,ReturnTuple> operator()(ExFuture<ExecutorAgent,TArg> inputFut)
-                {
-                    return parallel_convert<ReturnTuple,TArg>(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
-                }
-            };*/
-            //@todo PRUEBAS
+            }            
             template < class ...FTypes> struct ApplyParallelConvert
             {
-                ApplyParallelConvert(FTypes&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
-                ApplyParallelConvert(const FTypes&... fs):mFuncs(fs...){}           
+                template <class ...Fs>
+                ApplyParallelConvert(Fs... fs):mFuncs(std::forward<FTypes>(fs)...){}
                 std::tuple<FTypes...> mFuncs;
                 template <class ExecutorAgent,class TArg> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
@@ -732,47 +682,47 @@ namespace mel
         //@brief version for use with operator |
         template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
         {
-            return _private::ApplyInmediate<TRet>(std::forward<TRet>(arg));
+            return _private::ApplyInmediate<std::decay_t<TRet>>(std::forward<TRet>(arg));
         }
         /**
          * @brief Version for use with operator |     
          */
-        template <class NewExecutionAgent> _private::ApplyTransfer<NewExecutionAgent> transfer(Executor<NewExecutionAgent> newAgent)
+        template <class NewExecutionAgent> _private::ApplyTransfer<std::decay_t<NewExecutionAgent>> transfer(Executor<NewExecutionAgent> newAgent)
         {
-            return _private::ApplyTransfer<NewExecutionAgent>(newAgent);
+            return _private::ApplyTransfer<std::decay_t<NewExecutionAgent>>(newAgent);
         }
         
         ///@brief version for use with operator |
-        template <class F> _private::ApplyNext<F> next(F&& f)
+        template <class F> _private::ApplyNext<std::decay_t<F>> next(F&& f)
         {
-            return _private::ApplyNext<F>(std::forward<F>(f));
+            return _private::ApplyNext<std::decay_t<F>>(std::forward<F>(f));
         }
         ///@brief version for use with operator |
-        template <class I,class F> _private::ApplyLoop<I,F> loop(I&& begin, I&& end, F&& functor, int increment = 1)
+        template <class I,class F> _private::ApplyLoop<I,std::decay_t<F>> loop(I&& begin, I&& end, F&& functor, int increment = 1)
         {
-            return _private::ApplyLoop<I,F>(begin,end,std::forward<F>(functor),increment);
+            return _private::ApplyLoop<I,std::decay_t<F>>(begin,end,std::forward<F>(functor),increment);
         }
         ///@brief version for use with operator |
-        template <class ...FTypes> _private::ApplyBulk<FTypes...> parallel(FTypes&&... functions)
+        template <class ...FTypes> _private::ApplyBulk<std::decay_t<FTypes>...> parallel(FTypes&&... functions)
         {
-            return _private::ApplyBulk<FTypes...>(std::forward<FTypes>(functions)...);
+            return _private::ApplyBulk<std::decay_t<FTypes>...>(std::forward<FTypes>(functions)...);
         }
         ///@brief version for use with operator |
-        template <class F> _private::ApplyError<F> catchError(F&& f)
+        template <class F> _private::ApplyError<std::decay_t<F>> catchError(F&& f)
         {
-            return _private::ApplyError<F>(std::forward<F>(f));
-        }
-        
-        ///@brief version for use with operator |
-        template <class ...FTypes> _private::ApplyParallelConvert<FTypes...> parallel_convert(FTypes&&... functions)
-        {
-            return _private::ApplyParallelConvert<FTypes...>(std::forward<FTypes>(functions)...);
+            return _private::ApplyError<std::decay_t<F>>(std::forward<F>(f));
         }
         
         ///@brief version for use with operator |
-        template <class F> _private::ApplyGetExecutor<F> getExecutor(F&& f)
+        template <class ...FTypes> _private::ApplyParallelConvert<std::decay_t<FTypes>...> parallel_convert(FTypes&&... functions)
         {
-            return _private::ApplyGetExecutor<F>(std::forward<F>(f));
+            return _private::ApplyParallelConvert<std::decay_t<FTypes>...>(std::forward<FTypes>(functions)...);
+        }
+        
+        ///@brief version for use with operator |
+        template <class F> _private::ApplyGetExecutor<std::decay_t<F>> getExecutor(F&& f)
+        {
+            return _private::ApplyGetExecutor<std::decay_t<F>>(std::forward<F>(f));
         }
         ///@endcond
 

@@ -1,0 +1,144 @@
+/**
+\page execution_flows Work flows
+It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". This is very simple 
+thanks to *generic lambdas*. The lambda or callable used as a flow will receive an \ref ::mel::execution::ExFuture "ExFuture" which serves as the 
+input of any other *execution* function.
+Let's start with a simple example, definign two flows:
+\code
+template <class ExecutorType> void _sampleFlows1(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+
+	//create a flow. input parameter is an ExFuture depending on given executor
+	auto flow1 = [](auto input)
+	{
+		return input | execution::next(
+			[](const string& str)
+			{
+				return str+" Dani";
+			}
+		);
+	};
+
+	th->fireAndForget([ex,flow1] () mutable
+	{
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::launch(ex,[]()
+				{
+					return "Hello"s;
+				}
+			)
+			| flow1
+			| execution::next([](const string& str)
+				{
+					return 	str + " Barrientos";
+				}
+			)
+			| 
+			[](auto input)
+			{
+				return input | execution::next([](const string& str)
+					{
+						return str + ". Bye!!";
+					}
+				);
+			}
+		);
+		if ( res.isValid())
+		{
+			text::info("Result = {}",res.value());
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+\endcode
+Output will be:
+\verbatim
+Result = Hello Dani Barrientos. Byt!!
+\endverbatim
+### Conditions
+Besides creating flows for reusability, one important use is for \ref ::mel::execution::condition "conditions", which are the equivalent to a normal *switch*, 
+such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number.
+\code
+template <class ExecutorType> void _sampleFlowsCondition(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+
+	//create a flow. input paramter is an ExFuture depending on given executor
+	auto flow0 = [](/*execution::ExFuture<ExecutorType,string> */auto input)
+	{
+		return input | execution::next(
+			[](int val)
+			{
+				return "Flow0";
+			}
+		);
+	};
+	auto flow1 = [](auto input)
+	{
+		return input | execution::next(
+			[](int val)
+			{
+				return "Flow1";
+			}
+		);
+	};
+
+	th->fireAndForget([ex,flow0,flow1] () mutable
+	{
+		srand(time(NULL));
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::launch(ex,[]()
+				{
+					return rand()%10;
+				}
+			)
+			| execution::condition(
+				[](int val)
+				{
+					int result = val<5?0:1;
+					text::info("Input value = {}. Selecting flow {}",val,result);
+					return result;
+				},
+				flow0,flow1
+			)
+			| execution::next( [](const string& str)
+			{
+				return str+" End!";
+			})
+			
+		);
+		if ( res.isValid())
+		{
+			text::info("Result = {}",res.value());
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+\endcode
+And the output, in a concrete execution, is:
+\verbatim
+Input value = 3. Selecting flow 0
+Result = Flow0 End!
+\endverbatim
+*/
