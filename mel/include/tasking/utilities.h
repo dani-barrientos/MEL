@@ -110,7 +110,7 @@ namespace mel
                         evId = f.subscribeCallback(
                             [this](typename futT::ValueType& ) 
                             {
-                                mEvent.set();                        
+                                this->mEvent.set();                        
                             }
                         );
                     },msecs); 
@@ -131,7 +131,7 @@ namespace mel
                     }			                        
                 }
                 private:
-                ::mel::tasking::Event_mthread<> mEvent;
+                    ::mel::tasking::Event_mthread<> mEvent;
 
             };
 
