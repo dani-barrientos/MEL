@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('execution_flows.html',''); initResizab
 <div class="title">Work flows </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>It's possible to create independent work flows to reuse then or apply them at functions as <a class="el" href="namespacemel_1_1execution.html#a68fa05394a05321a0a85c1cf60764b67">condition</a>. This is very simple thanks to <em>generic lambdas</em>. The lambda or callable used as a flow will receive an <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a> which serves as the input of any other <em>execution</em> function. Let's start with a simple example, definign two flows: </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlows1(ExecutorType ex)</div>
+<div class="textblock"><p>It's possible to create independent work flows to reuse then or apply them at functions as <a class="el" href="namespacemel_1_1execution.html#a22648cdccf57285e054561edf32bc84b">condition</a>. This is very simple thanks to <em>generic lambdas</em>. The lambda or callable used as a flow will receive an <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a> which serves as the input of any other <em>execution</em> function. Let's start with a simple example, definign two flows: </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlows1(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>
@@ -145,7 +145,7 @@ $(document).ready(function(){initNavTree('execution_flows.html',''); initResizab
 </div><!-- fragment --><p> Output will be: </p><pre class="fragment">Result = Hello Dani Barrientos. Byt!!
 </pre> <h3><a class="anchor" id="autotoc_md2"></a>
 Conditions</h3>
-<p>Besides creating flows for reusability, one important use is for <a class="el" href="namespacemel_1_1execution.html#a68fa05394a05321a0a85c1cf60764b67">conditions</a>, which are the equivalent to a normal <em>switch</em>, such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number. </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowsCondition(ExecutorType ex)</div>
+<p>Besides creating flows for reusability, one important use is for <a class="el" href="namespacemel_1_1execution.html#a22648cdccf57285e054561edf32bc84b">conditions</a>, which are the equivalent to a normal <em>switch</em>, such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number. </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowsCondition(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>
