@@ -20,21 +20,27 @@ using mel::tasking::Process;
 #include <execution/Flow.h>
 #include <vector>
 using std::vector;
-
+#include <memory>
 using namespace mel;
 namespace test_execution
 {
 //funcion para pruebas a lo cerdo
 struct MyPepe
 {
-	int val = 10;
+	int val;
 	MyPepe()
 	{
 		mel::text::info("MyPepe");
 	}
+	~MyPepe()
+	{
+		val = -2;
+		mel::text::info("MyPepe destructor {}",(void*)this);
+	}
 	MyPepe( const MyPepe& ob2)
 	{
 		mel::text::info("MyPepe(const MyPepe& ob2)");
+		val = ob2.val;
 	}
 	MyPepe( MyPepe&& ob2)
 	{
@@ -45,6 +51,7 @@ struct MyPepe
 	MyPepe& operator=(const MyPepe& ob2)
 	{
 		mel::text::info("operator= (const MyPepe& ob2)");
+		val = ob2.val;
 		return *this;
 	}
 	MyPepe& operator=(MyPepe&& ob2)
@@ -56,84 +63,11 @@ struct MyPepe
 	}
 };
 
-/*
-		using execution::ExFuture;
-		using execution::Executor;
-		template <class F> class Flow
-		{
-			public:
-				Flow(F&& f):mFunct(std::move(f)){
-				}
-				Flow(const F& f):mFunct(f){
-				}
-				//cuado lo tenga claro, ya poner tipos bien
-				//template <class TRet,class SourceType,class TArg> TRet operator()(SourceType source, TArg&& v,bool directExecution = false )				
-				template <class TArg,class ExecutorAgent> std::invoke_result_t<F,ExFuture<ExecutorAgent,TArg>> operator()(ExFuture<ExecutorAgent,TArg> source)
-				{
-					return mFunct(source);
-					//static_assert( std::is_invocable<F,TArg>::value, "execution::Flow bad functor signature");
-					//typedef std::invoke_result_t<F,Executor<ExecutorAgent>,TArg> TRet;  //it's an ExFuture
-					//typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;            
-					// TRet result(source.agent);
-					// //@todo no tengo claro ahora por qué necesito el function!!!
-					// source.subscribeCallback(std::function<void( ValueType&)>(
-					// 	[source,result,this]( ValueType& input) mutable 
-					// 	{
-					// 		if ( input.isValid() )
-					// 		{
-					// 			//@todo no tengo nada claro que pueda hacerlo sin tarea
-					// 			result.assign(mFunct(source.agent,source.getValue().value()));
-					// 			
-					// 		}else
-					// 		{
-                    //             //set error as task in executor
-					// 			launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
-					// 			{
-					// 				result.setError(std::move(err));
-					// 			});
-								
-					// 		}				
-					// 	})
-					// );
-					// return result;
-				}				
-			private:		
-				F mFunct;
-		};
-		*/
-
 static tests::BaseTest* sCurrentTest = nullptr;
 //calling this code breask on msvc < 19.31
 auto f = [](auto exec)
 		{
-		/*	auto res = execution::launch(exec,[]() 
-				{
-				//	throw std::runtime_error("Err en launch");		
-					return 5.2f;
-				})    
-				| execution::next( [](float v)
-				{
-					return std::to_string(v);
-				})
-				// | execution::catchError2( [](std::exception_ptr) noexcept
-				// {
-				// 	return "cachiporrez"s;
-				// })
-				| mel::execution::next( [](const string& str) noexcept
-					{
-						//throw std::runtime_error("Err en next");		
-						return str + " fin";
-					}
-				) 
-				| mel::execution::next( [](const string& str)
-					{
-						return 7.8f;
-					}
-				);
-				*/
-			auto g = [](std::exception_ptr){};
-			//mel::execution::catchError2(res,[](std::exception_ptr){});
-			//return res;
+			auto g = [](std::exception_ptr){};			
 		};
 
 template <class ExecutorAgent,class TArg> auto flow_template ( execution::ExFuture<ExecutorAgent,TArg> source) 
@@ -178,38 +112,90 @@ auto flow_lambda  = [](auto source) ->auto //es un ExFuture<ExecutorAgent,const 
 	;
 };
 	using namespace mel::execution;
+
+	template <class T> struct RemovePointerRef
+	{
+		using type = std::remove_pointer_t<::remove_reference_t<T>>;
+	};
+
+	template <class Flow,class Predicate,class ExecutorAgent,class TArg,class FlowResult> class WhileImpl : public std::enable_shared_from_this<WhileImpl<Flow,Predicate,ExecutorAgent,TArg,FlowResult>>
+	{
+		using SourceType = ExFuture<ExecutorAgent,TArg>; 
+		public:
+			template <class F,class P> static std::shared_ptr<WhileImpl<Flow,Predicate,ExecutorAgent,TArg,FlowResult>> create(F&& f,P&& p,SourceType source,FlowResult result)
+			{				
+				auto ptr = new WhileImpl<Flow,Predicate,ExecutorAgent,TArg,FlowResult>(std::forward<F>(f),std::forward<P>(p),source,result);
+				return std::shared_ptr<WhileImpl<Flow,Predicate,ExecutorAgent,TArg,FlowResult>>(ptr);
+				//return std::make_shared<WhileImpl<Flow,Predicate,ExecutorAgent,TArg,FlowResult>>(std::forward<F>(f),std::forward<P>(p),source);
+			}		
+			void execute()
+			{
+				auto fut = mFlow(mSource);				
+				auto _this = WhileImpl<Flow,Predicate,ExecutorAgent,TArg,FlowResult>::shared_from_this();
+				fut.subscribeCallback( [_this,fut](auto v)
+				{
+					_this->_callback(fut);
+				});
+			}
+			~WhileImpl()  //para depurar, quitarlo
+			{
+				mel::text::info("WhileImpl destructor");
+			}		
+		private:
+			//typename RemovePointerRef<Flow>::type mFlow;
+			//typename RemovePointerRef<Predicate>::type mPred;
+			Flow 		mFlow;
+			Predicate 	mPred;
+			SourceType 	mSource;
+			FlowResult 	mResult;
+
+			template <class F,class P>
+			WhileImpl(F&& f,P&& p,SourceType s,FlowResult r):mFlow(std::forward<F>(f)),mPred(std::forward<P>(p)),mSource(s),mResult(r)
+			{				
+			}
+			void _callback(FlowResult res)
+			{
+				if ( res.getValue().isValid())
+				{
+					if ( mPred() )
+						execute(); 
+					else 
+						mResult.assign(res);
+				}else
+					mResult.setError(std::move(res.getValue().error()));				
+			}
+	};
+
 	template <class ExecutorAgent,class TArg,class Flow,class Predicate>
-         auto doWhile(ExFuture<ExecutorAgent,TArg> source, Flow&& flow, Predicate&& p)
-		 {
+    //     auto doWhile(ExFuture<ExecutorAgent,TArg> source, Flow&& flow, Predicate&& p)
+		 auto doWhile(ExFuture<ExecutorAgent,TArg> source, Flow flow, Predicate p)
+		 {			 			 
 			static_assert( std::is_invocable<Flow,ExFuture<ExecutorAgent,TArg>>::value, "execution::doWhile bad flow signature");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             typedef std::invoke_result_t<Flow,ExFuture<ExecutorAgent,TArg>> TRet;
             TRet result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                std::function<void( ValueType&)>([source,flow = std::forward<Flow>(flow),p = std::forward<Predicate>(p),result](  ValueType& input) mutable
+
+/*lo que quiero es quitar el ref de p si lo tiene¿¿???
+POSIBILDIADES:
+ - USAR pREDICATE PARA QUE SEA POR COPIA Y LUEGO HACER MOVE
+ -
+
+
+			tengo la impresion que no es correcto este forwar, porque si p fuese referecia, eso es lo que se bindea
+			yo quisiera aquí hacer un move . el problema es que el tipo original puede ser una referencia.. 
+			no forwardear directamente dsde el Apply no vale, porque si yo tengo una rvalue reference, y por tanto ,que puedo mover, eso lo pierde
+
+*/
+
+                //[source,flow = std::forward<Flow>(flow),p = std::forward<Predicate>(p),result](ValueType& input) mutable
+				[source,flow = std::move(flow),p = std::move(p),result](ValueType& input) mutable
                 {   
-					if ( input.isValid())
+					if ( input.isValid() )
 					{
-						// launch(source.agent,[source,result,p = std::forward<Predicate>(p),flow = std::forward<Flow>(flow)]( ) mutable noexcept 
-						// {  
-						// 	auto ret = flow(source);		
-						// 	problemas gordos:
-						// 	 - subscripcion, necesito un function
-						// 	ret.subscribeCallback(                
-                		// 		std::function<void(auto&)>([ret,p = std::forward<Predicate>(p),result](auto& input) mutable
-						// 		{
-						// 			//check error
-									
-						// 			// //this callback comes always from current executor, so it's not needed to launch task
-						// 			// bool repeat = p();
-						// 			// if ( !repeat )
-						// 			// {						
-						// 			// 	result.assign();
-						// 			// }
-						// 		}
-						// 		));
-						// }); 
+						auto _while = WhileImpl<Flow,Predicate,ExecutorAgent,TArg,TRet>::create(std::move(flow),std::move(p),source,result);
+						_while->execute();											
 					}else
 					{
 						launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept {  
@@ -217,7 +203,7 @@ auto flow_lambda  = [](auto source) ->auto //es un ExFuture<ExecutorAgent,const 
 						}); 
 					}
 				
-                })
+                }
             );
             return result;
 		 }
@@ -226,20 +212,26 @@ auto flow_lambda  = [](auto source) ->auto //es un ExFuture<ExecutorAgent,const 
             template <class Flow,class Predicate> struct ApplyWhile
             {
 				template <class F,class P>
-                ApplyWhile(F&& flow,P&& p):mFlow(std::forward<F>(flow),mPred(std::forward<P>(p))){}
+                ApplyWhile(F&& flow,P&& p):mFlow(std::forward<F>(flow)),mPred(std::forward<P>(p))
+				{					
+				}				
+				// ~ApplyWhile() //PARA DEPURACION
+				// {
+				// 	mel::text::info("Destructor ApplyWhile");
+				// }
                 Flow mFlow;              
 				Predicate mPred;  
 				template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
 				{
-					return doWhile(inputFut,mFlow,mPred);
+					return doWhile(inputFut,std::forward<Flow>(mFlow),std::forward<Predicate>(mPred));
 				}
             };
         }
         
-        
-    template <class Flow,class Predicate> _private::ApplyWhile<std::decay_t<Flow>,std::decay_t<Predicate>> doWhile(Flow&& flow,Predicate&& pred)
+    //template <class Flow,class Predicate> _private::ApplyWhile<std::decay_t<Flow>,std::decay_t<Predicate>> doWhile(Flow&& flow,Predicate&& pred)
+	template <class Flow,class Predicate> _private::ApplyWhile<Flow,Predicate> doWhile(Flow&& flow,Predicate&& pred)
         {
-            return _private::ApplyWhile<std::decay_t<Flow>,std::decay_t<Predicate>>(std::forward<Flow>(flow),std::forward<Predicate>(pred));
+            return _private::ApplyWhile<Flow,Predicate>(std::forward<Flow>(flow),std::forward<Predicate>(pred));
         }		 
 
 
@@ -264,11 +256,18 @@ int _testDebug(tests::BaseTest* test)
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
 	{
-		auto localFlow = [](auto input)
+		MyPepe obj;
+		obj.val = 8;
+		int cont = 0;
+//preparar buenos tests para ver copias es capturas
+
+		auto localFlow = [obj](auto input)
 		{
+			mel::text::info("Obj.val = {}. Obj = {}",obj.val,(void*)(&obj));
 			return input | next([](const string& str) noexcept->auto
-			{
+			{				
 				string result = str+ " HOLA" ;
+				mel::text::info("local flow {}",result);
 				return result;
 			}
 			);
@@ -277,20 +276,43 @@ int _testDebug(tests::BaseTest* test)
 		mel::core::waitForFutureThread(
 			execution::start(exr)
 			| execution::inmediate("Dani"s)
-			// | doWhile(localFlow,[]()
-			// 	{
-			// 		//@todo ¿deberia pasar algo al while, como un contador?
-			// 		//@todo cómo sé que el while termina? 					
-			// 		return true;	
-			// 	}
-			// )
-			// | doWhile([](auto input){
-			// 	return input | next([](const string& str) noexcept ->auto
-			// 	{
-			// 		return "HOLA"s;
-			// 	}
-			// 	);
-			// })
+			| execution::next( [](const string& s)
+				{
+					mel::text::info("Next before wait");
+					mel::tasking::Process::wait(2000);
+					mel::text::info("Next after wait");
+					return s;
+				}
+			)
+			| doWhile(
+				// [obj](auto input)
+				// {
+				// 	return input | next([](const string& str) noexcept->auto
+				// 	{				
+				// 		string result = str+ " HOLA" ;
+				// 		mel::text::info("local flow {}",result);
+				// 		return result;
+				// 	}
+				// 	);
+				// }
+				localFlow
+
+//			en msvc, el obj es como que no estuviese inicializado
+			,[cont,obj]() mutable
+				{
+					//mel::text::info("Predicado: {}, {}",cont++,obj.val++);
+					/*if ( cont < 30)
+						return true;	
+					else	
+						return false;*/
+						return true;
+					// mel::text::info("Predicado: {}",++obj.val);
+					// if ( obj.val < 30)
+					// 	return true;	
+					// else	
+					// 	return false;
+				}
+			)			
 		);
 		mel::text::info("Value = {}",res.value());
 	}

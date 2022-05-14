@@ -125,7 +125,8 @@ namespace mel
          * @return An ExFuture with type given by functor result.
          */
         template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,TArg>> 
-            next(ExFuture<ExecutorAgent,TArg> source, F&& f)
+            //next(ExFuture<ExecutorAgent,TArg> source, F&& f)
+            next(ExFuture<ExecutorAgent,TArg> source, F f)
         {                
             static_assert( std::is_invocable<F,TArg>::value, "execution::next bad functor signature");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
@@ -133,11 +134,13 @@ namespace mel
             ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                [source,f = std::forward<F>(f),result](  ValueType& input) mutable
+                //[source,f = std::forward<F>(f),result](  ValueType& input) mutable
+                [source,f = std::move(f),result](  ValueType& input) mutable
                 {       
                     if ( input.isValid() )
                     {                            
-                        source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
+                        //source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
+                        source.agent. template launch<TRet>([f=std::move(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
                         {                                          
                             return f(arg.getValue().value());                         
                         },source,result);                                                          
@@ -157,7 +160,7 @@ namespace mel
         ///@cond HIDDEN_SYMBOLS
         //overload for void arg
         template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F>> 
-            next(ExFuture<ExecutorAgent,void> source, F&& f)
+            next(ExFuture<ExecutorAgent,void> source, F f)
         {                            
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             typedef std::invoke_result_t<F> TRet;
@@ -171,13 +174,15 @@ namespace mel
                     {                                       
                         if constexpr (noexcept(f()))
                         {
-                            source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void>& arg) noexcept->TRet
+                            //source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void>& arg) noexcept->TRet
+                            source.agent. template launch<TRet>([f=std::move(f)](ExFuture<ExecutorAgent,void>& arg) noexcept->TRet
                             {                                          
                                 return f();                         
                             },source,result);
                         }else
                         {
-                            source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void>& arg)->TRet
+                            //source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,void>& arg)->TRet
+                            source.agent. template launch<TRet>([f=std::move(f)](ExFuture<ExecutorAgent,void>& arg)->TRet
                             {                                          
                                 return f();                         
                             },source,result);
@@ -364,18 +369,20 @@ namespace mel
          * value of the first exception thrown is set as error in the resulting future, so forwarding the error to the next element (if any) of the chain
          @return A ExFuture with same value as input future, whose content IS MOVED
         */
-        template <class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,TArg> parallel(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
+        template <class ExecutorAgent,class TArg,class ...FTypes> ExFuture<ExecutorAgent,TArg> parallel(ExFuture<ExecutorAgent,TArg> source, FTypes... functions)
         {
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(            
                 //@note in C++20 I could have done fs... = std::forward<FTypes>(functions)..., but not in C++17
-                [source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                //[source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                [source,result,fs = std::make_tuple(std::move(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() )
                     {
                         std::exception_ptr* except = new std::exception_ptr(nullptr);
-                        auto barrier  = source.agent.parallel(source,*except,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                        //auto barrier  = source.agent.parallel(source,*except,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                        auto barrier  = source.agent.parallel(source,*except,std::move(std::get<FTypes>(fs))...);
                         barrier.subscribeCallback(
                             std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([source,result,except](const ::mel::parallelism::BarrierData& ) mutable
                             {                 
@@ -494,19 +501,20 @@ namespace mel
          * @return A tuple with types for each functor return, in order. Returning void is not allowed
          * @note The limit in callables is because a bug in gcc < 10.2 where template overload resolution is buggy
          */
-        template <class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,typename ::mel::execution::_private::GetReturn<TArg,FTypes...>::type> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes&&... functions)
+        template <class TArg,class ExecutorAgent,class ...FTypes> ExFuture<ExecutorAgent,typename ::mel::execution::_private::GetReturn<TArg,FTypes...>::type> parallel_convert(ExFuture<ExecutorAgent,TArg> source, FTypes... functions)
         {            
             typedef typename ::mel::execution::_private::GetReturn<TArg,FTypes...>::type ResultTuple;
             static_assert(std::is_default_constructible<ResultTuple>::value,"All types returned by the input ExFutures must be DefaultConstructible");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             ExFuture<ExecutorAgent,ResultTuple> result(source.agent);
             source.subscribeCallback(            
-                [source,result,fs = std::make_tuple(std::forward<FTypes>(functions)... )](ValueType& input)  mutable
+                [source,result,fs = std::make_tuple(std::move(functions)... )](ValueType& input)  mutable
                 {
                     if ( input.isValid() ){
                         std::exception_ptr* except = new std::exception_ptr(nullptr);
                         ResultTuple* output = new ResultTuple; //para que compile
-                        auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                        //auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
+                        auto barrier  = source.agent.parallel_convert(source,*except,*output,std::move(std::get<FTypes>(fs))...);
                         barrier.subscribeCallback(
                             std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,output,except](const ::mel::parallelism::BarrierData& ) mutable
                             {      
@@ -538,7 +546,7 @@ namespace mel
          * @see ExecutorTraits
          */
         template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TArg> 
-            getExecutor(ExFuture<ExecutorAgent,TArg> source, F&& f)
+            getExecutor(ExFuture<ExecutorAgent,TArg> source, F f)
         {                
             static_assert(std::is_same<std::invoke_result_t<F,Executor<ExecutorAgent>>,void>::value,
                           "return value for callbable in 'getExecutor' must be void");
@@ -546,7 +554,7 @@ namespace mel
             ExFuture<ExecutorAgent,TArg> result(source.agent);            
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                [source,f = std::forward<F>(f),result]( ValueType& input) mutable
+                [source,f = std::move(f),result]( ValueType& input) mutable
                 {       
                     f(source.agent);
                     //result.assign(std::move(input));
@@ -581,8 +589,7 @@ namespace mel
             };
             template <class F> struct ApplyNext
             {
-                ApplyNext(F&& f):mFunc(std::move(f)){}
-                ApplyNext(const F& f):mFunc(f){}
+                template <class T> ApplyNext(T&& f):mFunc(std::forward<T>(f)){}                
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(const ExFuture<ExecutorAgent,TArg>& inputFut)
                 {
@@ -595,8 +602,10 @@ namespace mel
             };
             template <class I,class F> struct ApplyLoop
             {
-                ApplyLoop(I b, I e,F&& f,int inc):mFunc(std::move(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
-                ApplyLoop(I b, I e,const F& f,int inc):mFunc(f),begin(std::move(b)),end(std::move(e)),increment(inc){}
+                template <class T> 
+                    ApplyLoop(I b, I e,T&& f,int inc):mFunc(std::forward<T>(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
+                //ApplyLoop(I b, I e,F&& f,int inc):mFunc(std::move(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
+                //ApplyLoop(I b, I e,const F& f,int inc):mFunc(f),begin(std::move(b)),end(std::move(e)),increment(inc){}
                 F mFunc;
                 I begin;
                 I end;
@@ -619,8 +628,8 @@ namespace mel
             };
             template <class F> struct ApplyError
             {
-                ApplyError(F&& f):mFunc(std::move(f)){}
-                ApplyError(const F& f):mFunc(f){}
+                template <class T> 
+                    ApplyError(T&& f):mFunc(std::forward<T>(f)){}
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
@@ -630,8 +639,8 @@ namespace mel
             
             template <class F> struct ApplyGetExecutor
             {
-                ApplyGetExecutor(F&& f):mFunc(std::move(f)){}
-                ApplyGetExecutor(const F& f):mFunc(f){}
+                template <class T> 
+                    ApplyGetExecutor(T&& f):mFunc(std::forward<T>(f)){}                
                 F mFunc;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
@@ -670,59 +679,60 @@ namespace mel
             template < class ...FTypes> struct ApplyParallelConvert
             {
                 template <class ...Fs>
-                ApplyParallelConvert(Fs... fs):mFuncs(std::forward<FTypes>(fs)...){}
+                ApplyParallelConvert(Fs&&... fs):mFuncs(std::forward<FTypes>(fs)...){}
                 std::tuple<FTypes...> mFuncs;
                 template <class ExecutorAgent,class TArg> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
                     return parallel_convert(inputFut,std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
                 }
-            };
-           
+            };           
         }
+
+
         //@brief version for use with operator |
         template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
         {
-            return _private::ApplyInmediate<std::decay_t<TRet>>(std::forward<TRet>(arg));
+            return _private::ApplyInmediate<TRet>(std::forward<TRet>(arg));
         }
         /**
          * @brief Version for use with operator |     
          */
-        template <class NewExecutionAgent> _private::ApplyTransfer<std::decay_t<NewExecutionAgent>> transfer(Executor<NewExecutionAgent> newAgent)
+        template <class NewExecutionAgent> _private::ApplyTransfer<NewExecutionAgent> transfer(Executor<NewExecutionAgent> newAgent)
         {
-            return _private::ApplyTransfer<std::decay_t<NewExecutionAgent>>(newAgent);
+            return _private::ApplyTransfer<NewExecutionAgent>(newAgent);
         }
         
         ///@brief version for use with operator |
-        template <class F> _private::ApplyNext<std::decay_t<F>> next(F&& f)
+        template <class F> _private::ApplyNext<F> next(F&& f)
         {
-            return _private::ApplyNext<std::decay_t<F>>(std::forward<F>(f));
+            return _private::ApplyNext<F>(std::forward<F>(f));
         }
         ///@brief version for use with operator |
-        template <class I,class F> _private::ApplyLoop<I,std::decay_t<F>> loop(I&& begin, I&& end, F&& functor, int increment = 1)
+        template <class I,class F> _private::ApplyLoop<I,F> loop(I&& begin, I&& end, F&& functor, int increment = 1)
         {
-            return _private::ApplyLoop<I,std::decay_t<F>>(begin,end,std::forward<F>(functor),increment);
+            return _private::ApplyLoop<I,F>(begin,end,std::forward<F>(functor),increment);
         }
         ///@brief version for use with operator |
-        template <class ...FTypes> _private::ApplyBulk<std::decay_t<FTypes>...> parallel(FTypes&&... functions)
+        template <class ...FTypes> _private::ApplyBulk<FTypes...> parallel(FTypes&&... functions)
         {
-            return _private::ApplyBulk<std::decay_t<FTypes>...>(std::forward<FTypes>(functions)...);
+            return _private::ApplyBulk<FTypes...>(std::forward<FTypes>(functions)...);
         }
         ///@brief version for use with operator |
-        template <class F> _private::ApplyError<std::decay_t<F>> catchError(F&& f)
+        template <class F> _private::ApplyError<F> catchError(F&& f)
         {
-            return _private::ApplyError<std::decay_t<F>>(std::forward<F>(f));
-        }
-        
-        ///@brief version for use with operator |
-        template <class ...FTypes> _private::ApplyParallelConvert<std::decay_t<FTypes>...> parallel_convert(FTypes&&... functions)
-        {
-            return _private::ApplyParallelConvert<std::decay_t<FTypes>...>(std::forward<FTypes>(functions)...);
+            return _private::ApplyError<F>(std::forward<F>(f));
         }
         
         ///@brief version for use with operator |
-        template <class F> _private::ApplyGetExecutor<std::decay_t<F>> getExecutor(F&& f)
+        template <class ...FTypes> _private::ApplyParallelConvert<FTypes...> parallel_convert(FTypes&&... functions)
         {
-            return _private::ApplyGetExecutor<std::decay_t<F>>(std::forward<F>(f));
+            return _private::ApplyParallelConvert<FTypes...>(std::forward<FTypes>(functions)...);
+        }
+        
+        ///@brief version for use with operator |
+        template <class F> _private::ApplyGetExecutor<F> getExecutor(F&& f)
+        {
+            return _private::ApplyGetExecutor<F>(std::forward<F>(f));
         }
         ///@endcond
 

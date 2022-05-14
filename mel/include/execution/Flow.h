@@ -43,7 +43,7 @@ namespace mel
          * @param flows variable number of callables to choose in \p selector
          */                
         template <class ExecutorAgent,class TArg,class F,class ...Flows>
-         auto condition(ExFuture<ExecutorAgent,TArg> source, F&& selector,Flows&&... flows)
+         auto condition(ExFuture<ExecutorAgent,TArg> source, F selector,Flows... flows)
         {                
 
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
@@ -53,7 +53,7 @@ namespace mel
             ResultType result(source.agent);            
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
-                 [source,selector = std::forward<F>(selector),flows = std::make_tuple(std::forward<Flows>(flows)...),result](  ValueType& input) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)
+                 [source,selector = std::move(selector),flows = std::make_tuple(std::move(flows)...),result](  ValueType& input) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)
                 {       
                     if ( input.isValid() )
                     {  
@@ -149,9 +149,9 @@ namespace mel
         }
         
         ///@brief version for use with operator |
-        template <class F,class ...FTypes> _private::ApplyCondition<std::decay_t<F>,std::decay_t<FTypes>...> condition(F&& selector,FTypes&&... functions)
+        template <class F,class ...FTypes> _private::ApplyCondition<F,FTypes...> condition(F&& selector,FTypes&&... functions)
         {
-            return _private::ApplyCondition<std::decay_t<F>,std::decay_t<FTypes>...>(std::forward<F>(selector),std::forward<FTypes>(functions)...);
+            return _private::ApplyCondition<F,FTypes...>(std::forward<F>(selector),std::forward<FTypes>(functions)...);
         }
     }
 }

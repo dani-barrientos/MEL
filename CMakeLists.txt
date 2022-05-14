@@ -52,13 +52,14 @@ add_test(NAME RunAll COMMAND main -a)
 add_test(NAME TestCallbacks COMMAND main -t callbacks)
 add_test(NAME TestExecution.Launch COMMAND main -t execution -n 0)
 add_test(NAME TestExecution.For COMMAND main -t execution -n 1)
+add_test(NAME TestExecution.Captures COMMAND main -t execution -n 3)
 add_test(NAME TestThreading.SimpleMicrothreads COMMAND main -t threading -n 0)
 add_test(NAME TestThreading.LotsTasks COMMAND main -t threading -n 1)
 add_test(NAME TestThreading.FutureTests COMMAND main -t threading -n 2)
 add_test(NAME TestThreading.LockFree COMMAND main -t threading -n 3)
 add_test(NAME TestThreading.Exceptions COMMAND main -t threading -n 4)
 add_test(NAME TestThreading.ConcurrentPosts COMMAND main -t threading -n 3)
-set_property(TEST RunAll TestCallbacks TestExecution.Launch TestExecution.For  TestThreading.SimpleMicrothreads 
+set_property(TEST RunAll TestCallbacks TestExecution.Launch TestExecution.For TestExecution.Captures TestThreading.SimpleMicrothreads 
 TestThreading.LotsTasks TestThreading.FutureTests TestThreading.LockFree TestThreading.Exceptions TestThreading.ConcurrentPosts PROPERTY FAIL_REGULAR_EXPRESSION "${failRegex}")
 
 enable_testing() #se supone que no es necesario haciendo luego el include.., pero en algun sitio vi que también lo ponen

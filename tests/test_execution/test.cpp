@@ -18,6 +18,7 @@ using mel::tasking::Process;
 #include <execution/ThreadPoolExecutor.h>
 #include <execution/NaiveInlineExecutor.h>
 #include <execution/InlineExecutor.h>
+#include <execution/Flow.h>
 #include <vector>
 using std::vector;
 #include "test_samples.h"
@@ -740,6 +741,446 @@ int _testLaunch( tests::BaseTest* test)
 	return result;
 }
 
+template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
+{
+	#define INIT_VALUE 2
+	sCurrentTest = test;
+	//@todo cosas pendientes: chequeo de valor de cont al ejecutar lambda
+	//test launch
+	tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
+	{
+		mel::text::info("Test Launch lambda rvalue ref");
+		//first test: Passing lambda as rvalue reference and capturing object by copy
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto res = mel::core::waitForFutureThread(
+			 execution::launch(ex,[pp,cont]()
+				{
+					mel::text::info("Launch before wait. pp.val = {}, cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( mel::execution::ExecutorTraits<ExecutorType>::has_microthreading)
+						mel::tasking::Process::wait(2000);
+					else
+						mel::text::warn("Current executor hasn't microthread capabilities");
+					mel::text::info("Launch after wait. pp.val = {}, cont = {}",pp.val,cont);
+					return "HOLA"s;		
+				}
+			 )
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	{
+		mel::text::info("Test Launch lambda lvalue ref");
+		//second test: Passing lambda as lvalue reference and capturing object by copy
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto lmb = [pp,cont]()
+				{
+					mel::text::info("Launch before wait. pp.val = {}, cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( mel::execution::ExecutorTraits<ExecutorType>::has_microthreading)
+						mel::tasking::Process::wait(2000);
+					else
+						mel::text::warn("Current executor hasn't microthread capabilities");
+					mel::text::info("Launch after wait. pp.val = {}, cont = {}",pp.val,cont);
+					return "HOLA"s;		
+				};
+		auto res = mel::core::waitForFutureThread(
+			 execution::launch(ex,lmb)
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	//test next
+	{
+		mel::text::info("Test Next lambda rvalue ref");
+		//first test: Passing lambda as rvalue reference and capturing object by copy
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::next( [pp,cont](const string& s)
+				{
+					mel::text::info("Next before wait. pp.val = {}, cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( mel::execution::ExecutorTraits<ExecutorType>::has_microthreading)
+						mel::tasking::Process::wait(2000);
+					else
+						mel::text::warn("Current executor hasn't microthread capabilities");
+					mel::text::info("Next after wait. pp.val = {}, cont = {}",pp.val,cont);
+					return s;
+				}
+			) 			
+		/*	| execution::next(  [](const string& s)
+			{
+				return 5;
+			}
+			)*/
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	{
+		mel::text::info("Test next lambda lvalue ref");
+		//second test: Passing lambda as lvalue reference and capturing object by copy
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto lmb = [pp,cont](const string& s)
+				{
+					mel::text::info("Next before wait. pp.val = {}, cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( mel::execution::ExecutorTraits<ExecutorType>::has_microthreading)
+						mel::tasking::Process::wait(2000);
+					else
+						mel::text::warn("Current executor hasn't microthread capabilities");
+					mel::text::info("Next after wait. pp.val = {} cont = {}",pp.val,cont);
+					return s;
+				};		
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::next( 
+				lmb
+			) 
+		
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	//parallel
+	{
+		mel::text::info("Test Parallel lambda rvalue ref");
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		//first test: Passing lambda as rvalue reference and capturing object by copy
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::parallel( 
+				[cont](const string& s)
+				{
+					mel::text::info("Parallel t1. cont = {}",cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+				},
+				[pp,cont](const string& s)
+				{
+					mel::text::info("Parallel t2. pp.val = {} cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+				}
+			)
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	{		
+		mel::text::info("Test Parallel lambda lvalue ref");
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto lmb = [pp,cont](const string& s)
+				{
+					mel::text::info("Parallel lmb. pp.val = {} cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+				};
+
+		//second test: Passing lambda as lvalue reference and capturing object by copy
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::parallel( 
+				[cont](const string& s)
+				{
+					mel::text::info("Parallel t1. cont = {}",cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+				}
+				,
+				lmb
+			)
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	//parallel_convert
+	{
+		mel::text::info("Test Parallel_convert lambda rvalue ref");
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		//first test: Passing lambda as rvalue reference and capturing object by copy
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::parallel_convert( 
+				[cont](const string& s)
+				{
+					mel::text::info("Parallel_convert t1. cont = {}",cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					return "hola"s;
+				},
+				[pp,cont](const string& s)
+				{
+					mel::text::info("Parallel_convert t2. pp.val = {} cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					return 9.6f;
+				}
+			)
+		);	
+		mel::text::info("Value = ({} {})",std::get<0>(res.value()),std::get<1>(res.value()));
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	{		
+		mel::text::info("Test Parallel_convert lambda lvalue ref");
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto lmb = [pp,cont](const string& s)
+				{
+					mel::text::info("Parallel_convert lmb. pp.val = {} cont = {}",pp.val,cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					return 9.6f;
+				};
+
+		//second test: Passing lambda as lvalue reference and capturing object by copy
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::parallel_convert( 
+				[cont](const string& s)
+				{
+					mel::text::info("Parallel t1. cont = {}",cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					return "hola"s;
+				},
+				lmb
+			)
+		);	
+		mel::text::info("Value = ({} {})",std::get<0>(res.value()),std::get<1>(res.value()));
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	//loop
+	{
+		mel::text::info("Test Loop lambda rvalue ref");
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		//first test: Passing lambda as rvalue reference and capturing object by copy
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::loop( 0,10,
+				[cont,pp](int idx,const string& s) noexcept
+				{
+					//mel::text::info("loop cont = {}",cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+				}
+			)
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+	//loop
+	{
+		mel::text::info("Test Loop lambda lvalue ref");
+		TestClass pp(INIT_VALUE,ll);
+		int cont = INIT_VALUE;
+		auto lmb = [cont,pp](int idx,const string& s) noexcept
+				{
+					//mel::text::info("loop cont = {}",cont);
+					if ( cont != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "Cont value is "<<cont<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+					if ( pp.val != INIT_VALUE ) 
+					{
+						stringstream ss;
+						ss << "pp.val value is "<<pp.val<<" but should be "<<INIT_VALUE<<'\n';
+						sCurrentTest->setFailed(ss.str());
+					}
+				};		
+		//first test: Passing lambda as rvalue reference and capturing object by copy
+		auto res = mel::core::waitForFutureThread(
+			execution::start(ex)
+			| execution::inmediate("Dani"s)
+			| execution::loop( 0,10,
+				lmb
+			)
+		);	
+		mel::text::info("Value = {}",res.value());
+		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	}
+}
+//test copys and movements in lambda captures
+int _testCaptures( tests::BaseTest* test)
+{
+	int result = 0;
+	{
+		auto th1 = ThreadRunnable::create(true);			
+		execution::Executor<Runnable> exr(th1);
+		exr.setOpts({true,false});
+		text::info("\n\t_testCaptures with RunnableExecutor");
+		_testCapturesHelper(exr,th1.get(),test);
+		text::info("\n\tFinished _testCaptures with RunnableExecutor");
+	}
+	{
+		auto th1 = ThreadRunnable::create(true);						
+		parallelism::ThreadPool::ThreadPoolOpts opts;
+		auto myPool = make_shared<parallelism::ThreadPool>(opts);
+		parallelism::ThreadPool::ExecutionOpts exopts;
+		execution::Executor<parallelism::ThreadPool> extp(myPool);
+		extp.setOpts({true,true});
+		text::info("\n\t_testCaptures with ThreadPoolExecutor");
+		_testCapturesHelper(extp,th1.get(),test);
+		text::info("\n\tFinished _testCaptures with ThreadPoolExecutor");
+	}
+	{
+		auto th1 = ThreadRunnable::create(true);
+		execution::NaiveInlineExecutor ex;
+		text::info("\n\t_testCaptures with NaiveInlineExecutor");
+		_testCapturesHelper(ex,th1.get(),test);
+		text::info("\n\tFinished _testCaptures with NaiveInlineExecutor");
+	}
+	return result;
+
+}
 int _testAdvanceSample(tests::BaseTest* test)
 {
 	int result = 0;	
@@ -1065,6 +1506,9 @@ int TestExecution::onExecuteTest()
 				case 2:
 					result = _testAdvanceSample(this);
 					break;
+				case 3:
+					result = _testCaptures(this);
+					break;
 				default:
 				#if USE_SPDLOG
 					spdlog::warn("Test number {} doesn't exist. Executing default test",n);
@@ -1091,5 +1535,6 @@ int TestExecution::onExecuteAllTests()
 	_testLaunch(this);
 	_testAdvanceSample(this);
 	_testFor(this);
+	_testCaptures(this);
 	return 0;
 }
