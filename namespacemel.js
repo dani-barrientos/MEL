@@ -9,10 +9,10 @@ var namespacemel =
       [ "Careful with local variables and microthreads", "tasking_system.html#autotoc_md3", null ],
       [ "Careful with executing tasks in a Runnable", "tasking_system.html#autotoc_md4", null ]
     ] ],
-    [ "Introduction", "tasking_constructs.html#introduction", null ],
     [ "Futures", "tasking_constructs.html#futures", null ],
     [ "Synchronization mechanisms", "tasking_constructs.html#sync_mechanisms", null ],
     [ "Synchronized functions", "tasking_constructs.html#sync_macros", null ],
+    [ "Introduction", "execution_system.html#introduction", null ],
     [ "Usage samples", "execution_system.html#usage_samples", [
       [ "Basic sample", "execution_system.html#basic_sample", null ],
       [ "Using references", "execution_system.html#using_references", null ],
