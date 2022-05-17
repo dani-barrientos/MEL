@@ -10,7 +10,7 @@ namespace mel
     namespace execution
     {
         using mel::core::Future;
-        template <class ExecutorAgent> class Executor; //predeclarationj
+        template <class ExecutorAgent> class Executor; //predeclarationj       
         /**
          * @brief Extension of \ref mel::core::Future to apply to executors
          * @details Any executor function will return an ExFuture, allowing this way to chain functions
@@ -19,19 +19,19 @@ namespace mel
         class ExFuture : public Future<ResultType>
         {
             public:
-                ExFuture(const ExFuture& ob):Future<ResultType>(ob),agent(ob.agent){}
-                ExFuture(ExFuture&& ob):Future<ResultType>(std::move(ob)),agent(std::move(ob.agent)){}
-                ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}
+                ExFuture(const ExFuture& ob) noexcept :Future<ResultType>(ob),agent(ob.agent){}
+                ExFuture(ExFuture&& ob) noexcept :Future<ResultType>(std::move(ob)),agent(std::move(ob.agent)){}
+                ExFuture(Executor<ExecutorAgent> aEx) noexcept:agent(aEx){}
                 ExFuture(Executor<ExecutorAgent> aEx,const ResultType& val):Future<ResultType>(val),agent(aEx){}
                 ExFuture(Executor<ExecutorAgent> aEx,ResultType&& val):Future<ResultType>(std::move(val)),agent(aEx){}
             
-                ExFuture& operator= ( const ExFuture& f )
+                ExFuture& operator= ( const ExFuture& f ) noexcept
                 {
                     Future<ResultType>::operator=( f );
                     agent = f.agent;
                     return *this;
                 };
-                ExFuture& operator= ( ExFuture&& f )
+                ExFuture& operator= ( ExFuture&& f ) noexcept
                 {
                     Future<ResultType>::operator=( std::move(f));
                     agent = std::move(f.agent);

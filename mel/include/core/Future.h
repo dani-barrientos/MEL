@@ -465,25 +465,25 @@ namespace mel
 			{
 			protected:
 				std::shared_ptr<FutureDataContainer> mData;
-				Future_Base():mData(nullptr){};
+				Future_Base() noexcept :mData(nullptr){};
 
 			public:
 				
-				Future_Base( const Future_Base& f )
+				Future_Base( const Future_Base& f ) noexcept 
 				{
 					mData = f.mData; 
 				};
-				Future_Base( Future_Base&& f )
+				Future_Base( Future_Base&& f ) noexcept 
 				{
 					mData = std::move(f.mData); 
 				};
 			
-				Future_Base& operator= ( const Future_Base& f )
+				Future_Base& operator= ( const Future_Base& f ) noexcept 
 				{
 					mData = f.mData;
 					return *this;
 				};		
-				Future_Base& operator= (  Future_Base&& f )
+				Future_Base& operator= (  Future_Base&& f ) noexcept 
 				{
 					mData = std::move(f.mData);
 					return *this;
@@ -491,16 +491,16 @@ namespace mel
 				/**
 				* return if data is valid
 				*/
-				inline bool getValid() const
+				inline bool getValid() const noexcept 
 				{
 					return mData->getPtr()->getValid();
 				}
-				inline EFutureState getState() const
+				inline EFutureState getState() const noexcept 
 				{
 					return mData->getPtr()->getState();
 				}
 				//Check if given future points to same data
-				inline bool operator == ( const Future_Base& f ) const{ return mData == f.mData; };
+				inline bool operator == ( const Future_Base& f ) const noexcept { return mData == f.mData; };
 						
 			};
 			
@@ -518,7 +518,7 @@ namespace mel
 		///@endcond
 		{
 		protected:
-			Future_Common()
+			Future_Common() 
 			{
 				mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>());
 			};
@@ -583,14 +583,14 @@ namespace mel
 			{
 				return const_cast<Future_Common<T>*>(this)->getData().unsubscribeCallback( id );
 			}
-			Future_Common( const Future_Common& f ): _private::Future_Base( f ){}
-			Future_Common( Future_Common&& f ): _private::Future_Base( std::move(f) ){}
-			Future_Common& operator= ( const Future_Common& f )
+			Future_Common( const Future_Common& f ) noexcept : _private::Future_Base( f ){}
+			Future_Common( Future_Common&& f ) noexcept: _private::Future_Base( std::move(f) ){}
+			Future_Common& operator= ( const Future_Common& f ) noexcept
 			{
 				_private::Future_Base::operator=(f);
 				return *this;
 			};		
-			Future_Common& operator= (  Future_Common&& f )
+			Future_Common& operator= (  Future_Common&& f ) noexcept
 			{
 				_private::Future_Base::operator=( std::move(f));
 				return *this;
@@ -616,9 +616,9 @@ namespace mel
 		{
 		public:
 			typedef typename _private::FutureData<T>::ValueType ValueType;
-			Future(){};
-			Future( const Future& f ):Future_Common<T>(f){};
-			Future( Future&& f ):Future_Common<T>(std::move(f)){};
+			Future() noexcept{};
+			Future( const Future& f ) noexcept:Future_Common<T>(f){};
+			Future( Future&& f ) noexcept:Future_Common<T>(std::move(f)){};
 			Future(const T& val)
 			{
 				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>(val));				
@@ -627,12 +627,12 @@ namespace mel
 			{
 				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T>>(std::move(val)));				
 			}
-			Future& operator= ( const Future& f )
+			Future& operator= ( const Future& f ) noexcept
 			{
 				Future_Common<T>::operator=(f);
 				return *this;
 			};		
-			Future& operator= (  Future&& f )
+			Future& operator= (  Future&& f ) noexcept
 			{
 				Future_Common<T>::operator=(f);
 				return *this;
@@ -654,19 +654,19 @@ namespace mel
 		{
 		public:
 			typedef typename _private::FutureData<T&>::ValueType ValueType;
-			Future(){};
-			Future( const Future& f ):Future_Common<T&>(f){};
-			Future( Future&& f ):Future_Common<T&>(std::move(f)){};
+			Future() noexcept{};
+			Future( const Future& f ) noexcept :Future_Common<T&>(f){};
+			Future( Future&& f ) noexcept :Future_Common<T&>(std::move(f)){};
 			Future(T& val)
 			{
 				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<T&>>(val));
 			}
-			Future& operator= ( const Future& f )
+			Future& operator= ( const Future& f ) noexcept
 			{
 				Future_Common<T&>::operator=(f);
 				return *this;
 			};		
-			Future& operator= (  Future&& f )
+			Future& operator= (  Future&& f ) noexcept
 			{
 				Future_Common<T&>::operator=(std::move(f));
 				return *this;
@@ -689,21 +689,21 @@ namespace mel
 		{
 		public:
 			typedef typename _private::FutureData<void>::ValueType ValueType;
-			Future(){};
+			Future() noexcept{};
 			//fake initializacion to indicate we want to initialize as valid
-			Future(int a)
+			Future(int a) noexcept
 			{
 //				_private::Future_Base::mData = std::make_shared<_private::FutureData<void>>(a);
 				_private::Future_Base::mData = std::make_shared<_private::FutureDataContainer>( std::make_shared<_private::FutureData<void>>(a));
 			};
-			Future(const Future& f):Future_Common<void>(f){};	
-			Future(Future&& f):Future_Common<void>(std::move(f)){};	
-			Future& operator= ( const Future& f )
+			Future(const Future& f) noexcept:Future_Common<void>(f){};	
+			Future(Future&& f) noexcept:Future_Common<void>(std::move(f)){};	
+			Future& operator= ( const Future& f ) noexcept
 			{
 				Future_Common<void>::operator=(f);
 				return *this;
 			};		
-			Future& operator= (  Future&& f )
+			Future& operator= (  Future&& f ) noexcept
 			{
 				Future_Common<void>::operator=(std::move(f));
 				return *this;

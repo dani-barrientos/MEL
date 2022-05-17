@@ -256,6 +256,9 @@ int _testDebug(tests::BaseTest* test)
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
 	{
+// @todo retomar el tema del while, sin mirar lo de las capturas y ya meterlo en los tests normales luego donde se chequeará
+// me queda decidir bien qué recibe el flujo y qué recibe el selector
+
 		MyPepe obj;
 		obj.val = 8;
 		int cont = 0;
@@ -272,19 +275,69 @@ int _testDebug(tests::BaseTest* test)
 			}
 			);
 		};
-		auto res = 
-		mel::core::waitForFutureThread(
+		auto cond1 = [](auto input) noexcept
+		{
+			//throw std::runtime_error("Error en cond1");// ojo que mi idea era lanzar excepcion como parte del flujo
+			return input | execution::inmediate("condition1"s);
+		};	
+		auto cond2 = [](auto input) noexcept
+		{
+			return input | execution::inmediate("condition2"s) 
+			
+			//msvc < 19.31 has bug in lambda processing and using directly std::exception_ptr raises compilation error
+			| execution::catchError( [](const std::exception_ptr& err) noexcept
+			{
+				//rethrow_exception(err);
+				return "err1";
+			})
+			//si no pongo esto el catchError provoca problemas al ejecutar el flujo.¿¿??
+			| execution::next( [](const string& s)
+			{
+				return s;
+			})
+			;
+		};
+		
+		// auto lNext = [](const string& s) noexcept
+		// 		{
+		// 			mel::text::info("Next before wait");
+		// 			mel::tasking::Process::wait(2000);
+		// 			mel::text::info("Next after wait");
+		// 			return s;
+		// 		};
+		auto lPar = [](auto s) noexcept
+		{
+			mel::text::info("par {}",s);
+		};
+		auto res = 	mel::core::waitForFutureThread(
 			execution::start(exr)
 			| execution::inmediate("Dani"s)
-			| execution::next( [](const string& s)
+			| execution::next(
+				 [](const string& s) noexcept
 				{
 					mel::text::info("Next before wait");
 					mel::tasking::Process::wait(2000);
 					mel::text::info("Next after wait");
 					return s;
 				}
+				//lNext
 			)
-			| doWhile(
+			| execution::parallel( 
+				lPar,
+				[](const string& s)
+				{
+					mel::text::info("Par2");
+				}
+			)
+			| mel::execution::condition(
+						[](const string& v) noexcept
+						{
+							text::info("condition {}",v);
+							return 1;
+						},
+						cond1,cond2
+					)			
+			/*| doWhile(
 				// [obj](auto input)
 				// {
 				// 	return input | next([](const string& str) noexcept->auto
@@ -297,133 +350,131 @@ int _testDebug(tests::BaseTest* test)
 				// }
 				localFlow
 
-//			en msvc, el obj es como que no estuviese inicializado
 			,[cont,obj]() mutable
 				{
 					//mel::text::info("Predicado: {}, {}",cont++,obj.val++);
-					/*if ( cont < 30)
+					if ( cont < 30)
 						return true;	
 					else	
-						return false;*/
-						return true;
+						return false;
 					// mel::text::info("Predicado: {}",++obj.val);
 					// if ( obj.val < 30)
 					// 	return true;	
 					// else	
 					// 	return false;
 				}
-			)			
+			)	*/		
 		);
 		mel::text::info("Value = {}",res.value());
 	}
-	{		
-		auto flow_lambda_local = [](auto source) ->auto //es un ExFuture<ExecutorAgent,string>    can only be templated in C++ 20
-		{
-			return execution::next(source, [](const string& val) noexcept
-			{
+	// {		
+	// 	auto flow_lambda_local = [](auto source) ->auto //es un ExFuture<ExecutorAgent,string>    can only be templated in C++ 20
+	// 	{
+	// 		return execution::next(source, [](const string& val) noexcept
+	// 		{
 				
-				::mel::text::info("Flow launch");
-				return val + " flow_lambda_local";
-			})
-			| execution::loop(0,10,[](int idx, const string& str)
-			{
-				::mel::text::info("Flow launch loop {}",idx);
-			})
-			| execution::catchError( [](std::exception_ptr err)
-				{
-					return "flow_lambda_local catch error"s;
-				}
-			)
-			| execution::next( []( string str)
-			{
-				return "Next"s;
-			}
-			)
-			;
-		};
+	// 			::mel::text::info("Flow launch");
+	// 			return val + " flow_lambda_local";
+	// 		})
+	// 		| execution::loop(0,10,[](int idx, const string& str)
+	// 		{
+	// 			::mel::text::info("Flow launch loop {}",idx);
+	// 		})
+	// 		| execution::catchError( [](std::exception_ptr err)
+	// 			{
+	// 				return "flow_lambda_local catch error"s;
+	// 			}
+	// 		)
+	// 		| execution::next( []( string str)
+	// 		{
+	// 			return "Next"s;
+	// 		}
+	// 		)
+	// 		;
+	// 	};
 	
-		auto cond1 = [](auto input) noexcept
-		{
-			//throw std::runtime_error("Error en cond1");// ojo que mi idea era lanzar excepcion como parte del flujo
-			return input | execution::inmediate(1.5f) 
-			/*| execution::next([](float) ->float
-			{
-				throw std::runtime_error("Error en next de cond1");			
-			}
-			)*/
-			;
-		};
-		auto cond2 = [](auto input) noexcept
-		{
-			return input | execution::inmediate(2.5f) 
-			//msvc < 19.31 has bug in lambda processing and using directly std::exception_ptr raises compilation error
-			| execution::catchError( [](const std::exception_ptr& err) noexcept
-			{
-				//rethrow_exception(err);
-				return 3.5f;
-			})
-			| execution::catchError( [](auto err) noexcept
-			{
-				return 3.5f;
-			})
-			;
-		};
+	// 	auto cond1 = [](auto input) noexcept
+	// 	{
+	// 		//throw std::runtime_error("Error en cond1");// ojo que mi idea era lanzar excepcion como parte del flujo
+	// 		return input | execution::inmediate(1.5f) 
+	// 		/*| execution::next([](float) ->float
+	// 		{
+	// 			throw std::runtime_error("Error en next de cond1");			
+	// 		}
+	// 		)*/
+	// 		;
+	// 	};
+	// 	auto cond2 = [](auto input) noexcept
+	// 	{
+	// 		return input | execution::inmediate(2.5f) 
+	// 		//msvc < 19.31 has bug in lambda processing and using directly std::exception_ptr raises compilation error
+	// 		| execution::catchError( [](const std::exception_ptr& err) noexcept
+	// 		{
+	// 			//rethrow_exception(err);
+	// 			return 3.5f;
+	// 		})
+	// 		| execution::catchError( [](auto err) noexcept
+	// 		{
+	// 			return 3.5f;
+	// 		})
+	// 		;
+	// 	};
 
-		auto futres = execution::launch(exr,[]()
-			{
-				//throw "error";
-				return 1.8f;
-			}		
-		) 
-	//	| createFlow(flow1_2) _> el problema de esto es que los flows son templates (o auto con lambda, pero ya vi que da problemas)
-		;
+	// 	auto futres = execution::launch(exr,[]()
+	// 		{
+	// 			//throw "error";
+	// 			return 1.8f;
+	// 		}		
+	// 	) 
+	// //	| createFlow(flow1_2) _> el problema de esto es que los flows son templates (o auto con lambda, pero ya vi que da problemas)
+	// 	;
 		
-		try
-		{
-			auto res = mel::core::waitForFutureThread(
-				flow_template(futres) //como es template no puedo hacerlo de otra forma???
-				| execution::next( [](const string& str)
-					{
-						//throw std::runtime_error("Error!!. hola amigos");
-						return str + " dani";		
-					}
-				)
-				| flow_lambda
-				| [](auto input)
-					{						
-						return input
-						| mel::execution::next( [](const string& v){return v + " Carrera";}
-						)
-						| mel::execution::catchError( [](std::exception_ptr err) noexcept(true) ->string
-							{
-								//rethrow_exception(err);
-								//throw std::runtime_error("Error!!. hola amigos 2");
-								return "catchError!!!";
-							})
-						;
-					}				
-				| mel::execution::condition(
-						[](const string& v)
-						{
-							text::info("condition {}",v);
-							return 0;
-						},
-						cond1,cond2
-					)
-			);				
-			mel::text::info("Result = {}",res.value());
-		}
-		catch(std::exception& e)
-		{
-			mel::text::info("ERROR. Cause = {}",e.what());
-		}
-		catch(...)
-		{
-			mel::text::info("ERROR");
-		}
-		mel::text::info("FIN");
-		return 0;
-	}
+	// 	try
+	// 	{
+	// 		auto res = mel::core::waitForFutureThread(
+	// 			flow_template(futres) //como es template no puedo hacerlo de otra forma???
+	// 			| execution::next( [](const string& str)
+	// 				{
+	// 					//throw std::runtime_error("Error!!. hola amigos");
+	// 					return str + " dani";		
+	// 				}
+	// 			)
+	// 			| flow_lambda
+	// 			| [](auto input)
+	// 				{						
+	// 					return input
+	// 					| mel::execution::next( [](const string& v){return v + " Carrera";}
+	// 					)
+	// 					| mel::execution::catchError( [](std::exception_ptr err) noexcept(true) ->string
+	// 						{
+	// 							//rethrow_exception(err);
+	// 							//throw std::runtime_error("Error!!. hola amigos 2");
+	// 							return "catchError!!!";
+	// 						})
+	// 					;
+	// 				}				
+	// 			| mel::execution::condition(
+	// 					[](const string& v)
+	// 					{
+	// 						text::info("condition {}",v);
+	// 						return 0;
+	// 					},
+	// 					cond1,cond2
+	// 				)
+	// 		);				
+	// 		mel::text::info("Result = {}",res.value());
+	// 	}
+	// 	catch(std::exception& e)
+	// 	{
+	// 		mel::text::info("ERROR. Cause = {}",e.what());
+	// 	}
+	// 	catch(...)
+	// 	{
+	// 		mel::text::info("ERROR");
+	// 	}
+	// 	mel::text::info("FIN");
+	// 	return 0;
+	// }
 
 	
 
