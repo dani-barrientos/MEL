@@ -86,7 +86,15 @@ $(document).ready(function(){initNavTree('execution_flows.html',''); initResizab
 <div class="title">Work flows </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>It's possible to create independent work flows to reuse then or apply them at functions as <a class="el" href="namespacemel_1_1execution.html#a22648cdccf57285e054561edf32bc84b">condition</a>. This is very simple thanks to <em>generic lambdas</em>. The lambda or callable used as a flow will receive an <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a> which serves as the input of any other <em>execution</em> function. Let's start with a simple example, definign two flows: </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlows1(ExecutorType ex)</div>
+<div class="textblock"><ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#conditions">Conditions</a></li>
+<li><a href="#loops">Loops</a></li>
+<li><a href="#flow_chart">Flow chart example</a></li>
+</ul>
+<h3><a class="anchor" id="introduction"></a>
+Introduction</h3>
+<p>It's possible to create independent work flows to reuse then or apply them at functions as condition. This is very simple thanks to <em>generic lambdas</em>. The lambda or callable used as a flow will receive an <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a> which serves as the input of any other <em>execution</em> function. Let's start with a simple example, defining two flows: </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlows1(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>
@@ -142,10 +150,11 @@ $(document).ready(function(){initNavTree('execution_flows.html',''); initResizab
 <div class="line">        </div>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> Output will be: </p><pre class="fragment">Result = Hello Dani Barrientos. Byt!!
-</pre> <h3><a class="anchor" id="autotoc_md2"></a>
+</div><!-- fragment --><p> Output will be: </p><pre class="fragment">Result = Hello Dani Barrientos. Bye!!
+</pre> <h3><a class="anchor" id="conditions"></a>
 Conditions</h3>
-<p>Besides creating flows for reusability, one important use is for <a class="el" href="namespacemel_1_1execution.html#a22648cdccf57285e054561edf32bc84b">conditions</a>, which are the equivalent to a normal <em>switch</em>, such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number. </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowsCondition(ExecutorType ex)</div>
+<p>Besides creating flows for reusability, one important use is for conditions, which are the equivalent to a normal <em>switch</em>, such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number. Both flows are written as lambas local to the function, but any other callbable could be used or lambdas written inline in the code, it's shown this way for clarity.</p>
+<div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowsCondition(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>
@@ -212,7 +221,70 @@ Conditions</h3>
 <div class="line">}</div>
 </div><!-- fragment --><p> And the output, in a concrete execution, is: </p><pre class="fragment">Input value = 3. Selecting flow 0
 Result = Flow0 End!
-</pre> </div></div><!-- contents -->
+</pre><h3><a class="anchor" id="loops"></a>
+Loops</h3>
+<p>It's possible to implement iterations as part of an execution flow. This concept shouldn't be confused with <a class="el" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a> which execute independent iterations in a, possibly, parallel way. The concept introduced here referes to sequential iterations,</p>
+<p>This way we can implement non-lineal work flows.</p>
+<p>In the next example, a loop creating a random number and showing it in console is reapeated 4 times, doing a <em>microthread wait</em> in each iteration (if used executor allows it) </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleWhile(ExecutorType ex)</div>
+<div class="line">{   </div>
+<div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
+<div class="line"> </div>
+<div class="line">    th-&gt;fireAndForget([ex] () <span class="keyword">mutable</span></div>
+<div class="line">    {</div>
+<div class="line">        srand(time(NULL));</div>
+<div class="line">        <span class="keywordtype">int</span> idx = 0;</div>
+<div class="line">        <span class="keyword">auto</span> res = mel::tasking::waitForFutureMThread&lt;::mel::core::WaitErrorNoException&gt;(</div>
+<div class="line">                execution::start(ex)</div>
+<div class="line">                | execution::doWhile( </div>
+<div class="line">                    []( <span class="keyword">auto</span> input ) noexcept</div>
+<div class="line">                    {</div>
+<div class="line">                        <span class="keywordflow">return</span> input | execution::next( []() noexcept -&gt; <span class="keywordtype">int</span></div>
+<div class="line">                        {</div>
+<div class="line">                            <span class="keywordflow">return</span> rand()%10;</div>
+<div class="line">                        })</div>
+<div class="line">                        | execution::next( [](<span class="keywordtype">int</span> v ) noexcept</div>
+<div class="line">                        {</div>
+<div class="line">                            mel::text::info(<span class="stringliteral">&quot; new value = {}&quot;</span>,v);</div>
+<div class="line">                            <span class="keywordflow">if</span> constexpr(execution::ExecutorTraits&lt;decltype(ex)&gt;::has_microthreading)</div>
+<div class="line">                            {</div>
+<div class="line">                                <a class="code" href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a>(2500);</div>
+<div class="line">                            }</div>
+<div class="line">                            <span class="keywordflow">else</span></div>
+<div class="line">                                mel::text::info(<span class="stringliteral">&quot;Current executor supports true parallelism. wait not done&quot;</span>);</div>
+<div class="line">                        });</div>
+<div class="line">                    },</div>
+<div class="line">                    [idx]() <span class="keyword">mutable</span> noexcept</div>
+<div class="line">                    {</div>
+<div class="line">                        <span class="keywordflow">if</span> ( ++idx == 4 )</div>
+<div class="line">                            <span class="keywordflow">return</span> <span class="keyword">false</span>; <span class="comment">//finish while</span></div>
+<div class="line">                        <span class="keywordflow">else</span></div>
+<div class="line">                            <span class="keywordflow">return</span> <span class="keyword">true</span>; <span class="comment">//continue iterating</span></div>
+<div class="line">                    }</div>
+<div class="line">                </div>
+<div class="line">            )                       </div>
+<div class="line">        );</div>
+<div class="line">        <span class="keywordflow">if</span> ( res.isValid())</div>
+<div class="line">        {</div>
+<div class="line">            text::info(<span class="stringliteral">&quot;Finished&quot;</span>);</div>
+<div class="line">        }<span class="keywordflow">else</span></div>
+<div class="line">        {</div>
+<div class="line">            <span class="keywordflow">try</span></div>
+<div class="line">            {</div>
+<div class="line">                std::rethrow_exception(res.error());                </div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">catch</span>(...)</div>
+<div class="line">            {</div>
+<div class="line">                ::text::error(<span class="stringliteral">&quot;Some error occured!!&quot;</span>);</div>
+<div class="line">            }</div>
+<div class="line">        }</div>
+<div class="line">        </div>
+<div class="line">    },0,::tasking::Runnable::killFalse);</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassmel_1_1tasking_1_1_process_html_ae3350d1645cca8cb94f65b1b85dff032"><div class="ttname"><a href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a></div><div class="ttdeci">static ESwitchResult wait(unsigned int msegs) OPTIMIZE_FLAGS</div></div>
+</div><!-- fragment --><h3><a class="anchor" id="flow_chart"></a>
+Flow chart example</h3>
+<p>TODO PONER UN EJEMPLO PITNANDO UN DIAGRAMA DE FLUJO EN IMPLEMENTARLO </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -1,6 +1,7 @@
 var classmel_1_1execution_1_1_ex_future =
 [
     [ "ValueType", "classmel_1_1execution_1_1_ex_future.html#ae85824bce69cca95c890f3ca9d667914", null ],
+    [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a891d5e09de051e8cdfb1d66ccfce1bdc", null ],
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a059d977e764564883a03cd4e95cbda67", null ],
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#af0264c990fd840082ad4c9fc1ac26ba9", null ],
     [ "ExFuture", "classmel_1_1execution_1_1_ex_future.html#a2fd1ac9d2b51940a194f10753c8aeac4", null ],

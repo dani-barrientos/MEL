@@ -39,9 +39,20 @@ var annotated_dup =
           [ "GetReturn< TArg, F1, F2, F3, F4, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f3a08b3c776b7b4829345a121c0899650.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f3a08b3c776b7b4829345a121c0899650" ],
           [ "GetReturn< TArg, F1, F2, F3, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01vocb782d2ef4503bd281f5758cc1c073de.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01vocb782d2ef4503bd281f5758cc1c073de" ],
           [ "GetReturn< TArg, F1, F2, void, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01void_00_01v47d8d39fddceea3dd79d78b2374dc3ab.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01void_00_01v47d8d39fddceea3dd79d78b2374dc3ab" ],
-          [ "GetReturn< TArg, F1, void, void, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01void_00_01void_00_01e51a8201ae6b8fbfd4aa455a9ea973fb.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01void_00_01void_00_01e51a8201ae6b8fbfd4aa455a9ea973fb" ],
-          [ "ApplyCondition", "structmel_1_1execution_1_1__private_1_1_apply_condition.html", "structmel_1_1execution_1_1__private_1_1_apply_condition" ]
+          [ "GetReturn< TArg, F1, void, void, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01void_00_01void_00_01e51a8201ae6b8fbfd4aa455a9ea973fb.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01void_00_01void_00_01e51a8201ae6b8fbfd4aa455a9ea973fb" ]
         ] ],
+        [ "flow", null, [
+          [ "_private", null, [
+            [ "ApplyCondition", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition" ],
+            [ "ApplyLaunch", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch" ],
+            [ "WhileImpl", "classmel_1_1execution_1_1flow_1_1__private_1_1_while_impl.html", "classmel_1_1execution_1_1flow_1_1__private_1_1_while_impl" ],
+            [ "ApplyWhile", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while" ]
+          ] ],
+          [ "FlowsResult", "structmel_1_1execution_1_1flow_1_1_flows_result.html", "structmel_1_1execution_1_1flow_1_1_flows_result" ]
+        ] ],
+        [ "VoidType", "structmel_1_1execution_1_1_void_type.html", null ],
+        [ "WrapperType", "structmel_1_1execution_1_1_wrapper_type.html", "structmel_1_1execution_1_1_wrapper_type" ],
+        [ "WrapperType< void >", "structmel_1_1execution_1_1_wrapper_type_3_01void_01_4.html", "structmel_1_1execution_1_1_wrapper_type_3_01void_01_4" ],
         [ "Executor", "classmel_1_1execution_1_1_executor.html", null ],
         [ "ExecutorTraits", "structmel_1_1execution_1_1_executor_traits.html", null ],
         [ "OnAllException", "classmel_1_1execution_1_1_on_all_exception.html", "classmel_1_1execution_1_1_on_all_exception" ],

@@ -338,134 +338,144 @@ $(document).ready(function(){initNavTree('_runnable_8h_source.html',''); initRes
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;            KF&amp;&amp; killFunction,</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;            <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> period,<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> startTime )</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        {</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;            ::std::shared_ptr&lt;GenericProcess&gt; p(AllocatorType::allocate(<span class="keyword">this</span>));         </div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;            p-&gt;setProcessCallback( ::std::forward&lt;F&gt;(task_proc) );</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;            p-&gt;setPeriod( period );</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;            p-&gt;setKillCallback( ::std::forward&lt;KF&gt;(killFunction) );</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;            <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a775fa406358dc7b798116ab68473c037">postTask</a>(p,startTime);</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;            <span class="keywordflow">return</span> p;   </div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        }</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> AllocatorType, <span class="keyword">class</span> F,<span class="keyword">class</span> KF&gt;</div>
-<div class="line"><a name="l00366"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">  366</a></span>&#160;            std::shared_ptr&lt;Process&gt; <a class="code" href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">Runnable::fireAndForget</a>(</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;                F&amp;&amp; task_proc,</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> startTime,</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;                KF&amp;&amp; killFunction)</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;        {   </div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            <span class="keywordflow">return</span> post&lt;AllocatorType&gt;(</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                [f=std::forward&lt;F&gt;(task_proc)](RUNNABLE_TASK_PARAMS) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                {</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;                    f();</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;                    return ::mel::tasking::EGenericProcessResult::KILL;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;                }</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;                ,std::forward&lt;KF&gt;(killFunction),0,startTime</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;            );</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;            </div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;        }</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160; </div>
-<div class="line"><a name="l00382"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">  382</a></span>&#160;        <span class="keyword">const</span> <a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html">ProcessScheduler</a>&amp; <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">Runnable::getScheduler</a>()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;<span class="keyword">        </span>{</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;            <span class="keywordflow">return</span> mTasks;</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        }</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        <a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html">ProcessScheduler</a>&amp; <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">Runnable::getScheduler</a>() </div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;        {</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;            <span class="keywordflow">return</span> mTasks;</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;        }</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;        <span class="keyword">const</span> std::shared_ptr&lt;Timer&gt; Runnable::getTimer( )<span class="keyword"> const</span></div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;<span class="keyword">        </span>{</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;            <span class="keywordflow">return</span> mTasks.<a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html#a202c4554a7ee53abfcbbf3a0e774cf5b">getTimer</a>();</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        }</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;        std::shared_ptr&lt;Timer&gt; Runnable::getTimer( )</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        {</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;            <span class="keywordflow">return</span> mTasks.<a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html#a202c4554a7ee53abfcbbf3a0e774cf5b">getTimer</a>();</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;        }</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        </div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet, <span class="keyword">class</span> F,<span class="keyword">class</span> KF&gt; </div>
-<div class="line"><a name="l00400"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">  400</a></span>&#160;        <a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">Runnable::execute</a>( F&amp;&amp; <span class="keyword">function</span>,KF&amp;&amp; killFunction) noexcept</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;        {</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;            <a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> future;    </div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;            <span class="keywordflow">return</span> execute(std::forward&lt;F&gt;(<span class="keyword">function</span>),future,std::forward&lt;KF&gt;(killFunction));        </div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        }</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet, <span class="keyword">class</span> F,<span class="keyword">class</span> KF&gt; </div>
-<div class="line"><a name="l00412"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#acb42def1c0524e42f9e6a33f3fabfdfb">  412</a></span>&#160;        <a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">Runnable::execute</a>( F&amp;&amp; f,<a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> output,KF&amp;&amp; killFunction) noexcept</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;        {</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;            <span class="comment">//always post the task, despite being in same thread. This is the most consistent way of doing it</span></div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160; </div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;        <span class="comment">//PRUEBAS</span></div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;            <span class="comment">// try</span></div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;            <span class="comment">// {</span></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;            <span class="comment">//  if constexpr (std::is_same&lt;void,TRet&gt;::value)</span></div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;            <span class="comment">//  {</span></div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;            <span class="comment">//      f();</span></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;            <span class="comment">//      output.setValue();</span></div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;            <span class="comment">//  }</span></div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;            <span class="comment">//  else</span></div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;            <span class="comment">//      output.setValue(f());</span></div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;            <span class="comment">// }</span></div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;            <span class="comment">// //check chances of Exception</span></div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;            <span class="comment">// catch( std::exception&amp; e )</span></div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;            <span class="comment">// {                    </span></div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;            <span class="comment">//  output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );   </span></div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;            <span class="comment">// }</span></div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;            <span class="comment">// catch(...)</span></div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;            <span class="comment">// {</span></div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;                </div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;            <span class="comment">//  output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,&quot;Unknown exception&quot;) );    </span></div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160; </div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;            <span class="comment">// }</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;            </div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;            post(</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;                [output,f = std::forward&lt;F&gt;(f)](RUNNABLE_TASK_PARAMS) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;                {</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;                    <span class="keywordflow">if</span> constexpr (noexcept(f()))</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;                    {</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;                        <span class="keywordflow">if</span> constexpr (std::is_same&lt;void,TRet&gt;::value)</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                        {</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;                            f();</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;                            output.setValue();</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;                        }</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;                        <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;                        {</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;                            output.setValue(f());</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;                        }</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;                    }<span class="keywordflow">else</span></div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;                    {</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;                        <span class="keywordflow">try</span> </div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;                        {</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                            <span class="keywordflow">if</span> constexpr (std::is_same&lt;void,TRet&gt;::value)</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;                            {</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;                                f();</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;                                output.setValue();</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;                            }</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;                            <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;                            {</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;                                output.setValue(f());</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;                            }</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;                        }</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;                        <span class="keywordflow">catch</span>(...)</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;                        {</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;                            <span class="comment">//output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,&quot;Unknown exception&quot;) );  </span></div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;                            output.setError( std::current_exception() );    </div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;                        }</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;                    }</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                    <span class="comment">/*</span></div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<span class="comment">                    //check chances of Exception</span></div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<span class="comment">                    catch( std::exception&amp; e )</span></div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;<span class="comment">                    {                   </span></div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;<span class="comment">                        output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );                       </span></div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;<span class="comment">                    }*/</span></div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;                    </div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;                    return ::mel::tasking::EGenericProcessResult::KILL;</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;                },std::forward&lt;KF&gt;(killFunction)        </div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;            );</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;            </div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;        </div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;            <span class="keywordflow">return</span> output;</div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;        }                       </div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;        </div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;    }</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;}</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;            <span class="comment">//@todo para pruebas. Sacaré mejor un warning</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;            <span class="keywordflow">if</span> constexpr ( std::is_nothrow_invocable&lt;F,uint64_t,Process*&gt;::value) </div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;            {</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;                <span class="comment">//@todo continuar con este temaeste warning no me muestra la variable               </span></div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;            <span class="comment">//  char Runnable_post_task_should_be_noexcept = 300;//&quot;Runnable::post. Task must be noexcept&quot;);</span></div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;                <span class="comment">//problema, quiero que saque warning. Una solucion podria ser tener una sobrecarga del post o un parámetro para que ignore el noexcept</span></div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160; </div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;            }</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;            <span class="comment">//static_assert( std::is_nothrow_invocable&lt;F,uint64_t,Process*&gt;::value,&quot;Runnable::post. Task must be noexcept&quot;);</span></div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;            ::std::shared_ptr&lt;GenericProcess&gt; p(AllocatorType::allocate(<span class="keyword">this</span>));         </div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;            p-&gt;setProcessCallback( ::std::forward&lt;F&gt;(task_proc) );</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;            p-&gt;setPeriod( period );</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;            p-&gt;setKillCallback( ::std::forward&lt;KF&gt;(killFunction) );</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a775fa406358dc7b798116ab68473c037">postTask</a>(p,startTime);</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;            <span class="keywordflow">return</span> p;   </div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;        }</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> AllocatorType, <span class="keyword">class</span> F,<span class="keyword">class</span> KF&gt;</div>
+<div class="line"><a name="l00375"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">  375</a></span>&#160;            std::shared_ptr&lt;Process&gt; <a class="code" href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">Runnable::fireAndForget</a>(</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;                F&amp;&amp; task_proc,</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> startTime,</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                KF&amp;&amp; killFunction)</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        {   </div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;            <span class="comment">//static_assert( std::is_nothrow_invocable&lt;F&gt;::value,&quot;Runnable::fireAndForget. Task must be noexcept&quot;);</span></div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;            <span class="keywordflow">return</span> post&lt;AllocatorType&gt;(</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;                [f=std::forward&lt;F&gt;(task_proc)](RUNNABLE_TASK_PARAMS) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;                {</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;                    f();</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;                    return ::mel::tasking::EGenericProcessResult::KILL;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;                }</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;                ,std::forward&lt;KF&gt;(killFunction),0,startTime</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;            );</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;            </div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;        }</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160; </div>
+<div class="line"><a name="l00392"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">  392</a></span>&#160;        <span class="keyword">const</span> <a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html">ProcessScheduler</a>&amp; <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">Runnable::getScheduler</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="keyword">        </span>{</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;            <span class="keywordflow">return</span> mTasks;</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        }</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html">ProcessScheduler</a>&amp; <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">Runnable::getScheduler</a>() </div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;        {</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;            <span class="keywordflow">return</span> mTasks;</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;        }</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;        <span class="keyword">const</span> std::shared_ptr&lt;Timer&gt; Runnable::getTimer( )<span class="keyword"> const</span></div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;<span class="keyword">        </span>{</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;            <span class="keywordflow">return</span> mTasks.<a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html#a202c4554a7ee53abfcbbf3a0e774cf5b">getTimer</a>();</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;        }</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        std::shared_ptr&lt;Timer&gt; Runnable::getTimer( )</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;        {</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;            <span class="keywordflow">return</span> mTasks.<a class="code" href="classmel_1_1tasking_1_1_process_scheduler.html#a202c4554a7ee53abfcbbf3a0e774cf5b">getTimer</a>();</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        }</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;        </div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet, <span class="keyword">class</span> F,<span class="keyword">class</span> KF&gt; </div>
+<div class="line"><a name="l00410"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">  410</a></span>&#160;        <a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">Runnable::execute</a>( F&amp;&amp; <span class="keyword">function</span>,KF&amp;&amp; killFunction) noexcept</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        {</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;            <a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> future;    </div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;            <span class="keywordflow">return</span> execute(std::forward&lt;F&gt;(<span class="keyword">function</span>),future,std::forward&lt;KF&gt;(killFunction));        </div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;        }</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> TRet, <span class="keyword">class</span> F,<span class="keyword">class</span> KF&gt; </div>
+<div class="line"><a name="l00422"></a><span class="lineno"><a class="line" href="classmel_1_1tasking_1_1_runnable.html#acb42def1c0524e42f9e6a33f3fabfdfb">  422</a></span>&#160;        <a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> <a class="code" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">Runnable::execute</a>( F&amp;&amp; f,<a class="code" href="classmel_1_1core_1_1_future.html">Future&lt;TRet&gt;</a> output,KF&amp;&amp; killFunction) noexcept</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;        {</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;            <span class="comment">//always post the task, despite being in same thread. This is the most consistent way of doing it</span></div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160; </div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;        <span class="comment">//PRUEBAS</span></div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;            <span class="comment">// try</span></div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;            <span class="comment">// {</span></div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;            <span class="comment">//  if constexpr (std::is_same&lt;void,TRet&gt;::value)</span></div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;            <span class="comment">//  {</span></div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;            <span class="comment">//      f();</span></div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;            <span class="comment">//      output.setValue();</span></div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;            <span class="comment">//  }</span></div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;            <span class="comment">//  else</span></div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;            <span class="comment">//      output.setValue(f());</span></div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;            <span class="comment">// }</span></div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;            <span class="comment">// //check chances of Exception</span></div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;            <span class="comment">// catch( std::exception&amp; e )</span></div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;            <span class="comment">// {                    </span></div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;            <span class="comment">//  output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );   </span></div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;            <span class="comment">// }</span></div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;            <span class="comment">// catch(...)</span></div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;            <span class="comment">// {</span></div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;                </div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;            <span class="comment">//  output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,&quot;Unknown exception&quot;) );    </span></div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160; </div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;            <span class="comment">// }</span></div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;            </div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;            post(</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;                [output,f = std::forward&lt;F&gt;(f)](RUNNABLE_TASK_PARAMS) <span class="keyword">mutable</span> noexcept</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;                {</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;                    <span class="keywordflow">if</span> constexpr (noexcept(f()))</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;                    {</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;                        <span class="keywordflow">if</span> constexpr (std::is_same&lt;void,TRet&gt;::value)</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;                        {</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;                            f();</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                            output.setValue();</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;                        }</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;                        <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;                        {</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;                            output.setValue(f());</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;                        }</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;                    }<span class="keywordflow">else</span></div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;                    {</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;                        <span class="keywordflow">try</span> </div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;                        {</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;                            <span class="keywordflow">if</span> constexpr (std::is_same&lt;void,TRet&gt;::value)</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;                            {</div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;                                f();</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;                                output.setValue();</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;                            }</div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;                            <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                            {</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;                                output.setValue(f());</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;                            }</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;                        }</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;                        <span class="keywordflow">catch</span>(...)</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;                        {</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;                            <span class="comment">//output.setError( ErrorType(Runnable::ERRORCODE_UNKNOWN_EXCEPTION,&quot;Unknown exception&quot;) );  </span></div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;                            output.setError( std::current_exception() );    </div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;                        }</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;                    }</div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;                    <span class="comment">/*</span></div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<span class="comment">                    //check chances of Exception</span></div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="comment">                    catch( std::exception&amp; e )</span></div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<span class="comment">                    {                   </span></div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="comment">                        output.setError( ErrorType(Runnable::ERRORCODE_EXCEPTION,e.what()) );                       </span></div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;<span class="comment">                    }*/</span></div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;                    </div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;                    return ::mel::tasking::EGenericProcessResult::KILL;</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;                },std::forward&lt;KF&gt;(killFunction)        </div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;            );</div>
+<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;            </div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;        </div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;            <span class="keywordflow">return</span> output;</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;        }                       </div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;        </div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    }</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;}</div>
 <div class="ttc" id="aclassmel_1_1core_1_1_callback_subscriptor_html"><div class="ttname"><a href="classmel_1_1core_1_1_callback_subscriptor.html">mel::core::CallbackSubscriptor</a></div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor_Impl.h:351</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_future_html"><div class="ttname"><a href="classmel_1_1core_1_1_future.html">mel::core::Future</a></div><div class="ttdoc">Represents a value that maybe is not present at the current moment.</div><div class="ttdef"><b>Definition:</b> Future.h:616</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_future_html"><div class="ttname"><a href="classmel_1_1core_1_1_future.html">mel::core::Future</a></div><div class="ttdoc">Represents a value that maybe is not present at the current moment.</div><div class="ttdef"><b>Definition:</b> Future.h:617</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_generic_process_html"><div class="ttname"><a href="classmel_1_1tasking_1_1_generic_process.html">mel::tasking::GenericProcess</a></div><div class="ttdoc">A Process constructed from a functor with signature EGenericProcessResult(uint64_t,...</div><div class="ttdef"><b>Definition:</b> GenericProcess.h:21</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_factory_html"><div class="ttname"><a href="classmel_1_1tasking_1_1_process_factory.html">mel::tasking::ProcessFactory</a></div><div class="ttdoc">Base factory class for tasks.</div><div class="ttdef"><b>Definition:</b> Runnable.h:62</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_factory_html_a0c1076e213fb2a92c60dc75525570fac"><div class="ttname"><a href="classmel_1_1tasking_1_1_process_factory.html#a0c1076e213fb2a92c60dc75525570fac">mel::tasking::ProcessFactory::onCreate</a></div><div class="ttdeci">virtual GenericProcess * onCreate(Runnable *owner) const</div><div class="ttdoc">Reimplement in children to change default behaviour.</div></div>
@@ -474,18 +484,18 @@ $(document).ready(function(){initNavTree('_runnable_8h_source.html',''); initRes
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_scheduler_html_a202c4554a7ee53abfcbbf3a0e774cf5b"><div class="ttname"><a href="classmel_1_1tasking_1_1_process_scheduler.html#a202c4554a7ee53abfcbbf3a0e774cf5b">mel::tasking::ProcessScheduler::getTimer</a></div><div class="ttdeci">const std::shared_ptr&lt; Timer &gt; getTimer() const</div><div class="ttdef"><b>Definition:</b> ProcessScheduler.h:328</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_scheduler_html_a32c0039a640d54dcf4ff06309dae69f6"><div class="ttname"><a href="classmel_1_1tasking_1_1_process_scheduler.html#a32c0039a640d54dcf4ff06309dae69f6">mel::tasking::ProcessScheduler::SchedulerOptions</a></div><div class="ttdeci">std::variant&lt; BlockingOptions, LockFreeOptions &gt; SchedulerOptions</div><div class="ttdoc">Scheduler creation options. By default use BlockingOotions.</div><div class="ttdef"><b>Definition:</b> ProcessScheduler.h:115</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></div><div class="ttdoc">A class representing a &quot;running&quot; task, with added functionality to post events requesting execution o...</div><div class="ttdef"><b>Definition:</b> Runnable.h:183</div></div>
-<div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a02cdb4e5ff3ac532059b5a0ca6a0a49b"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">mel::tasking::Runnable::execute</a></div><div class="ttdeci">Future&lt; TRet &gt; execute(F &amp;&amp;function, KF &amp;&amp;killFunction=killFalse) noexcept</div><div class="ttdoc">Executes a function in a context of the Runnable. If this Runnable is in the same thread than caller ...</div><div class="ttdef"><b>Definition:</b> Runnable.h:400</div></div>
+<div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a02cdb4e5ff3ac532059b5a0ca6a0a49b"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">mel::tasking::Runnable::execute</a></div><div class="ttdeci">Future&lt; TRet &gt; execute(F &amp;&amp;function, KF &amp;&amp;killFunction=killFalse) noexcept</div><div class="ttdoc">Executes a function in a context of the Runnable. If this Runnable is in the same thread than caller ...</div><div class="ttdef"><b>Definition:</b> Runnable.h:410</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a34e3ef27a129b113b00a0c40cee7090e"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a34e3ef27a129b113b00a0c40cee7090e">mel::tasking::Runnable::setDefaultFactory</a></div><div class="ttdeci">void setDefaultFactory(ProcessFactory *factory)</div><div class="ttdoc">Change default factory used to create task through post and fireAndForget.</div><div class="ttdef"><b>Definition:</b> Runnable.h:212</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a6a046d4ea86599c3cb091bd56a95de15"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a6a046d4ea86599c3cb091bd56a95de15">mel::tasking::Runnable::setOwnerThreadId</a></div><div class="ttdeci">void setOwnerThreadId(mel::core::ThreadId tid)</div><div class="ttdef"><b>Definition:</b> Runnable.h:206</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a739300ffe3746a01d7db62f4cb575ab6"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a739300ffe3746a01d7db62f4cb575ab6">mel::tasking::Runnable::processTasks</a></div><div class="ttdeci">void processTasks()</div><div class="ttdoc">Performs a controlled loop over the internal queue, executing pending tasks. This function must be ca...</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a775fa406358dc7b798116ab68473c037"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a775fa406358dc7b798116ab68473c037">mel::tasking::Runnable::postTask</a></div><div class="ttdeci">void postTask(std::shared_ptr&lt; Process &gt; process, unsigned int startTime=0)</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a8321dac1a4a8f7415a5fdbcb5e540e62"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a8321dac1a4a8f7415a5fdbcb5e540e62">mel::tasking::Runnable::killFalse</a></div><div class="ttdeci">static std::function&lt; bool()&gt; killFalse</div><div class="ttdoc">helper function to reject kill when receiving kill signal</div><div class="ttdef"><b>Definition:</b> Runnable.h:276</div></div>
-<div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a858692ee28e2526a797a6178206c7df5"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">mel::tasking::Runnable::getScheduler</a></div><div class="ttdeci">const ProcessScheduler &amp; getScheduler() const</div><div class="ttdef"><b>Definition:</b> Runnable.h:382</div></div>
+<div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_a858692ee28e2526a797a6178206c7df5"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#a858692ee28e2526a797a6178206c7df5">mel::tasking::Runnable::getScheduler</a></div><div class="ttdeci">const ProcessScheduler &amp; getScheduler() const</div><div class="ttdef"><b>Definition:</b> Runnable.h:392</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_aa13d5da09bbc07193a5b3a4992165f3d"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#aa13d5da09bbc07193a5b3a4992165f3d">mel::tasking::Runnable::killTrue</a></div><div class="ttdeci">static std::function&lt; bool()&gt; killTrue</div><div class="ttdoc">helper function to automatically kill process when receiving kill signal</div><div class="ttdef"><b>Definition:</b> Runnable.h:274</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_ac761ffdc2fc076acbc40c6b3f9d83ff7"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#ac761ffdc2fc076acbc40c6b3f9d83ff7">mel::tasking::Runnable::getDefaultFactory</a></div><div class="ttdeci">const ProcessFactory * getDefaultFactory() const</div><div class="ttdoc">Retrieves the current default factory for tasks.</div><div class="ttdef"><b>Definition:</b> Runnable.h:214</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_ad4648740579cca61ddd8ae5df2932302"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#ad4648740579cca61ddd8ae5df2932302">mel::tasking::Runnable::setTimer</a></div><div class="ttdeci">void setTimer(std::shared_ptr&lt; Timer &gt; timer)</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_ad5c2f5863c6a3d76f143c58c2db8a4d8"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#ad5c2f5863c6a3d76f143c58c2db8a4d8">mel::tasking::Runnable::Runnable</a></div><div class="ttdeci">Runnable(RunnableCreationOptions opts)</div><div class="ttdoc">Constructor.</div></div>
-<div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_ad890610e8fbbe03fafea4804813cd3b0"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">mel::tasking::Runnable::fireAndForget</a></div><div class="ttdeci">std::shared_ptr&lt; Process &gt; fireAndForget(F &amp;&amp;task_proc, unsigned int startTime=0, KF &amp;&amp;killFunction=killTrue)</div><div class="ttdoc">Convenient function to post no periodic task with signature void f()</div><div class="ttdef"><b>Definition:</b> Runnable.h:366</div></div>
+<div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_ad890610e8fbbe03fafea4804813cd3b0"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">mel::tasking::Runnable::fireAndForget</a></div><div class="ttdeci">std::shared_ptr&lt; Process &gt; fireAndForget(F &amp;&amp;task_proc, unsigned int startTime=0, KF &amp;&amp;killFunction=killTrue)</div><div class="ttdoc">Convenient function to post no periodic task with signature void f()</div><div class="ttdef"><b>Definition:</b> Runnable.h:375</div></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html_af513abe2b1af17b963b1262bfa271190"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html#af513abe2b1af17b963b1262bfa271190">mel::tasking::Runnable::post</a></div><div class="ttdeci">std::shared_ptr&lt; Process &gt; post(F &amp;&amp;task_proc, KF &amp;&amp;killFunction=killFalse, unsigned int period=0, unsigned int startTime=0)</div><div class="ttdef"><b>Definition:</b> Runnable.h:353</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
 <div class="ttc" id="astructmel_1_1tasking_1_1_default_allocator_html"><div class="ttname"><a href="structmel_1_1tasking_1_1_default_allocator.html">mel::tasking::DefaultAllocator</a></div><div class="ttdoc">Default allocator for new tasks (through Runnable::post) using the runnable default factory Runnable:...</div><div class="ttdef"><b>Definition:</b> Runnable.h:78</div></div>

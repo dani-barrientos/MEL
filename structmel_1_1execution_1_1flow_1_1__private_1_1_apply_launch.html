@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MEL: mel::execution::_private::ApplyCondition&lt; F, FTypes &gt; Struct Template Reference</title>
+<title>MEL: mel::execution::flow::_private::ApplyLaunch&lt; Flows &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('structmel_1_1execution_1_1__private_1_1_apply_condition.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -85,41 +85,38 @@ $(document).ready(function(){initNavTree('structmel_1_1execution_1_1__private_1_
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structmel_1_1execution_1_1__private_1_1_apply_condition-members.html">List of all members</a>  </div>
+<a href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">mel::execution::_private::ApplyCondition&lt; F, FTypes &gt; Struct Template Reference</div>  </div>
+<div class="title">mel::execution::flow::_private::ApplyLaunch&lt; Flows &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7ce373b6933b9aa34cc32ad0c0a100b9"><td class="memTemplParams" colspan="2"><a id="a7ce373b6933b9aa34cc32ad0c0a100b9"></a>
-template&lt;class S , class ... Fs&gt; </td></tr>
-<tr class="memitem:a7ce373b6933b9aa34cc32ad0c0a100b9"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ApplyCondition</b> (S &amp;&amp;selector, Fs &amp;&amp;... fs)</td></tr>
-<tr class="separator:a7ce373b6933b9aa34cc32ad0c0a100b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d4121d14eb1ccda13fcb2a084aa7012"><td class="memTemplParams" colspan="2"><a id="a8d4121d14eb1ccda13fcb2a084aa7012"></a>
+<tr class="memitem:a6ba3466b16d16cf375877e7081f1d52f"><td class="memTemplParams" colspan="2"><a id="a6ba3466b16d16cf375877e7081f1d52f"></a>
+template&lt;class ... Fs&gt; </td></tr>
+<tr class="memitem:a6ba3466b16d16cf375877e7081f1d52f"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ApplyLaunch</b> (Fs &amp;&amp;... fs)</td></tr>
+<tr class="separator:a6ba3466b16d16cf375877e7081f1d52f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfd036ac3415a12d47b28058e978a45e"><td class="memTemplParams" colspan="2"><a id="acfd036ac3415a12d47b28058e978a45e"></a>
 template&lt;class TArg , class ExecutorAgent &gt; </td></tr>
-<tr class="memitem:a8d4121d14eb1ccda13fcb2a084aa7012"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; inputFut)</td></tr>
-<tr class="separator:a8d4121d14eb1ccda13fcb2a084aa7012"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfd036ac3415a12d47b28058e978a45e"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; inputFut)</td></tr>
+<tr class="separator:acfd036ac3415a12d47b28058e978a45e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ae403bf578aa3b78619c771e80acbc137"><td class="memItemLeft" align="right" valign="top"><a id="ae403bf578aa3b78619c771e80acbc137"></a>
-F&#160;</td><td class="memItemRight" valign="bottom"><b>mSelector</b></td></tr>
-<tr class="separator:ae403bf578aa3b78619c771e80acbc137"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63b0743880dc59405b245df8ef9e50f5"><td class="memItemLeft" align="right" valign="top"><a id="a63b0743880dc59405b245df8ef9e50f5"></a>
-std::tuple&lt; FTypes... &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mFuncs</b></td></tr>
-<tr class="separator:a63b0743880dc59405b245df8ef9e50f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8f99e706d6530948ccfd89019989813"><td class="memItemLeft" align="right" valign="top"><a id="ae8f99e706d6530948ccfd89019989813"></a>
+std::tuple&lt; Flows... &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mFuncs</b></td></tr>
+<tr class="separator:ae8f99e706d6530948ccfd89019989813"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/github/workspace/mel/include/execution/<a class="el" href="_flow_8h_source.html">Flow.h</a></li>
+<li>/github/workspace/mel/include/execution/flow/<a class="el" href="_launch_8h_source.html">Launch.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespacemel.html">mel</a></li><li class="navelem"><a class="el" href="namespacemel_1_1execution.html">execution</a></li><li class="navelem"><b>_private</b></li><li class="navelem"><a class="el" href="structmel_1_1execution_1_1__private_1_1_apply_condition.html">ApplyCondition</a></li>
+    <li class="navelem"><a class="el" href="namespacemel.html">mel</a></li><li class="navelem"><a class="el" href="namespacemel_1_1execution.html">execution</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>_private</b></li><li class="navelem"><a class="el" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch.html">ApplyLaunch</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
