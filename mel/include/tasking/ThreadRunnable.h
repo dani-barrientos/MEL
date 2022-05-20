@@ -121,7 +121,7 @@ namespace mel
             /**
             * suspend inmediately, can be called only from same thread execution
             */
-            ::mel::tasking::EGenericProcessResult _suspendInternal(uint64_t millis,Process* proc);
+            ::mel::tasking::EGenericProcessResult _suspendInternal(uint64_t millis,Process* proc) noexcept;
             void _signalWakeup();
         protected:
             /**

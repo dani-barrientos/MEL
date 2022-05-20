@@ -9,6 +9,7 @@
 
 #include <parallelism/Barrier.h>
 #include <mpl/TypeTraits.h>
+#include <type_traits>
 namespace mel
 {
     namespace execution
@@ -28,6 +29,7 @@ namespace mel
         template <> class Executor<Runnable>
         {
             public:
+                Executor() = default;
                 Executor(Executor&& ex):mRunnable(std::move(ex.mRunnable)),mOpts(ex.mOpts){}
                 Executor(const Executor& ex):mRunnable(ex.mRunnable),mOpts(ex.mOpts){}
                 Executor(std::shared_ptr<Runnable> runnable):mRunnable(runnable){};
@@ -141,8 +143,11 @@ namespace mel
                 {
                     mel::execution::launch(fut.agent,
                         [f = std::forward<F>(f),b,&output](ExFuture<Runnable,TArg>& fut) mutable noexcept
-                        {                                        
-                            std::get<n>(output) = f(fut.getValue().value());
+                        {                    
+                            if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)                    
+                                f(fut.getValue().value());
+                            else
+                                std::get<n>(output) = f(fut.getValue().value());
                             b.set();
                         },fut);
                 }else
@@ -151,8 +156,11 @@ namespace mel
                         [f = std::forward<F>(f),b,&output,&except](ExFuture<Runnable,TArg>& fut) mutable
                         {            
                             try
-                            {                            
-                                std::get<n>(output) = f(fut.getValue().value());
+                            {        
+                                if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+                                    f(fut.getValue().value());
+                                else
+                                    std::get<n>(output) = f(fut.getValue().value());
                             }catch(...)
                             {
                                 if (!except)
@@ -170,7 +178,10 @@ namespace mel
                     mel::execution::launch(fut.agent,
                         [f = std::forward<F>(f),b,&output](ExFuture<Runnable,void>& fut) mutable noexcept
                         {                    
-                            std::get<n>(output) = f();
+                            if constexpr (std::is_same< std::invoke_result_t<F>,void >::value)
+                                f();
+                            else
+                                std::get<n>(output) = f();
                             b.set();
                         },fut);
                 }else
@@ -180,7 +191,10 @@ namespace mel
                         {   
                             try
                             {                 
-                                std::get<n>(output) = f();
+                                if constexpr (std::is_same< std::invoke_result_t<F>,void>::value)
+                                    f();
+                                else
+                                    std::get<n>(output) = f();
                             }catch(...)
                             {
                                 if (!except)
@@ -270,10 +284,9 @@ namespace mel
         /**
          * @brief Executor Traits for Runnable Executor
          */
-        template <> struct ExecutorTraits<Executor<Runnable>>
+        template <> struct ExecutorTraits<Executor<Runnable>> : ExecutorTraits<void>
         {
             enum {has_microthreading = true};  //support microthreading?
-            enum {has_parallelism = false}; ////support true parallelism?
         };
         //! @brief alias for Executor<Runnable>
         typedef Executor<Runnable> RunnableExecutor; //alias

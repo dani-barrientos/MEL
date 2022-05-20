@@ -19,6 +19,7 @@ namespace mel
         class ExFuture : public Future<ResultType>
         {
             public:
+                ExFuture() = default;
                 ExFuture(const ExFuture& ob) noexcept :Future<ResultType>(ob),agent(ob.agent){}
                 ExFuture(ExFuture&& ob) noexcept :Future<ResultType>(std::move(ob)),agent(std::move(ob.agent)){}
                 ExFuture(Executor<ExecutorAgent> aEx) noexcept:agent(aEx){}
@@ -47,6 +48,7 @@ namespace mel
         class ExFuture<ExecutorAgent,ResultType&> : public Future<ResultType&>
         {
             public:
+                ExFuture() = default;
                 ExFuture(const ExFuture& ob):Future<ResultType&>(ob),agent(ob.agent){}
                 ExFuture(ExFuture&& ob):Future<ResultType&>(std::move(ob)),agent(std::move(ob.agent)){}
                 ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}            
@@ -72,6 +74,7 @@ namespace mel
         class ExFuture<ExecutorAgent,void> : public Future<void>
         {
             public:
+                ExFuture() = default;
                 ExFuture(const ExFuture& ob):Future<void>(ob),agent(ob.agent){}
                 ExFuture(ExFuture&& ob):Future<void>(std::move(ob)),agent(std::move(ob.agent)){}
                 ExFuture(Executor<ExecutorAgent> aEx):agent(aEx){}            

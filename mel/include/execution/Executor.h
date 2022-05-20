@@ -389,7 +389,6 @@ namespace mel
                                 if ( *except ) //any exception?
                                     result.setError(*except);
                                 else
-                                    //result.assign(std::move(source.getValue()));//@todo it's not correct, but necesary to avoid a lot of copies. I left this way until solved in the root. Really is not very worrying
                                     result.assign(source);
                                 delete except;
                                 return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
@@ -447,14 +446,18 @@ namespace mel
         }           
         
         namespace _private
-        {
+        {            
+            using ::mel::execution::VoidType;
             template <class F,class TArg> struct inv_res
             {
-                using type = std::invoke_result_t<F,TArg>;
+                using _realtype = std::invoke_result_t<F,TArg>;
+                //using type = typename std::conditional<std::is_same<_realtype,void>::value,VoidType,_realtype>::type;
+                using type = typename mel::execution::WrapperType<_realtype>::type;
             };
             template <class F> struct inv_res<F,void>
             {
-                using type = std::invoke_result_t<F>;
+                using _realtype = std::invoke_result_t<F>;
+                using type = typename mel::execution::WrapperType<_realtype>::type;
             };
              //return deduction for parallel_convert
             template <class TArg,class F1 = void,class F2 = void,class F3=void,class F4=void,class F5=void,class F6=void,class F7=void,class F8=void,class F9=void> struct GetReturn
@@ -497,7 +500,7 @@ namespace mel
         }
         /**
          * @brief Same as @ref parallel but returning a tuple with the values for each functor
-         * @details So, these functors must return a value. Until 10 callables can be used
+         * @details functors returning a void will be converted to _private::VoidType. Until 10 callables can be used
          * @return A tuple with types for each functor return, in order. Returning void is not allowed
          * @note The limit in callables is because a bug in gcc < 10.2 where template overload resolution is buggy
          */
@@ -512,7 +515,7 @@ namespace mel
                 {
                     if ( input.isValid() ){
                         std::exception_ptr* except = new std::exception_ptr(nullptr);
-                        ResultTuple* output = new ResultTuple; //para que compile
+                        ResultTuple* output = new ResultTuple; 
                         //auto barrier  = source.agent.parallel_convert(source,*except,*output,std::forward<FTypes>(std::get<FTypes>(fs))...);
                         auto barrier  = source.agent.parallel_convert(source,*except,*output,std::move(std::get<FTypes>(fs))...);
                         barrier.subscribeCallback(
@@ -666,10 +669,12 @@ namespace mel
             {
                 if constexpr (n != std::tuple_size<SourceTuple>::value)
                 {
-                    auto& val = std::get<n>(st);
+                    auto&& val = std::get<n>(st);
                     if ( val.isValid() )
                     {
-                        std::get<n>(tt) = std::move(val.value());
+                        using ValType = std::remove_reference_t<decltype(val)>; //type of the underlying FutureValue
+                        if constexpr (!std::is_same<typename ValType::Type,void>::value)
+                            std::get<n>(tt) = std::move(val.value());
                         return _moveValue<n+1>(st,tt);
                     }else
                         return std::make_pair(n,std::move(val.error()));
@@ -737,7 +742,7 @@ namespace mel
         ///@endcond
 
         /**
-         * @brief overload operator | for chaining
+        * @brief overload operator | for chaining
         */
         template <class ExecutorAgent,class TRet1,class U> auto operator | (const ExFuture<ExecutorAgent,TRet1>& input,U&& u)
         {
@@ -765,15 +770,18 @@ namespace mel
                 std::exception_ptr mSource;
         };
         /**
-         * @brief return ExFuture which will be executed, in the context of the given executor ex,
-         * when all the given ExFutures are triggered. The resulting ExFuture has a std::tuple with the types if the given ExFutures
+         * @brief return ExFuture which will be executed, in the context of the given executor ex, when all the given ExFutures are triggered.
+         * @details The resulting ExFuture has a std::tuple with the types if the given ExFutures
          * in the same order. So, all of them must return a value, void is not allowed
          * If any of the given input ExFuture has error, the returned one will have the same error indicating  the element who failed
          *   @throws OnAllException if any error
          */
         template <class ExecutorAgent,class ...FTypes> auto on_all(Executor<ExecutorAgent> ex,FTypes... futs)
         {                
-            typedef std::tuple<typename FTypes::ValueType::Type...> ReturnType;
+        //@todo detectar void y sustituirlo por VoidType->creo que voy a tener que meter este tipo como básico
+        //mierda, el problema es que es un paraemter pack 
+            //typedef std::tuple<typename FTypes::ValueType::Type...> ReturnType;
+            typedef std::tuple<typename mel::execution::WrapperType<typename FTypes::ValueType::Type>::type...> ReturnType;
             static_assert(std::is_default_constructible<ReturnType>::value,"All types returned by the input ExFutures must be DefaultConstructible");
             ExFuture<ExecutorAgent,ReturnType> result(ex);
             ::mel::parallelism::Barrier barrier(sizeof...(futs));
@@ -783,17 +791,17 @@ namespace mel
             barrier.subscribeCallback(
             std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result,tupleRes](const ::mel::parallelism::BarrierData& ) mutable
             {
-                ReturnType resultVal;			
+                ReturnType resultVal;
                 auto r = ::mel::execution::_private::_moveValue<0>(*tupleRes,resultVal);
                 if ( r == std::nullopt)
                 {
                     result.setValue(std::move(resultVal));
                 }else
                 {
-                    result.setError( std::make_exception_ptr(OnAllException(r.value().first,r.value().second,"Error in tuple element"))); 
+                    result.setError( std::make_exception_ptr(OnAllException(r.value().first,r.value().second,"Error in tuple element")));
                 }
                 delete tupleRes;
-                return ::mel::core::ECallbackResult::UNSUBSCRIBE; 
+                return ::mel::core::ECallbackResult::UNSUBSCRIBE;
             }));
             ::mel::execution::_private::_on_all<0,_ttype>(tupleRes,barrier,futs...);  //la idea es pasar una barrera o lo que sea y devolver resultado al activarse
             return result;

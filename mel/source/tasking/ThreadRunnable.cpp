@@ -78,7 +78,7 @@ bool ThreadRunnable::join(unsigned int millis)
     onJoined();
     return result;
 }
-mel::tasking::EGenericProcessResult ThreadRunnable::_suspendInternal(uint64_t millis,Process* proc) {
+mel::tasking::EGenericProcessResult ThreadRunnable::_suspendInternal(uint64_t millis,Process* proc) noexcept {
 	mPauseEV.wait();
 	return ::mel::tasking::EGenericProcessResult::KILL;
 }

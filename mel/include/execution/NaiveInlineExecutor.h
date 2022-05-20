@@ -149,12 +149,18 @@ namespace mel
                 static_assert( std::is_invocable<F,TArg>::value, "_invokeInline_with_result bad functor signature");
                 if constexpr (std::is_nothrow_invocable<F,TArg>::value)
                 {
-                    std::get<n>(output) = f(fut.getValue().value());                    
+                    if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+                        f(fut.getValue().value());
+                    else
+                        std::get<n>(output) = f(fut.getValue().value());
                 }else
                 {
                     try
                     {
-                        std::get<n>(output) = f(fut.getValue().value());
+                        if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+                            f(fut.getValue().value());
+                        else
+                            std::get<n>(output) = f(fut.getValue().value());
                     }catch(...)
                     {
                         if ( !except )
@@ -168,12 +174,18 @@ namespace mel
             {
                 if constexpr (std::is_nothrow_invocable<F>::value)
                 {
-                    std::get<n>(output) = f();                    
+                    if constexpr (std::is_same< std::invoke_result_t<F>,void >::value)
+                        f();
+                    else
+                        std::get<n>(output) = f();                    
                 }else
                 {
                     try
                     {
-                        std::get<n>(output) = f();
+                        if constexpr (std::is_same< std::invoke_result_t<F>,void >::value)
+                            f();
+                        else
+                            std::get<n>(output) = f();
                     }catch(...)
                     {
                         if (!except)
@@ -223,10 +235,8 @@ namespace mel
         /**
          * @brief Executor Traits for NaiveInlineExecutionAgent Executor
          */
-        template <> struct ExecutorTraits<Executor<NaiveInlineExecutionAgent>>
+        template <> struct ExecutorTraits<Executor<NaiveInlineExecutionAgent>> : ExecutorTraits<void>
         {
-            enum {has_microthreading = false};  //support microthreading?
-            enum {has_parallelism = false}; ////support true parallelism?
         };
         //! @brief alias for Executor<NaiveInlineExecutionAgent>
         typedef Executor<NaiveInlineExecutionAgent> NaiveInlineExecutor; //alias

@@ -305,12 +305,18 @@ namespace mel
 				{
 					if constexpr (std::is_nothrow_invocable<F,TArg>::value)
 					{
-						std::get<n>(result) = func(std::forward<TArg>(arg));
+						if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+							func(std::forward<TArg>(arg));
+						else
+							std::get<n>(result) = func(std::forward<TArg>(arg));
 					}else
 					{
 						try
 						{
-							std::get<n>(result) = func(std::forward<TArg>(arg));
+							if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+								func(std::forward<TArg>(arg));
+							else
+								std::get<n>(result) = func(std::forward<TArg>(arg));
 						}catch(...)
 						{
 							std::scoped_lock<std::mutex> lck(mExceptionLock);
@@ -328,7 +334,10 @@ namespace mel
 						mPool[mLastIndex]->post(
 						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,arg,&result](uint64_t, Process*) mutable
 						{
-							std::get<n>(result) = func(std::forward<TArg>(arg));
+							if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+								func(std::forward<TArg>(arg));
+							else
+								std::get<n>(result) = func(std::forward<TArg>(arg));
 							output.set();
 							return mel::tasking::EGenericProcessResult::KILL;
 						})
@@ -340,7 +349,10 @@ namespace mel
 						{
 							try
 							{
-								std::get<n>(result) = func(std::forward<TArg>(arg));
+								if constexpr (std::is_same< std::invoke_result_t<F,TArg>,void >::value)
+									func(std::forward<TArg>(arg));
+								else
+									std::get<n>(result) = func(std::forward<TArg>(arg));
 							}catch(...)
 							{
 								std::scoped_lock<std::mutex> lck(mExceptionLock);
@@ -368,12 +380,18 @@ namespace mel
 				{
 					if constexpr (std::is_nothrow_invocable<F>::value)
 					{
-						std::get<n>(result) = func();
+						if constexpr (std::is_same< std::invoke_result_t<F>,void >::value)
+							func();
+						else
+							std::get<n>(result) = func();
 					}else
 					{
 						try
 						{
-							std::get<n>(result) = func();
+							if constexpr (std::is_same< std::invoke_result_t<F>,void >::value)
+								func();
+							else
+								std::get<n>(result) = func();
 						}catch(...)
 						{
 							std::scoped_lock<std::mutex> lck(mExceptionLock);
@@ -391,7 +409,10 @@ namespace mel
 						mPool[mLastIndex]->post(
 						std::function<tasking::EGenericProcessResult (uint64_t,Process*)>([func = std::forward<F>(func),output,&result](uint64_t, Process*) mutable
 						{
-							std::get<n>(result) = func();
+							if constexpr (std::is_same< std::invoke_result_t<F>,void >::value)
+								func();
+							else
+								std::get<n>(result) = func();
 							output.set();
 							return mel::tasking::EGenericProcessResult::KILL;
 						})

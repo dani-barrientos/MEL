@@ -355,6 +355,15 @@ namespace mel
 			KF&& killFunction,
 			unsigned int period,unsigned int startTime )
 		{
+			//@todo para pruebas. Sacaré mejor un warning
+			if constexpr ( std::is_nothrow_invocable<F,uint64_t,Process*>::value) 
+			{
+				//@todo continuar con este temaeste warning no me muestra la variable				
+			//	char Runnable_post_task_should_be_noexcept = 300;//"Runnable::post. Task must be noexcept");
+				//problema, quiero que saque warning. Una solucion podria ser tener una sobrecarga del post o un parámetro para que ignore el noexcept
+
+			}
+			//static_assert( std::is_nothrow_invocable<F,uint64_t,Process*>::value,"Runnable::post. Task must be noexcept");
 			::std::shared_ptr<GenericProcess> p(AllocatorType::allocate(this));			
 			p->setProcessCallback( ::std::forward<F>(task_proc) );
 			p->setPeriod( period );
@@ -368,6 +377,7 @@ namespace mel
 				unsigned int startTime,
 				KF&& killFunction)
 		{	
+			//static_assert( std::is_nothrow_invocable<F>::value,"Runnable::fireAndForget. Task must be noexcept");
 			return post<AllocatorType>(
 				[f=std::forward<F>(task_proc)](RUNNABLE_TASK_PARAMS) mutable
 				{
@@ -437,7 +447,7 @@ namespace mel
 			// }
 			
 			post(
-				[output,f = std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable
+				[output,f = std::forward<F>(f)](RUNNABLE_TASK_PARAMS) mutable noexcept
 				{
 					if constexpr (noexcept(f()))
 					{

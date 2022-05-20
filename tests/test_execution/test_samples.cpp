@@ -2,7 +2,11 @@
 #include <tasking/utilities.h>
 #include <execution/RunnableExecutor.h>
 #include <execution/ThreadPoolExecutor.h>
-#include <execution/Flow.h>
+#include <execution/InlineExecutor.h>
+#include <execution/NaiveInlineExecutor.h>
+#include <execution/flow/Condition.h>
+#include <execution/flow/While.h>
+#include <execution/flow/Launch.h>
 #include <functional>
 using std::string;
 #include <memory>
@@ -330,7 +334,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         auto job1 = mel::execution::start(ex1)
         | mel::execution::next( []() noexcept
         {
-            ::mel::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
+            ::mel::tasking::Process::wait(3000); //only possible if the executor Has microthreading behaviour
             mel::text::info("First job");
             return "First Job";
         });
@@ -339,7 +343,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         auto job2 = mel::execution::start(ex2)
         | mel::execution::parallel( []() noexcept
         {
-            ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
+            ::mel::tasking::Process::wait(300); //only possible if the executor Has microthreading behaviour
             mel::text::info("second job, t1");
         },
         []() noexcept
@@ -360,7 +364,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
             mel::text::info("third job, t1");
-            return 5;
+			//don't return anything, so ignore this tuple element (but it exists with an empty type)   
         },
         []() noexcept
         {
@@ -376,10 +380,10 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
             auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
             //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
             auto& val = res.value();
-            ::mel::text::info("Result value = [{},{},({},{})]",
+            ::mel::text::info("Result value = [{},{},(void,{})]",
 					std::get<0>(val),  //first job result
 					std::get<1>(val),   //second job result
-					std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val))  //third job result
+					std::get<1>(std::get<2>(val))  //third job result
 			);
 			
         }
@@ -605,7 +609,7 @@ template <class ExecutorType> void _sampleFlowsCondition(ExecutorType ex)
 					return rand()%10;
 				}
 			)
-			| execution::condition(
+			| execution::flow::condition(
 				[](int val)
 				{
 					int result = val<5?0:1;
@@ -637,6 +641,129 @@ template <class ExecutorType> void _sampleFlowsCondition(ExecutorType ex)
 		
 	},0,::tasking::Runnable::killFalse);
 }
+//simple doWhile example
+template <class ExecutorType> void _sampleWhile(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+
+	th->fireAndForget([ex] () mutable
+	{
+		srand(time(NULL));
+		int idx = 0;
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::start(ex)
+				| execution::flow::doWhile( 
+					[]( auto input ) noexcept
+					{
+						return input | execution::next( []() noexcept -> int
+						{
+							return rand()%10;
+						})
+						| execution::next( [](int v ) noexcept
+						{
+							mel::text::info(" new value = {}",v);
+							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
+							{
+								mel::tasking::Process::wait(2500);
+							}
+							else
+								mel::text::info("Current executor supports true parallelism. wait not done");
+						});
+					},
+					[idx]() mutable noexcept
+					{
+						if ( ++idx == 4 )
+							return false; //finish while
+						else
+							return true; //continue iterating
+					}
+				
+			)						
+		);
+		if ( res.isValid())
+		{
+			text::info("Finished");
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+
+template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
+{	
+	/*auto th = ThreadRunnable::create();
+
+	th->fireAndForget([ex] () mutable
+	{
+		srand(time(NULL));
+		int idx = 0;
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::launch(ex,[]()
+					{
+						//create random vector with random size
+						size_t vecSize = rand()%20+10;
+						auto result = std::vector<int>(vecSize);
+						for( auto& v:result)
+							v= rand()%5;
+						return result;
+					}
+				)
+				| execution::doWhile( 
+					[]( auto input ) noexcept
+					{
+						return input | execution::next( []() noexcept -> int
+						{
+							return rand()%10;
+						})
+						| execution::next( [](int v ) noexcept
+						{
+							mel::text::info(" new value = {}",v);
+							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
+							{
+								mel::tasking::Process::wait(2500);
+							}
+							else
+								mel::text::info("Current executor supports true parallelism. wait not done");
+						});
+					},
+					[idx]() mutable noexcept
+					{
+						if ( ++idx == 4 )
+							return false; //finish while
+						else
+							return true; //continue iterating
+					}
+				
+			)						
+		);
+		if ( res.isValid())
+		{
+			text::info("Finished");
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+	*/
+}
+
 void test_execution::samples()
 {
 	text::set_level(text::level::info);
@@ -648,17 +775,21 @@ void test_execution::samples()
 	parallelism::ThreadPool::ExecutionOpts exopts;
 	execution::Executor<parallelism::ThreadPool> extp(myPool);
 	extp.setOpts({true,true});
+	execution::InlineExecutor exInl;
+	execution::NaiveInlineExecutor exNaive;	
     
-	// _sampleBasic(exr);	
-	// _sampleBasic(extp);
- 	// _sampleReference(exr);
- 	// _sampleError1(exr);
- 	// _sampleError2(extp);
-	// _sampleErrorNoException(extp);
- 	// _sampleTransfer(exr,extp);
-    // _sampleSeveralFlows(exr,extp);
-    // _sampleCallables(extp);
-   	// _samplePF(exr);	
-	//_sampleFlows1(extp);
-	//_sampleFlowsCondition(extp);
+	_sampleBasic(exr);	
+	_sampleBasic(extp);
+ 	_sampleReference(exr);
+ 	_sampleError1(exr);
+ 	_sampleError2(extp);
+	_sampleErrorNoException(extp);
+ 	_sampleTransfer(exr,extp);
+     _sampleSeveralFlows(exr,extp);
+    _sampleCallables(extp);
+   	_samplePF(exr);	
+	_sampleFlows1(extp);
+	_sampleFlowsCondition(extp);
+	_sampleWhile(exNaive);
+	_sampleFlowChart(exr);
 }

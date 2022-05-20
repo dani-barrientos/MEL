@@ -1,9 +1,15 @@
 /**
 \page execution_flows Work flows
+- [Introduction] (#introduction)
+- [Conditions] (#conditions)
+- [Loops] (#loops)
+- [Flow chart example] (#flow_chart)
+
+###Introduction {#introduction}
 It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". This is very simple 
 thanks to *generic lambdas*. The lambda or callable used as a flow will receive an \ref ::mel::execution::ExFuture "ExFuture" which serves as the 
 input of any other *execution* function.
-Let's start with a simple example, definign two flows:
+Let's start with a simple example, defining two flows:
 \code
 template <class ExecutorType> void _sampleFlows1(ExecutorType ex)
 {	
@@ -64,12 +70,14 @@ template <class ExecutorType> void _sampleFlows1(ExecutorType ex)
 \endcode
 Output will be:
 \verbatim
-Result = Hello Dani Barrientos. Byt!!
+Result = Hello Dani Barrientos. Bye!!
 \endverbatim
-### Conditions
+### Conditions {#conditions}
 Besides creating flows for reusability, one important use is for \ref ::mel::execution::condition "conditions", which are the equivalent to a normal *switch*, 
-such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number.
-\code
+such that a flow is selected based on the previous result in the chain. In the next example a flow is chosen, between two, according to a random number. Both flows 
+are written as lambas local to the function, but any other callbable could be used or lambdas written inline in the code, it's shown this way for clarity.
+
+\code{.cpp}
 template <class ExecutorType> void _sampleFlowsCondition(ExecutorType ex)
 {	
 	auto th = ThreadRunnable::create();
@@ -141,4 +149,75 @@ And the output, in a concrete execution, is:
 Input value = 3. Selecting flow 0
 Result = Flow0 End!
 \endverbatim
+
+### Loops {#loops}
+It's possible to implement iterations as part of an execution flow. This concept shouldn't be confused with \ref ::mel::execution::loop "loop" which execute independent iterations in
+a, possibly, parallel way. The concept introduced here referes to sequential iterations,
+
+This way we can implement non-lineal work flows. 
+
+In the next example, a loop creating a random number
+and showing it in console is reapeated 4 times, doing a *microthread wait* in each iteration (if used executor allows it)
+\code {.cpp}
+template <class ExecutorType> void _sampleWhile(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+
+	th->fireAndForget([ex] () mutable
+	{
+		srand(time(NULL));
+		int idx = 0;
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::start(ex)
+				| execution::doWhile( 
+					[]( auto input ) noexcept
+					{
+						return input | execution::next( []() noexcept -> int
+						{
+							return rand()%10;
+						})
+						| execution::next( [](int v ) noexcept
+						{
+							mel::text::info(" new value = {}",v);
+							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
+							{
+								mel::tasking::Process::wait(2500);
+							}
+							else
+								mel::text::info("Current executor supports true parallelism. wait not done");
+						});
+					},
+					[idx]() mutable noexcept
+					{
+						if ( ++idx == 4 )
+							return false; //finish while
+						else
+							return true; //continue iterating
+					}
+				
+			)						
+		);
+		if ( res.isValid())
+		{
+			text::info("Finished");
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+\endcode 
+
+
+### Flow chart example{#flow_chart}
+
+TODO PONER UN EJEMPLO PITNANDO UN DIAGRAMA DE FLUJO EN IMPLEMENTARLO
 */

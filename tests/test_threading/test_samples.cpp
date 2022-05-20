@@ -540,5 +540,5 @@ void test_threading::samples()
  //   _sampleLimitation();
     //_sampleCustomRunnable();
     //_sampleCustomRunnableBad();
-    //_sampleSyncMacros();
+    _sampleSyncMacros();
 }

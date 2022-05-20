@@ -139,6 +139,7 @@ namespace mel
 			static constexpr size_t ValidIdx = 1;
 			typedef std::variant<_private::NotAvailable,VoidType,std::exception_ptr> Base;
 			public:
+				typedef void Type;
 				typedef void ReturnType;
 				typedef void CReturnType;
 				FutureValue(){}

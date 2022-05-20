@@ -442,7 +442,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         auto job1 = mel::execution::start(ex1)
         | mel::execution::next( []() noexcept
         {
-            ::mel::tasking::Process::wait(3000); //only possible if the executor as microthreading behaviour
+            ::mel::tasking::Process::wait(3000); //only possible if the executor Has microthreading behaviour
             mel::text::info("First job");
             return "First Job";
         });
@@ -451,7 +451,7 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
         auto job2 = mel::execution::start(ex2)
         | mel::execution::parallel( []() noexcept
         {
-            ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
+            ::mel::tasking::Process::wait(300); //only possible if the executor Has microthreading behaviour
             mel::text::info("second job, t1");
         },
         []() noexcept
@@ -467,12 +467,12 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 
         //Third job in the same executor as before
         auto job3 = mel::execution::start(ex2)
-        | mel::execution::parallel_convert<std::tuple<int,float>>(
+        | mel::execution::parallel_convert(
          []() noexcept
         {
             ::mel::tasking::Process::wait(300); //only possible if the executor as microthreading behaviour
             mel::text::info("third job, t1");
-            return 5;
+			//don't return anything, so ignore this tuple element (but it exists with an empty type)   
         },
         []() noexcept
         {
@@ -488,10 +488,10 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
             auto res = ::mel::tasking::waitForFutureMThread(execution::on_all(ex2,job1,job2,job3));
             //the result of the job merging is as a tuple, where each elements corresponds to the job in same position
             auto& val = res.value();
-            ::mel::text::info("Result value = [{},{},({},{})]",
+            ::mel::text::info("Result value = [{},{},(void,{})]",
 					std::get<0>(val),  //first job result
 					std::get<1>(val),   //second job result
-					std::get<0>(std::get<2>(val)),std::get<1>(std::get<2>(val))  //third job result
+					std::get<1>(std::get<2>(val))  //third job result
 			);
 			
         }
@@ -499,15 +499,18 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		{
 			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}
+		
 	},0,::tasking::Runnable::killFalse);
 }
 \endcode
 And the output is:
 \verbatim{.cpp}
 second job, t2
+third job, t2
 second job, t1
+third job, t1
 First job
-Result value = [First Job,10,(5,8.7)]
+Result value = [First Job,10,(void,8.7)]
 \endverbatim
 Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, **as a tuple**. Also, 
 the third job returns a tuple (this is how \ref ::mel::execution::parallel_convert "parallel_convert" works), and it's shown between parenthesis.

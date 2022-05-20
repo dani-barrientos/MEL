@@ -28,6 +28,7 @@ namespace mel
         template <> class Executor<ThreadPool>
         {
             public:
+                Executor() = default;
                 Executor(std::shared_ptr<ThreadPool> pool):mPool(pool){};           
                 Executor(Executor&& ex):mPool(std::move(ex.mPool)),mOpts(ex.mOpts){}
                 Executor(const Executor& ex):mPool(ex.mPool),mOpts(ex.mOpts){}
@@ -140,7 +141,7 @@ namespace mel
         /**
          * @brief Executor Traits for ThreadPool Executor
          */
-        template <> struct ExecutorTraits<Executor<ThreadPool>>
+        template <> struct ExecutorTraits<Executor<ThreadPool>> : ExecutorTraits<void>
         {
             enum {has_microthreading = true};  //support microthreading?
             enum {has_parallelism = true}; ////support true parallelism?
