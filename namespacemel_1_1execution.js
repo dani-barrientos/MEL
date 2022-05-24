@@ -28,12 +28,13 @@ var namespacemel_1_1execution =
     [ "flow", null, [
       [ "_private", null, [
         [ "ApplyCondition", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition" ],
+        [ "ApplyOnAll", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all" ],
         [ "ApplyLaunch", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch" ],
         [ "WhileImpl", "classmel_1_1execution_1_1flow_1_1__private_1_1_while_impl.html", "classmel_1_1execution_1_1flow_1_1__private_1_1_while_impl" ],
         [ "ApplyWhile", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while" ],
         [ "_forwardOnAll", "_launch_8h.html#a5a7eb03c9f1f28f6374c72a2ce3b6050", null ],
-        [ "_invokeFlow", "_launch_8h.html#a6d221cb1c484a0d50c1071eac67ea9fc", null ],
-        [ "_invokeFlow", "_launch_8h.html#a3e47f53d7ea3ce790111f88dfb8bef82", null ]
+        [ "_invokeFlow", "_launch_8h.html#a196f983db4bc9a650d720284dd5acfca", null ],
+        [ "_invokeFlow", "_launch_8h.html#ac22f47c5ad62d740b8eb129b6d83d903", null ]
       ] ],
       [ "FlowsResult", "structmel_1_1execution_1_1flow_1_1_flows_result.html", "structmel_1_1execution_1_1flow_1_1_flows_result" ],
       [ "condition", "_condition_8h.html#a247608ba2a595be5077b7d649de19d03", null ],
@@ -42,7 +43,10 @@ var namespacemel_1_1execution =
       [ "doWhile", "_while_8h.html#a2b4540ddc7fabc9b82814e5f62a4ab63", null ],
       [ "launch", "_launch_8h.html#a4a19431bbce0e08e7adf119f264d7df9", null ],
       [ "launch", "_launch_8h.html#aa50b73d530ed08504145280da9c2934e", null ],
-      [ "on_all", "_launch_8h.html#a7a8a2083987256cfb2c4f38e8ac7662e", null ]
+      [ "on_all", "_launch_8h.html#ae31496c9ab2129873f21b0e33f075ac7", null ],
+      [ "on_all", "_launch_8h.html#a7a8a2083987256cfb2c4f38e8ac7662e", null ],
+      [ "operator|", "_launch_8h.html#a61ac1baee27c3038e8b1fe42776cca27", null ],
+      [ "operator|", "_launch_8h.html#a71cbbe022889be8f289fbe023843308a", null ]
     ] ],
     [ "VoidType", "structmel_1_1execution_1_1_void_type.html", null ],
     [ "WrapperType", "structmel_1_1execution_1_1_wrapper_type.html", "structmel_1_1execution_1_1_wrapper_type" ],

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MEL: mel::mpl::typelist::_private::TListFindPos&lt; TypeList&lt; H, T &gt;, Condition, currentPos &gt; Struct Template Reference</title>
+<title>MEL: mel::execution::flow::_private::ApplyOnAll&lt; ExecutionAgent &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('structmel_1_1mpl_1_1typelist_1_1__private_1_1_t_list_find_pos_3_01_type_list_3_01_h_00_01_t_01_435179c7b506d385c0064817d475a2855.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -83,28 +83,43 @@ $(document).ready(function(){initNavTree('structmel_1_1mpl_1_1typelist_1_1__priv
 
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
-<a href="structmel_1_1mpl_1_1typelist_1_1__private_1_1_t_list_find_pos_3_01_type_list_3_01_h_00_01_t_01_49cf27781c65817c3c20fca9d5ced22bd.html">List of all members</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">mel::mpl::typelist::_private::TListFindPos&lt; TypeList&lt; H, T &gt;, Condition, currentPos &gt; Struct Template Reference</div>  </div>
+<div class="title">mel::execution::flow::_private::ApplyOnAll&lt; ExecutionAgent &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a4c6b5df2e12c0287655e9003147e71f8"><td class="memItemLeft" align="right" valign="top"><a id="a4c6b5df2e12c0287655e9003147e71f8"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>result</b> = NextPos&lt;TypeList&lt;H,T&gt;,Condition,currentPos,Condition&lt;H&gt;::result&gt;::result
- }</td></tr>
-<tr class="separator:a4c6b5df2e12c0287655e9003147e71f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:af70fa6192af602e0e2acf2e09450876c"><td class="memItemLeft" align="right" valign="top"><a id="af70fa6192af602e0e2acf2e09450876c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ApplyOnAll</b> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutionAgent &gt;ex)</td></tr>
+<tr class="separator:af70fa6192af602e0e2acf2e09450876c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab78d1465b3b870e6cd8f4f323274bfcb"><td class="memTemplParams" colspan="2"><a id="ab78d1465b3b870e6cd8f4f323274bfcb"></a>
+template&lt;class TupleType &gt; </td></tr>
+<tr class="memitem:ab78d1465b3b870e6cd8f4f323274bfcb"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structmel_1_1execution_1_1flow_1_1_flows_result.html">FlowsResult</a>&lt; TupleType &gt; &amp;&amp;fr)</td></tr>
+<tr class="separator:ab78d1465b3b870e6cd8f4f323274bfcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab29a5dbcd3bd65243914986dfca46a9a"><td class="memTemplParams" colspan="2"><a id="ab29a5dbcd3bd65243914986dfca46a9a"></a>
+template&lt;class TupleType &gt; </td></tr>
+<tr class="memitem:ab29a5dbcd3bd65243914986dfca46a9a"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="structmel_1_1execution_1_1flow_1_1_flows_result.html">FlowsResult</a>&lt; TupleType &gt; &amp;fr)</td></tr>
+<tr class="separator:ab29a5dbcd3bd65243914986dfca46a9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:afd8aaf250081a330411b8c0e677062c7"><td class="memItemLeft" align="right" valign="top"><a id="afd8aaf250081a330411b8c0e677062c7"></a>
+<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutionAgent &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mEx</b></td></tr>
+<tr class="separator:afd8aaf250081a330411b8c0e677062c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/github/workspace/mel/include/mpl/typelist/<a class="el" href="_find_8h_source.html">Find.h</a></li>
+<li>/github/workspace/mel/include/execution/flow/<a class="el" href="_launch_8h_source.html">Launch.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespacemel.html">mel</a></li><li class="navelem"><a class="el" href="namespacemel_1_1mpl.html">mpl</a></li><li class="navelem"><b>typelist</b></li><li class="navelem"><b>_private</b></li><li class="navelem"><a class="el" href="structmel_1_1mpl_1_1typelist_1_1__private_1_1_t_list_find_pos_3_01_type_list_3_01_h_00_01_t_01_435179c7b506d385c0064817d475a2855.html">TListFindPos&lt; TypeList&lt; H, T &gt;, Condition, currentPos &gt;</a></li>
+    <li class="navelem"><a class="el" href="namespacemel.html">mel</a></li><li class="navelem"><a class="el" href="namespacemel_1_1execution.html">execution</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>_private</b></li><li class="navelem"><a class="el" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html">ApplyOnAll</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
