@@ -24,6 +24,7 @@ var namespaces_dup =
       [ "Perfect forwarding", "execution_system.html#perfect_forwarding", null ],
       [ "Work flows", "execution_system.html#work_flows", null ],
       [ "Conditions", "execution_flows.html#conditions", null ],
+      [ "Launching flows", "execution_flows.html#launching_flows", null ],
       [ "Loops", "execution_flows.html#loops", null ],
       [ "Flow chart example", "execution_flows.html#flow_chart", null ]
     ] ],

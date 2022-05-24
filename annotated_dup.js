@@ -28,20 +28,7 @@ var annotated_dup =
         [ "Timer", "classmel_1_1core_1_1_timer.html", "classmel_1_1core_1_1_timer" ]
       ] ],
       [ "execution", "namespacemel_1_1execution.html", [
-        [ "_private", null, [
-          [ "inv_res", "structmel_1_1execution_1_1__private_1_1inv__res.html", "structmel_1_1execution_1_1__private_1_1inv__res" ],
-          [ "inv_res< F, void >", "structmel_1_1execution_1_1__private_1_1inv__res_3_01_f_00_01void_01_4.html", "structmel_1_1execution_1_1__private_1_1inv__res_3_01_f_00_01void_01_4" ],
-          [ "GetReturn", "structmel_1_1execution_1_1__private_1_1_get_return.html", "structmel_1_1execution_1_1__private_1_1_get_return" ],
-          [ "GetReturn< TArg, F1, F2, F3, F4, F5, F6, F7, F8, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_fb1d1db078596d4b44170fbc1e0bb8dc2.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_fb1d1db078596d4b44170fbc1e0bb8dc2" ],
-          [ "GetReturn< TArg, F1, F2, F3, F4, F5, F6, F7, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f0665b9758b5a6037cd18e8a0921c09fb.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f0665b9758b5a6037cd18e8a0921c09fb" ],
-          [ "GetReturn< TArg, F1, F2, F3, F4, F5, F6, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f4c29a81eacbea01a0c6013daa206f8b5.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f4c29a81eacbea01a0c6013daa206f8b5" ],
-          [ "GetReturn< TArg, F1, F2, F3, F4, F5, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f4459a4827ea8ff1f1499d20a270100bd.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f4459a4827ea8ff1f1499d20a270100bd" ],
-          [ "GetReturn< TArg, F1, F2, F3, F4, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f3a08b3c776b7b4829345a121c0899650.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01_f3a08b3c776b7b4829345a121c0899650" ],
-          [ "GetReturn< TArg, F1, F2, F3, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01vocb782d2ef4503bd281f5758cc1c073de.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01_f3_00_01vocb782d2ef4503bd281f5758cc1c073de" ],
-          [ "GetReturn< TArg, F1, F2, void, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01void_00_01v47d8d39fddceea3dd79d78b2374dc3ab.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01_f2_00_01void_00_01v47d8d39fddceea3dd79d78b2374dc3ab" ],
-          [ "GetReturn< TArg, F1, void, void, void, void, void, void, void, void >", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01void_00_01void_00_01e51a8201ae6b8fbfd4aa455a9ea973fb.html", "structmel_1_1execution_1_1__private_1_1_get_return_3_01_t_arg_00_01_f1_00_01void_00_01void_00_01e51a8201ae6b8fbfd4aa455a9ea973fb" ]
-        ] ],
-        [ "flow", null, [
+        [ "flow", "namespacemel_1_1execution_1_1flow.html", [
           [ "_private", null, [
             [ "ApplyCondition", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition" ],
             [ "ApplyOnAll", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all" ],
