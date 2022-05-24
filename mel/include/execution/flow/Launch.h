@@ -29,7 +29,7 @@ namespace mel
             namespace _private
             {               
                 //helper for invoking flows
-                template <int n,class ResultTuple,class Flow,class ExecutionAgent,class TArg> void _invokeFlow(ExFuture<ExecutionAgent,TArg> fut,ResultTuple& output,Flow&& f)
+                template <int n,class ResultTuple,class Flow,class ExecutionAgent,class TArg> void _invokeFlow(ExFuture<ExecutionAgent,TArg> fut,std::exception_ptr& except,ResultTuple& output,Flow&& f)
                 {
                     //static_assert( std::is_invocable<F,TArg>::value, "inlineExecutor::_invokeInline bad signature");
                     if constexpr (std::is_nothrow_invocable<Flow,ExFuture<ExecutionAgent,TArg>>::value)
@@ -42,17 +42,15 @@ namespace mel
                             std::get<n>(output)=f(fut);
                         }catch(...)
                         {
-                            /*@todo resolver qué pasa si un elemento da error. seguramente pasando el exception_ptr como otros
                             if ( !except )
                                 except = std::current_exception();
-                                */
                         }
                     }
                 }	
-                template <int n,class ResultTuple,class ExecutionAgent,class TArg,class Flow,class ...Flows> void _invokeFlow(ExFuture<ExecutionAgent,TArg> fut,ResultTuple& output,Flow&& f, Flows&&... fs)
+                template <int n,class ResultTuple,class ExecutionAgent,class TArg,class Flow,class ...Flows> void _invokeFlow(ExFuture<ExecutionAgent,TArg> fut,std::exception_ptr& except, ResultTuple& output,Flow&& f, Flows&&... fs)
                 {            
-                    _invokeFlow<n>(fut,output,std::forward<Flow>(f));
-                    _invokeFlow<n+1>(fut,output,std::forward<Flows>(fs)...);
+                    _invokeFlow<n>(fut,except,output,std::forward<Flow>(f));
+                    _invokeFlow<n+1>(fut,except,output,std::forward<Flows>(fs)...);
                 }
                 template <class ExecutionAgent, class T, size_t ...Is> auto _forwardOnAll(Executor<ExecutionAgent> ex,T&& tup, std::index_sequence<Is...>)
                 {
@@ -72,37 +70,39 @@ namespace mel
             {
                 typedef typename ::mel::execution::_private::GetReturn<ExFuture<ExecutorAgent,TArg>,Flows...>::type ResultTuple;
                 ResultTuple output;
-                _private::_invokeFlow<0>(source,output,std::move(flows)...);									
+                std::exception_ptr except; //@todo, uhmm, no es muy importante, porque se refiere a error en la funcion que lanza el flow..
+                _private::_invokeFlow<0>(source,except,output,std::move(flows)...);									
                 return FlowsResult<ResultTuple>(output);
             }
             /**
              * @brief takes a tuple with the results of execution of some flows and does a execution::on_all
              */
+            
             template <class ExecutionAgent, class TupleFlow> auto on_all(Executor<ExecutionAgent> ex,TupleFlow&& f)
             {
                 //constexpr size_t ts = std::tuple_size<typename std::remove_reference<TupleFlow>::type>::value;
                 //return _private::_forwardOnAll(ex,f,std::make_index_sequence<ts>{});
                 constexpr size_t ts = std::tuple_size<typename std::remove_reference_t<TupleFlow>::type>::value;
                 return _private::_forwardOnAll(ex,f.tup,std::make_index_sequence<ts>{});
-
             } 
 
             namespace _private
             {
-               /* template <class F, class ...FTypes> struct ApplyOnAll
-                {
-                    template <class S,class ...Fs>
-                    ApplyOnAll(S&& selector,Fs&&... fs):mSelector(std::forward<F>(selector)), 
-                        mFuncs(std::forward<FTypes>(fs)...)
-                    {
-                    }
-                    std::tuple<FTypes...> mFuncs;                
-                    template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
+                template <class ExecutionAgent> struct ApplyOnAll
+                {                    
+                    ApplyOnAll(Executor<ExecutionAgent>ex):mEx(ex){}
+                    Executor<ExecutionAgent> mEx;
+
+                    template <class TupleType> auto operator()(FlowsResult<TupleType>&& fr )
                     {                  
-                        return condition(inputFut,std::forward<F>(mSelector),std::forward<FTypes>(std::get<FTypes>(mFuncs))...);
+                        return on_all(mEx,std::move(fr));
+                    }
+                    template <class TupleType> auto operator()(const FlowsResult<TupleType>& fr )
+                    {                  
+                        return on_all(mEx,fr);
                     }
                 };                
-                */
+                
                 template <class ...Flows> struct ApplyLaunch
                 {
                     template <class ...Fs>
@@ -123,20 +123,21 @@ namespace mel
             {
                 return _private::ApplyLaunch<Flows...>(std::forward<Flows>(flows)...);
             }
+            template <class ExecutionAgent> auto on_all(Executor<ExecutionAgent> ex)
+            {
+                return _private::ApplyOnAll<ExecutionAgent>(ex);
+            }
             /**
             * @brief overload operator | for chaining
             */
-            // template <class TupleType,class U> auto operator | (const FlowsResult<TupleType>& input,U&& u)
-            // {
-            //     return u(input);
-            // } 
-            // template <class TupleType,class U> auto operator | (FlowsResult<TupleType>&& input,U&& u)
-            // {
-            //     return u(std::move(input));
-            // } 
-
-
-
+            template <class TupleType,class U> auto operator | (const FlowsResult<TupleType>& input,U&& u)
+            {
+                return u(input);
+            } 
+            template <class TupleType,class U> auto operator | (FlowsResult<TupleType>&& input,U&& u)
+            {
+                return u(std::move(input));
+            } 
 
         }
     }

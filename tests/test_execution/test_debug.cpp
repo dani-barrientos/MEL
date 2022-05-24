@@ -343,73 +343,51 @@ int _testDebug(tests::BaseTest* test)
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
 	{
-		auto res = 
-			execution::launch(extp,[]() noexcept{ return "hola"s;})
-			| execution::parallel_convert(
-				[](const string&)  noexcept
-				{
-					//@todo objetivo: poder devolver void
-					//return 1;
-
-				},
-				[](const string&) 
-				{
-					return "dani"s;
-				}
-			) 
-			| execution::flow::launch(
-				[](auto input)
-				{
-					return input | execution::inmediate("hola"s) | execution::next( [](const string& s){}); //devuelvo void para terminar de arreglar en on_all
-				},
-				[](auto input)
-				{
-					return input | execution::inmediate(7.8f);// | execution::next( [](float s){});
-				}
-			);
-		// auto tupleRes = flow::launch(res,
-		// 	[](auto input)
-		// 	{
-		// 		return input | execution::inmediate("hola"s);
-		// 	},
-		// 	[](auto input)
-		// 	{
-		// 		return input | execution::inmediate(7.8f);
-		// 	}
-		// );
-
-		// auto n1 = std::get<0>(tupleRes) | execution::next(
-		// 	[](const string& str)
-		// 	{
-		// 		return 1; 
-		// 	}
-		// );
-		// auto n2 = std::get<1>(tupleRes) | execution::next(
-		// 	[](int str)
-		// 	{
-		// 		return 2;
-		// 	}
-		// );
-		// execution::on_all(exr,n1,n2);
-		//wait for all flows
-//a ver: quiero poder usar el | con el resultado del launch. ¿merece la pena?
-//un posibilidad podría ser tener un tipo propio FlowREsult o similar, sobre el que aplicar operator |, ya que el launch devuelve tupla
-		
-		auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorNoException>(
-			  
-			//res | mel::execution::flow::on_all(exr)  es necsario darle el executor ->podría evitarse? significaría que 
-			mel::execution::flow::on_all(exr,
-				res
-			)
-		);
-		
-		if ( finalRes.isValid() ) 
+		try
 		{
+			auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(
+				execution::launch(extp,[]() noexcept{ return "hola"s;})
+				| execution::parallel_convert(
+					[](const string&)  noexcept
+					{
+
+					},
+					[](const string&) 
+					{
+						throw std::runtime_error("ERR EN PARALLEL_CONVERT");
+						return "dani"s;
+					}
+				) 
+				| execution::flow::launch( 
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate("hola"s)
+						| execution::next( [](const string& s){
+							throw std::runtime_error("Err in flow");
+						}); //return void for testing purposes
+					},
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate(7.8f);
+					}
+				)
+				| mel::execution::flow::on_all(exr)
+			);							
 			//mel::text::info("Final res = ({},{})",std::get<0>(finalRes.value()),std::get<1>(finalRes.value()));
 			mel::text::info("Final res = (void,{})",std::get<1>(finalRes.value()));
-		}else
-			mel::text::error("Some error!!!");
-
+		}catch( mel::execution::OnAllException& e)
+		{
+			qué poco me gusta que sea tan chapa...por un lado está bien que haya un OnAllException, pero es bastante rollo
+			teniendo en cuenta que coje el primer error, igual es una chorrada y es mejor recibir el error original directamente
+			mel::text::error(e.getCause());
+		}
+		catch(std::exception& e)
+		{
+			mel::text::error(e.what());
+		}catch(...)
+		{
+			mel::text::error("Unknown error!!!");
+		}
 
 		/*auto res = 	mel::core::waitForFutureThread(
 			execution::launch(exr,[]()
