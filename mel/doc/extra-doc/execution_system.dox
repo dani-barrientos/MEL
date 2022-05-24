@@ -2,11 +2,11 @@
 /**
 \page execution_system Execution System
 Contents of this section:
-- [Introduction] (#introduction)
-- [Usage samples] (#usage_samples)
+- [Introduction](#introduction)
+- [Usage samples](#usage_samples)
 - [Error management](#error_management)
-- [Perfect forwarding] (#perfect_forwarding)
-- [Work flows] (#work_flows)
+- [Perfect forwarding](#perfect_forwarding)
+- [Work flows](#work_flows)
 
 ## Introduction {#introduction}
 The goal of this module is to provide a very high level API for task execution in a generic way, such that is not neccesary to know the underlying execution system.
@@ -498,6 +498,19 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		catch(core::WaitException& e)
 		{
 			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
+		}
+		catch( mel::execution::OnAllException& e)
+		{
+			try
+			{
+				rethrow_exception( e.getCause() );
+			}catch(std::exception& e)
+			{
+				mel::text::error("Error {}",e.what());
+			}catch(...)
+			{
+				mel::text::error("OnAllException. unknown error");
+			}
 		}
 		
 	},0,::tasking::Runnable::killFalse);

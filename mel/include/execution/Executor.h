@@ -444,7 +444,7 @@ namespace mel
             );
             return result;
         }           
-        
+        ///@cond HIDDEN_SYMBOLS
         namespace _private
         {            
             using ::mel::execution::VoidType;
@@ -498,6 +498,7 @@ namespace mel
                 using type = std::tuple<typename inv_res<F1,TArg>::type>;
             };
         }
+        ///@endcond
         /**
          * @brief Same as @ref parallel but returning a tuple with the values for each functor
          * @details functors returning a void will be converted to _private::VoidType. Until 10 callables can be used
@@ -692,7 +693,7 @@ namespace mel
                 }
             };           
         }
-
+        ///@endcond
 
         //@brief version for use with operator |
         template <class TRet> _private::ApplyInmediate<TRet> inmediate( TRet&& arg)
@@ -772,15 +773,12 @@ namespace mel
         /**
          * @brief return ExFuture which will be executed, in the context of the given executor ex, when all the given ExFutures are triggered.
          * @details The resulting ExFuture has a std::tuple with the types if the given ExFutures
-         * in the same order. So, all of them must return a value, void is not allowed
+         * in the same order. If any of the jobs returns void, its result is substituted for VoidType
          * If any of the given input ExFuture has error, the returned one will have the same error indicating  the element who failed
          *   @throws OnAllException if any error
          */
         template <class ExecutorAgent,class ...FTypes> auto on_all(Executor<ExecutorAgent> ex,FTypes... futs)
         {                
-        //@todo detectar void y sustituirlo por VoidType->creo que voy a tener que meter este tipo como básico
-        //mierda, el problema es que es un paraemter pack 
-            //typedef std::tuple<typename FTypes::ValueType::Type...> ReturnType;
             typedef std::tuple<typename mel::execution::WrapperType<typename FTypes::ValueType::Type>::type...> ReturnType;
             static_assert(std::is_default_constructible<ReturnType>::value,"All types returned by the input ExFutures must be DefaultConstructible");
             ExFuture<ExecutorAgent,ReturnType> result(ex);
@@ -798,7 +796,7 @@ namespace mel
                     result.setValue(std::move(resultVal));
                 }else
                 {
-                    result.setError( std::make_exception_ptr(OnAllException(r.value().first,r.value().second,"Error in tuple element")));
+                    result.setError( std::make_exception_ptr(OnAllException(r.value().first,r.value().second,"OnAllException: error in tuple element")));
                 }
                 delete tupleRes;
                 return ::mel::core::ECallbackResult::UNSUBSCRIBE;

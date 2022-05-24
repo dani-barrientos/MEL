@@ -1,9 +1,10 @@
 /**
 \page execution_flows Work flows
-- [Introduction] (#introduction)
-- [Conditions] (#conditions)
-- [Loops] (#loops)
-- [Flow chart example] (#flow_chart)
+- [Introduction](#introduction)
+- [Conditions](#conditions)
+- [Launching flows](#launching_flows)
+- [Loops](#loops)
+- [Flow chart example](#flow_chart)
 
 ###Introduction {#introduction}
 It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". This is very simple 
@@ -150,12 +151,88 @@ Input value = 3. Selecting flow 0
 Result = Flow0 End!
 \endverbatim
 
+### Launching flows {#launching_flows}
+Flows can also be *launched at same time* (of course, this concept of *same time* depends on the underlying executor capabilities) via \ref mel::execution::flow::launch "flow::launch"
+and get a *tuple of ExFuture* as a result, being each position in the tuple the result of the corresponding flow. Bellow an example of launching three flows,
+one of which can throw exception randomly. The function \ref ::mel::execution::flow::on_all "flow::on_all" is used to get the result of all flows as a tuple.
+As can be seen, throwing error in any flow is propagated correctly to the final result.
+\code {.cpp}
+template <class ExecutorType> void _sampleFlowLaunch(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+
+	th->fireAndForget([ex] () mutable
+	{
+		try
+		{
+			auto finalRes =  mel::tasking::waitForFutureMThread<::mel::core::WaitErrorAsException>(
+				execution::launch(ex,[]() noexcept{ return "Starting job!!"s;})
+				| execution::parallel_convert(
+					[](const string& str)  noexcept
+					{
+						mel::text::info("parallel_convert task 1, returning void");
+					},
+					[](const string& str) noexcept
+					{
+						return str+" Second parallel task"s;
+					}
+				) 
+				| execution::flow::launch( 
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate("hola"s)
+						| execution::next( [](const string& s)
+							{
+								if ( rand()%10 < 5 )
+									throw std::runtime_error("parallel:_convert second task. Throwing exception!!");
+							}
+						); //return void for testing purposes
+					},
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate(7.8f);
+					}
+					,
+					[](auto input) noexcept
+					{
+						return input | execution::next( [](const std::tuple<mel::execution::VoidType,string>& v) noexcept
+							{
+								return std::get<1>(v).size();
+							}
+						 );
+					}
+				)
+				| mel::execution::flow::on_all(ex)
+			);							
+			auto& finalValue = finalRes.value();
+			mel::text::info("Final res = (void,{},{})",std::get<1>(finalValue),std::get<2>(finalValue));
+		}catch( mel::execution::OnAllException& e)
+		{
+			try
+			{
+				rethrow_exception( e.getCause() );
+			}catch(std::exception& e)
+			{
+				mel::text::error("Error {}",e.what());
+			}catch(...)
+			{
+				mel::text::error("OnAllException. unknown error");
+			}
+		}
+		catch(std::exception& e)
+		{
+			mel::text::error(e.what());
+		}catch(...)
+		{
+			mel::text::error("Unknown error!!!");
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+\endcode
 ### Loops {#loops}
 It's possible to implement iterations as part of an execution flow. This concept shouldn't be confused with \ref ::mel::execution::loop "loop" which execute independent iterations in
-a, possibly, parallel way. The concept introduced here referes to sequential iterations,
-
-This way we can implement non-lineal work flows. 
-
+a, possibly, parallel way. The concept introduced here referes to sequential iterations, this way we can implement non-lineal work flows. 
 In the next example, a loop creating a random number
 and showing it in console is reapeated 4 times, doing a *microthread wait* in each iteration (if used executor allows it)
 \code {.cpp}
@@ -184,7 +261,7 @@ template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 								mel::tasking::Process::wait(2500);
 							}
 							else
-								mel::text::info("Current executor supports true parallelism. wait not done");
+								mel::text::info("Current executor doesn't supports true parallelism, wait not done");
 						});
 					},
 					[idx]() mutable noexcept

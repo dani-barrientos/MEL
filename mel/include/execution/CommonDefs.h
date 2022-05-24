@@ -8,6 +8,10 @@ namespace mel
 {
     namespace execution
     {
+        /**
+         * @brief Empty type used in some cases when a type is needed to represent a void
+         * 
+         */
         struct VoidType{};
         //helper type to get a VoidType when template parameter is void
         template <class T> struct WrapperType

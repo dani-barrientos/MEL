@@ -377,9 +377,16 @@ int _testDebug(tests::BaseTest* test)
 			mel::text::info("Final res = (void,{})",std::get<1>(finalRes.value()));
 		}catch( mel::execution::OnAllException& e)
 		{
-			qué poco me gusta que sea tan chapa...por un lado está bien que haya un OnAllException, pero es bastante rollo
-			teniendo en cuenta que coje el primer error, igual es una chorrada y es mejor recibir el error original directamente
-			mel::text::error(e.getCause());
+			try
+			{
+				rethrow_exception( e.getCause() );
+			}catch(std::exception& e)
+			{
+				mel::text::error("Error {}",e.what());
+			}catch(...)
+			{
+				mel::text::error("OnAllException. unknown error");
+			}
 		}
 		catch(std::exception& e)
 		{
@@ -462,6 +469,10 @@ int _testDebug(tests::BaseTest* test)
 					mel::text::info("Par2");
 				}
 			)					
+
+		// me sigue sin convencer lo que recibe el predicado. en la doc puse que recibe el resulktado del flujo...y no es verdad recibe lo anterior...
+		// pero creo que sí deberñia ser lo del flujo
+		// y una cosa...cómo podría hacer un while de varios flujos? creo que simplemente sería un flujo que lo que hace es un launch y tiene un on_all
 			| execution::flow::doWhile(
 				[](auto input) noexcept
 				{

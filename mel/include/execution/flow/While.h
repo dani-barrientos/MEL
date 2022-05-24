@@ -1,11 +1,12 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <execution/Executor.h>
 #include <tuple>
 #include <preprocessor/utils.h>
-/**
- * @file execution helper for flow control
- * 
- */
 
 namespace mel
 {
@@ -83,7 +84,7 @@ namespace mel
              * @param source input ExFuture from previous job
              * @param flow  flow to execute
              * @param p predicate to finish loop (returing false) or to continue (returning true)
-             * @return auto 
+             * @return last result of the flow 
              */
             template <class ExecutorAgent,class TArg,class Flow,class Predicate>
                 auto doWhile(ExFuture<ExecutorAgent,TArg> source, Flow flow, Predicate p)

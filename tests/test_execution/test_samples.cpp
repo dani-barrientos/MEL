@@ -391,6 +391,19 @@ template <class ExecutorType1,class ExecutorType2> void _sampleSeveralFlows(Exec
 		{
 			::text::error("Some error occured!! Code= {}, Reason: {}",(int)e.getCode(),e.what());
 		}
+		catch( mel::execution::OnAllException& e)
+		{
+			try
+			{
+				rethrow_exception( e.getCause() );
+			}catch(std::exception& e)
+			{
+				mel::text::error("Error {}",e.what());
+			}catch(...)
+			{
+				mel::text::error("OnAllException. unknown error");
+			}
+		}
 		
 	},0,::tasking::Runnable::killFalse);
 }
@@ -641,13 +654,88 @@ template <class ExecutorType> void _sampleFlowsCondition(ExecutorType ex)
 		
 	},0,::tasking::Runnable::killFalse);
 }
-//simple doWhile example
-template <class ExecutorType> void _sampleWhile(ExecutorType ex)
+//flow launching sample
+template <class ExecutorType> void _sampleFlowLaunch(ExecutorType ex)
 {	
 	auto th = ThreadRunnable::create();
 
 	th->fireAndForget([ex] () mutable
 	{
+		try
+		{
+			auto finalRes =  mel::tasking::waitForFutureMThread<::mel::core::WaitErrorAsException>(
+				execution::launch(ex,[]() noexcept{ return "Starting job!!"s;})
+				| execution::parallel_convert(
+					[](const string& str)  noexcept
+					{
+						mel::text::info("parallel_convert task 1, returning void");
+					},
+					[](const string& str) noexcept
+					{
+						return str+" Second parallel task"s;
+					}
+				) 
+				| execution::flow::launch( 
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate("hola"s)
+						| execution::next( [](const string& s)
+							{
+								if ( rand()%10 < 5 )
+									throw std::runtime_error("parallel:_convert second task. Throwing exception!!");
+							}
+						); //return void for testing purposes
+					},
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate(7.8f);
+					}
+					,
+					[](auto input) noexcept
+					{
+						return input | execution::next( [](const std::tuple<mel::execution::VoidType,string>& v) noexcept
+							{
+								return std::get<1>(v).size();
+							}
+						 );
+					}
+				)
+				| mel::execution::flow::on_all(ex)
+			);							
+			auto& finalValue = finalRes.value();
+			mel::text::info("Final res = (void,{},{})",std::get<1>(finalValue),std::get<2>(finalValue));
+		}catch( mel::execution::OnAllException& e)
+		{
+			try
+			{
+				rethrow_exception( e.getCause() );
+			}catch(std::exception& e)
+			{
+				mel::text::error("Error {}",e.what());
+			}catch(...)
+			{
+				mel::text::error("OnAllException. unknown error");
+			}
+		}
+		catch(std::exception& e)
+		{
+			mel::text::error(e.what());
+		}catch(...)
+		{
+			mel::text::error("Unknown error!!!");
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+//simple doWhile example
+template <class ExecutorType> void _sampleWhile(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex] () mutable
+	{
+
+
+
 		srand(time(NULL));
 		int idx = 0;
         auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
@@ -667,7 +755,7 @@ template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 								mel::tasking::Process::wait(2500);
 							}
 							else
-								mel::text::info("Current executor supports true parallelism. wait not done");
+								mel::text::info("Current executor doesn't support true parallelism, wait not done");
 						});
 					},
 					[idx]() mutable noexcept
@@ -778,18 +866,19 @@ void test_execution::samples()
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
     
-	_sampleBasic(exr);	
-	_sampleBasic(extp);
- 	_sampleReference(exr);
- 	_sampleError1(exr);
- 	_sampleError2(extp);
-	_sampleErrorNoException(extp);
- 	_sampleTransfer(exr,extp);
-     _sampleSeveralFlows(exr,extp);
-    _sampleCallables(extp);
-   	_samplePF(exr);	
-	_sampleFlows1(extp);
-	_sampleFlowsCondition(extp);
-	_sampleWhile(exNaive);
-	_sampleFlowChart(exr);
+	// _sampleBasic(exr);	
+	// _sampleBasic(extp);
+ 	// _sampleReference(exr);
+ 	// _sampleError1(exr);
+ 	// _sampleError2(extp);
+	// _sampleErrorNoException(extp);
+ 	// _sampleTransfer(exr,extp);
+    // _sampleSeveralFlows(exr,extp);
+    // _sampleCallables(extp);
+   	// _samplePF(exr);	
+	// _sampleFlows1(extp);
+	// _sampleFlowsCondition(extp);
+	//_sampleFlowLaunch(extp);
+	_sampleWhile(extp);
+	// _sampleFlowChart(exr);
 }

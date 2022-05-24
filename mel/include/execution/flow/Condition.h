@@ -1,16 +1,21 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <execution/Executor.h>
 #include <tuple>
 #include <preprocessor/utils.h>
-/**
- * @file execution helper for flow control
- * 
- */
 
 namespace mel
 {
     namespace execution
     {      
+        /**
+         * @brief Functions for flow management
+         */
         namespace flow
         {           
             //for internal use by condition function
@@ -44,7 +49,7 @@ namespace mel
              * @brief Select functor to execute
              * @details Callable \p selector return an unsigned int with is the index of de callable in \p jobs
              * If index is greater than available callables, an std::out_of_range error is set
-             * @param selector callable with signature 'size_t f(TArg)' TODO decidir qué debe recibir el selector
+             * @param selector callable with signature 'size_t f(TArg)' 
              * @param flows variable number of callables to choose in \p selector 
              */                
             template <class ExecutorAgent,class TArg,class F,class ...Flows>

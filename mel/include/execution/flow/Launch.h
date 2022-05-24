@@ -1,31 +1,26 @@
 #pragma once
+/*
+ * SPDX-FileCopyrightText: 2022 Daniel Barrientos <danivillamanin@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <execution/Executor.h>
 #include <tuple>
 #include <preprocessor/utils.h>
-/**
- * @file execution helper for flow control
- * 
- */
-
 namespace mel
 {
     namespace execution
     {      
         namespace flow
         {
-
-            /**
-             * @brief 
-             * 
-             * @tparam TupleType 
-             */
-            template <class TupleType> struct FlowsResult  //@todo usar herencia
+            ///!brief tuple wrapper for holding result of flows execution
+            template <class TupleType> struct FlowsResult
             {
                 using type = TupleType;
-                template <class T> 
-                FlowsResult( T&& tt):tup(std::forward<T>(tt)){};
-                TupleType tup;  //ahora como agregado para probar y avanzar
+                FlowsResult(TupleType&& tt):tup(std::move(tt)){};
+                TupleType tup;
             };
+            ///@cond HIDDEN_SYMBOLS
             namespace _private
             {               
                 //helper for invoking flows
@@ -57,6 +52,7 @@ namespace mel
                     return execution::on_all(ex,std::get<Is>(tup)...);
                 }
             }; //end _private
+            ///@endcond
                                   
             /**
              * @brief Launch given set of flows 
@@ -72,12 +68,11 @@ namespace mel
                 ResultTuple output;
                 std::exception_ptr except; //@todo, uhmm, no es muy importante, porque se refiere a error en la funcion que lanza el flow..
                 _private::_invokeFlow<0>(source,except,output,std::move(flows)...);									
-                return FlowsResult<ResultTuple>(output);
+                return FlowsResult<ResultTuple>(std::move(output));
             }
             /**
-             * @brief takes a tuple with the results of execution of some flows and does a execution::on_all
+             * @brief Takes a tuple with the results of execution of some flows and does a execution::on_all
              */
-            
             template <class ExecutionAgent, class TupleFlow> auto on_all(Executor<ExecutionAgent> ex,TupleFlow&& f)
             {
                 //constexpr size_t ts = std::tuple_size<typename std::remove_reference<TupleFlow>::type>::value;
@@ -128,7 +123,7 @@ namespace mel
                 return _private::ApplyOnAll<ExecutionAgent>(ex);
             }
             /**
-            * @brief overload operator | for chaining
+            * @brief overload operator | for chaining a FlowsResult
             */
             template <class TupleType,class U> auto operator | (const FlowsResult<TupleType>& input,U&& u)
             {

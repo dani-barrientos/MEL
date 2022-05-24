@@ -744,16 +744,15 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 {
 	#define INIT_VALUE 2
 	sCurrentTest = test;
-	//@todo cosas pendientes: chequeo de valor de cont al ejecutar lambda
-	//test launch
-	tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
+	tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
 	{
 		mel::text::info("Test Launch lambda rvalue ref");
 		//first test: Passing lambda as rvalue reference and capturing object by copy
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
 		auto res = mel::core::waitForFutureThread(
-			 execution::launch(ex,[pp,cont]()
+			 execution::launch(ex,
+			 	[pp,cont]()
 				{
 					mel::text::info("Launch before wait. pp.val = {}, cont = {}",pp.val,cont);
 					if ( cont != INIT_VALUE ) 
@@ -777,12 +776,14 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 				}
 			 )
 		);	
-		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		//mel::text::info("Value = {}",res.value());
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("TestClass move",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);  //moved when calling launch + move to execute							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Launch lambda lvalue ref");
 		//second test: Passing lambda as lvalue reference and capturing object by copy
 		TestClass pp(INIT_VALUE,ll);
@@ -813,12 +814,13 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 			 execution::launch(ex,lmb)
 		);	
 		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
-		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture + copy lamda
+		test->checkOccurrences("TestClass move",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed							
 	}
 	//test next
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Next lambda rvalue ref");
 		//first test: Passing lambda as rvalue reference and capturing object by copy
 		TestClass pp(INIT_VALUE,ll);
@@ -849,18 +851,16 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 					return s;
 				}
 			) 			
-		/*	| execution::next(  [](const string& s)
-			{
-				return 5;
-			}
-			)*/
+		
 		);	
-		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
-		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+	//	mel::text::info("Value = {}",res.value());
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture
+//@todo	es muy mosqueando estas ocurrencias, ya que a veces sale distinto numero, supongo que en funcion de si se tien eque suscribir al callback del input o no 	
+		test->checkOccurrences("TestClass move",9,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed			
 	}
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test next lambda lvalue ref");
 		//second test: Passing lambda as lvalue reference and capturing object by copy
 		TestClass pp(INIT_VALUE,ll);
@@ -896,12 +896,13 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		
 		);	
 		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
-		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture
+		test->checkOccurrences("TestClass move",7,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed	
 	}
 	//parallel
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Parallel lambda rvalue ref");
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
@@ -939,11 +940,14 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 			)
 		);	
 		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
-		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
+		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture
+		test->checkOccurrences("TestClass move",8,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed	
+
+seguir por aqui. me mosquea que no siempre da mismos valores
 	}
 	{		
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Parallel lambda lvalue ref");
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
@@ -990,6 +994,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 	}
 	//parallel_convert
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Parallel_convert lambda rvalue ref");
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
@@ -1034,6 +1039,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 	{		
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Parallel_convert lambda lvalue ref");
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
@@ -1081,6 +1087,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 	}
 	//loop
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Loop lambda rvalue ref");
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
@@ -1114,6 +1121,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 	}
 	//loop
 	{
+		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Loop lambda lvalue ref");
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
