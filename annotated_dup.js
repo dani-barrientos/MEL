@@ -33,6 +33,7 @@ var annotated_dup =
             [ "ApplyCondition", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition" ],
             [ "ApplyOnAll", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all" ],
             [ "ApplyLaunch", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch" ],
+            [ "ApplyLoop", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop" ],
             [ "WhileImpl", "classmel_1_1execution_1_1flow_1_1__private_1_1_while_impl.html", "classmel_1_1execution_1_1flow_1_1__private_1_1_while_impl" ],
             [ "ApplyWhile", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while.html", "structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while" ]
           ] ],

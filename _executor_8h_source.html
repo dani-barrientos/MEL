@@ -631,7 +631,7 @@ $(document).ready(function(){initNavTree('_executor_8h_source.html',''); initRes
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;                <span class="keywordtype">int</span> increment;</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(ExFuture&lt;ExecutorAgent,TArg&gt; inputFut)</div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;                {</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a>(inputFut,begin,end,std::forward&lt;F&gt;(mFunc));</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;                    <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a>(inputFut,begin,end,std::forward&lt;F&gt;(mFunc),increment);</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;                }</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;            };</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;            </div>

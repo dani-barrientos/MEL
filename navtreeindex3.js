@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"classmel_1_1mpl_1_1_return_adaptor.html#a448d4cf134fafa43a159a124ed1fa4cb":[5,0,0,2,55,1],
 "classmel_1_1mpl_1_1_return_adaptor.html#a90ce92970df2d28b0180a2d99fcd604d":[5,0,0,2,55,0],
 "classmel_1_1mpl_1_1_return_adaptor.html#acf5e7b3add3fddc92c8a3d74db9a5516":[5,0,0,2,55,2],
 "classmel_1_1mpl_1_1_small.html":[5,0,0,2,12],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "classmel_1_1tasking_1_1_thread_runnable.html#a17130341324f5f5f5646a9a5be8416ee":[5,0,0,4,12,14],
 "classmel_1_1tasking_1_1_thread_runnable.html#a34e3ef27a129b113b00a0c40cee7090e":[5,0,0,4,12,32],
 "classmel_1_1tasking_1_1_thread_runnable.html#a40875f72ac18980f9c4d0228669294b2":[5,0,0,4,12,2],
-"classmel_1_1tasking_1_1_thread_runnable.html#a655983125608fea8480cc1a8d515d97d":[5,0,0,4,12,36],
-"classmel_1_1tasking_1_1_thread_runnable.html#a6599cc178733e5d47b6ecf8841688468":[5,0,0,4,12,9]
+"classmel_1_1tasking_1_1_thread_runnable.html#a655983125608fea8480cc1a8d515d97d":[5,0,0,4,12,36]
 };

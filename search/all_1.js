@@ -10,11 +10,12 @@ var searchData=
   ['append_3c_20typelist_3c_20h_2c_20t_20_3e_2c_20new_20_3e_21',['Append&lt; TypeList&lt; H, T &gt;, New &gt;',['../structmel_1_1mpl_1_1typelist_1_1_append_3_01_type_list_3_01_h_00_01_t_01_4_00_01_new_01_4.html',1,'mel::mpl::typelist']]],
   ['applycondition_22',['ApplyCondition',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_condition.html',1,'mel::execution::flow::_private']]],
   ['applylaunch_23',['ApplyLaunch',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_launch.html',1,'mel::execution::flow::_private']]],
-  ['applyonall_24',['ApplyOnAll',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html',1,'mel::execution::flow::_private']]],
-  ['applywhile_25',['ApplyWhile',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while.html',1,'mel::execution::flow::_private']]],
-  ['asleep_26',['ASLEEP',['../classmel_1_1tasking_1_1_process.html#a43d7b582fa6610ddc24f41531da6b27daa012260a8af269add90841ccb726c81b',1,'mel::tasking::Process']]],
-  ['asptr_27',['AsPtr',['../classmel_1_1mpl_1_1_as_ptr.html',1,'mel::mpl']]],
-  ['assign_28',['assign',['../classmel_1_1core_1_1_future___common.html#aca794c846301c1a1d7c907e7d69fc1d6',1,'mel::core::Future_Common']]],
-  ['assign_29',['Assign',['../classmel_1_1mpl_1_1_assign.html',1,'mel::mpl']]],
-  ['autokill_30',['autoKill',['../structmel_1_1execution_1_1_runnable_executor_opts.html#af820f05a9b4cdfe70a162f637f5ff78a',1,'mel::execution::RunnableExecutorOpts::autoKill()'],['../structmel_1_1execution_1_1_thread_pool_executor_opts.html#a34c40a8b2aa65e7aed5a68cab5c8eb29',1,'mel::execution::ThreadPoolExecutorOpts::autoKill()']]]
+  ['applyloop_24',['ApplyLoop',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html',1,'mel::execution::flow::_private']]],
+  ['applyonall_25',['ApplyOnAll',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_on_all.html',1,'mel::execution::flow::_private']]],
+  ['applywhile_26',['ApplyWhile',['../structmel_1_1execution_1_1flow_1_1__private_1_1_apply_while.html',1,'mel::execution::flow::_private']]],
+  ['asleep_27',['ASLEEP',['../classmel_1_1tasking_1_1_process.html#a43d7b582fa6610ddc24f41531da6b27daa012260a8af269add90841ccb726c81b',1,'mel::tasking::Process']]],
+  ['asptr_28',['AsPtr',['../classmel_1_1mpl_1_1_as_ptr.html',1,'mel::mpl']]],
+  ['assign_29',['assign',['../classmel_1_1core_1_1_future___common.html#aca794c846301c1a1d7c907e7d69fc1d6',1,'mel::core::Future_Common']]],
+  ['assign_30',['Assign',['../classmel_1_1mpl_1_1_assign.html',1,'mel::mpl']]],
+  ['autokill_31',['autoKill',['../structmel_1_1execution_1_1_runnable_executor_opts.html#af820f05a9b4cdfe70a162f637f5ff78a',1,'mel::execution::RunnableExecutorOpts::autoKill()'],['../structmel_1_1execution_1_1_thread_pool_executor_opts.html#a34c40a8b2aa65e7aed5a68cab5c8eb29',1,'mel::execution::ThreadPoolExecutorOpts::autoKill()']]]
 ];

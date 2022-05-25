@@ -224,7 +224,7 @@ Conditions</h3>
 Result = Flow0 End!
 </pre><h3><a class="anchor" id="launching_flows"></a>
 Launching flows</h3>
-<p>Flows can also be <em>launched at same time</em> (of course, this concept of <em>same time</em> depends on the underlying executor capabilities) via <a class="el" href="namespacemel_1_1execution_1_1flow.html#a4a19431bbce0e08e7adf119f264d7df9">flow::launch</a> and get a <em>tuple of ExFuture</em> as a result, being each position in the tuple the result of the corresponding flow. Bellow an example of launching three flows, one of which can throw exception randomly. The function <a class="el" href="namespacemel_1_1execution_1_1flow.html#a7a8a2083987256cfb2c4f38e8ac7662e">flow::on_all</a> is used to get the result of all flows as a tuple. As can be seen, throwing error in any flow is propagated correctly to the final result. </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowLaunch(ExecutorType ex)</div>
+<p>Flows can also be <em>launched at same time</em> (of course, this concept of <em>same time</em> depends on the underlying executor capabilities) via <a class="el" href="namespacemel_1_1execution_1_1flow.html#a4a19431bbce0e08e7adf119f264d7df9">flow::launch</a> and get a <em>tuple of ExFuture</em> as a result, being each position in the tuple the result of the corresponding flow. Below an example of launching three flows, one of which can throw exception randomly. The function <a class="el" href="namespacemel_1_1execution_1_1flow.html#a7a8a2083987256cfb2c4f38e8ac7662e">flow::on_all</a> is used to get the result of all flows as a tuple. As can be seen, throwing error in any flow is propagated correctly to the final result. </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowLaunch(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>
@@ -300,7 +300,8 @@ Launching flows</h3>
 <div class="ttc" id="anamespacemel_1_1execution_1_1flow_html_a7a8a2083987256cfb2c4f38e8ac7662e"><div class="ttname"><a href="namespacemel_1_1execution_1_1flow.html#a7a8a2083987256cfb2c4f38e8ac7662e">mel::execution::flow::on_all</a></div><div class="ttdeci">auto on_all(Executor&lt; ExecutionAgent &gt; ex, TupleFlow &amp;&amp;f)</div><div class="ttdoc">Takes a tuple with the results of execution of some flows and does a execution::on_all.</div><div class="ttdef"><b>Definition:</b> Launch.h:76</div></div>
 </div><!-- fragment --> <h3><a class="anchor" id="loops"></a>
 Loops</h3>
-<p>It's possible to implement iterations as part of an execution flow. This concept shouldn't be confused with <a class="el" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a> which execute independent iterations in a, possibly, parallel way. The concept introduced here referes to sequential iterations, this way we can implement non-lineal work flows. In the next example, a loop creating a random number and showing it in console is reapeated 4 times, doing a <em>microthread wait</em> in each iteration (if used executor allows it) </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleWhile(ExecutorType ex)</div>
+<p>It's possible to implement iterations as part of an execution flow. There are two kinds of iterations in flows: <em>sequential</em>, implemented with <a class="el" href="namespacemel_1_1execution_1_1flow.html#a621cba67bd9f449d2e5f42b8d4db59a0">flow::doWhile</a> and <em>independent iterations</em> with <a class="el" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">flow::loop</a>.</p>
+<p>Below an example of using <a class="el" href="namespacemel_1_1execution_1_1flow.html#a621cba67bd9f449d2e5f42b8d4db59a0">doWhile</a> where a random number is created and shown in console for 4 times, doing a <em>microthread wait</em> in each iteration (if used executor allows it) </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleWhile(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>
@@ -356,7 +357,65 @@ Loops</h3>
 <div class="line">    },0,::tasking::Runnable::killFalse);</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_process_html_ae3350d1645cca8cb94f65b1b85dff032"><div class="ttname"><a href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a></div><div class="ttdeci">static ESwitchResult wait(unsigned int msegs) OPTIMIZE_FLAGS</div></div>
-</div><!-- fragment --><h3><a class="anchor" id="flow_chart"></a>
+</div><!-- fragment --><p>And now an example of <a class="el" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">flow::loop</a> where iterations are independent, and so could be parallelized if executor allows it. </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlowLoop(ExecutorType ex)</div>
+<div class="line">{   </div>
+<div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
+<div class="line">    th-&gt;fireAndForget([ex] () <span class="keyword">mutable</span></div>
+<div class="line">    {</div>
+<div class="line">        srand(time(NULL));</div>
+<div class="line">        <span class="keywordtype">int</span> idx = 0;</div>
+<div class="line">        <span class="keyword">auto</span> res = mel::tasking::waitForFutureMThread&lt;::mel::core::WaitErrorNoException&gt;(</div>
+<div class="line">                execution::start(ex)</div>
+<div class="line">                | execution::flow::loop( 0,4,</div>
+<div class="line">                    []( <span class="keywordtype">int</span> idx, <span class="keyword">auto</span> input ) noexcept</div>
+<div class="line">                    {</div>
+<div class="line">                        <span class="keywordflow">return</span> input | execution::next( []() noexcept -&gt; <span class="keywordtype">int</span></div>
+<div class="line">                        {</div>
+<div class="line">                            <span class="keywordflow">return</span> rand()%10;</div>
+<div class="line">                        })</div>
+<div class="line">                        | execution::next( [](<span class="keywordtype">int</span> v ) noexcept</div>
+<div class="line">                        {</div>
+<div class="line">                            mel::text::info(<span class="stringliteral">&quot; new value = {}. Now waiting&quot;</span>,v);</div>
+<div class="line">                            <span class="keywordflow">if</span> constexpr(execution::ExecutorTraits&lt;decltype(ex)&gt;::has_microthreading)</div>
+<div class="line">                            {</div>
+<div class="line">                                <a class="code" href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a>(2500);</div>
+<div class="line">                            }</div>
+<div class="line">                            <span class="keywordflow">else</span></div>
+<div class="line">                                mel::text::info(<span class="stringliteral">&quot;Current executor doesn&#39;t support true parallelism, wait not done&quot;</span>);</div>
+<div class="line">                            mel::text::info(<span class="stringliteral">&quot; new value = {}. After wait&quot;</span>,v);</div>
+<div class="line">                        });</div>
+<div class="line">                    }               </div>
+<div class="line">                )</div>
+<div class="line">                | execution::next( []{</div>
+<div class="line">                    mel::text::info(<span class="stringliteral">&quot; Flow finished!!&quot;</span>);</div>
+<div class="line">                })</div>
+<div class="line">        );</div>
+<div class="line">        <span class="keywordflow">if</span> ( res.isValid())</div>
+<div class="line">        {</div>
+<div class="line">            text::info(<span class="stringliteral">&quot;Finished&quot;</span>);</div>
+<div class="line">        }<span class="keywordflow">else</span></div>
+<div class="line">        {</div>
+<div class="line">            <span class="keywordflow">try</span></div>
+<div class="line">            {</div>
+<div class="line">                std::rethrow_exception(res.error());                </div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">catch</span>(...)</div>
+<div class="line">            {</div>
+<div class="line">                ::text::error(<span class="stringliteral">&quot;Some error occured!!&quot;</span>);</div>
+<div class="line">            }</div>
+<div class="line">        }</div>
+<div class="line">        </div>
+<div class="line">    },0,::tasking::Runnable::killFalse);</div>
+<div class="line">}</div>
+</div><!-- fragment --><p> The fact that independent iterations are used can be seen in the output ,where an iteration doesn't need the previous to be finished: </p><pre class="fragment">new value = 9. Now waiting
+new value = 1. Now waiting
+new value = 3. Now waiting
+new value = 3. Now waiting
+new value = 9. After wait
+new value = 3. After wait
+new value = 1. After wait
+new value = 3. After wait
+</pre><h3><a class="anchor" id="flow_chart"></a>
 Flow chart example</h3>
 <p>TODO PONER UN EJEMPLO PITNANDO UN DIAGRAMA DE FLUJO EN IMPLEMENTARLO </p>
 </div></div><!-- contents -->
