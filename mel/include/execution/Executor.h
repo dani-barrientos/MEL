@@ -616,7 +616,7 @@ namespace mel
                 int increment;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return loop(inputFut,begin,end,std::forward<F>(mFunc));
+                    return loop(inputFut,begin,end,std::forward<F>(mFunc),increment);
                 }
             };
             

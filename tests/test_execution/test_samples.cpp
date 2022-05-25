@@ -7,6 +7,7 @@
 #include <execution/flow/Condition.h>
 #include <execution/flow/While.h>
 #include <execution/flow/Launch.h>
+#include <execution/flow/Loop.h>
 #include <functional>
 using std::string;
 #include <memory>
@@ -733,9 +734,6 @@ template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 	auto th = ThreadRunnable::create();
 	th->fireAndForget([ex] () mutable
 	{
-
-
-
 		srand(time(NULL));
 		int idx = 0;
         auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
@@ -749,13 +747,14 @@ template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 						})
 						| execution::next( [](int v ) noexcept
 						{
-							mel::text::info(" new value = {}",v);
+							mel::text::info(" new value = {}. Now waiting",v);
 							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
 							{
 								mel::tasking::Process::wait(2500);
 							}
 							else
 								mel::text::info("Current executor doesn't support true parallelism, wait not done");
+							mel::text::info(" new value = {}. After wait",v);
 						});
 					},
 					[idx]() mutable noexcept
@@ -785,10 +784,75 @@ template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 		
 	},0,::tasking::Runnable::killFalse);
 }
+//simple flow::loop example
+template <class ExecutorType> void _sampleFlowLoop(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex] () mutable
+	{
+		srand(time(NULL));
+		int idx = 0;
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::start(ex)
+				| execution::flow::loop( 0,4,
+					[]( int idx, auto input ) noexcept
+					{
+						return input | execution::next( []() noexcept -> int
+						{
+							return rand()%10;
+						})
+						| execution::next( [](int v ) noexcept
+						{
+							mel::text::info(" new value = {}. Now waiting",v);
+							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
+							{
+								mel::tasking::Process::wait(2500);
+							}
+							else
+								mel::text::info("Current executor doesn't support true parallelism, wait not done");
+							mel::text::info(" new value = {}. After wait",v);
+						});
+					}				
+				)
+				| execution::next( []{
+					mel::text::info(" Flow finished!!");
+				})
+		);
+		if ( res.isValid())
+		{
+			text::info("Finished");
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
 
 template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
 {	
-	/*auto th = ThreadRunnable::create();
+/*	auto th = ThreadRunnable::create();
+
+COSAS:
+ - NO CREAR EL VECTOR EN EL LAUNCH, PORQUE LUEGO GENERARÁ COPIA POR CADA ITERACION. CREARLO Y PASARLO POR REF O PUNTERO
+ - SI USO EL DOWHILE PARA ITERAR EL VECTOR, ESTO ES SECUENCIAL. ¿TIENE SENTIDO UN "LOOP" PARA FLUJOS? LO QUE MÁS ME JOROBA DE TODO ESTO ES QUE PARECEN COSAS REPETIDAS DEL execution
+		PODRÍA USAR EL DOwILE PARA ESO? EL TEMA ES QUE LLAMARLE LOOP SUENA IGUAL QUE EL DOWHILE->POSIBILDIADES:
+			- PARALLEL -> EN EL FONDO EL LAUNCH TAMBIÉN ES UN parallelism
+			- SOBRECARGAS DEL LAUNCH-> UN PROBLEMA GORDO CON TODO ESTO ES EL RESULTADO...YA NO TIENE SENTIDO DEVOLVER UNA TUPLA
+			EN CUALQUIER CASO:
+				- DADO QUE CADA FLUJO TERMINARÁ CUANDO SEA...¿CÓMO ESPERAR A TODOS? -> CREO QUE SERÁ FACIL, MÁS O MENOS COMO EL LOOP NORMAL, CON UNA BARRERA
+				- EL RESULTADO DEL FLUJO YA NO TENDRÍA SENTIDO...¿IGNORARLO?
+
+		
+
+
 
 	th->fireAndForget([ex] () mutable
 	{
@@ -805,7 +869,10 @@ template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
 						return result;
 					}
 				)
-				| execution::doWhile( 
+				si hago esto así, el vector se copiará en cada flujo
+				ademñas esto no lanza flujos paralelos.... pero me parece que hacer un  loop para los flows es una burrada...
+
+				| execution::flow::doWhile( 
 					[]( auto input ) noexcept
 					{
 						return input | execution::next( []() noexcept -> int
@@ -879,6 +946,7 @@ void test_execution::samples()
 	// _sampleFlows1(extp);
 	// _sampleFlowsCondition(extp);
 	//_sampleFlowLaunch(extp);
-	_sampleWhile(extp);
-	// _sampleFlowChart(exr);
+	//_sampleWhile(extp);
+	_sampleFlowLoop(extp);
+	 //_sampleFlowChart(exr);
 }

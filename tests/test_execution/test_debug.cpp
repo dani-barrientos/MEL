@@ -20,6 +20,7 @@ using mel::tasking::Process;
 #include <execution/flow/Condition.h>
 #include <execution/flow/While.h>
 #include <execution/flow/Launch.h>
+#include <execution/flow/Loop.h>
 #include <vector>
 using std::vector;
 #include <memory>
@@ -343,38 +344,52 @@ int _testDebug(tests::BaseTest* test)
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
 	{
+
 		try
 		{
+			auto fl = [](auto input) noexcept
+					{
+						return input 
+						| execution::next( [](const string& s){
+							::mel::text::info(" flow::loop -> next it");
+						}); //return from flow is not used, no return void
+					};
 			auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(
-				execution::launch(extp,[]() noexcept{ return "hola"s;})
-				| execution::parallel_convert(
-					[](const string&)  noexcept
-					{
 
-					},
-					[](const string&) 
+				execution::launch(exNaive,[]() noexcept{ return "hola"s;})
+				| execution::flow::loop(2,5, 
+					/*[](int idx,auto input) noexcept
 					{
-						throw std::runtime_error("ERR EN PARALLEL_CONVERT");
-						return "dani"s;
+						::mel::text::info(" flow number it {}",idx);
+						return input 
+						| execution::next( [idx](const string& s){
+							::mel::text::info(" flow::loop -> next it {}",idx);
+						}); //return from flow is not used, no return void
+					}*/
+					[fl](int idx,auto v)
+					{
+						return fl(v);
 					}
-				) 
-				| execution::flow::launch( 
+					,1
+				)
+			);
+			/*auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(
+				execution::launch(extp,[]() noexcept{ return "hola"s;})
+
+				| execution::flow::loop(2,9, 
 					[](auto input) noexcept
 					{
 						return input | execution::inmediate("hola"s)
 						| execution::next( [](const string& s){
-							throw std::runtime_error("Err in flow");
+							::mel::text::info(" flow::loop it");
+							return 6;
 						}); //return void for testing purposes
-					},
-					[](auto input) noexcept
-					{
-						return input | execution::inmediate(7.8f);
 					}
 				)
-				| mel::execution::flow::on_all(exr)
-			);							
+				
+			);*/
 			//mel::text::info("Final res = ({},{})",std::get<0>(finalRes.value()),std::get<1>(finalRes.value()));
-			mel::text::info("Final res = (void,{})",std::get<1>(finalRes.value()));
+			mel::text::info("Final res");
 		}catch( mel::execution::OnAllException& e)
 		{
 			try

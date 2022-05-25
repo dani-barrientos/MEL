@@ -740,6 +740,7 @@ int _testLaunch( tests::BaseTest* test)
 	return result;
 }
 
+// "move" tests are removed because they depend greately on compiler and debug vs release
 template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRunnable* th,tests::BaseTest* test)
 {
 	#define INIT_VALUE 2
@@ -779,7 +780,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		//mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-		test->checkOccurrences("TestClass move",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);  //moved when calling launch + move to execute							
+		//test->checkOccurrences("TestClass move",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);  //moved when calling launch + move to execute							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 	{
@@ -816,7 +817,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture + copy lamda
-		test->checkOccurrences("TestClass move",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed							
+	//	test->checkOccurrences("TestClass move",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed							
 	}
 	//test next
 	{
@@ -826,8 +827,11 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		TestClass pp(INIT_VALUE,ll);
 		int cont = INIT_VALUE;
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::next( [pp,cont](const string& s)
 				{
 					mel::text::info("Next before wait. pp.val = {}, cont = {}",pp.val,cont);
@@ -856,8 +860,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 	//	mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture
-//@todo	es muy mosqueando estas ocurrencias, ya que a veces sale distinto numero, supongo que en funcion de si se tien eque suscribir al callback del input o no 	
-		test->checkOccurrences("TestClass move",9,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed			
+	//	test->checkOccurrences("TestClass move",10,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed			
 	}
 	{
 		sCurrentTest->clearTextBuffer();
@@ -888,8 +891,11 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 					return s;
 				};		
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::next( 
 				lmb
 			) 
@@ -898,7 +904,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture
-		test->checkOccurrences("TestClass move",7,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed	
+//		test->checkOccurrences("TestClass move",7,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed	
 	}
 	//parallel
 	{
@@ -908,8 +914,11 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		int cont = INIT_VALUE;
 		//first test: Passing lambda as rvalue reference and capturing object by copy
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::parallel( 
 				[cont](const string& s)
 				{
@@ -942,9 +951,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
 		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //copy in capture
-		test->checkOccurrences("TestClass move",8,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed	
-
-seguir por aqui. me mosquea que no siempre da mismos valores
+	//	test->checkOccurrences("TestClass move",8,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //moved when executed	
 	}
 	{		
 		sCurrentTest->clearTextBuffer();
@@ -970,8 +977,11 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 
 		//second test: Passing lambda as lvalue reference and capturing object by copy
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::parallel( 
 				[cont](const string& s)
 				{
@@ -988,11 +998,11 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 			)
 		);	
 		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
-	//parallel_convert
+	//parallel_convert rvalue ref
 	{
 		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Parallel_convert lambda rvalue ref");
@@ -1000,8 +1010,11 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 		int cont = INIT_VALUE;
 		//first test: Passing lambda as rvalue reference and capturing object by copy
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::parallel_convert( 
 				[cont](const string& s)
 				{
@@ -1034,10 +1047,11 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 			)
 		);	
 		mel::text::info("Value = ({} {})",std::get<0>(res.value()),std::get<1>(res.value()));
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
+	//parallel_convert lvalue ref
 	{		
 		sCurrentTest->clearTextBuffer();
 		mel::text::info("Test Parallel_convert lambda lvalue ref");
@@ -1063,8 +1077,11 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 
 		//second test: Passing lambda as lvalue reference and capturing object by copy
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::parallel_convert( 
 				[cont](const string& s)
 				{
@@ -1081,8 +1098,8 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 			)
 		);	
 		mel::text::info("Value = ({} {})",std::get<0>(res.value()),std::get<1>(res.value()));
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 	//loop
@@ -1093,12 +1110,14 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 		int cont = INIT_VALUE;
 		//first test: Passing lambda as rvalue reference and capturing object by copy
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::loop( 0,10,
 				[cont,pp](int idx,const string& s) noexcept
 				{
-					//mel::text::info("loop cont = {}",cont);
 					if ( cont != INIT_VALUE ) 
 					{
 						stringstream ss;
@@ -1115,8 +1134,8 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 			)
 		);	
 		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		test->checkOccurrences("TestClass copy",11,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //each iteration means a copy of the lambda
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 	//loop
@@ -1141,21 +1160,24 @@ seguir por aqui. me mosquea que no siempre da mismos valores
 						sCurrentTest->setFailed(ss.str());
 					}
 				};		
-		//first test: Passing lambda as rvalue reference and capturing object by copy
+		
 		auto res = mel::core::waitForFutureThread(
-			execution::start(ex)
-			| execution::inmediate("Dani"s)
+			execution::launch( ex,[]() noexcept
+				{
+					return "Dani"s;
+				}
+			)
 			| execution::loop( 0,10,
 				lmb
 			)
 		);	
 		mel::text::info("Value = {}",res.value());
-		// test->checkOccurrences("TestClass constructor",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		// test->checkOccurrences("TestClass copy",2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
+		test->checkOccurrences("TestClass copy",13,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 }
-//test copys and movements in lambda captures
+//test copies and behaviour in lambda captures
 int _testCaptures( tests::BaseTest* test)
 {
 	int result = 0;

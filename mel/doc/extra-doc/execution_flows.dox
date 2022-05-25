@@ -153,7 +153,7 @@ Result = Flow0 End!
 
 ### Launching flows {#launching_flows}
 Flows can also be *launched at same time* (of course, this concept of *same time* depends on the underlying executor capabilities) via \ref mel::execution::flow::launch "flow::launch"
-and get a *tuple of ExFuture* as a result, being each position in the tuple the result of the corresponding flow. Bellow an example of launching three flows,
+and get a *tuple of ExFuture* as a result, being each position in the tuple the result of the corresponding flow. Below an example of launching three flows,
 one of which can throw exception randomly. The function \ref ::mel::execution::flow::on_all "flow::on_all" is used to get the result of all flows as a tuple.
 As can be seen, throwing error in any flow is propagated correctly to the final result.
 \code {.cpp}
@@ -231,10 +231,10 @@ template <class ExecutorType> void _sampleFlowLaunch(ExecutorType ex)
 }
 \endcode
 ### Loops {#loops}
-It's possible to implement iterations as part of an execution flow. This concept shouldn't be confused with \ref ::mel::execution::loop "loop" which execute independent iterations in
-a, possibly, parallel way. The concept introduced here referes to sequential iterations, this way we can implement non-lineal work flows. 
-In the next example, a loop creating a random number
-and showing it in console is reapeated 4 times, doing a *microthread wait* in each iteration (if used executor allows it)
+It's possible to implement iterations as part of an execution flow. There are two kinds of iterations in flows: *sequential*, implemented with \ref mel::execution::flow::doWhile "flow::doWhile"
+and *independent iterations* with \ref mel::execution::flow::loop "flow::loop".
+
+Below an example of using \ref mel::execution::flow::doWhile "doWhile" where a random number is created and shown in console for 4 times, doing a *microthread wait* in each iteration (if used executor allows it)
 \code {.cpp}
 template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 {	
@@ -293,6 +293,70 @@ template <class ExecutorType> void _sampleWhile(ExecutorType ex)
 }
 \endcode 
 
+And now an example of \ref mel::execution::flow::loop "flow::loop" where iterations are independent, and so could be parallelized if executor allows it.
+\code{.cpp}
+template <class ExecutorType> void _sampleFlowLoop(ExecutorType ex)
+{	
+	auto th = ThreadRunnable::create();
+	th->fireAndForget([ex] () mutable
+	{
+		srand(time(NULL));
+		int idx = 0;
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				execution::start(ex)
+				| execution::flow::loop( 0,4,
+					[]( int idx, auto input ) noexcept
+					{
+						return input | execution::next( []() noexcept -> int
+						{
+							return rand()%10;
+						})
+						| execution::next( [](int v ) noexcept
+						{
+							mel::text::info(" new value = {}. Now waiting",v);
+							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
+							{
+								mel::tasking::Process::wait(2500);
+							}
+							else
+								mel::text::info("Current executor doesn't support true parallelism, wait not done");
+							mel::text::info(" new value = {}. After wait",v);
+						});
+					}				
+				)
+				| execution::next( []{
+					mel::text::info(" Flow finished!!");
+				})
+		);
+		if ( res.isValid())
+		{
+			text::info("Finished");
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+}
+\endcode
+The fact that independent iterations are used can be seen in the output ,where an iteration doesn't need the previous to be finished:
+\verbatim
+new value = 9. Now waiting
+new value = 1. Now waiting
+new value = 3. Now waiting
+new value = 3. Now waiting
+new value = 9. After wait
+new value = 3. After wait
+new value = 1. After wait
+new value = 3. After wait
+\endverbatim
 
 ### Flow chart example{#flow_chart}
 

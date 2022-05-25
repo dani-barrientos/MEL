@@ -79,7 +79,8 @@ namespace mel
         
             /**
              * @brief do...while a flow
-             * @details implement the pseudocode: do { r = flow() }while(predicate(r))
+             * @details implement the pseudocode: do { r = flow() }while(predicate(r)) 
+             * So, it's a sequential loop, not a parallel one where each iteration is independent
              * 
              * @param source input ExFuture from previous job
              * @param flow  flow to execute
