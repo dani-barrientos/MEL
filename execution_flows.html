@@ -95,7 +95,8 @@ $(document).ready(function(){initNavTree('execution_flows.html',''); initResizab
 </ul>
 <h3><a class="anchor" id="introduction"></a>
 Introduction</h3>
-<p>It's possible to create independent work flows to reuse then or apply them at functions as condition. This is very simple thanks to <em>generic lambdas</em>. The lambda or callable used as a flow will receive an <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a> which serves as the input of any other <em>execution</em> function. Let's start with a simple example, defining two flows: </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlows1(ExecutorType ex)</div>
+<p>It's possible to create independent work flows to reuse then or apply them at functions as condition. A <em>flow</em> could be defined as a callable with signature <code>ExFuture&lt;...&gt; flow( ExFuture&lt;...&gt; )</code>, meaning that it can substitute a chain of job. With the help of <em>generic lambdas</em> this callable will be defined as <code>[](auto input)-&gt;auto</code>.</p>
+<p>The lambda or callable used as a flow will receive an <a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a> which serves as the input of any other <em>execution</em> function. Let's start with a simple example, defining two flows: </p><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> ExecutorType&gt; <span class="keywordtype">void</span> _sampleFlows1(ExecutorType ex)</div>
 <div class="line">{   </div>
 <div class="line">    <span class="keyword">auto</span> th = ThreadRunnable::create();</div>
 <div class="line"> </div>

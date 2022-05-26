@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('_loop_8h_source.html',''); initResizab
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent,<span class="keyword">class</span> Flow,<span class="keyword">class</span> I&gt; ExFuture&lt;ExecutorAgent,void&gt;</div>
 <div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">   25</a></span>&#160;                <a class="code" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">loop</a>(<a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> source, I begin, I end, Flow flow,<span class="keywordtype">int</span> increment = 1)</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            {</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,void&gt;</a> result;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                <a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,void&gt;</a> result(source.<a class="code" href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">agent</a>);</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                <span class="comment">//std::exception_ptr except; //@todo, uhmm, no es muy importante, porque se refiere a error en la funcion que lanza el flow..</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                constexpr <span class="keywordtype">bool</span> isArithIterator = <a class="code" href="classmel_1_1mpl_1_1_type_traits.html">mel::mpl::TypeTraits&lt;typename std::decay&lt;I&gt;::type</a>&gt;::isArith;</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                <span class="keywordtype">int</span> length;</div>
@@ -114,60 +114,74 @@ $(document).ready(function(){initNavTree('_loop_8h_source.html',''); initResizab
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                    length = (end-begin);</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                <span class="keywordflow">else</span></div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                    length = std::distance(begin, end);</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                <a class="code" href="classmel_1_1parallelism_1_1_barrier.html">::mel::parallelism::Barrier</a> barrier(length);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                <span class="keywordflow">for</span>(<span class="keyword">auto</span> i = begin;i != end;i+=increment)</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                {</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                    <span class="keyword">auto</span> f = flow(i,source);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                    f.subscribeCallback( [barrier](<span class="keyword">const</span> <span class="keyword">auto</span>&amp;) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                        {</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                            barrier.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                        }</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                    );</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                    </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                barrier.subscribeCallback(</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                    std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a>( const ::mel::parallelism::BarrierData&amp;)&gt;([result](const ::mel::parallelism::BarrierData&amp; ) <span class="keyword">mutable</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                    {                </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                        result.setValue();</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                        return ::mel::core::ECallbackResult::UNSUBSCRIBE; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                    })</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                );</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                <span class="keywordflow">return</span> result;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            }</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;           </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;            <span class="keyword">namespace </span>_private</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;            {                                          </div>
-<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">   60</a></span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">ApplyLoop</a></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                {</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                    <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                        <a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">ApplyLoop</a>(I b, I e,T&amp;&amp; f,<span class="keywordtype">int</span> inc):mFlow(std::forward&lt;T&gt;(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                    F mFlow;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                    I begin;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                    I end;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                    <span class="keywordtype">int</span> increment;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                    <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(<a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> inputFut)</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                    {                  </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                        <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">flow::loop</a>(inputFut,begin,end,std::forward&lt;F&gt;(mFlow),increment);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                    }</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                };    </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            }</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            </div>
-<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution_1_1flow.html#a629864dc94ef35d74ab19c47bb4c82e8">   76</a></span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; <a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">flow::_private::ApplyLoop&lt;I,F&gt;</a> <a class="code" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">loop</a>(I&amp;&amp; begin, I&amp;&amp; end, F&amp;&amp; flow, <span class="keywordtype">int</span> increment = 1)</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">_private::ApplyLoop&lt;I,F&gt;</a>(begin,end,std::forward&lt;F&gt;(flow),increment);</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            }</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        }</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    }</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;}</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                <span class="keywordtype">int</span> count = 0;                </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                <span class="keywordtype">int</span> nElements = (length + increment - 1) / increment;  <span class="comment">//&quot;manual&quot; ceil, because ceil function fails sometimes in fast floating mode</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                <a class="code" href="classmel_1_1parallelism_1_1_barrier.html">::mel::parallelism::Barrier</a> barrier(nElements);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                I i{begin};</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                <span class="keywordflow">while</span>(count++ &lt; nElements)</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                {</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                    <span class="keyword">auto</span> f = flow(i,source);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                    f.subscribeCallback( [barrier](<span class="keyword">const</span> <span class="keyword">auto</span>&amp;) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                        {</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                            barrier.<a class="code" href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">set</a>();</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                        }</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                    );</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                    i += increment;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                }</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                <span class="comment">// for(auto i = begin;i != end ;i+=increment)</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                <span class="comment">// {</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                <span class="comment">//     auto f = flow(i,source);</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                <span class="comment">//     f.subscribeCallback( [barrier](const auto&amp;) mutable</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                <span class="comment">//         {</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                <span class="comment">//             barrier.set();</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                <span class="comment">//         }</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                <span class="comment">//     );</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                    </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                <span class="comment">// }</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                barrier.subscribeCallback(</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                    std::function&lt;::<a class="code" href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a>( const ::mel::parallelism::BarrierData&amp;)&gt;([result](const ::mel::parallelism::BarrierData&amp; ) <span class="keyword">mutable</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                    {                </div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                        result.setValue();</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                        return ::mel::core::ECallbackResult::UNSUBSCRIBE; </div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                    })</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                );</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;            }</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;           </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            <span class="keyword">namespace </span>_private</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            {                                          </div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">   73</a></span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">ApplyLoop</a></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                {</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                    <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                        <a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">ApplyLoop</a>(I b, I e,T&amp;&amp; f,<span class="keywordtype">int</span> inc):mFlow(std::forward&lt;T&gt;(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                    F mFlow;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                    I begin;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                    I end;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                    <span class="keywordtype">int</span> increment;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                    <span class="keyword">template</span> &lt;<span class="keyword">class</span> TArg,<span class="keyword">class</span> ExecutorAgent&gt; <span class="keyword">auto</span> operator()(<a class="code" href="classmel_1_1execution_1_1_ex_future.html">ExFuture&lt;ExecutorAgent,TArg&gt;</a> inputFut)</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    {                  </div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                        <span class="keywordflow">return</span> <a class="code" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">flow::loop</a>(inputFut,begin,end,std::forward&lt;F&gt;(mFlow),increment);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                    }</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                };    </div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            }</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;            </div>
+<div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution_1_1flow.html#a629864dc94ef35d74ab19c47bb4c82e8">   89</a></span>&#160;            <span class="keyword">template</span> &lt;<span class="keyword">class</span> I,<span class="keyword">class</span> F&gt; <a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">flow::_private::ApplyLoop&lt;I,F&gt;</a> <a class="code" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">loop</a>(I&amp;&amp; begin, I&amp;&amp; end, F&amp;&amp; flow, <span class="keywordtype">int</span> increment = 1)</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            {</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">_private::ApplyLoop&lt;I,F&gt;</a>(begin,end,std::forward&lt;F&gt;(flow),increment);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;            }</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        }</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    }</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;}</div>
 <div class="ttc" id="aclassmel_1_1execution_1_1_ex_future_html"><div class="ttname"><a href="classmel_1_1execution_1_1_ex_future.html">mel::execution::ExFuture&lt; ExecutorAgent, TArg &gt;</a></div></div>
+<div class="ttc" id="aclassmel_1_1execution_1_1_ex_future_html_abd5310d697bdce3c5f531115d40d8145"><div class="ttname"><a href="classmel_1_1execution_1_1_ex_future.html#abd5310d697bdce3c5f531115d40d8145">mel::execution::ExFuture::agent</a></div><div class="ttdeci">Executor&lt; ExecutorAgent &gt; agent</div><div class="ttdoc">execution agent associated with this instance</div><div class="ttdef"><b>Definition:</b> ExFuture.h:40</div></div>
 <div class="ttc" id="aclassmel_1_1mpl_1_1_type_traits_html"><div class="ttname"><a href="classmel_1_1mpl_1_1_type_traits.html">mel::mpl::TypeTraits</a></div><div class="ttdef"><b>Definition:</b> TypeTraits.h:296</div></div>
 <div class="ttc" id="aclassmel_1_1parallelism_1_1_barrier_html"><div class="ttname"><a href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a></div><div class="ttdoc">Multithread barrier.</div><div class="ttdef"><b>Definition:</b> Barrier.h:43</div></div>
 <div class="ttc" id="aclassmel_1_1parallelism_1_1_barrier_html_a3cacc6b65bb36b2d766663a93329f0f7"><div class="ttname"><a href="classmel_1_1parallelism_1_1_barrier.html#a3cacc6b65bb36b2d766663a93329f0f7">mel::parallelism::Barrier::set</a></div><div class="ttdeci">void set()</div><div class="ttdef"><b>Definition:</b> Barrier.h:59</div></div>
 <div class="ttc" id="anamespacemel_1_1core_html_aa2a125e0f16e14641d995c0675f79992"><div class="ttname"><a href="namespacemel_1_1core.html#aa2a125e0f16e14641d995c0675f79992">mel::core::ECallbackResult</a></div><div class="ttdeci">ECallbackResult</div><div class="ttdoc">Type resturned by callbacks subscribed to CallbackSubscriptors.</div><div class="ttdef"><b>Definition:</b> CallbackSubscriptor.h:27</div></div>
 <div class="ttc" id="anamespacemel_1_1execution_1_1flow_html_aa1fc5a2ec463d8f3f4b0436543d4dbb0"><div class="ttname"><a href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">mel::execution::flow::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, void &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I begin, I end, Flow flow, int increment=1)</div><div class="ttdoc">Loop with independent iterations.</div><div class="ttdef"><b>Definition:</b> Loop.h:25</div></div>
 <div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
-<div class="ttc" id="astructmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop_html"><div class="ttname"><a href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">mel::execution::flow::_private::ApplyLoop</a></div><div class="ttdef"><b>Definition:</b> Loop.h:61</div></div>
+<div class="ttc" id="astructmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop_html"><div class="ttname"><a href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">mel::execution::flow::_private::ApplyLoop</a></div><div class="ttdef"><b>Definition:</b> Loop.h:74</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
