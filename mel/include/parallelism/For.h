@@ -135,7 +135,7 @@ namespace mel
 				Barrier result;
 				typedef typename std::decay<I>::type DecayedIt;
 				constexpr bool isArithIterator =::mel::mpl::TypeTraits<DecayedIt>::isArith;
-				int nElements = (loopSize + increment - 1) / increment;  //"manual" ceil, because ceil function fails somtimes in fast floating mode
+				int nElements = (loopSize + increment - 1) / increment;  //"manual" ceil, because ceil function fails sometimes in fast floating mode
 				size_t nThreads = tp->getNumThreads()+(opts.useCallingThread?1:0);
 				if (begin == end)
 					return result;

@@ -55,7 +55,10 @@ namespace mel
                                 },
                                 static_cast<Future<TRet>>(output)
                             ,mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);                  
-                    }            
+                    }else
+                    {
+                        output.setError( new std::runtime_error("ThreadPoolExecutor::launch. Pool has expired!!!"));
+                    } 
                 }
                 template <class TRet,class F> void launch( F&& f,ExFuture<ThreadPool,TRet> output) const noexcept
                 {
@@ -65,6 +68,9 @@ namespace mel
                         opts.schedPolicy = ThreadPool::SchedulingPolicy::SP_BESTFIT;
                         auto th = mPool.lock()->selectThread(opts);
                         th->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);               
+                    }else
+                    {
+                        output.setError( new std::runtime_error("ThreadPoolExecutor::launch. Pool has expired!!!"));
                     }       
                 }
                 template <class I, class F>	 ::mel::parallelism::Barrier loop(I&& begin, I&& end, F&& functor, int increment);

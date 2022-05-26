@@ -24,7 +24,7 @@ namespace mel
             template <class TArg,class ExecutorAgent,class Flow,class I> ExFuture<ExecutorAgent,void>
                 loop(ExFuture<ExecutorAgent,TArg> source, I begin, I end, Flow flow,int increment = 1)
             {
-                ExFuture<ExecutorAgent,void> result;
+                ExFuture<ExecutorAgent,void> result(source.agent);
                 //std::exception_ptr except; //@todo, uhmm, no es muy importante, porque se refiere a error en la funcion que lanza el flow..
                 constexpr bool isArithIterator = mel::mpl::TypeTraits<typename std::decay<I>::type>::isArith;
                 int length;
@@ -33,8 +33,11 @@ namespace mel
                     length = (end-begin);
                 else
                     length = std::distance(begin, end);
-                ::mel::parallelism::Barrier barrier(length);
-                for(auto i = begin;i != end;i+=increment)
+                int count = 0;                
+                int nElements = (length + increment - 1) / increment;  //"manual" ceil, because ceil function fails sometimes in fast floating mode
+                ::mel::parallelism::Barrier barrier(nElements);
+                I i{begin};
+                while(count++ < nElements)
                 {
                     auto f = flow(i,source);
                     f.subscribeCallback( [barrier](const auto&) mutable
@@ -42,8 +45,18 @@ namespace mel
                             barrier.set();
                         }
                     );
-                    
+                    i += increment;
                 }
+                // for(auto i = begin;i != end ;i+=increment)
+                // {
+                //     auto f = flow(i,source);
+                //     f.subscribeCallback( [barrier](const auto&) mutable
+                //         {
+                //             barrier.set();
+                //         }
+                //     );
+                    
+                // }
                 barrier.subscribeCallback(
                     std::function<::mel::core::ECallbackResult( const ::mel::parallelism::BarrierData&)>([result](const ::mel::parallelism::BarrierData& ) mutable
                     {                

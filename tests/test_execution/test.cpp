@@ -745,7 +745,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 {
 	#define INIT_VALUE 2
 	sCurrentTest = test;
-	tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Info;
+	tests::BaseTest::LogLevel ll = tests::BaseTest::LogLevel::Debug;
 	{
 		mel::text::info("Test Launch lambda rvalue ref");
 		//first test: Passing lambda as rvalue reference and capturing object by copy
@@ -1135,7 +1135,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		);	
 		mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		test->checkOccurrences("TestClass copy",11,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //each iteration means a copy of the lambda
+		test->checkOccurrences("TestClass copy",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //each iteration means a copy of the lambda
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 	//loop

@@ -308,7 +308,7 @@ template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 				| mel::execution::loop(0,10, [](int idx, const string& str) noexcept
 				{
 					text::info("Iteration {}", str + std::to_string(idx));
-				})
+				},3)
 				| mel::execution::next( [](const string& str ) noexcept
 				{
 					//Fourth job. 
@@ -797,6 +797,7 @@ template <class ExecutorType> void _sampleFlowLoop(ExecutorType ex)
 				| execution::flow::loop( 0,4,
 					[]( int idx, auto input ) noexcept
 					{
+						mel::text::info(" loop idx {}",idx);
 						return input | execution::next( []() noexcept -> int
 						{
 							return rand()%10;
@@ -806,15 +807,16 @@ template <class ExecutorType> void _sampleFlowLoop(ExecutorType ex)
 							mel::text::info(" new value = {}. Now waiting",v);
 							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
 							{
-								mel::tasking::Process::wait(2500);
+								mel::tasking::Process::wait(500);
 							}
 							else
 								mel::text::info("Current executor doesn't support true parallelism, wait not done");
 							mel::text::info(" new value = {}. After wait",v);
+							return 5;						
 						});
-					}				
+					},2			
 				)
-				| execution::next( []{
+				| execution::next( []() noexcept {
 					mel::text::info(" Flow finished!!");
 				})
 		);
@@ -947,6 +949,6 @@ void test_execution::samples()
 	// _sampleFlowsCondition(extp);
 	//_sampleFlowLaunch(extp);
 	//_sampleWhile(extp);
-	_sampleFlowLoop(extp);
+	_sampleFlowLoop(exr);
 	 //_sampleFlowChart(exr);
 }

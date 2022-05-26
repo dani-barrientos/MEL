@@ -264,65 +264,7 @@ auto flow_lambda  = [](auto source) ->auto //es un ExFuture<ExecutorAgent,const 
 	// 	using type = std::remove_pointer_t<::remove_reference_t<T>>;
 	// };
 		 
-// namespace flow
-// {
-// 	namespace _private
-// 	{
-// 		template <int n,class ResultTuple,class Flow,class ExecutionAgent,class TArg> void _invokeFlow(ExFuture<ExecutionAgent,TArg> fut,ResultTuple& output,Flow&& f)
-// 		{
-// 			//static_assert( std::is_invocable<F,TArg>::value, "inlineExecutor::_invokeInline bad signature");
-// 			if constexpr (std::is_nothrow_invocable<Flow,ExFuture<ExecutionAgent,TArg>>::value)
-// 			{
-// 				std::get<n>(output)=f(fut);
-// 			}else
-// 			{
-// 				try
-// 				{
-// 					std::get<n>(output)=f(fut);
-// 				}catch(...)
-// 				{
-// 					/*@todo resolver qué pasa si un elemento da error. seguramente pasando el exception_ptr como otros
-// 					if ( !except )
-// 						except = std::current_exception();
-// 						*/
-// 				}
-// 			}
-// 		}	
-// 		template <int n,class ResultTuple,class ExecutionAgent,class TArg,class Flow,class ...Flows> void _invokeFlow(ExFuture<ExecutionAgent,TArg> fut,ResultTuple& output,Flow&& f, Flows&&... fs)
-// 		{            
-// 			_invokeFlow<n>(fut,output,std::forward<Flow>(f));
-// 			_invokeFlow<n+1>(fut,output,std::forward<Flows>(fs)...);
-// 		}
-// 		template <class ExecutionAgent, class T, size_t ...Is> auto _forwardOnAll(Executor<ExecutionAgent> ex,T&& tup, std::index_sequence<Is...>)
-// 		{
-// 			return execution::on_all(ex,std::get<Is>(tup)...);
-// 		}
-// 	};
-// 	/**
-// 	 * @brief Launch given set of flows 
-// 	 * 
-// 	 * @param source previous result in current job
-// 	 * @param flows callables with the form ExFuture f(ExFuture)
-// 	 * @return a std::tuple with the ExFuture result of each flow (in order)
-// 	 */
-// 	template <class TArg,class ExecutorAgent,class ...Flows> typename ::mel::execution::_private::GetReturn<ExFuture<ExecutorAgent,TArg>,Flows...>::type
-//         launch(ExFuture<ExecutorAgent,TArg> source, Flows... flows)
-// 	{
-// 		typedef typename ::mel::execution::_private::GetReturn<ExFuture<ExecutorAgent,TArg>,Flows...>::type ResultTuple;
-// 		ResultTuple output;
-// 		_private::_invokeFlow<0>(source,output,std::move(flows)...);									
-// 		return output;
-// 	}
-// 	/**
-// 	 * @brief takes a tuple with the results of execution of some flows and does a execution::on_all
-// 	 */
-// 	template <class ExecutionAgent, class TupleFlow> auto on_all(Executor<ExecutionAgent> ex,TupleFlow&& f)
-// 	{
-// 		constexpr size_t ts = std::tuple_size<typename std::remove_reference<TupleFlow>::type>::value;
-// 		return _private::_forwardOnAll(ex,f,std::make_index_sequence<ts>{});
 
-// 	}
-// }
 int _testDebug(tests::BaseTest* test)
 {
 
@@ -332,7 +274,6 @@ int _testDebug(tests::BaseTest* test)
 	//auto th2 = ThreadRunnable::create(true);	
 	execution::Executor<Runnable> exr(th1);		
 	exr.setOpts({true,false});
-
 
 	//now executor for threadpool
 	parallelism::ThreadPool::ThreadPoolOpts opts;
@@ -344,7 +285,6 @@ int _testDebug(tests::BaseTest* test)
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
 	{
-
 		try
 		{
 			auto fl = [](auto input) noexcept

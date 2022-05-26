@@ -55,6 +55,9 @@ namespace mel
                             },
                             static_cast<Future<TRet>>(output)
                         ,mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);
+                    }else
+                    {
+                        output.setError( new std::runtime_error("RunnableExecutor::launch. Runnable has expired!!!"));
                     }          
                 }
                 template <class TRet,class F> void launch( F&& f,ExFuture<Runnable,TRet> output) const noexcept
@@ -62,7 +65,10 @@ namespace mel
                     if ( !mRunnable.expired())
                     {
                         mRunnable.lock()->execute<TRet>(std::forward<F>(f),static_cast<Future<TRet>>(output),mOpts.autoKill?Runnable::killTrue:Runnable::killFalse);                   
-                    }            
+                    }else
+                    {
+                        output.setError( new std::runtime_error("RunnableExecutor::launch. Runnable has expired!!!"));
+                    } 
                 }
                 template <class I, class F>	 ::mel::parallelism::Barrier loop( I&& begin, I&& end, F&& functor, int increment);
                 template <class TArg,class ...FTypes> ::mel::parallelism::Barrier parallel(ExFuture<Runnable,TArg> fut,std::exception_ptr& excpt, FTypes&&... functions);
@@ -242,6 +248,7 @@ namespace mel
             auto ptr = getRunnable().lock();        
         
             ::mel::parallelism::Barrier barrier(nElements);
+            //@todo mal sistema iteradores si no aritmaticos
             if ( independentTasks)
             {                    
                 for(auto i = begin; i < end;i+=increment)

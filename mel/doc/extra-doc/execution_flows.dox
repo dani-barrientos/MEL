@@ -7,9 +7,11 @@
 - [Flow chart example](#flow_chart)
 
 ###Introduction {#introduction}
-It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". This is very simple 
-thanks to *generic lambdas*. The lambda or callable used as a flow will receive an \ref ::mel::execution::ExFuture "ExFuture" which serves as the 
-input of any other *execution* function.
+It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". A *flow* could be defined as
+a callable with signature ```ExFuture<...> flow( ExFuture<...> )```, meaning that it can substitute a chain of job. With the help of *generic lambdas* this callable will be
+defined as ```[](auto input)->auto```.
+
+The lambda or callable used as a flow will receive an \ref ::mel::execution::ExFuture "ExFuture" which serves as the input of any other *execution* function.
 Let's start with a simple example, defining two flows:
 \code
 template <class ExecutorType> void _sampleFlows1(ExecutorType ex)
