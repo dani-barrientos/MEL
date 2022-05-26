@@ -220,10 +220,10 @@ template&lt;class NewExecutorAgent , class OldExecutorAgent , class TRet &gt; </
 <tr class="memitem:ac70c86e823891528b9f865c80853e6f1"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, typename ::mel::execution::_private::GetReturn&lt; TArg, FTypes... &gt;::type &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#ac70c86e823891528b9f865c80853e6f1">parallel_convert</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)</td></tr>
 <tr class="memdesc:ac70c86e823891528b9f865c80853e6f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as <a class="el" href="namespacemel_1_1execution.html#aa452862b7a1d169e5a3be1e9fa1b66f2">parallel</a> but returning a tuple with the values for each functor.  <a href="namespacemel_1_1execution.html#ac70c86e823891528b9f865c80853e6f1">More...</a><br /></td></tr>
 <tr class="separator:ac70c86e823891528b9f865c80853e6f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a213ac5a4e059b4c8e60dc539b20e5fe8"><td class="memTemplParams" colspan="2">template&lt;class F , class TArg , class ExecutorAgent &gt; </td></tr>
-<tr class="memitem:a213ac5a4e059b4c8e60dc539b20e5fe8"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a213ac5a4e059b4c8e60dc539b20e5fe8">getExecutor</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F f)</td></tr>
-<tr class="memdesc:a213ac5a4e059b4c8e60dc539b20e5fe8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a> used in the chaing of execution.  <a href="namespacemel_1_1execution.html#a213ac5a4e059b4c8e60dc539b20e5fe8">More...</a><br /></td></tr>
-<tr class="separator:a213ac5a4e059b4c8e60dc539b20e5fe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1c91ed37b04b6d4c85dfc6332187015"><td class="memTemplParams" colspan="2">template&lt;class F , class TArg , class ExecutorAgent &gt; </td></tr>
+<tr class="memitem:ac1c91ed37b04b6d4c85dfc6332187015"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, std::invoke_result_t&lt; F, <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt;, TArg &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#ac1c91ed37b04b6d4c85dfc6332187015">getExecutor</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, F f)</td></tr>
+<tr class="memdesc:ac1c91ed37b04b6d4c85dfc6332187015"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a> used in the chain of execution.  <a href="namespacemel_1_1execution.html#ac1c91ed37b04b6d4c85dfc6332187015">More...</a><br /></td></tr>
+<tr class="separator:ac1c91ed37b04b6d4c85dfc6332187015"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58d0496d75ff375be90d58bd80127bbd"><td class="memTemplParams" colspan="2"><a id="a58d0496d75ff375be90d58bd80127bbd"></a>
 template&lt;class TRet &gt; </td></tr>
 <tr class="memitem:a58d0496d75ff375be90d58bd80127bbd"><td class="memTemplItemLeft" align="right" valign="top">_private::ApplyInmediate&lt; TRet &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>inmediate</b> (TRet &amp;&amp;arg)</td></tr>
@@ -351,8 +351,8 @@ template&lt;class F , class TArg , class ExecutorAgent &gt; </div>
 
 </div>
 </div>
-<a id="a213ac5a4e059b4c8e60dc539b20e5fe8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a213ac5a4e059b4c8e60dc539b20e5fe8">&#9670;&nbsp;</a></span>getExecutor()</h2>
+<a id="ac1c91ed37b04b6d4c85dfc6332187015"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1c91ed37b04b6d4c85dfc6332187015">&#9670;&nbsp;</a></span>getExecutor()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -360,7 +360,7 @@ template&lt;class F , class TArg , class ExecutorAgent &gt; </div>
 template&lt;class F , class TArg , class ExecutorAgent &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt;ExecutorAgent,TArg&gt; mel::execution::getExecutor </td>
+          <td class="memname"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt;ExecutorAgent,std::invoke_result_t&lt;F,<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt;ExecutorAgent&gt;,TArg&gt; &gt; mel::execution::getExecutor </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td>
           <td class="paramname"><em>source</em>, </td>
@@ -379,8 +379,8 @@ template&lt;class F , class TArg , class ExecutorAgent &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Get the <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a> used in the chaing of execution. </p>
-<p>It returns an <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> moved from source, so transferring previous value to the next element in chain. The intent of function is to be able to check executor traits or change some option in it </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Get the <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a> used in the chain of execution. </p>
+<p>Given callable gets current executor and the previous value and return The intent of function is to be able to check executor traits or change some option in it </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>Callable with signature void (auto executor) </td></tr>
   </table>
