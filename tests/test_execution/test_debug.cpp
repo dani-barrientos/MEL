@@ -290,13 +290,33 @@ int _testDebug(tests::BaseTest* test)
 			auto fl = [](auto input) noexcept
 					{
 						return input 
+						// | execution::getExecutor( [](auto ex,const string& s)
+						// {
+						// 	if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
+						// 		return "has parallelism";
+						// 	else
+						// 		return "hasn't parallelism";
+						// })
 						| execution::next( [](const string& s){
-							::mel::text::info(" flow::loop -> next it");
+
+							::mel::text::info(s+" flow::loop -> next it");
 						}); //return from flow is not used, no return void
 					};
 			auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(
 
-				execution::launch(exNaive,[]() noexcept{ return "hola"s;})
+				execution::launch(extp,[]() noexcept{ return 1.3f;})
+				| execution::getExecutor( [](auto ex,float)
+						{
+							// if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
+							// 	return "has parallelism";
+							// else
+							// 	return "hasn't parallelism";
+						})
+				| execution::next( []
+					{
+						return "triqui"s;	
+					}
+				)
 				| execution::flow::loop(2,5, 
 					/*[](int idx,auto input) noexcept
 					{

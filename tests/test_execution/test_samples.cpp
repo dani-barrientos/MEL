@@ -28,11 +28,12 @@ template <class ExecutorType> void _sampleBasic(ExecutorType ex)
                     mel::execution::next([](float param) noexcept {
                       return std::to_string(param);
                     }) |
-					mel::execution::getExecutor([](auto ex) noexcept {
+					mel::execution::getExecutor([](auto ex,const string& str) noexcept {
 						if constexpr(execution::ExecutorTraits<decltype(ex)>::has_parallelism)
 							mel::text::info("Current executor supports true parallelism. Next job will be executed parallelized");
 						else
 							mel::text::info("Current executor doesn't support true parallelism. Next job will be executed sequentially");
+						return str;
                     }) |
                     mel::execution::parallel(
                         [](const string &str) noexcept{
@@ -935,20 +936,20 @@ void test_execution::samples()
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
     
-	// _sampleBasic(exr);	
-	// _sampleBasic(extp);
- 	// _sampleReference(exr);
- 	// _sampleError1(exr);
- 	// _sampleError2(extp);
-	// _sampleErrorNoException(extp);
- 	// _sampleTransfer(exr,extp);
-    // _sampleSeveralFlows(exr,extp);
-    // _sampleCallables(extp);
-   	// _samplePF(exr);	
-	// _sampleFlows1(extp);
-	// _sampleFlowsCondition(extp);
-	//_sampleFlowLaunch(extp);
-	//_sampleWhile(extp);
+	_sampleBasic(exr);	
+	_sampleBasic(extp);
+ 	_sampleReference(exr);
+ 	_sampleError1(exr);
+ 	_sampleError2(extp);
+	_sampleErrorNoException(extp);
+ 	_sampleTransfer(exr,extp);
+    _sampleSeveralFlows(exr,extp);
+    _sampleCallables(extp);
+   	_samplePF(exr);	
+	_sampleFlows1(extp);
+	_sampleFlowsCondition(extp);
+	_sampleFlowLaunch(extp);
+	_sampleWhile(extp);
 	_sampleFlowLoop(exr);
-	 //_sampleFlowChart(exr);
+	_sampleFlowChart(exr);
 }

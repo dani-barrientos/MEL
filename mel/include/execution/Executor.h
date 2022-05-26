@@ -543,31 +543,77 @@ namespace mel
             return result;
         }               
         /**
-         * @brief Get the Executor used in the chaing of execution
-         * @details It returns an ExFuture moved from source, so transferring previous value to the next element in chain.
+         * @brief Get the Executor used in the chain of execution
+         * @details Given callable gets current executor and the previous value and return 
          * The intent of function is to be able to check executor traits or change some option in it
          * @param[in] f Callable with signature void (auto executor)
          * @see ExecutorTraits
          */
-        template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,TArg> 
+         template <class F,class TArg,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,Executor<ExecutorAgent>,TArg>> 
             getExecutor(ExFuture<ExecutorAgent,TArg> source, F f)
         {                
-            static_assert(std::is_same<std::invoke_result_t<F,Executor<ExecutorAgent>>,void>::value,
-                          "return value for callbable in 'getExecutor' must be void");
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
-            ExFuture<ExecutorAgent,TArg> result(source.agent);            
+            typedef std::invoke_result_t<F,Executor<ExecutorAgent>,TArg> TRet;            
+            ExFuture<ExecutorAgent,TRet> result(source.agent);
             source.subscribeCallback(
                 //need to bind de source future to not get lost and input pointing to unknown place                
                 [source,f = std::move(f),result]( ValueType& input) mutable
                 {       
-                    f(source.agent);
-                    //result.assign(std::move(input));
-                    result.assign(source);
+                    if ( input.isValid() )
+                    {                            
+                        //source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
+                        source.agent. template launch<TRet>([f=std::move(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
+                        {                                          
+                            return f(arg.agent,arg.getValue().value());                         
+                        },source,result);                                                          
+                    }
+                    else
+                    {
+                        //set error as task in executor
+                        launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
+                        {
+                            result.setError(std::move(err));
+                        });
+                    }     
                 }
             );
             return result;
         }
-      
+
+         ///@cond HIDDEN_SYMBOLS
+         //overload for void arg
+         template <class F,class ExecutorAgent> ExFuture<ExecutorAgent,std::invoke_result_t<F,Executor<ExecutorAgent>>> 
+            getExecutor(ExFuture<ExecutorAgent,void> source, F f)
+        {                
+            typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
+            typedef std::invoke_result_t<F,Executor<ExecutorAgent>> TRet;
+            ExFuture<ExecutorAgent,TRet> result(source.agent);
+            source.subscribeCallback(
+                //need to bind de source future to not get lost and input pointing to unknown place                
+                [source,f = std::move(f),result]( ValueType& input) mutable
+                {       
+                    if ( input.isValid() )
+                    {                            
+                        //source.agent. template launch<TRet>([f=std::forward<F>(f)](ExFuture<ExecutorAgent,TArg>& arg) mutable noexcept(std::is_nothrow_invocable<F,TArg>::value)->TRet 
+                        source.agent. template launch<TRet>([f=std::move(f)](ExFuture<ExecutorAgent,void>& arg) mutable noexcept(std::is_nothrow_invocable<F,void>::value)->TRet 
+                        {                                          
+                            return f(arg.agent);                         
+                        },source,result);                                                          
+                    }
+                    else
+                    {
+                        //set error as task in executor
+                        launch(source.agent,[result,err = std::move(input.error())]( ) mutable noexcept
+                        {
+                            result.setError(std::move(err));
+                        });
+                    }     
+                }
+            );
+            return result;
+        }        
+        ///@endcond
+       
         ///@cond HIDDEN_SYMBOLS
         namespace _private
         {
