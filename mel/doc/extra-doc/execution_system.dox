@@ -529,7 +529,7 @@ Result value = [First Job,10,(void,8.7)]
 Again, only for educational purposes, some *microthread* waits were inserted in some of the tasks. The final result is the merge of the 3 jobs, **as a tuple**. Also, 
 the third job returns a tuple (this is how \ref ::mel::execution::parallel_convert "parallel_convert" works), and it's shown between parenthesis.
 ### Advanced example {#advance_example}
-We are going to see a more real example with measurements to compare performance in various cases. Follow this \ref execution_sample_advance "link" to explore it
+We are going to see a more real example with measurements to compare performance in various cases. Follow this \subpage execution_sample_advance "link" to explore it
 
 ## Error management	{#error_management}
 This is a very important part and need to be addressed carefully. When using any of the wait functions (\ref ::mel::tasking::waitForFutureMThread or \ref ::mel::core::waitForFutureThread) there are 
@@ -835,6 +835,6 @@ to target executor, move constructions are impossible to avoid. This is because 
 quiero que cuando se pinche en la opcion de menu, directametne vaya a la pagina, no a eta seccion
 
 ## Work flows {#work_flows} 
-It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". Follow the \ref execution_flows "link" 
+It's possible to create independent work flows to reuse then or apply them at functions as \ref ::mel::execution::condition "condition". Follow the \subpage execution_flows "link" 
 for a more in deep explanation,
 */
