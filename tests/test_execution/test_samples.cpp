@@ -840,72 +840,89 @@ template <class ExecutorType> void _sampleFlowLoop(ExecutorType ex)
 }
 
 template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
-{	
-/*	auto th = ThreadRunnable::create();
-
-COSAS:
- - NO CREAR EL VECTOR EN EL LAUNCH, PORQUE LUEGO GENERARÁ COPIA POR CADA ITERACION. CREARLO Y PASARLO POR REF O PUNTERO
- - SI USO EL DOWHILE PARA ITERAR EL VECTOR, ESTO ES SECUENCIAL. ¿TIENE SENTIDO UN "LOOP" PARA FLUJOS? LO QUE MÁS ME JOROBA DE TODO ESTO ES QUE PARECEN COSAS REPETIDAS DEL execution
-		PODRÍA USAR EL DOwILE PARA ESO? EL TEMA ES QUE LLAMARLE LOOP SUENA IGUAL QUE EL DOWHILE->POSIBILDIADES:
-			- PARALLEL -> EN EL FONDO EL LAUNCH TAMBIÉN ES UN parallelism
-			- SOBRECARGAS DEL LAUNCH-> UN PROBLEMA GORDO CON TODO ESTO ES EL RESULTADO...YA NO TIENE SENTIDO DEVOLVER UNA TUPLA
-			EN CUALQUIER CASO:
-				- DADO QUE CADA FLUJO TERMINARÁ CUANDO SEA...¿CÓMO ESPERAR A TODOS? -> CREO QUE SERÁ FACIL, MÁS O MENOS COMO EL LOOP NORMAL, CON UNA BARRERA
-				- EL RESULTADO DEL FLUJO YA NO TENDRÍA SENTIDO...¿IGNORARLO?
-
-		
-
-
-
-	th->fireAndForget([ex] () mutable
+{		
+	using std::vector;
+	size_t vecSize = rand()%20+10;
+	mel::text::info("vecSize will be {}",vecSize);
+	auto inputVec = vector<int>(vecSize);
+	for( auto& v:inputVec)
+		v= rand()%5;
+	auto th = ThreadRunnable::create(); //need to be the last declaration to be the first thing to destroy and not destroy vector until finished
+	th->fireAndForget([ex,&inputVec] () mutable
 	{
-		srand(time(NULL));
-		int idx = 0;
+		srand(time(NULL));	
+		int iteration = 0;
         auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
-				execution::launch(ex,[]()
+				mel::execution::start(ex)
+				| mel::execution::inmediate(std::ref(inputVec))
+				| mel::execution::flow::doWhile(
+					[size = inputVec.size()](auto input )
+					{					
+						return input | execution::flow::loop(0,(int)size,
+							[]( int idx,auto input ) noexcept
+							{
+								return input | execution::next( [idx](vector<int>& v) noexcept -> int
+								{
+									auto value = v[idx] + rand()%9;
+									return value;
+								})
+								| execution::flow::condition(
+									[](int value ) noexcept
+									{
+										if ( value < 3)
+											return 0;
+										else if (value < 6)
+											return 1;
+										else
+											return 2;
+									},
+									[idx](auto input) //flow number 0
+									{
+										return 	input | execution::next([idx](int value) noexcept
+										{
+											::mel::text::info("T1 of element {}",idx);
+										})
+										| execution::next( [idx]() noexcept
+										{
+											::mel::text::info("T2 of element {}",idx);
+										});
+									},
+									[idx](auto input) //flow number 1
+									{
+										return 	input | execution::next([idx](int value) noexcept
+										{
+											::mel::text::info("T3 of element {}",idx);
+										});
+									},
+									[idx](auto input) //flow number 2
+									{
+										return 	input | execution::next([idx](int value) noexcept
+										{
+											::mel::text::info("T4 of element {}",idx);
+										})
+										| execution::next( [idx]() noexcept
+										{
+											::mel::text::info("T5 of element {}",idx);
+										});
+									}
+								);
+							});	
+					},
+					[iteration]() mutable noexcept
 					{
-						//create random vector with random size
-						size_t vecSize = rand()%20+10;
-						auto result = std::vector<int>(vecSize);
-						for( auto& v:result)
-							v= rand()%5;
-						return result;
+						::mel::text::info("Iteration {} finished", iteration);
+						if ( ++iteration == 5)
+							return false;
+						else
+						{
+							return true;
+						}
 					}
 				)
-				si hago esto así, el vector se copiará en cada flujo
-				ademñas esto no lanza flujos paralelos.... pero me parece que hacer un  loop para los flows es una burrada...
-
-				| execution::flow::doWhile( 
-					[]( auto input ) noexcept
-					{
-						return input | execution::next( []() noexcept -> int
-						{
-							return rand()%10;
-						})
-						| execution::next( [](int v ) noexcept
-						{
-							mel::text::info(" new value = {}",v);
-							if constexpr(execution::ExecutorTraits<decltype(ex)>::has_microthreading)
-							{
-								mel::tasking::Process::wait(2500);
-							}
-							else
-								mel::text::info("Current executor supports true parallelism. wait not done");
-						});
-					},
-					[idx]() mutable noexcept
-					{
-						if ( ++idx == 4 )
-							return false; //finish while
-						else
-							return true; //continue iterating
-					}
-				
-			)						
 		);
 		if ( res.isValid())
 		{
-			text::info("Finished");
+			//text::info("Finished");
 		}else
 		{
 			try
@@ -919,7 +936,7 @@ COSAS:
 		}
 		
 	},0,::tasking::Runnable::killFalse);
-	*/
+	
 }
 
 void test_execution::samples()
@@ -935,7 +952,7 @@ void test_execution::samples()
 	extp.setOpts({true,true});
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
-    
+    /*
 	_sampleBasic(exr);	
 	_sampleBasic(extp);
  	_sampleReference(exr);
@@ -951,5 +968,6 @@ void test_execution::samples()
 	_sampleFlowLaunch(extp);
 	_sampleWhile(extp);
 	_sampleFlowLoop(exr);
+	*/
 	_sampleFlowChart(exr);
 }

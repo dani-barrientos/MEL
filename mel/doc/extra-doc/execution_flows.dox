@@ -361,6 +361,123 @@ new value = 3. After wait
 \endverbatim
 
 ### Flow chart example{#flow_chart}
+In order to show a more complex and practical (although the tasks acoomplished here haven't any interest) let's see a translation from a flowchart to code.
 
-TODO PONER UN EJEMPLO PITNANDO UN DIAGRAMA DE FLUJO EN IMPLEMENTARLO
+The goal is to implement the next flowchart:
+\image html flowchart.jpg
+A brief explanation:
+ - an integer vector is processed *in a parallel way* (remember, this parallelism depends on underlying executor, meaning that each iteration is considered to be independent)
+ - each element is added a random integer number in [0...9) and passed to next step
+ - A flow among 3 different ones is selected depending on the previos value
+ - all of this have to be repeated 5 times
+
+And the code doing this work could be something like:
+\code{.cpp}
+template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
+{		
+	using std::vector;
+	size_t vecSize = rand()%20+10;
+	mel::text::info("vecSize will be {}",vecSize);
+	auto inputVec = vector<int>(vecSize);
+	for( auto& v:inputVec)
+		v= rand()%5;
+	auto th = ThreadRunnable::create(); //need to be the last declaration to be the first thing to destroy and not destroy vector until finished
+	th->fireAndForget([ex,&inputVec] () mutable
+	{
+		srand(time(NULL));	
+		int iteration = 0;
+        auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
+				mel::execution::start(ex)
+				| mel::execution::inmediate(std::ref(inputVec))
+				| mel::execution::flow::doWhile(
+					[size = inputVec.size()](auto input )
+					{					
+						return input | execution::flow::loop(0,(int)size,
+							[]( int idx,auto input ) noexcept
+							{
+								return input | execution::next( [idx](vector<int>& v) noexcept -> int
+								{
+									auto value = v[idx] + rand()%9;
+									return value;
+								})
+								| execution::flow::condition(
+									[](int value ) noexcept
+									{
+										if ( value < 3)
+											return 0;
+										else if (value < 6)
+											return 1;
+										else
+											return 2;
+									},
+									[idx](auto input) //flow number 0
+									{
+										return 	input | execution::next([idx](int value) noexcept
+										{
+											::mel::text::info("T1 of element {}",idx);
+										})
+										| execution::next( [idx]() noexcept
+										{
+											::mel::text::info("T2 of element {}",idx);
+										});
+									},
+									[idx](auto input) //flow number 1
+									{
+										return 	input | execution::next([idx](int value) noexcept
+										{
+											::mel::text::info("T3 of element {}",idx);
+										});
+									},
+									[idx](auto input) //flow number 2
+									{
+										return 	input | execution::next([idx](int value) noexcept
+										{
+											::mel::text::info("T4 of element {}",idx);
+										})
+										| execution::next( [idx]() noexcept
+										{
+											::mel::text::info("T5 of element {}",idx);
+										});
+									}
+								);
+							});	
+					},
+					[iteration]() mutable noexcept
+					{
+						::mel::text::info("Iteration {} finished", iteration);
+						if ( ++iteration == 5)
+							return false;
+						else
+						{
+							return true;
+						}
+					}
+				)
+		);
+		if ( res.isValid())
+		{
+			//text::info("Finished");
+		}else
+		{
+			try
+			{
+				std::rethrow_exception(res.error());				
+			}
+			catch(...)
+			{
+				::text::error("Some error occured!!");
+			}
+		}
+		
+	},0,::tasking::Runnable::killFalse);
+	
+}
+\endcode
+Some points on this code:
+ - the initial vector es generated (randomly) outside the flow. it could be done in an initial task as part of the flow, but this would imply a lot of copies because the independent iterations.
+ - this vector is created outside task posted to *th*. It could be tempting to create it inside the same task that is launching the whole flow, but remember from \ref microthread_limitation_local_var "microthread limitations"
+ that a local variable inside a microthread can't be got by reference if a context switch is going to be done.
+
+ Output is not shown because the parallel nature of each iteration makes difficult to follow it and doesn't contribute to the understanding.
+
 */

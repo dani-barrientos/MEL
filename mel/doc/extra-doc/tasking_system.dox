@@ -439,7 +439,8 @@ by the users.
 
 
 ##Known limitations {#limitations}
-### Careful with local variables and microthreads
+\anchor microthread_limitation_local_var
+### Careful with local variables and microthreads 
  The *stackless* nature of the microthreads (in the sense that, by default, the don't use its own stack) implies a confusing limitation, that can be overcame very easily. This techniques have been in use since earlies 2000s
  and this limitation is not really important, but is neccesary to explain it. Let's see an example:
  \code

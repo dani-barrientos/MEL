@@ -69,7 +69,7 @@ class TestResult
 int TestParallelism::onExecuteTest()
 {
 	int result = 0;
-    mel::text::set_level(text::level::info);    
+    mel::text::set_level(text::level::debug);    
     Timer timer;
     constexpr int n = 100000;
     constexpr int tries = 50;
