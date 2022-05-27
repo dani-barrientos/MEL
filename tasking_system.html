@@ -434,6 +434,7 @@ Runnable specialization</h2>
 </div><!-- fragment --><p> The only thing the Runnable specialization (MyRunnable) has to do, is to call <code>Runnable::processTasks</code> which is a protected function not exposed publicy to avoid calling it by the users.</p>
 <h2><a class="anchor" id="limitations"></a>
 Known limitations</h2>
+<p><a class="anchor" id="microthread_limitation_local_var"></a></p>
 <h3><a class="anchor" id="autotoc_md2"></a>
 Careful with local variables and microthreads</h3>
 <p>The <em>stackless</em> nature of the microthreads (in the sense that, by default, the don't use its own stack) implies a confusing limitation, that can be overcame very easily. This techniques have been in use since earlies 2000s and this limitation is not really important, but is neccesary to explain it. Let's see an example: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span> _sampleLimitation()</div>
