@@ -861,7 +861,7 @@ template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
 						return input | execution::flow::loop(0,(int)size,
 							[]( int idx,auto input ) noexcept
 							{
-								return input | execution::next( [idx](vector<int>& v) noexcept -> int
+								return input | execution::next( [idx](std::vector<int>& v) noexcept -> int
 								{
 									auto value = v[idx] + rand()%9;
 									return value;
