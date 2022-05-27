@@ -14,7 +14,7 @@ tests::BaseTest* sCurrentTest = nullptr;
 void addText(string str)
 {
     if ( sCurrentTest )
-        sCurrentTest->addTextToBuffer(std::move(str),tests::BaseTest::LogLevel::debug);
+        sCurrentTest->addTextToBuffer(std::move(str),tests::BaseTest::LogLevel::Debug);
 }
 
 ::core::ECallbackResult f1(float a)
