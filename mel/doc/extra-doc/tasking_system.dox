@@ -385,7 +385,7 @@ void _sampleTasking7()
 {
     //custom allocator which will use out CustomProcessFactory, not inheriting from ProcessFactory, so best performance
     auto th1 = ThreadRunnable::create(true);
-    th1->fireAndForget<MyAllocator>( []
+    th1->fireAndForget<true,MyAllocator>( []() noexcept
     {
         mel::text::info("execute");
     },0,Runnable::killFalse);

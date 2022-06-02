@@ -123,22 +123,25 @@ namespace mel
         }      
         
         // overload for performance reasons
-        template <class TArg, class I, class F>	 ExFuture<InlineExecutionAgent,TArg> loop(ExFuture<InlineExecutionAgent,TArg> source,I&& begin, I&& end, F&& functor, int increment = 1)
-        {
-            static_assert( std::is_invocable<F,I,TArg>::value, "InlineExecutor::loop bad signature");
+        template <class TArg, class I, class F>	 ExFuture<InlineExecutionAgent,TArg> loop(ExFuture<InlineExecutionAgent,TArg> source,I&& getIteratorsFunc, F&& functor, int increment = 1)
+        {            
             if ( source.getValid())
             {
                 std::exception_ptr except{nullptr};
                 auto& v = source.getValue().value();
-                if constexpr (std::is_nothrow_invocable<F,I,TArg>::value)
+                auto iterators = getIteratorsFunc(v);
+                using IteratorType = decltype(iterators[0]);
+                static_assert( std::is_invocable<F,IteratorType,TArg>::value, "InlineExecutor::loop bad signature");
+                //@todo remember this iteration could not valid for increment diferent to 1 and not arithmetic iterators
+                if constexpr (std::is_nothrow_invocable<F,IteratorType,TArg>::value) 
                 {
-                    for(auto i = begin; i != end;i+=increment)
+                    for(auto i = iterators[0]; i != iterators[1];i+=increment)
                     {
                         functor(i,v);
                     }   
                 }else
                 {
-                    for(auto i = begin; i != end;i+=increment)
+                    for(auto i = iterators[0]; i != iterators[1];i+=increment)
                     {                    
                         try
                         {
@@ -166,20 +169,22 @@ namespace mel
             }
         }
         // voide overload for performance reasons
-        template <class I, class F>	 ExFuture<InlineExecutionAgent,void> loop(ExFuture<InlineExecutionAgent,void> source,I&& begin, I&& end, F&& functor, int increment = 1)
+        template <class I, class F>	 ExFuture<InlineExecutionAgent,void> loop(ExFuture<InlineExecutionAgent,void> source,I&& getIteratorsFunc, F&& functor, int increment = 1)
         {
             if ( source.getValid())
             {
                 std::exception_ptr except{nullptr};
-                if constexpr (std::is_nothrow_invocable<F,I>::value)
+                auto iterators = getIteratorsFunc();
+                using IteratorType = decltype(iterators[0]);
+                if constexpr (std::is_nothrow_invocable<F,IteratorType>::value)
                 {
-                    for(auto i = begin; i != end;i+=increment)
+                    for(auto i = iterators[0]; i != iterators[1];i+=increment)
                     {
                         functor(i);
                     }   
                 }else
                 {
-                    for(auto i = begin; i != end;i+=increment)
+                    for(auto i = iterators[0]; i != iterators[1];i+=increment)
                     {                    
                         try
                         {

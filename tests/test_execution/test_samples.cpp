@@ -306,10 +306,15 @@ template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 					return str + ". How are you?";
 				})
 				| mel::execution::transfer(ex2)
-				| mel::execution::loop(0,10, [](int idx, const string& str) noexcept
-				{
-					text::info("Iteration {}", str + std::to_string(idx));
-				},3)
+				| mel::execution::loop(
+					[](const string& str)
+					{
+						return std::array{0,10};
+					},
+					[](int idx, const string& str) noexcept
+					{
+						text::info("Iteration {}", str + std::to_string(idx));
+					},3)
 				| mel::execution::next( [](const string& str ) noexcept
 				{
 					//Fourth job. 
@@ -795,7 +800,11 @@ template <class ExecutorType> void _sampleFlowLoop(ExecutorType ex)
 		int idx = 0;
         auto res = mel::tasking::waitForFutureMThread<::mel::core::WaitErrorNoException>(
 				execution::start(ex)
-				| execution::flow::loop( 0,4,
+				| execution::flow::loop( 
+					[]()
+					{
+						return std::array{0,4};
+					},
 					[]( int idx, auto input ) noexcept
 					{
 						mel::text::info(" loop idx {}",idx);
@@ -858,7 +867,12 @@ template <class ExecutorType> void _sampleFlowChart(ExecutorType ex)
 				| mel::execution::flow::doWhile(
 					[size = inputVec.size()](auto input )
 					{					
-						return input | execution::flow::loop(0,(int)size,
+						return input | execution::flow::loop(
+							
+							[size]
+							{
+								return std::array{0,(int)size};
+							},
 							[]( int idx,auto input ) noexcept
 							{
 								return input | execution::next( [idx](std::vector<int>& v) noexcept -> int
@@ -952,7 +966,7 @@ void test_execution::samples()
 	extp.setOpts({true,true});
 	execution::InlineExecutor exInl;
 	execution::NaiveInlineExecutor exNaive;	
-    /*
+    
 	_sampleBasic(exr);	
 	_sampleBasic(extp);
  	_sampleReference(exr);
@@ -968,6 +982,6 @@ void test_execution::samples()
 	_sampleFlowLaunch(extp);
 	_sampleWhile(extp);
 	_sampleFlowLoop(exr);
-	*/
+	
 	_sampleFlowChart(exr);
 }

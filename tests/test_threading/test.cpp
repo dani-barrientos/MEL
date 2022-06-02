@@ -551,7 +551,7 @@ int  _testPerformanceLotTasks(tests::BaseTest* test)
 			{
 				++count;
 				//th1->post<CustomProcessType,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)				
-				th1->post<MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
+				th1->post<false,MyAllocator>( [count](RUNNABLE_TASK_PARAMS)
 				{
 					return ::mel::tasking::EGenericProcessResult::KILL;
 				},Runnable::killFalse,1000,0);		

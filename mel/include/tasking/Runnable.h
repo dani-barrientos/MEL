@@ -280,13 +280,14 @@ namespace mel
 			* By default, a ::mel::tasking::_private::RunnableTask is created, which is intended to be used with a custom memory manager for performance reasons. Users can provide their own 
 			* AllocatorType class to change the way the underlying Process is created, either by creating a custom specialization of \ref GenericProcess or/and using a custom memory pool
 			@see RTMemPool
+			* @tparam ignoreNoThrow If false, an assertion is raised if callable \p task_proc is not *noexcept*. Default value = false
 			* @param[in] task_proc the functor to be executed. It has signature: bool (unsigned int msecs, Process*)
 			* @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 			* @param[in] period Milliseconds
 			* @param[in] startTime milliseconds to begin task
 			* @return the process created for this task
 			*/
-			template <class AllocatorType = ::mel::tasking::DefaultAllocator, class F,class KF = const std::function<bool()>&>
+			template <bool ignoreNoThrow=false,class AllocatorType = ::mel::tasking::DefaultAllocator, class F,class KF = const std::function<bool()>&>
 			std::shared_ptr<Process> post(
 				F&& task_proc,
 				KF&& killFunction=killFalse,			
@@ -297,7 +298,7 @@ namespace mel
 			 * @param[in] task_proc functor with signature void f(void)
 			 * @param[in] killFunction. Functor with signature bool () used when kill is executed while doing function.
 			 */			
-			template <class AllocatorType = ::mel::tasking::DefaultAllocator, class F,class KF = const std::function<bool()>&>
+			template <bool ignoreNoThrow=false,class AllocatorType = ::mel::tasking::DefaultAllocator, class F,class KF = const std::function<bool()>&>
 			std::shared_ptr<Process> fireAndForget(
 				F&& task_proc,
 				unsigned int startTime = 0,
@@ -349,21 +350,13 @@ namespace mel
 
 		};
 		
-		template <class AllocatorType, class F,class KF>
+		template <bool ignoreNoThrow, class AllocatorType, class F,class KF>
 		std::shared_ptr<Process> Runnable::post(
 			F&& task_proc,
 			KF&& killFunction,
 			unsigned int period,unsigned int startTime )
 		{
-			//@todo para pruebas. Sacaré mejor un warning
-			if constexpr ( std::is_nothrow_invocable<F,uint64_t,Process*>::value) 
-			{
-				//@todo continuar con este temaeste warning no me muestra la variable				
-			//	char Runnable_post_task_should_be_noexcept = 300;//"Runnable::post. Task must be noexcept");
-				//problema, quiero que saque warning. Una solucion podria ser tener una sobrecarga del post o un parámetro para que ignore el noexcept
-
-			}
-			//static_assert( std::is_nothrow_invocable<F,uint64_t,Process*>::value,"Runnable::post. Task must be noexcept");
+			static_assert( !ignoreNoThrow || std::is_nothrow_invocable<F,uint64_t,Process*>::value,"Runnable::post. Task must be noexcept");
 			::std::shared_ptr<GenericProcess> p(AllocatorType::allocate(this));			
 			p->setProcessCallback( ::std::forward<F>(task_proc) );
 			p->setPeriod( period );
@@ -371,15 +364,14 @@ namespace mel
 			postTask(p,startTime);
 			return p;	
 		}
-		template <class AllocatorType, class F,class KF>
+		template <bool ignoreNoThrow, class AllocatorType, class F,class KF>
 			std::shared_ptr<Process> Runnable::fireAndForget(
 				F&& task_proc,
 				unsigned int startTime,
 				KF&& killFunction)
 		{	
-			//static_assert( std::is_nothrow_invocable<F>::value,"Runnable::fireAndForget. Task must be noexcept");
-			return post<AllocatorType>(
-				[f=std::forward<F>(task_proc)](RUNNABLE_TASK_PARAMS) mutable
+			return post<ignoreNoThrow,AllocatorType>(
+				[f=std::forward<F>(task_proc)](RUNNABLE_TASK_PARAMS) mutable noexcept( noexcept(task_proc()) )
 				{
 					f();
 					return ::mel::tasking::EGenericProcessResult::KILL;

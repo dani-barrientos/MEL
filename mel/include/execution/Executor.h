@@ -221,15 +221,15 @@ namespace mel
         /**
          * @brief parallel (possibly, depending on executor capabilities) loop
          * @note concrete executor must provide a member loop function with neccesary interface
+         * @param getIteratorsFunc callable with signature std::array<It,2> f(TArg) returning the begin and end iterators to use in the loop
          * @return A ExFuture with same value as input future, whose content IS MOVED
          */
-        template <class ExecutorAgent,class TArg, class I, class F>	 ExFuture<ExecutorAgent,TArg> loop(ExFuture<ExecutorAgent,TArg> source,I&& begin, I&& end, F&& functor, int increment = 1)
-        {
-            static_assert( std::is_invocable<F,int,TArg>::value, "execution::loop bad functor signature");
+        template <class ExecutorAgent,class TArg, class I, class F>	 ExFuture<ExecutorAgent,TArg> loop(ExFuture<ExecutorAgent,TArg> source,I getIteratorsFunc, F functor, int increment = 1)
+        {            
             ExFuture<ExecutorAgent,TArg> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,TArg>::ValueType  ValueType;
             source.subscribeCallback(
-                [source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
+                [source,functor = std::move(functor),result,getIteratorsFunc = std::move(getIteratorsFunc),increment](ValueType& input)  mutable
                 {
                     try
                     {   
@@ -237,10 +237,13 @@ namespace mel
                         {
                             std::exception_ptr* except = new std::exception_ptr(nullptr);
                             ::mel::parallelism::Barrier barrier;
-                            if constexpr (std::is_nothrow_invocable<F,I,TArg>::value)
+                            auto iterators = getIteratorsFunc(input.value());
+                            using IteratorType = decltype(iterators[0]);
+                            static_assert( std::is_invocable<F,IteratorType,TArg>::value, "execution::loop bad functor signature");
+                            if constexpr (std::is_nothrow_invocable<F,IteratorType,TArg>::value)
                             {
-                                barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
-                                [f = std::forward<F>(functor),source](I idx) mutable noexcept
+                                barrier  = source.agent.loop(iterators[0], iterators[1],
+                                [f = std::move(functor),source](auto idx) mutable noexcept
                                 {
                                     //@todo arreglar el loop para que reciba I&&
                                     //f(std::forward<I>(idx),fut.getValue());
@@ -250,8 +253,8 @@ namespace mel
                                 , increment);
                             }else
                             {
-                                barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
-                                [f = std::forward<F>(functor),source,except](I idx) mutable
+                                barrier  = source.agent.loop(iterators[0], iterators[1],
+                                [f = std::move(functor),source,except](auto idx) mutable
                                 {
                                     try
                                     {
@@ -290,37 +293,38 @@ namespace mel
                     }
                 });
             return result;
-        }
+        }       
 
         ///@cond HIDDEN_SYMBOLS
         
         //void argument overload
-        template <class ExecutorAgent,class I, class F>	 ExFuture<ExecutorAgent,void> loop(ExFuture<ExecutorAgent,void> source,I&& begin, I&& end, F&& functor, int increment = 1)
+        template <class ExecutorAgent,class I, class F>	 ExFuture<ExecutorAgent,void> loop(ExFuture<ExecutorAgent,void> source,I getIteratorsFunc, F functor, int increment = 1)
         {
             static_assert( std::is_invocable<F,int>::value, "execution::loop bad functor signature");
             ExFuture<ExecutorAgent,void> result(source.agent);
             typedef typename ExFuture<ExecutorAgent,void>::ValueType  ValueType;
             source.subscribeCallback(
-                [source,functor = std::forward<F>(functor),result,begin = std::forward<I>(begin),end = std::forward<I>(end),increment](ValueType& input)  mutable
+                [source,functor = std::move(functor),result,getIteratorsFunc = std::move(getIteratorsFunc),increment](ValueType& input)  mutable
                 {
                     try
                     {   
                         if ( input.isValid() )
                         {                        
+                            auto iterators = getIteratorsFunc();
                             std::exception_ptr* except = new std::exception_ptr(nullptr);
                             ::mel::parallelism::Barrier barrier;
-                            if constexpr (std::is_nothrow_invocable<F,I>::value)
+                            if constexpr (std::is_nothrow_invocable<F,decltype(iterators[0])>::value)
                             {
-                                barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
-                                [f = std::forward<F>(functor),source](I idx) mutable noexcept
+                                barrier  = source.agent.loop(iterators[0], iterators[1],
+                                [f = std::move(functor),source](auto idx) mutable noexcept
                                 {
                                     f(idx);
                                 }
                                 , increment);
                             }else
                             {
-                                barrier  = source.agent.loop(std::forward<I>(begin), std::forward<I>(end),
-                                [f = std::forward<F>(functor),source,except](I idx) mutable
+                                barrier  = source.agent.loop(iterators[0], iterators[1],
+                                [f = std::move(functor),source,except](auto idx) mutable
                                 {
                                     try
                                     {
@@ -652,17 +656,14 @@ namespace mel
             };
             template <class I,class F> struct ApplyLoop
             {
-                template <class T> 
-                    ApplyLoop(I b, I e,T&& f,int inc):mFunc(std::forward<T>(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
-                //ApplyLoop(I b, I e,F&& f,int inc):mFunc(std::move(f)),begin(std::move(b)),end(std::move(e)),increment(inc){}
-                //ApplyLoop(I b, I e,const F& f,int inc):mFunc(f),begin(std::move(b)),end(std::move(e)),increment(inc){}
+                template <class U,class T> 
+                    ApplyLoop(U&& its,T&& f,int inc):mGetIts(std::forward<U>(its)),mFunc(std::forward<T>(f)),increment(inc){}
+                I mGetIts;
                 F mFunc;
-                I begin;
-                I end;
                 int increment;
                 template <class TArg,class ExecutorAgent> auto operator()(ExFuture<ExecutorAgent,TArg> inputFut)
                 {
-                    return loop(inputFut,begin,end,std::forward<F>(mFunc),increment);
+                    return loop(inputFut,std::forward<I>(mGetIts),std::forward<F>(mFunc),increment);
                 }
             };
             
@@ -760,9 +761,9 @@ namespace mel
             return _private::ApplyNext<F>(std::forward<F>(f));
         }
         ///@brief version for use with operator |
-        template <class I,class F> _private::ApplyLoop<I,F> loop(I&& begin, I&& end, F&& functor, int increment = 1)
+        template <class I,class F> _private::ApplyLoop<I,F> loop(I&& getItFunc, F&& functor, int increment = 1)
         {
-            return _private::ApplyLoop<I,F>(begin,end,std::forward<F>(functor),increment);
+            return _private::ApplyLoop<I,F>(std::forward<I>(getItFunc),std::forward<F>(functor),increment);
         }
         ///@brief version for use with operator |
         template <class ...FTypes> _private::ApplyBulk<FTypes...> parallel(FTypes&&... functions)

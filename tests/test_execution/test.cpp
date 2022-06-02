@@ -399,7 +399,10 @@ template <class ExecutorType> void _basicTests(ExecutorType ex,ThreadRunnable* t
 						}
 					) 
 					| mel::execution::loop(
-						0,LOOP_SIZE,
+						[](vector<TestClass>& v)
+						{
+							return std::array{0,(int)v.size()};
+						},
 						[](int idx,vector<TestClass>& v) noexcept
 						{
 							v[idx].val+=5.f;
@@ -659,8 +662,11 @@ template <class ExecutorType> void _testMeanVectorLoop(::mel::execution::ExFutur
 		vector<double> means(numParts);
 		auto res5 = mel::core::waitForFutureThread(
 		fut
-		| mel::execution::loop(
-						0,(int)numParts,
+		| mel::execution::loop(						
+						[numParts](const VectorType& s)
+						{
+							return std::array{0,numParts};
+						},
 						[&means,numParts](int idx,const VectorType& v) noexcept
 						{
 							double mean = 0.f;
@@ -1116,7 +1122,11 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 					return "Dani"s;
 				}
 			)
-			| execution::loop( 0,10,
+			| execution::loop( 
+				[](const string& s)
+				{
+					return std::array{0,10};
+				},
 				[cont,pp](int idx,const string& s) noexcept
 				{
 					if ( cont != INIT_VALUE ) 
@@ -1168,7 +1178,11 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 					return "Dani"s;
 				}
 			)
-			| execution::loop( 0,10,
+			| execution::loop( 
+				[](const string& s)
+				{
+					return std::array{0,10};
+				},
 				lmb
 			)
 		);	
@@ -1295,6 +1309,11 @@ int _testAdvanceSample(tests::BaseTest* test)
 		text::info("vector mean(loop): RunnableExecutor");		
 		_testMeanVectorLoop(execution::transfer(initFut,exr),"vector mean(loop): RunnableExecutor",test);
 	}
+	{
+		execution::InlineExecutor ex;		
+		text::info("vector mean(loop): InlineExecutor");		
+		_testMeanVectorLoop(execution::transfer(initFut,ex),"vector mean(loop): InlineExecutor",test);
+	}
 
 	//comparar resultados?
 	return result;
@@ -1363,10 +1382,6 @@ int _testFor(tests::BaseTest* test)
 	tests::BaseTest::addMeasurement("CPU Info",cpuinfo.str());
 
 	//basic test with a plain Thread to get a base reference
-	/*qué probar?
-	una prueba fijo es con el measurement test para ver la creacion
-	otra un bucle a pelo */
-
 	_measureTest("Plain thread, only one",[]
 	{	
 		auto plainThread = std::make_unique<Thread>(
@@ -1402,9 +1417,13 @@ int _testFor(tests::BaseTest* test)
 			execution::Executor<Runnable> ex(th1);			
 			execution::RunnableExecutorOpts exopts;
 			exopts.independentTasks = true;
-			ex.setOpts(exopts);
-			const int idx0 = 0;
-			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			ex.setOpts(exopts);			
+			core::waitForFutureThread(execution::loop(execution::start(ex),
+				[loopSize]()
+				{
+					return std::array{0,loopSize};
+				},
+				gTestFunc,1));
 			//text::debug("hecho");
 			
 		},iters,loopSize
@@ -1417,8 +1436,12 @@ int _testFor(tests::BaseTest* test)
 			execution::RunnableExecutorOpts exOpts;
 			exOpts.independentTasks = true;
 			ex.setOpts(exOpts);
-			const int idx0 = 0;
-			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			core::waitForFutureThread(execution::loop(execution::start(ex),
+			[loopSize]() -> std::array<int,2>
+				{
+					return {0,loopSize};
+				}
+			,gTestFunc,1));
 			//text::debug("hecho");
 			
 		},iters,loopSize
@@ -1433,7 +1456,12 @@ int _testFor(tests::BaseTest* test)
 			exOpts.independentTasks = true;
 			ex.setOpts(exOpts);
 			int idx0 = 0;
-			auto r = mel::execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1);
+			auto r = mel::execution::loop(execution::start(ex),
+				[loopSize]()
+				{
+					return std::array{0,loopSize};
+				},
+				gTestFunc,1);
 			th1->resume();
 			core::waitForFutureThread(r);
 			th1->suspend();
@@ -1448,7 +1476,12 @@ int _testFor(tests::BaseTest* test)
 			exOpts.independentTasks = false;
 			ex.setOpts(exOpts);
 			const int idx0 = 0;
-			core::waitForFutureThread(execution::loop(execution::start(ex),idx0,loopSize,gTestFunc,1));
+			core::waitForFutureThread(execution::loop(execution::start(ex),
+			[loopSize]()
+				{
+					return std::array{0,loopSize};
+				},
+			gTestFunc,1));
 		},iters,loopSize
 	);
 	_measureTest("ThreadPool executor, grouped tasks",
@@ -1462,7 +1495,12 @@ int _testFor(tests::BaseTest* test)
 			exOpts.independentTasks = false;
 			extp.setOpts(exOpts);
 			const int idx0 = 0;
-			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
+			core::waitForFutureThread(execution::loop(execution::start(extp),
+				[loopSize]()
+				{
+					return std::array{0,loopSize};
+				},
+				gTestFunc,1));
 		},iters,loopSize
 	);
 	_measureTest("ThreadPool executor, grouped tasks, lock-free",
@@ -1476,7 +1514,12 @@ int _testFor(tests::BaseTest* test)
 			exOpts.independentTasks = false;
 			extp.setOpts(exOpts);
 			const int idx0 = 0;
-			core::waitForFutureThread(execution::loop(execution::start(extp),idx0,loopSize,gTestFunc,1));
+			core::waitForFutureThread(execution::loop(execution::start(extp),
+				[loopSize]()
+				{
+					return std::array{0,loopSize};
+				},
+				gTestFunc,1));
 		},iters,loopSize
 	);
 	/*

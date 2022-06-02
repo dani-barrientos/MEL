@@ -286,6 +286,91 @@ int _testDebug(tests::BaseTest* test)
 	execution::NaiveInlineExecutor exNaive;	
 	{
 		try
+		{	
+			vector<int> vec(16);
+			auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(
+
+				execution::start(exInl)
+				| execution::inmediate(std::ref(vec))
+				| execution::next( [&vec](vector<int>&) -> vector<int>&
+					{
+						vec.resize(5);
+						return vec;
+					}
+				)
+				| execution::loop(
+
+					[](vector<int>& v) noexcept -> std::array<int,2>
+					{						
+						return {0,(int)v.size()};
+					}
+					,[](int idx,vector<int>&) 
+					{
+						::mel::text::info("Loop {}",idx);
+					}
+				)
+				| execution::next( [](vector<int>& v)							
+				{
+
+				})
+				| execution::loop( 
+					[]() noexcept
+					{
+						return std::array{0,50};
+					},
+					[](int idx) 
+					{
+						mel::text::info("It {}",idx);
+					}
+				)
+			);
+			/*auto finalRes =  mel::core::waitForFutureThread<::mel::core::WaitErrorAsException>(
+				execution::launch(extp,[]() noexcept{ return "hola"s;})
+
+				| execution::flow::loop(2,9, 
+					[](auto input) noexcept
+					{
+						return input | execution::inmediate("hola"s)
+						| execution::next( [](const string& s){
+							::mel::text::info(" flow::loop it");
+							return 6;
+						}); //return void for testing purposes
+					}
+				)
+				
+			);*/
+			//mel::text::info("Final res = ({},{})",std::get<0>(finalRes.value()),std::get<1>(finalRes.value()));
+			mel::text::info("Final res. vecsize = {}",vec.size());
+		}catch( mel::execution::OnAllException& e)
+		{
+			try
+			{
+				rethrow_exception( e.getCause() );
+			}catch(std::exception& e)
+			{
+				mel::text::error("Error {}",e.what());
+			}catch(...)
+			{
+				mel::text::error("OnAllException. unknown error");
+			}
+		}
+		catch(std::exception& e)
+		{
+			mel::text::error(e.what());
+		}catch(...)
+		{
+			mel::text::error("Unknown error!!!");
+		}
+
+		/*auto res = 	mel::core::waitForFutureThread(
+			execution::launch(exr,[]()
+			{
+				return 2;
+			})			
+		);*/
+	}
+	{
+		try
 		{
 			auto fl = [](auto input) noexcept
 					{
@@ -317,7 +402,11 @@ int _testDebug(tests::BaseTest* test)
 						return "triqui"s;	
 					}
 				)
-				| execution::flow::loop(2,5, 
+				| execution::flow::loop(
+					[]
+					{
+						return std::array{2,5};
+					},
 					/*[](int idx,auto input) noexcept
 					{
 						::mel::text::info(" flow number it {}",idx);

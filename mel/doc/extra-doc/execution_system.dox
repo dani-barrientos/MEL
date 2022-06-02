@@ -408,10 +408,15 @@ template <class Ex1, class Ex2> void _sampleTransfer(Ex1 ex1,Ex2 ex2)
 					return str + ". How are you?";
 				})
 				| mel::execution::transfer(ex2)
-				| mel::execution::loop(0,10, [](int idx, const string& str) noexcept
-				{
-					text::info("Iteration {}", str + std::to_string(idx));
-				})
+				| mel::execution::loop(
+					[](const string& str)
+					{
+						return std::array{0,10};
+					},
+					[](int idx, const string& str) noexcept
+					{
+						text::info("Iteration {}", str + std::to_string(idx));
+					})
 				| mel::execution::next( [](const string& str ) noexcept
 				{
 					//Fourth job. 
