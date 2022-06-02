@@ -38,7 +38,7 @@ Issues/facts:
    At the present moment this error has only be shown with a case as that, using exception_ptr, but could possibly appear in other situations.
   
  # Testing
- if using Visual Studio Code, execute *Run CTest*,or execute ctest from commandline in out/build/[required configuration]/tests
+ If using Visual Studio Code, execute *Run CTest*,or execute ctest from command line in out/build/[required configuration]/tests
  Tests runs automatically when build action runs (whenever a change in source code is done) and sent to: https://my.cdash.org/index.php?project=mel
  
  
