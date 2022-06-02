@@ -16,6 +16,11 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -29,6 +34,21 @@
    </div>
    <div id="projectbrief">Microthread &amp; Execution library</div>
   </td>
+   <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <img id="MSearchSelect" src="search/mag_sel.svg"
+               onmouseover="return searchBox.OnSearchSelectShow()"
+               onmouseout="return searchBox.OnSearchSelectHide()"
+               alt=""/>
+          <input type="text" id="MSearchField" value="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
  </tr>
  </tbody>
 </table>
@@ -40,16 +60,6 @@
 var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
 /* @license-end */
 </script>
-<script type="text/javascript" src="menudata.js"></script>
-<script type="text/javascript" src="menu.js"></script>
-<script type="text/javascript">
-/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(function() {
-  initMenu('',true,false,'search.php','Search');
-  $(document).ready(function() { init_search(); });
-});
-/* @license-end */</script>
-<div id="main-nav"></div>
 </div><!-- top -->
 <div id="side-nav" class="ui-resizable side-nav-resizable">
   <div id="nav-tree">
@@ -204,10 +214,10 @@ template&lt;class NewExecutorAgent , class OldExecutorAgent , class TRet &gt; </
 <tr class="memitem:a9c2d394e1f670743253c44823c2e26fc"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; NewExecutorAgent, TRet &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc">transfer</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; OldExecutorAgent, TRet &gt; source, <a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; NewExecutorAgent &gt; newAgent)</td></tr>
 <tr class="memdesc:a9c2d394e1f670743253c44823c2e26fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transfer given <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> to a different executor This way, continuations can be chained but executed in diferent executors. <br /></td></tr>
 <tr class="separator:a9c2d394e1f670743253c44823c2e26fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbcaf139dc87026232b3816d7ecb256e"><td class="memTemplParams" colspan="2">template&lt;class ExecutorAgent , class TArg , class I , class F &gt; </td></tr>
-<tr class="memitem:acbcaf139dc87026232b3816d7ecb256e"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">loop</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
-<tr class="memdesc:acbcaf139dc87026232b3816d7ecb256e"><td class="mdescLeft">&#160;</td><td class="mdescRight">parallel (possibly, depending on executor capabilities) loop  <a href="namespacemel_1_1execution.html#acbcaf139dc87026232b3816d7ecb256e">More...</a><br /></td></tr>
-<tr class="separator:acbcaf139dc87026232b3816d7ecb256e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a486988cae45cdfef766d7ae384509f62"><td class="memTemplParams" colspan="2">template&lt;class ExecutorAgent , class TArg , class I , class F &gt; </td></tr>
+<tr class="memitem:a486988cae45cdfef766d7ae384509f62"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a486988cae45cdfef766d7ae384509f62">loop</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, I getIteratorsFunc, F functor, int increment=1)</td></tr>
+<tr class="memdesc:a486988cae45cdfef766d7ae384509f62"><td class="mdescLeft">&#160;</td><td class="mdescRight">parallel (possibly, depending on executor capabilities) loop  <a href="namespacemel_1_1execution.html#a486988cae45cdfef766d7ae384509f62">More...</a><br /></td></tr>
+<tr class="separator:a486988cae45cdfef766d7ae384509f62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa452862b7a1d169e5a3be1e9fa1b66f2"><td class="memTemplParams" colspan="2">template&lt;class ExecutorAgent , class TArg , class ... FTypes&gt; </td></tr>
 <tr class="memitem:aa452862b7a1d169e5a3be1e9fa1b66f2"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#aa452862b7a1d169e5a3be1e9fa1b66f2">parallel</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)</td></tr>
 <tr class="memdesc:aa452862b7a1d169e5a3be1e9fa1b66f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute given functions in a (possibly, depending on concrete executor) parallel way If an exception is thrown in any of the callables, and noexcept is no specified, the value of the first exception thrown is set as error in the resulting future, so forwarding the error to the next element (if any) of the chain.  <a href="namespacemel_1_1execution.html#aa452862b7a1d169e5a3be1e9fa1b66f2">More...</a><br /></td></tr>
@@ -239,11 +249,11 @@ template&lt;class F &gt; </td></tr>
 <tr class="memitem:a5d9b5f56125ee528486ebd9659645090"><td class="memTemplItemLeft" align="right" valign="top">_private::ApplyNext&lt; F &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a5d9b5f56125ee528486ebd9659645090">next</a> (F &amp;&amp;f)</td></tr>
 <tr class="memdesc:a5d9b5f56125ee528486ebd9659645090"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
 <tr class="separator:a5d9b5f56125ee528486ebd9659645090"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82d5f2827e80ee351c8689bd361a6481"><td class="memTemplParams" colspan="2"><a id="a82d5f2827e80ee351c8689bd361a6481"></a>
+<tr class="memitem:a556f813b1ddf3e3af0e2ed02cb27460f"><td class="memTemplParams" colspan="2"><a id="a556f813b1ddf3e3af0e2ed02cb27460f"></a>
 template&lt;class I , class F &gt; </td></tr>
-<tr class="memitem:a82d5f2827e80ee351c8689bd361a6481"><td class="memTemplItemLeft" align="right" valign="top">_private::ApplyLoop&lt; I, F &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a82d5f2827e80ee351c8689bd361a6481">loop</a> (I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
-<tr class="memdesc:a82d5f2827e80ee351c8689bd361a6481"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
-<tr class="separator:a82d5f2827e80ee351c8689bd361a6481"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a556f813b1ddf3e3af0e2ed02cb27460f"><td class="memTemplItemLeft" align="right" valign="top">_private::ApplyLoop&lt; I, F &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a556f813b1ddf3e3af0e2ed02cb27460f">loop</a> (I &amp;&amp;getItFunc, F &amp;&amp;functor, int increment=1)</td></tr>
+<tr class="memdesc:a556f813b1ddf3e3af0e2ed02cb27460f"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
+<tr class="separator:a556f813b1ddf3e3af0e2ed02cb27460f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae145bb76241e570d2a9d4e4308c954c1"><td class="memTemplParams" colspan="2"><a id="ae145bb76241e570d2a9d4e4308c954c1"></a>
 template&lt;class ... FTypes&gt; </td></tr>
 <tr class="memitem:ae145bb76241e570d2a9d4e4308c954c1"><td class="memTemplItemLeft" align="right" valign="top">_private::ApplyBulk&lt; FTypes... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#ae145bb76241e570d2a9d4e4308c954c1">parallel</a> (FTypes &amp;&amp;... functions)</td></tr>
@@ -277,14 +287,14 @@ template&lt;class ExecutorAgent , class TRet1 , class U &gt; </td></tr>
 <tr class="memitem:a789d1502a968251fcc5ac40bdb4724b7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">on_all</a> (<a class="el" href="classmel_1_1execution_1_1_executor.html">Executor</a>&lt; ExecutorAgent &gt; ex, FTypes... futs)</td></tr>
 <tr class="memdesc:a789d1502a968251fcc5ac40bdb4724b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">return <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> which will be executed, in the context of the given executor ex, when all the given ExFutures are triggered.  <a href="namespacemel_1_1execution.html#a789d1502a968251fcc5ac40bdb4724b7">More...</a><br /></td></tr>
 <tr class="separator:a789d1502a968251fcc5ac40bdb4724b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplParams" colspan="2"><a id="a5ce2c44a3ac6630c36fc4e9e154d1d61"></a>
+<tr class="memitem:a700e369ad4acf6dda8418a4aa9e2f560"><td class="memTemplParams" colspan="2"><a id="a700e369ad4acf6dda8418a4aa9e2f560"></a>
 template&lt;class TArg , class I , class F &gt; </td></tr>
-<tr class="memitem:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
-<tr class="separator:a5ce2c44a3ac6630c36fc4e9e154d1d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38fff4c9b3a95d641b696635c123b742"><td class="memTemplParams" colspan="2"><a id="a38fff4c9b3a95d641b696635c123b742"></a>
+<tr class="memitem:a700e369ad4acf6dda8418a4aa9e2f560"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, I &amp;&amp;getIteratorsFunc, F &amp;&amp;functor, int increment=1)</td></tr>
+<tr class="separator:a700e369ad4acf6dda8418a4aa9e2f560"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65af56fcf8c088cba6eb8f0f2523c158"><td class="memTemplParams" colspan="2"><a id="a65af56fcf8c088cba6eb8f0f2523c158"></a>
 template&lt;class I , class F &gt; </td></tr>
-<tr class="memitem:a38fff4c9b3a95d641b696635c123b742"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt; source, I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;functor, int increment=1)</td></tr>
-<tr class="separator:a38fff4c9b3a95d641b696635c123b742"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65af56fcf8c088cba6eb8f0f2523c158"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>loop</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, void &gt; source, I &amp;&amp;getIteratorsFunc, F &amp;&amp;functor, int increment=1)</td></tr>
+<tr class="separator:a65af56fcf8c088cba6eb8f0f2523c158"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd3abc585168391c0b622cb5a4728f60"><td class="memTemplParams" colspan="2"><a id="abd3abc585168391c0b622cb5a4728f60"></a>
 template&lt;class TArg , class ... FTypes&gt; </td></tr>
 <tr class="memitem:abd3abc585168391c0b622cb5a4728f60"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>parallel</b> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; <a class="el" href="structmel_1_1execution_1_1_inline_execution_agent.html">InlineExecutionAgent</a>, TArg &gt; source, FTypes &amp;&amp;... functions)</td></tr>
@@ -534,8 +544,8 @@ template&lt;class TArg , class F &gt; </div>
 
 </div>
 </div>
-<a id="acbcaf139dc87026232b3816d7ecb256e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbcaf139dc87026232b3816d7ecb256e">&#9670;&nbsp;</a></span>loop()</h2>
+<a id="a486988cae45cdfef766d7ae384509f62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a486988cae45cdfef766d7ae384509f62">&#9670;&nbsp;</a></span>loop()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -551,19 +561,13 @@ template&lt;class ExecutorAgent , class TArg , class I , class F &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">I &amp;&amp;&#160;</td>
-          <td class="paramname"><em>begin</em>, </td>
+          <td class="paramtype">I&#160;</td>
+          <td class="paramname"><em>getIteratorsFunc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">I &amp;&amp;&#160;</td>
-          <td class="paramname"><em>end</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">F &amp;&amp;&#160;</td>
+          <td class="paramtype">F&#160;</td>
           <td class="paramname"><em>functor</em>, </td>
         </tr>
         <tr>
@@ -582,6 +586,12 @@ template&lt;class ExecutorAgent , class TArg , class I , class F &gt; </div>
 
 <p>parallel (possibly, depending on executor capabilities) loop </p>
 <dl class="section note"><dt>Note</dt><dd>concrete executor must provide a member loop function with neccesary interface </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">getIteratorsFunc</td><td>callable with signature std::array&lt;It,2&gt; f(TArg) returning the begin and end iterators to use in the loop </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>A <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> with same value as input future, whose content IS MOVED </dd></dl>
 
 </div>

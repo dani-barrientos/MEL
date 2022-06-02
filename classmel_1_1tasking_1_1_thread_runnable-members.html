@@ -16,6 +16,11 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -29,6 +34,21 @@
    </div>
    <div id="projectbrief">Microthread &amp; Execution library</div>
   </td>
+   <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <img id="MSearchSelect" src="search/mag_sel.svg"
+               onmouseover="return searchBox.OnSearchSelectShow()"
+               onmouseout="return searchBox.OnSearchSelectHide()"
+               alt=""/>
+          <input type="text" id="MSearchField" value="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
  </tr>
  </tbody>
 </table>
@@ -40,16 +60,6 @@
 var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
 /* @license-end */
 </script>
-<script type="text/javascript" src="menudata.js"></script>
-<script type="text/javascript" src="menu.js"></script>
-<script type="text/javascript">
-/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(function() {
-  initMenu('',true,false,'search.php','Search');
-  $(document).ready(function() { init_search(); });
-});
-/* @license-end */</script>
-<div id="main-nav"></div>
 </div><!-- top -->
 <div id="side-nav" class="ui-resizable side-nav-resizable">
   <div id="nav-tree">
@@ -94,7 +104,7 @@ $(document).ready(function(){initNavTree('classmel_1_1tasking_1_1_thread_runnabl
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>EThreadState</b> enum name (defined in <a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a>)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#a02cdb4e5ff3ac532059b5a0ca6a0a49b">execute</a>(F &amp;&amp;function, KF &amp;&amp;killFunction=killFalse) noexcept</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#acb42def1c0524e42f9e6a33f3fabfdfb">execute</a>(F &amp;&amp;function, Future&lt; TRet &gt;, KF &amp;&amp;killFunction=killFalse) noexcept</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#ad890610e8fbbe03fafea4804813cd3b0">fireAndForget</a>(F &amp;&amp;task_proc, unsigned int startTime=0, KF &amp;&amp;killFunction=killTrue)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#a44ee5771867cd16f474db2b3b8641b81">fireAndForget</a>(F &amp;&amp;task_proc, unsigned int startTime=0, KF &amp;&amp;killFunction=killTrue)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>getActiveTaskCount</b>() const (defined in <a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a>)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>getCurrentRunnable</b>() (defined in <a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a>)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"><span class="mlabel">static</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html#a6599cc178733e5d47b6ecf8841688468">getCurrentThreadRunnable</a>()</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a></td><td class="entry"><span class="mlabel">static</span></td></tr>
@@ -117,7 +127,7 @@ $(document).ready(function(){initNavTree('classmel_1_1tasking_1_1_thread_runnabl
   <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html#af49cb46462a825db91af836f19710f88">onStart</a>()</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html#a809406683351ab074afeffd66f982295">onThreadEnd</a>()</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
   <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html#a7ae905f6649afb62493019d381422701">onThreadStart</a>()</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#af513abe2b1af17b963b1262bfa271190">post</a>(F &amp;&amp;task_proc, KF &amp;&amp;killFunction=killFalse, unsigned int period=0, unsigned int startTime=0)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#acc43737cee58861f79750d8c32547505">post</a>(F &amp;&amp;task_proc, KF &amp;&amp;killFunction=killFalse, unsigned int period=0, unsigned int startTime=0)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#a775fa406358dc7b798116ab68473c037">postTask</a>(std::shared_ptr&lt; Process &gt; process, unsigned int startTime=0)</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html#a739300ffe3746a01d7db62f4cb575ab6">processTasks</a>()</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
   <tr><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html#ab57ce772628d0d3f50f3f9bd72344152">resume</a>()</td><td class="entry"><a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html">mel::tasking::ThreadRunnable</a></td><td class="entry"></td></tr>

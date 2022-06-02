@@ -16,6 +16,11 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -29,6 +34,21 @@
    </div>
    <div id="projectbrief">Microthread &amp; Execution library</div>
   </td>
+   <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <img id="MSearchSelect" src="search/mag_sel.svg"
+               onmouseover="return searchBox.OnSearchSelectShow()"
+               onmouseout="return searchBox.OnSearchSelectHide()"
+               alt=""/>
+          <input type="text" id="MSearchField" value="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
  </tr>
  </tbody>
 </table>
@@ -40,16 +60,6 @@
 var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
 /* @license-end */
 </script>
-<script type="text/javascript" src="menudata.js"></script>
-<script type="text/javascript" src="menu.js"></script>
-<script type="text/javascript">
-/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(function() {
-  initMenu('',true,false,'search.php','Search');
-  $(document).ready(function() { init_search(); });
-});
-/* @license-end */</script>
-<div id="main-nav"></div>
 </div><!-- top -->
 <div id="side-nav" class="ui-resizable side-nav-resizable">
   <div id="nav-tree">
@@ -137,15 +147,15 @@ template&lt;class TupleType , class U &gt; </td></tr>
 template&lt;class TupleType , class U &gt; </td></tr>
 <tr class="memitem:a71cbbe022889be8f289fbe023843308a"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator|</b> (<a class="el" href="structmel_1_1execution_1_1flow_1_1_flows_result.html">FlowsResult</a>&lt; TupleType &gt; &amp;&amp;input, U &amp;&amp;u)</td></tr>
 <tr class="separator:a71cbbe022889be8f289fbe023843308a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1fc5a2ec463d8f3f4b0436543d4dbb0"><td class="memTemplParams" colspan="2">template&lt;class TArg , class ExecutorAgent , class Flow , class I &gt; </td></tr>
-<tr class="memitem:aa1fc5a2ec463d8f3f4b0436543d4dbb0"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">loop</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, I begin, I end, Flow flow, int increment=1)</td></tr>
-<tr class="memdesc:aa1fc5a2ec463d8f3f4b0436543d4dbb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loop with independent iterations.  <a href="namespacemel_1_1execution_1_1flow.html#aa1fc5a2ec463d8f3f4b0436543d4dbb0">More...</a><br /></td></tr>
-<tr class="separator:aa1fc5a2ec463d8f3f4b0436543d4dbb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a629864dc94ef35d74ab19c47bb4c82e8"><td class="memTemplParams" colspan="2"><a id="a629864dc94ef35d74ab19c47bb4c82e8"></a>
+<tr class="memitem:a68da4cbd0af1c3a6c64913c9ec410d09"><td class="memTemplParams" colspan="2">template&lt;class TArg , class ExecutorAgent , class Flow , class I &gt; </td></tr>
+<tr class="memitem:a68da4cbd0af1c3a6c64913c9ec410d09"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution_1_1flow.html#a68da4cbd0af1c3a6c64913c9ec410d09">loop</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, I getIteratorsFunc, Flow flow, int increment=1)</td></tr>
+<tr class="memdesc:a68da4cbd0af1c3a6c64913c9ec410d09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loop with independent iterations.  <a href="namespacemel_1_1execution_1_1flow.html#a68da4cbd0af1c3a6c64913c9ec410d09">More...</a><br /></td></tr>
+<tr class="separator:a68da4cbd0af1c3a6c64913c9ec410d09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaa7d3de26c024670334b352e2f9b38e"><td class="memTemplParams" colspan="2"><a id="aeaa7d3de26c024670334b352e2f9b38e"></a>
 template&lt;class I , class F &gt; </td></tr>
-<tr class="memitem:a629864dc94ef35d74ab19c47bb4c82e8"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">flow::_private::ApplyLoop</a>&lt; I, F &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution_1_1flow.html#a629864dc94ef35d74ab19c47bb4c82e8">loop</a> (I &amp;&amp;begin, I &amp;&amp;end, F &amp;&amp;flow, int increment=1)</td></tr>
-<tr class="memdesc:a629864dc94ef35d74ab19c47bb4c82e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
-<tr class="separator:a629864dc94ef35d74ab19c47bb4c82e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaa7d3de26c024670334b352e2f9b38e"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structmel_1_1execution_1_1flow_1_1__private_1_1_apply_loop.html">flow::_private::ApplyLoop</a>&lt; I, F &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution_1_1flow.html#aeaa7d3de26c024670334b352e2f9b38e">loop</a> (I &amp;&amp;getItFunc, F &amp;&amp;flow, int increment=1)</td></tr>
+<tr class="memdesc:aeaa7d3de26c024670334b352e2f9b38e"><td class="mdescLeft">&#160;</td><td class="mdescRight">version for use with operator | <br /></td></tr>
+<tr class="separator:aeaa7d3de26c024670334b352e2f9b38e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a621cba67bd9f449d2e5f42b8d4db59a0"><td class="memTemplParams" colspan="2">template&lt;class ExecutorAgent , class TArg , class Flow , class Predicate &gt; </td></tr>
 <tr class="memitem:a621cba67bd9f449d2e5f42b8d4db59a0"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1execution_1_1flow.html#a621cba67bd9f449d2e5f42b8d4db59a0">doWhile</a> (<a class="el" href="classmel_1_1execution_1_1_ex_future.html">ExFuture</a>&lt; ExecutorAgent, TArg &gt; source, Flow flow, Predicate p)</td></tr>
 <tr class="memdesc:a621cba67bd9f449d2e5f42b8d4db59a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">do...while a flow  <a href="namespacemel_1_1execution_1_1flow.html#a621cba67bd9f449d2e5f42b8d4db59a0">More...</a><br /></td></tr>
@@ -292,8 +302,8 @@ template&lt;class TArg , class ExecutorAgent , class ... Flows&gt; </div>
 
 </div>
 </div>
-<a id="aa1fc5a2ec463d8f3f4b0436543d4dbb0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1fc5a2ec463d8f3f4b0436543d4dbb0">&#9670;&nbsp;</a></span>loop()</h2>
+<a id="a68da4cbd0af1c3a6c64913c9ec410d09"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a68da4cbd0af1c3a6c64913c9ec410d09">&#9670;&nbsp;</a></span>loop()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -310,13 +320,7 @@ template&lt;class TArg , class ExecutorAgent , class Flow , class I &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">I&#160;</td>
-          <td class="paramname"><em>begin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">I&#160;</td>
-          <td class="paramname"><em>end</em>, </td>
+          <td class="paramname"><em>getIteratorsFunc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -342,6 +346,7 @@ template&lt;class TArg , class ExecutorAgent , class Flow , class I &gt; </div>
 <p>Executes flow in a (possibly) independent way (depending on underlying executor). This flow need a first parameter being the iterator: f(I idx, auto input) </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">source</td><td>previous result in current job </td></tr>
+    <tr><td class="paramname">getIteratorsFunc</td><td>Callable returning an std::array&lt;I,2&gt; with begin and end iterators to loop in </td></tr>
     <tr><td class="paramname">flows</td><td>callables with the form <a class="el" href="classmel_1_1execution_1_1_ex_future.html" title="Extension of mel::core::Future to apply to executors.">ExFuture</a> f(ExFuture) </td></tr>
   </table>
   </dd>
