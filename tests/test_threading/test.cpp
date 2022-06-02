@@ -714,6 +714,20 @@ void _throwMyException(int& v)
 //	throw v;
 	throw MyException{v,"MyException "+std::to_string(v)};
 }
+auto _doWait(unsigned int msecs)
+{
+	// auto except = std::current_exception();
+
+	// if (except)
+	// {
+	// 	try{
+	// 		std::rethrow_exception(except);
+	// 	}catch(...){}
+	// }
+	// quisiera que aqui ya no hubiese excepcion
+	// except = std::current_exception();
+	return mel::tasking::Process::wait(msecs);
+}
 int _testExceptions( tests::BaseTest* test)
 {
 	mel::text::info("Test Exceptions");
@@ -721,18 +735,20 @@ int _testExceptions( tests::BaseTest* test)
 	th1->post(
 		 [test](RUNNABLE_TASK_PARAMS)
 		 {
+			std::exception_ptr except;
 			int val;
 			try
 			{
 				mel::text::info("Task1: Context switch");
-				if ( mel::tasking::Process::wait(2000) == Process::ESwitchResult::ESWITCH_OK)
+				if ( _doWait(200) == Process::ESwitchResult::ESWITCH_OK)
 				{
 					mel::text::info("Task1: Throw exception");
-					_throwMyException(val);
-					//_throwExc(val); wn Windows también peta con esto
+					// if (rand()%10 < 5)
+					// 	_throwMyException(val);
+					// else
+						_throwExc(val); 
 					test->setFailed("Task1: After throw exception. Shouldn't occur");
 				}
-				//_throwExc(val);
 
 			}catch(int v)
 			{
@@ -743,10 +759,13 @@ int _testExceptions( tests::BaseTest* test)
 					stringstream ss;
 					ss<<"Task1: Invalid 'int' Captured exception. Thrown "<<val<<" Catched "<<v;
 					test->setFailed(ss.str());
-//
-					//mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,v);
 				}
-				mel::tasking::Process::wait(5000);
+				// igual, puedo ahcer algo de esto en el wait, restaurandolo a la vuelta o similar..en este caso tengo que hacer buenas pruebas con excepciones encadenadas
+				// aunque no tengo claro como tendría que restaurarla..
+				// mirar el uncaught_exceptions 
+				// el problema es que no puedo siempre "obligar" a que no se haga u nswitch dentro de un catch, porque se podría llamar a funciones desde aquí
+				//auto except = std::current_exception();				
+				//_doWait(500);
 			}catch(MyException& exc)
 			{
 				if ( exc.code == val)
@@ -760,9 +779,10 @@ int _testExceptions( tests::BaseTest* test)
 					test->setFailed(ss.str());
 //					mel::text::error("Task1:onExecuteAlltests Captured exception Invalid,. Thrown {}, Catched {}",val,exc.code);
 				}
-				mel::tasking::Process::wait(5000);
+			//	mel::tasking::Process::wait(500); //haciendo esto aquí, peta al poco (Windows)
 			}			
 			
+			_doWait(500);
 			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		 },Runnable::killTrue
 	);
@@ -774,14 +794,30 @@ int _testExceptions( tests::BaseTest* test)
 			{
 
 				mel::text::info("Task2: Context switch");
-				if (mel::tasking::Process::wait(3000)  == Process::ESwitchResult::ESWITCH_OK)
+				if (_doWait(300)  == Process::ESwitchResult::ESWITCH_OK)
 				{
 					mel::text::info("Task2: Throw exception");
-					_throwExc(val);
+					if (rand()%10 < 5)
+						_throwExc(val);
+					else
+						_throwMyException(val);
 					test->setFailed("Task2: After throw exception. Shouldn't occur");
-					//mel::text::error("Task2: After throw exception. Shouldn't occur");
 				}
-			}catch( int v)
+			}
+			catch(MyException& exc)
+			{
+				if ( exc.code == val)
+				{
+					mel::text::info("Task2: Captured exception ok. msg ={}",exc.msg);
+				}
+				else
+				{
+					stringstream ss;
+					ss<<"Task2: Invalid 'MyException' Captured exception. Thrown "<<val<<" Catched "<<exc.code;
+					test->setFailed(ss.str());
+				}
+			}	
+			catch( int v)
 			{
 				if ( v == val)
 					mel::text::info("Task2: Captured exception ok");
@@ -791,12 +827,61 @@ int _testExceptions( tests::BaseTest* test)
 					ss<<"Task2: Invalid Captured exception. Thrown "<<val<<" Catched "<<v;
 					test->setFailed(ss.str());
 				}
-			}			
+			}
+			_doWait(1260);			
 			
 			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
 		 },Runnable::killTrue
 	);
-	Thread::sleep(45000);
+	th1->post(
+		 [test](RUNNABLE_TASK_PARAMS)
+		 {
+			 int val;
+			try
+			{
+
+				mel::text::info("Task3: Context switch");
+				if (_doWait(500)  == Process::ESwitchResult::ESWITCH_OK)
+				{
+					mel::text::info("Task3: Throw exception");
+					if (rand()%10 < 5)
+						_throwExc(val);
+					else
+						_throwMyException(val);
+					test->setFailed("Task3: After throw exception. Shouldn't occur");
+				}
+			}
+			catch(MyException& exc)
+			{
+				if ( exc.code == val)
+				{
+					mel::text::info("Task3: Captured exception ok. msg ={}",exc.msg);
+				}
+				else
+				{
+					stringstream ss;
+					ss<<"Task3: Invalid 'MyException' Captured exception. Thrown "<<val<<" Catched "<<exc.code;
+					test->setFailed(ss.str());
+				}
+			}	
+			catch( int v)
+			{
+				if ( v == val)
+					mel::text::info("Task3: Captured exception ok");
+				else
+				{
+					stringstream ss;
+					ss<<"Task3: Invalid Captured exception. Thrown "<<val<<" Catched "<<v;
+					test->setFailed(ss.str());
+				}
+			}
+			_doWait(750);
+			
+			 return ::mel::tasking::EGenericProcessResult::CONTINUE;
+		 },Runnable::killTrue
+	);
+	Thread::sleep(30000); //test time
+	mel::text::info("Test Exceptions finished ok");
 	return 0;
 }
 
@@ -862,6 +947,6 @@ int TestThreading::onExecuteAllTests()
 	//_testPerformanceLotTasks(this);
 	::test_threading::allTests(this);
 	 //_test_concurrent_post(this);	
-	 //_testExceptions(this);
+	 _testExceptions(this);
 	 return 0;
 }

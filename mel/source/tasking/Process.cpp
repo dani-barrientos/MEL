@@ -1,13 +1,11 @@
 	
 #include <tasking/Process.h>
 #include <tasking/ProcessScheduler.h>
-
 #include <stdlib.h>
-
 using mel::tasking::Process;
 using mel::tasking::ProcessScheduler;
 using mel::tasking::MThreadAttributtes;
-
+#include <exception>
 #undef max
 #include <limits>
 #include <assert.h>
@@ -157,6 +155,10 @@ Process::ESwitchResult Process::switchProcess( bool v )
 		result = ESwitchResult::ESWITCH_KILL;
 	else
 	{
+		#ifdef MEL_WINDOWS
+		if (std::current_exception() != nullptr)
+			mel::text::warn("Process::switchProcess. Doing context switch while pending exception can lead to crashes. You should avoid Process context switches on 'catch' contexts");
+		#endif
 		unsigned int currentPeriod = p->getPeriod();
 		if (v)
 			p->setPeriod(0);
