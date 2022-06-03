@@ -1,14 +1,15 @@
 #pragma once
 /*
- * SPDX-FileCopyrightText: 2017,2022 Daniel Barrientos <danivillamanin@gmail.com>
+ * SPDX-FileCopyrightText: 2017,2022 Daniel Barrientos
+ * <danivillamanin@gmail.com>
  *
  * SPDX-License-Identifier: MIT
  */
 #include <functional>
 
 /**
-* CallbackInterface implementation for C++ function objects and lambdas
-*/
+ * CallbackInterface implementation for C++ function objects and lambdas
+ */
 #include <core/CallbackInterface.h>
 #include <mpl/equal.h>
 

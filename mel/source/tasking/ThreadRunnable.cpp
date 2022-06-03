@@ -4,43 +4,45 @@ using mel::tasking::ThreadRunnable;
 // #include <core/TLS.h>
 // using mel::core::TLS;
 
-static thread_local ThreadRunnable* tlCurrentRunnable{nullptr};
+static thread_local ThreadRunnable* tlCurrentRunnable{ nullptr };
 // static TLS::TLSKey gCurrentThreadKey;
 // static bool gCurrentThreadKeyCreated = false;
 // static std::mutex gCurrrentThreadCS;
 
 Runnable::RunnableCreationOptions ThreadRunnable::sDefaultOpts;
-ThreadRunnable::ThreadRunnable( Runnable::RunnableCreationOptions opts):Runnable(std::move(opts)),mState(THREAD_INIT),mEnd(false),
-	mPauseEV(true,false),mThread(std::make_unique<Thread>())
+ThreadRunnable::ThreadRunnable( Runnable::RunnableCreationOptions opts )
+    : Runnable( std::move( opts ) ), mState( THREAD_INIT ), mEnd( false ),
+      mPauseEV( true, false ), mThread( std::make_unique<Thread>() )
 {
-	getScheduler().susbcribeWakeEvent(makeMemberEncapsulate(&ThreadRunnable::_processAwaken, this));
-	// gCurrrentThreadCS.lock();
-	// if ( !gCurrentThreadKeyCreated )
-	// {
-	// 	TLS::createKey( gCurrentThreadKey );
-	// 	gCurrentThreadKeyCreated = true;
-	// }
-	// gCurrrentThreadCS.unlock();
+    getScheduler().susbcribeWakeEvent(
+        makeMemberEncapsulate( &ThreadRunnable::_processAwaken, this ) );
+    // gCurrrentThreadCS.lock();
+    // if ( !gCurrentThreadKeyCreated )
+    // {
+    // 	TLS::createKey( gCurrentThreadKey );
+    // 	gCurrentThreadKeyCreated = true;
+    // }
+    // gCurrrentThreadCS.unlock();
 }
-void ThreadRunnable::_execute()	
+void ThreadRunnable::_execute()
 {
-	
-	//TLS::setValue( gCurrentThreadKey,new ThreadInfo{shared_from_this()} );
-	//TLS::setValue( gCurrentThreadKey,this );
-	tlCurrentRunnable = this;
+
+    // TLS::setValue( gCurrentThreadKey,new ThreadInfo{shared_from_this()} );
+    // TLS::setValue( gCurrentThreadKey,this );
+    tlCurrentRunnable = this;
     onThreadStart();
     while ( mState != THREAD_FINISHING_DONE )
     {
-        switch( mState )
+        switch ( mState )
         {
         case THREAD_RUNNING:
             if ( getTerminateRequest() )
             {
-                //end order was received
-                mState = THREAD_FINISHING;				
+                // end order was received
+                mState = THREAD_FINISHING;
                 getScheduler().killProcesses( false );
-				resume(); //just in case is paused
-				_signalWakeup();
+                resume(); // just in case is paused
+                _signalWakeup();
             }
             break;
         case THREAD_FINISHING:
@@ -48,10 +50,10 @@ void ThreadRunnable::_execute()
             {
                 mState = THREAD_FINISHING_DONE;
             }
-			getScheduler().killProcesses( false );
-			resume(); //just in case is paused
-			_signalWakeup();
-			break;
+            getScheduler().killProcesses( false );
+            resume(); // just in case is paused
+            _signalWakeup();
+            break;
         default:;
         }
         processTasks();
@@ -59,57 +61,67 @@ void ThreadRunnable::_execute()
     }
     onThreadEnd();
     mState = THREAD_FINISHED;
-    //return 1; // != 0 no error
+    // return 1; // != 0 no error
 }
 
 void ThreadRunnable::start()
 {
-	if ( mState == THREAD_INIT )
-	{
-		mState = THREAD_RUNNING;
-		onStart();
-		mThread = std::make_unique<Thread>(mpl::makeMemberEncapsulate(&ThreadRunnable::_execute,this));
-	}
+    if ( mState == THREAD_INIT )
+    {
+        mState = THREAD_RUNNING;
+        onStart();
+        mThread = std::make_unique<Thread>(
+            mpl::makeMemberEncapsulate( &ThreadRunnable::_execute, this ) );
+    }
 }
 
-bool ThreadRunnable::join(unsigned int millis)
+bool ThreadRunnable::join( unsigned int millis )
 {
-    bool result = mThread->join(millis);
+    bool result = mThread->join( millis );
     onJoined();
     return result;
 }
-mel::tasking::EGenericProcessResult ThreadRunnable::_suspendInternal(uint64_t millis,Process* proc) noexcept {
-	mPauseEV.wait();
-	return ::mel::tasking::EGenericProcessResult::KILL;
+mel::tasking::EGenericProcessResult
+ThreadRunnable::_suspendInternal( uint64_t millis, Process* proc ) noexcept
+{
+    mPauseEV.wait();
+    return ::mel::tasking::EGenericProcessResult::KILL;
 }
 unsigned int ThreadRunnable::suspend()
 {
-	if ( mState == THREAD_RUNNING )
-	{
-		post(makeMemberEncapsulate(&ThreadRunnable::_suspendInternal,this)); //post as the first task for next iteration
-		mState=THREAD_SUSPENDED; //aunque todav�a no se haya hecho el wait,
-								 //por la forma en que funcionan los eventos da igual, porque si se hace
-								 //un resume justo antes de procesarse la tarea "suspendInternal", implica que el set
-								 //hace que el siguiente wait no espere, lo cual es lo correcto
-	}
-	return 1;
+    if ( mState == THREAD_RUNNING )
+    {
+        post( makeMemberEncapsulate(
+            &ThreadRunnable::_suspendInternal,
+            this ) ); // post as the first task for next iteration
+        mState =
+            THREAD_SUSPENDED; // aunque todav�a no se haya hecho el wait,
+                              // por la forma en que funcionan los eventos da
+                              // igual, porque si se hace un resume justo antes
+                              // de procesarse la tarea "suspendInternal",
+                              // implica que el set hace que el siguiente wait
+                              // no espere, lo cual es lo correcto
+    }
+    return 1;
 }
 
-unsigned int ThreadRunnable::resume() {    
-	if ( mState == THREAD_SUSPENDED )
-	{
-		mState = THREAD_RUNNING;
+unsigned int ThreadRunnable::resume()
+{
+    if ( mState == THREAD_SUSPENDED )
+    {
+        mState = THREAD_RUNNING;
 #ifdef _WINDOWS
-		//DWORD sc=ResumeThread(mHandle);
-		mPauseEV.set();
-	}
-	//return mHandle?sc:0;
-	return 1;
+        // DWORD sc=ResumeThread(mHandle);
+        mPauseEV.set();
+    }
+    // return mHandle?sc:0;
+    return 1;
 #endif
-#if defined(MEL_LINUX) || defined(MEL_ANDROID) || defined(MEL_IOS) || defined (MEL_MACOSX)
-		mPauseEV.set();
-	}
-	return 1;
+#if defined( MEL_LINUX ) || defined( MEL_ANDROID ) || defined( MEL_IOS ) ||    \
+    defined( MEL_MACOSX )
+    mPauseEV.set();
+}
+return 1;
 
 #endif
 }
@@ -121,78 +133,77 @@ ThreadRunnable::~ThreadRunnable()
 /*
 void ThreadRunnable::onThreadEnd()
 {
-	Thread::onThreadEnd();	
-	//@todo estoy no es correcto, hay que hacerlo bien
-	if ( mAutoDestroy )
-	 	delete this;
+        Thread::onThreadEnd();
+        //@todo estoy no es correcto, hay que hacerlo bien
+        if ( mAutoDestroy )
+                delete this;
 }
 
 */
-void ThreadRunnable::onPostTask(std::shared_ptr<Process> process)
+void ThreadRunnable::onPostTask( std::shared_ptr<Process> process )
 {
-	_signalWakeup();
+    _signalWakeup();
 }
 
-mel::core::ECallbackResult ThreadRunnable::_processAwaken(std::shared_ptr<Process> p)
+mel::core::ECallbackResult
+ThreadRunnable::_processAwaken( std::shared_ptr<Process> p )
 {
-	_signalWakeup();
-	//::spdlog::debug("GenericThread::_processWaken");
-	return mel::core::ECallbackResult::NO_UNSUBSCRIBE;
+    _signalWakeup();
+    //::spdlog::debug("GenericThread::_processWaken");
+    return mel::core::ECallbackResult::NO_UNSUBSCRIBE;
 }
 void ThreadRunnable::onCycleEnd()
 {
-	unsigned int count = 0;
+    unsigned int count = 0;
     count = getActiveTaskCount();
-    if ( !mEnd && count == 0)
+    if ( !mEnd && count == 0 )
     {
 #ifdef USE_CUSTOM_EVENT
         mWaitForTasks.wait();
 #else
-        std::unique_lock<std::mutex> lk(mCondMut);
-        mWaitForTasksCond.wait(lk, [this]
-        {
-            return mSignaled;
-        }
-        );
-        mSignaled = false;	
+            std::unique_lock<std::mutex> lk( mCondMut );
+            mWaitForTasksCond.wait( lk, [this] { return mSignaled; } );
+            mSignaled = false;
 #endif
     }
 }
 void ThreadRunnable::terminate()
 {
-	if ( mState == THREAD_SUSPENDED )
-	{
-		resume();
-	}else if ( mState == THREAD_INIT )
-	{
-	/*	//TODO vigilar, esto no est� bien. Puede ocurrir que en este momento est� arrancado el hilo
-		#ifdef _WINDOWS
-		//in Windows we need to ResumeThread if it wasn't started. Other way it won't be removed from memory( I don't know why..)
-		ResumeThread( mHandle );
-		#endif*/
-	}
+    if ( mState == THREAD_SUSPENDED )
+    {
+        resume();
+    }
+    else if ( mState == THREAD_INIT )
+    {
+        /*	//TODO vigilar, esto no est� bien. Puede ocurrir que en este
+           momento est� arrancado el hilo #ifdef _WINDOWS
+                //in Windows we need to ResumeThread if it wasn't started. Other
+           way it won't be removed from memory( I don't know why..)
+                ResumeThread( mHandle );
+                #endif*/
+    }
     mEnd = true;
-	_signalWakeup();
+    _signalWakeup();
 }
 void ThreadRunnable::_signalWakeup()
 {
 #ifdef USE_CUSTOM_EVENT
-	mWaitForTasks.set();
+    mWaitForTasks.set();
 #else
-	{
-		std::scoped_lock<std::mutex> lk(mCondMut);
-		mSignaled = true;
-	}
-	mWaitForTasksCond.notify_one();
+        {
+            std::scoped_lock<std::mutex> lk( mCondMut );
+            mSignaled = true;
+        }
+        mWaitForTasksCond.notify_one();
 #endif
 }
 ThreadRunnable* ThreadRunnable::getCurrentThreadRunnable()
 {
-	return tlCurrentRunnable;
-	//return (ThreadRunnable*)TLS::getValue( gCurrentThreadKey );
-	// ThreadInfo* ti = (ThreadInfo*)TLS::getValue( gCurrentThreadKey );
-	// if ( ti )
-	// 	return ti->tr;
-	// else
-	// 	return nullptr;
+    return tlCurrentRunnable;
+    // return (ThreadRunnable*)TLS::getValue( gCurrentThreadKey );
+    //  ThreadInfo* ti = (ThreadInfo*)TLS::getValue( gCurrentThreadKey );
+    //  if ( ti )
+    //  	return ti->tr;
+    //  else
+    //  	return nullptr;
 }
