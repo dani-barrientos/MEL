@@ -464,7 +464,7 @@ Careful with local variables and microthreads</h3>
 <div class="line">        mel::text::info(<span class="stringliteral">&quot;At end &#39;a&#39; = {}&quot;</span>,a);</div>
 <div class="line">    },0,Runnable::killFalse);     </div>
 <div class="line">}</div>
-</div><!-- fragment --><p> This code does the following: a task launched in <em>th1</em> launch another task to the same \ef <a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html" title="Thread with Runnable behaviour.">mel::tasking::ThreadRunnable</a> "ThreadRunnable" (but any other ThreadRunnable would be valid) passing it <em>a reference to a local variable</em>. After that, the first task waits for 5 seconds, so the second task is executed and change the reference variable to a new value. The expected result should be: </p><div class="fragment"><div class="line">Set <span class="charliteral">&#39;a&#39;</span> = 5</div>
+</div><!-- fragment --><p> This code does the following: a task launched in <em>th1</em> launch another task to the same \rfmef <a class="el" href="classmel_1_1tasking_1_1_thread_runnable.html" title="Thread with Runnable behaviour.">mel::tasking::ThreadRunnable</a> "ThreadRunnable" (but any other ThreadRunnable would be valid) passing it <em>a reference to a local variable</em>. After that, the first task waits for 5 seconds, so the second task is executed and change the reference variable to a new value. The expected result should be: </p><div class="fragment"><div class="line">Set <span class="charliteral">&#39;a&#39;</span> = 5</div>
 <div class="line"><span class="charliteral">&#39;a&#39;</span> = 327675</div>
 <div class="line">At end <span class="charliteral">&#39;a&#39;</span> = 10</div>
 </div><!-- fragment --><p> But the output is the following: </p><div class="fragment"><div class="line">Set <span class="charliteral">&#39;a&#39;</span> = 5</div>
@@ -487,7 +487,18 @@ Careful with executing tasks in a Runnable</h3>
 <div class="line">    f1();</div>
 <div class="line">    f2();</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> In the previous code, two labmdas are created, such that one of them declares a loval variable. But the code, the only thing it does, is execute <code>r.processTasks()</code> two times. But the second time, the <em>stack at the point of execution is different</em>. If you execute that code, it throws an assert (in debug mode, in release it will crash). The reason is that task execution *must always be called with the stack in same place, so, this means executing <code>processTasks</code> always from same place. </p>
+</div><!-- fragment --><p> In the previous code, two lambdas are created, such that one of them declares a local variable. But the code, the only thing it does, is execute <code>r.processTasks()</code> two times. But the second time, the <em>stack at the point of execution is different</em>. If you execute that code, it throws an assert (in debug mode, in release it will crash). The reason is that task execution *must always be called with the stack in same place, so, this means executing <code>processTasks</code> always from same place.</p>
+<h3><a class="anchor" id="autotoc_md4"></a>
+Careful doing context-switch inside a 'catch' block</h3>
+<p>This only applies to MSVC compiler. In a <em>catch</em> block, the current exception is yet alive. Making a context-switch (so, using any function that at the end lead to a <a class="el" href="classmel_1_1tasking_1_1_process.html#a31bcb7b51959dabec561a1ed4b3de4d7">Process::switchProcess</a>) can finish in a crash if another exception occurs before returning from this switch. Also, this no always occurs, some other unknown (at this moment) have take place in the code, but the probability of crash is high. So, a warning log will be generated when detecting this situation so that code have to be changed. A dangerous code would be something like: </p><div class="fragment"><div class="line"><span class="keywordflow">try</span></div>
+<div class="line">{</div>
+<div class="line"> ....</div>
+<div class="line">}<span class="keywordflow">catch</span>(...)</div>
+<div class="line">{</div>
+<div class="line">    <a class="code" href="classmel_1_1tasking_1_1_process.html#ae3350d1645cca8cb94f65b1b85dff032">mel::tasking::Process::wait</a>(10);</div>
+<div class="line">}</div>
+</div><!-- fragment --><p>The previous code should be changed such that the wait is done outside the catch. For example: bool exceptCaught = false; try { .... }catch(...) { exceptCaught = true;</p>
+<p>} if ( exceptCaught ) mel::tasking::Process::wait(10);  </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

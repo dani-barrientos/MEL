@@ -23,6 +23,7 @@ var NAVTREEINDEX6 =
 "tasking_system.html":[0,0],
 "tasking_system.html#autotoc_md2":[5,0],
 "tasking_system.html#autotoc_md3":[5,1],
+"tasking_system.html#autotoc_md4":[5,2],
 "tasking_system.html#custom_tasks":[3],
 "tasking_system.html#limitations":[5],
 "tasking_system.html#microthreading":[1],
@@ -34,11 +35,11 @@ var NAVTREEINDEX6 =
 "utilities_8h.html#adcb60d6784a9c571ee675342fab73f7b":[3,0,0,5,17,1],
 "utilities_8h_source.html":[3,0,0,5,17],
 "utils_8h_source.html":[3,0,0,4,1],
-"":[1,0,0,2,1],
-"":[1,0,0,2,0],
-"":[1,0,0,1,1,0],
-"":[1,0,0,5,0],
-"":[1,0,0,5,0,0],
 "":[1,0,0,2,1,0],
-"":[1,0,0,1,0]
+"":[1,0,0,1,1,0],
+"":[1,0,0,5,0,0],
+"":[1,0,0,5,0],
+"":[1,0,0,1,0],
+"":[1,0,0,2,1],
+"":[1,0,0,2,0]
 };

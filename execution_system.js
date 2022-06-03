@@ -9,7 +9,8 @@ var execution_system =
       [ "Runnable specialization", "tasking_system.html#runnable_specialization", null ],
       [ "Known limitations", "tasking_system.html#limitations", [
         [ "Careful with local variables and microthreads", "tasking_system.html#autotoc_md2", null ],
-        [ "Careful with executing tasks in a Runnable", "tasking_system.html#autotoc_md3", null ]
+        [ "Careful with executing tasks in a Runnable", "tasking_system.html#autotoc_md3", null ],
+        [ "Careful doing context-switch inside a 'catch' block", "tasking_system.html#autotoc_md4", null ]
       ] ],
       [ "Futures", "tasking_constructs.html#futures", null ],
       [ "Synchronization mechanisms", "tasking_constructs.html#sync_mechanisms", null ],
