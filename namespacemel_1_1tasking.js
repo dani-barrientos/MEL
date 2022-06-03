@@ -13,9 +13,9 @@ var namespacemel_1_1tasking =
     [ "DefaultAllocator", "structmel_1_1tasking_1_1_default_allocator.html", "structmel_1_1tasking_1_1_default_allocator" ],
     [ "Runnable", "classmel_1_1tasking_1_1_runnable.html", "classmel_1_1tasking_1_1_runnable" ],
     [ "ThreadRunnable", "classmel_1_1tasking_1_1_thread_runnable.html", "classmel_1_1tasking_1_1_thread_runnable" ],
-    [ "EvictSubscriptor", "namespacemel_1_1tasking.html#a2f03a47e2c334351badf250a21c9fe10", null ],
-    [ "SleepSubscriptor", "namespacemel_1_1tasking.html#a0d8a47cd8b1b4c4c8ab7e1410034e7f0", null ],
-    [ "WakeSubscriptor", "namespacemel_1_1tasking.html#a67cad575912f85fe705003a20a7320fe", null ],
+    [ "EvictSubscriptor", "namespacemel_1_1tasking.html#a3134e3721ea80099e5ab54614a821e7c", null ],
+    [ "SleepSubscriptor", "namespacemel_1_1tasking.html#ab8720400dd2b276babbda3c51ca36763", null ],
+    [ "WakeSubscriptor", "namespacemel_1_1tasking.html#a5486a81edc99ab452f9fe3e0ba2aefa5", null ],
     [ "EEventMTWaitCode", "namespacemel_1_1tasking.html#a267297e64b3af8ddee72131d16717754", [
       [ "EVENTMT_WAIT_OK", "namespacemel_1_1tasking.html#a267297e64b3af8ddee72131d16717754a443eb7f611d4d8361d0efd421bf4d187", null ],
       [ "EVENTMT_WAIT_TIMEOUT", "namespacemel_1_1tasking.html#a267297e64b3af8ddee72131d16717754a9e3267f6856b5961c270cbc554f06d42", null ],
@@ -26,6 +26,6 @@ var namespacemel_1_1tasking =
       [ "KILL", "namespacemel_1_1tasking.html#a96d9377d27d919302df6839559a34a5da3986dd0914958ae2115e0ae7f10beef3", null ]
     ] ],
     [ "waitForBarrierMThread", "namespacemel_1_1tasking.html#ab0522a534c6ddb11108bc01646722960", null ],
-    [ "waitForFutureMThread", "namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b", null ],
+    [ "waitForFutureMThread", "namespacemel_1_1tasking.html#afbd3ab06c478fd0e7a923a0145bbd50c", null ],
     [ "EVENTMT_WAIT_INFINITE", "namespacemel_1_1tasking.html#ab2a1e3a0f223540d0e17a2409d013684", null ]
 ];

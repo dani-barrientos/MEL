@@ -159,16 +159,19 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">        TRet function_name##_sync args qualifiers; \</div>
-<div class="line">        Future&lt;TRet&gt; function_name( MAKE_PARAMS args  ) qualifiers{ \</div>
-<div class="line">        return runnable-&gt;execute&lt;TRet&gt;( [<span class="keyword">this</span>, CALL_PARAMS args]() qualifiers{ \</div>
-<div class="line">            return function_name##_sync(CALL_PARAMS args);\</div>
-<div class="line">        });}</div>
+<b>Value:</b><div class="fragment"><div class="line">    TRet function_name##_sync args qualifiers;                                 \</div>
+<div class="line">    Future&lt;TRet&gt; function_name( MAKE_PARAMS args ) qualifiers                  \</div>
+<div class="line">    {                                                                          \</div>
+<div class="line">        return runnable-&gt;execute&lt;TRet&gt;(                                        \</div>
+<div class="line">            [<span class="keyword">this</span>, CALL_PARAMS args]() qualifiers                              \</div>
+<div class="line">            { <span class="keywordflow">return</span> function_name##_sync( CALL_PARAMS args ); } );            \</div>
+<div class="line">    }</div>
 </div><!-- fragment -->
 <p>Declare a method synchronized with a given runnable. </p>
-<p>The code need to implement that <em>no sync</em> funcion (so, a normal funcion) which its call is managed by this macro. For example, if we declare a synchronized function as</p><pre class="fragment">SYNCHRONIZED_METHOD( f1,string,(int,float),,sRunnable ) </pre><p>, we have to implement the neccesary code for <code>f1_sync</code>, as: </p><div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">string</span> f1_sync(<span class="keywordtype">int</span> a,<span class="keywordtype">float</span> b )</div>
+<p>The code need to implement that <em>no sync</em> funcion (so, a normal funcion) which its call is managed by this macro. For example, if we declare a synchronized function as</p><pre class="fragment">SYNCHRONIZED_METHOD(
+f1,string,(int,float),,sRunnable ) </pre><p>, we have to implement the neccesary code for <code>f1_sync</code>, as: </p><div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">string</span> f1_sync(<span class="keywordtype">int</span> a,<span class="keywordtype">float</span> b )</div>
 <div class="line">{</div>
-<div class="line">    <span class="keywordflow">return</span> std::to_string(a) + std::to:string(b);       </div>
+<div class="line">        <span class="keywordflow">return</span> std::to_string(a) + std::to:string(b);</div>
 <div class="line">}</div>
 </div><!-- fragment --> <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -227,16 +230,19 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">        <span class="keyword">static</span> TRet function_name##_sync args qualifiers; \</div>
-<div class="line">        static Future&lt;TRet&gt; function_name( MAKE_PARAMS args  ) qualifiers{ \</div>
-<div class="line">        return runnable-&gt;execute&lt;TRet&gt;( [CALL_PARAMS args]() qualifiers{ \</div>
-<div class="line">            return function_name##_sync(CALL_PARAMS args);\</div>
-<div class="line">        });}</div>
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keyword">static</span> TRet function_name##_sync args qualifiers;                          \</div>
+<div class="line">    static Future&lt;TRet&gt; function_name( MAKE_PARAMS args ) qualifiers           \</div>
+<div class="line">    {                                                                          \</div>
+<div class="line">        return runnable-&gt;execute&lt;TRet&gt;(                                        \</div>
+<div class="line">            [CALL_PARAMS args]() qualifiers                                    \</div>
+<div class="line">            { <span class="keywordflow">return</span> function_name##_sync( CALL_PARAMS args ); } );            \</div>
+<div class="line">    }</div>
 </div><!-- fragment -->
 <p>Declare a static function synchronized with a given runnable. </p>
-<p>The code need to implement that <em>no sync</em> funcion (so, a normal funcion) which its call is managed by this macro. For example, if we declare a synchronized function as</p><pre class="fragment">SYNCHRONIZED_STATIC( f1,string,(int),noexcept,sRunnable ) </pre><p>, we have to implement the neccesary code for <code>f1_sync</code>, as: </p><div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">string</span> f1_sync(<span class="keywordtype">int</span> v) noexcept</div>
+<p>The code need to implement that <em>no sync</em> funcion (so, a normal funcion) which its call is managed by this macro. For example, if we declare a synchronized function as</p><pre class="fragment">SYNCHRONIZED_STATIC(
+f1,string,(int),noexcept,sRunnable ) </pre><p>, we have to implement the neccesary code for <code>f1_sync</code>, as: </p><div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">string</span> f1_sync(<span class="keywordtype">int</span> v) noexcept</div>
 <div class="line">{</div>
-<div class="line">    <span class="keywordflow">return</span> std::to_string(v);       </div>
+<div class="line">        <span class="keywordflow">return</span> std::to_string(v);</div>
 <div class="line">}</div>
 </div><!-- fragment --> <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

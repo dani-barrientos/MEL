@@ -104,8 +104,8 @@ $(document).ready(function(){initNavTree('utilities_8h.html',''); initResizable(
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;core/Future.h&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
-<code>#include &lt;tasking/Event_mthread.h&gt;</code><br />
 <code>#include &lt;parallelism/Barrier.h&gt;</code><br />
+<code>#include &lt;tasking/Event_mthread.h&gt;</code><br />
 <code>#include &lt;utility&gt;</code><br />
 </div>
 <p><a href="utilities_8h_source.html">Go to the source code of this file.</a></p>
@@ -120,10 +120,10 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:adcb60d6784a9c571ee675342fab73f7b"><td class="memTemplParams" colspan="2">template&lt;class ErrorType  = mel::core::WaitErrorAsException, class T &gt; </td></tr>
-<tr class="memitem:adcb60d6784a9c571ee675342fab73f7b"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">mel::tasking::waitForFutureMThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=EVENTMT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType,::<a class="el" href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a> &gt;::value)</td></tr>
-<tr class="memdesc:adcb60d6784a9c571ee675342fab73f7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits for future completion, returning a wapper around the internal vale.  <a href="namespacemel_1_1tasking.html#adcb60d6784a9c571ee675342fab73f7b">More...</a><br /></td></tr>
-<tr class="separator:adcb60d6784a9c571ee675342fab73f7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbd3ab06c478fd0e7a923a0145bbd50c"><td class="memTemplParams" colspan="2">template&lt;class ErrorType  = mel::core::WaitErrorAsException, class T &gt; </td></tr>
+<tr class="memitem:afbd3ab06c478fd0e7a923a0145bbd50c"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1tasking.html#afbd3ab06c478fd0e7a923a0145bbd50c">mel::tasking::waitForFutureMThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=EVENTMT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType, ::<a class="el" href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a> &gt;::value)</td></tr>
+<tr class="memdesc:afbd3ab06c478fd0e7a923a0145bbd50c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits for future completion, returning a wapper around the internal vale.  <a href="namespacemel_1_1tasking.html#afbd3ab06c478fd0e7a923a0145bbd50c">More...</a><br /></td></tr>
+<tr class="separator:afbd3ab06c478fd0e7a923a0145bbd50c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0522a534c6ddb11108bc01646722960"><td class="memItemLeft" align="right" valign="top"><a id="ab0522a534c6ddb11108bc01646722960"></a>
 MEL_API ::mel::tasking::EEventMTWaitCode&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1tasking.html#ab0522a534c6ddb11108bc01646722960">mel::tasking::waitForBarrierMThread</a> (const ::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a> &amp;b, unsigned int msecs=::mel::tasking::EVENTMT_WAIT_INFINITE)</td></tr>
 <tr class="memdesc:ab0522a534c6ddb11108bc01646722960"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1parallelism_1_1_barrier.html">barrier</a> to activated in the context of a <a class="el" href="classmel_1_1tasking_1_1_process.html">microthread</a>. <br /></td></tr>

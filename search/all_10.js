@@ -1,8 +1,8 @@
 var searchData=
 [
   ['packcondition_294',['PackCondition',['../structmel_1_1mpl_1_1__private_1_1_pack_condition.html',1,'mel::mpl::_private']]],
-  ['parallel_295',['parallel',['../namespacemel_1_1execution.html#ae145bb76241e570d2a9d4e4308c954c1',1,'mel::execution::parallel(FTypes &amp;&amp;... functions)'],['../namespacemel_1_1execution.html#aa452862b7a1d169e5a3be1e9fa1b66f2',1,'mel::execution::parallel(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)']]],
-  ['parallel_5fconvert_296',['parallel_convert',['../namespacemel_1_1execution.html#a16dbcf72ffee1c3077862a0b9dfcf158',1,'mel::execution::parallel_convert(FTypes &amp;&amp;... functions)'],['../namespacemel_1_1execution.html#ac70c86e823891528b9f865c80853e6f1',1,'mel::execution::parallel_convert(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)']]],
+  ['parallel_295',['parallel',['../namespacemel_1_1execution.html#ae145bb76241e570d2a9d4e4308c954c1',1,'mel::execution::parallel(FTypes &amp;&amp;... functions)'],['../namespacemel_1_1execution.html#a5a14fe3a0429e996593724e19d0c7640',1,'mel::execution::parallel(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)']]],
+  ['parallel_5fconvert_296',['parallel_convert',['../namespacemel_1_1execution.html#a16dbcf72ffee1c3077862a0b9dfcf158',1,'mel::execution::parallel_convert(FTypes &amp;&amp;... functions)'],['../namespacemel_1_1execution.html#aa9cb8c6743e86b309a497a14fba0daff',1,'mel::execution::parallel_convert(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)']]],
   ['paramadder_297',['ParamAdder',['../classmel_1_1mpl_1_1_param_adder.html',1,'mel::mpl']]],
   ['paramadder_5fprev_298',['ParamAdder_prev',['../classmel_1_1mpl_1_1_param_adder__prev.html',1,'mel::mpl::ParamAdder_prev&lt; T, TRet, NewArg, VARIABLE_ARGS &gt;'],['../class_param_adder__prev.html',1,'ParamAdder_prev']]],
   ['pause_299',['pause',['../classmel_1_1tasking_1_1_process.html#a40f9caef9f9b84527468bcb769c792f1',1,'mel::tasking::Process::pause()'],['../classmel_1_1core_1_1_timer.html#a508e2a8d597f5dc45bb4576189feb80a',1,'mel::core::Timer::pause()']]],

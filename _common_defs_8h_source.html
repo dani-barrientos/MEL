@@ -106,21 +106,23 @@ $(document).ready(function(){initNavTree('_common_defs_8h_source.html',''); init
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;{</div>
 <div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="namespacemel_1_1execution.html">    9</a></span>&#160;    <span class="keyword">namespace </span>execution</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    {</div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1_void_type.html">   15</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1_void_type.html">VoidType</a>{};</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;        <span class="comment">//helper type to get a VoidType when template parameter is void</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1_wrapper_type.html">   17</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1_wrapper_type.html">WrapperType</a></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;        {</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;            <span class="keyword">using</span> type = T;         </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        };</div>
-<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1_wrapper_type_3_01void_01_4.html">   21</a></span>&#160;        <span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1_wrapper_type.html">WrapperType</a>&lt;void&gt;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;            <span class="keyword">using</span> <a class="code" href="structmel_1_1execution_1_1_void_type.html">type</a> = <a class="code" href="structmel_1_1execution_1_1_void_type.html">VoidType</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        };</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    }</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;}</div>
-<div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
-<div class="ttc" id="astructmel_1_1execution_1_1_void_type_html"><div class="ttname"><a href="structmel_1_1execution_1_1_void_type.html">mel::execution::VoidType</a></div><div class="ttdoc">Empty type used in some cases when a type is needed to represent a void.</div><div class="ttdef"><b>Definition:</b> CommonDefs.h:15</div></div>
-<div class="ttc" id="astructmel_1_1execution_1_1_wrapper_type_html"><div class="ttname"><a href="structmel_1_1execution_1_1_wrapper_type.html">mel::execution::WrapperType</a></div><div class="ttdef"><b>Definition:</b> CommonDefs.h:18</div></div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1_void_type.html">   16</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1_void_type.html">VoidType</a></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;        {</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;        };</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="comment">// helper type to get a VoidType when template parameter is void</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1_wrapper_type.html">   20</a></span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1_wrapper_type.html">WrapperType</a></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;            <span class="keyword">using</span> type = T;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        };</div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structmel_1_1execution_1_1_wrapper_type_3_01void_01_4.html">   24</a></span>&#160;        <span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span><a class="code" href="structmel_1_1execution_1_1_wrapper_type.html">WrapperType</a>&lt;void&gt;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            <span class="keyword">using</span> <a class="code" href="structmel_1_1execution_1_1_void_type.html">type</a> = <a class="code" href="structmel_1_1execution_1_1_void_type.html">VoidType</a>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        };</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    } <span class="comment">// namespace execution</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;} <span class="comment">// namespace mel</span></div>
+<div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:11</div></div>
+<div class="ttc" id="astructmel_1_1execution_1_1_void_type_html"><div class="ttname"><a href="structmel_1_1execution_1_1_void_type.html">mel::execution::VoidType</a></div><div class="ttdoc">Empty type used in some cases when a type is needed to represent a void.</div><div class="ttdef"><b>Definition:</b> CommonDefs.h:17</div></div>
+<div class="ttc" id="astructmel_1_1execution_1_1_wrapper_type_html"><div class="ttname"><a href="structmel_1_1execution_1_1_wrapper_type.html">mel::execution::WrapperType</a></div><div class="ttdef"><b>Definition:</b> CommonDefs.h:21</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

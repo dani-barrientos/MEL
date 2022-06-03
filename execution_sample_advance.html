@@ -104,9 +104,9 @@ $(document).ready(function(){initNavTree('execution_sample_advance.html',''); in
 <div class="line">        Timer timer;</div>
 <div class="line">        uint64_t t0 = timer.getMilliseconds();</div>
 <div class="line"> </div>
-<div class="line">        <span class="keyword">auto</span> res5 = <a class="code" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a>( </div>
+<div class="line">        <span class="keyword">auto</span> res5 = <a class="code" href="namespacemel_1_1core.html#a755007c8f8202b76ff40a1a39863a923">mel::core::waitForFutureThread</a>( </div>
 <div class="line">        fut</div>
-<div class="line">        | <a class="code" href="namespacemel_1_1execution.html#ac70c86e823891528b9f865c80853e6f1">mel::execution::parallel_convert</a>(  <span class="comment">//calculate mean in 4 parts</span></div>
+<div class="line">        | <a class="code" href="namespacemel_1_1execution.html#aa9cb8c6743e86b309a497a14fba0daff">mel::execution::parallel_convert</a>(  <span class="comment">//calculate mean in 4 parts</span></div>
 <div class="line">            [](<span class="keyword">const</span> VectorType&amp; v) noexcept</div>
 <div class="line">            {</div>
 <div class="line">                <span class="keywordtype">double</span> mean = 0.f;</div>
@@ -150,7 +150,7 @@ $(document).ready(function(){initNavTree('execution_sample_advance.html',''); in
 <div class="line">                mean /= v.size();</div>
 <div class="line">                <span class="keywordflow">return</span> mean;</div>
 <div class="line">            }</div>
-<div class="line">        ) | <a class="code" href="namespacemel_1_1execution.html#a460fabb63e024b68842b3f2575373439">mel::execution::next</a>( [](<span class="keyword">const</span> std::tuple&lt;double,double,double,double&gt;&amp; means)</div>
+<div class="line">        ) | <a class="code" href="namespacemel_1_1execution.html#ad4a29fe71c6b38d0071735ef75806cb0">mel::execution::next</a>( [](<span class="keyword">const</span> std::tuple&lt;double,double,double,double&gt;&amp; means)</div>
 <div class="line">        {</div>
 <div class="line">            <span class="keywordflow">return</span> (std::get&lt;0&gt;(means)+std::get&lt;1&gt;(means)+std::get&lt;2&gt;(means)+std::get&lt;3&gt;(means));</div>
 <div class="line">        }));</div>
@@ -161,10 +161,10 @@ $(document).ready(function(){initNavTree('execution_sample_advance.html',''); in
 <div class="line">        text::info(<span class="stringliteral">&quot;Error = {}&quot;</span>,e.what());</div>
 <div class="line">    }</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassmel_1_1execution_1_1_ex_future_html"><div class="ttname"><a href="classmel_1_1execution_1_1_ex_future.html">mel::execution::ExFuture</a></div><div class="ttdoc">Extension of mel::core::Future to apply to executors.</div><div class="ttdef"><b>Definition:</b> ExFuture.h:20</div></div>
-<div class="ttc" id="anamespacemel_1_1core_html_a104e002cdbc28f6e37b771760742e3b6"><div class="ttname"><a href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType,::mel::core::WaitErrorNoException &gt;::value)</div><div class="ttdoc">Wait for a Future from a Thread</div><div class="ttdef"><b>Definition:</b> Thread.h:226</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a460fabb63e024b68842b3f2575373439"><div class="ttname"><a href="namespacemel_1_1execution.html#a460fabb63e024b68842b3f2575373439">mel::execution::next</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F, TArg &gt; &gt; next(ExFuture&lt; ExecutorAgent, TArg &gt; source, F f)</div><div class="ttdoc">Attach a functor to execute when input fut is complete Given functor will be executed inf the input E...</div><div class="ttdef"><b>Definition:</b> Executor.h:129</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_ac70c86e823891528b9f865c80853e6f1"><div class="ttname"><a href="namespacemel_1_1execution.html#ac70c86e823891528b9f865c80853e6f1">mel::execution::parallel_convert</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, typename ::mel::execution::_private::GetReturn&lt; TArg, FTypes... &gt;::type &gt; parallel_convert(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)</div><div class="ttdoc">Same as parallel but returning a tuple with the values for each functor.</div><div class="ttdef"><b>Definition:</b> Executor.h:512</div></div>
+<div class="ttc" id="aclassmel_1_1execution_1_1_ex_future_html"><div class="ttname"><a href="classmel_1_1execution_1_1_ex_future.html">mel::execution::ExFuture</a></div><div class="ttdoc">Extension of mel::core::Future to apply to executors.</div><div class="ttdef"><b>Definition:</b> ExFuture.h:21</div></div>
+<div class="ttc" id="anamespacemel_1_1core_html_a755007c8f8202b76ff40a1a39863a923"><div class="ttname"><a href="namespacemel_1_1core.html#a755007c8f8202b76ff40a1a39863a923">mel::core::waitForFutureThread</a></div><div class="ttdeci">::mel::core::WaitResult&lt; T &gt; waitForFutureThread(const mel::core::Future&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType, ::mel::core::WaitErrorNoException &gt;::value)</div><div class="ttdoc">Wait for a Future from a Thread.</div><div class="ttdef"><b>Definition:</b> Thread.h:236</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_aa9cb8c6743e86b309a497a14fba0daff"><div class="ttname"><a href="namespacemel_1_1execution.html#aa9cb8c6743e86b309a497a14fba0daff">mel::execution::parallel_convert</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, typename ::mel::execution::_private::GetReturn&lt; TArg, FTypes... &gt;::type &gt; parallel_convert(ExFuture&lt; ExecutorAgent, TArg &gt; source, FTypes... functions)</div><div class="ttdoc">Same as parallel but returning a tuple with the values for each functor.</div><div class="ttdef"><b>Definition:</b> Executor.h:725</div></div>
+<div class="ttc" id="anamespacemel_1_1execution_html_ad4a29fe71c6b38d0071735ef75806cb0"><div class="ttname"><a href="namespacemel_1_1execution.html#ad4a29fe71c6b38d0071735ef75806cb0">mel::execution::next</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, std::invoke_result_t&lt; F, TArg &gt; &gt; next(ExFuture&lt; ExecutorAgent, TArg &gt; source, F f)</div><div class="ttdoc">Attach a functor to execute when input fut is complete Given functor will be executed inf the input E...</div><div class="ttdef"><b>Definition:</b> Executor.h:165</div></div>
 </div><!-- fragment --><p> And from the <em>main</em> function: </p><div class="fragment"><div class="line">Runnable::RunnableCreationOptions opts;</div>
 <div class="line">opts.schedulerOpts = ProcessScheduler::LockFreeOptions{};</div>
 <div class="line"><span class="keyword">auto</span> th1 = ThreadRunnable::create(<span class="keyword">true</span>,opts);</div>
@@ -217,8 +217,8 @@ $(document).ready(function(){initNavTree('execution_sample_advance.html',''); in
 <div class="line">    _testMeanVector( execution::transfer(initFut,ex),<span class="stringliteral">&quot;vector mean: InlineExecutor&quot;</span>,test);</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> In this code, a very big vector is created, and the mean of its values is calculated by:</p><ul>
-<li>spliting the vector in 4 parts and calculating the mean on each. this is done in using <a class="el" href="namespacemel_1_1execution.html#ac70c86e823891528b9f865c80853e6f1">parallel_convert</a> with 4 <em>parallel</em> tasks, each of which returns its own mean, so the full result of this job is a tuple.</li>
-<li>passing the previous tuple with <a class="el" href="namespacemel_1_1execution.html#a460fabb63e024b68842b3f2575373439">next</a> to a callable which sums the four measurements.</li>
+<li>spliting the vector in 4 parts and calculating the mean on each. this is done in using <a class="el" href="namespacemel_1_1execution.html#aa9cb8c6743e86b309a497a14fba0daff">parallel_convert</a> with 4 <em>parallel</em> tasks, each of which returns its own mean, so the full result of this job is a tuple.</li>
+<li>passing the previous tuple with <a class="el" href="namespacemel_1_1execution.html#ad4a29fe71c6b38d0071735ef75806cb0">next</a> to a callable which sums the four measurements.</li>
 </ul>
 <p>Also, at first, a plain calculation is done to compare de results. In the concrete machine uses at this moment, the output is: </p><pre class="fragment">vector mean: plain way
     Mean = 3.1669570700186305. Time spent = 0.092
@@ -238,9 +238,9 @@ vector mean: InlineExecutor
 <div class="line">        uint64_t t0 = timer.getMilliseconds();</div>
 <div class="line">        <span class="keywordtype">int</span> numParts = ExecutorTraits&lt;Executor&lt;ExecutorType&gt;&gt;::has_parallelism?<a class="code" href="namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d">mel::core::getNumProcessors</a>():1;</div>
 <div class="line">        vector&lt;double&gt; means(numParts);</div>
-<div class="line">        <span class="keyword">auto</span> res5 = <a class="code" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">mel::core::waitForFutureThread</a>(</div>
+<div class="line">        <span class="keyword">auto</span> res5 = <a class="code" href="namespacemel_1_1core.html#a755007c8f8202b76ff40a1a39863a923">mel::core::waitForFutureThread</a>(</div>
 <div class="line">        fut</div>
-<div class="line">        | <a class="code" href="namespacemel_1_1execution.html#a486988cae45cdfef766d7ae384509f62">mel::execution::loop</a>(</div>
+<div class="line">        | <a class="code" href="namespacemel_1_1execution.html#a5bc08c955a3994aaf06387e9685c147e">mel::execution::loop</a>(</div>
 <div class="line">                        0,(<span class="keywordtype">int</span>)numParts,</div>
 <div class="line">                        [&amp;means,numParts](<span class="keywordtype">int</span> idx,VectorType&amp; v) noexcept</div>
 <div class="line">                        {</div>
@@ -258,7 +258,7 @@ vector mean: InlineExecutor
 <div class="line">                            means[idx] = mean;</div>
 <div class="line">                        },1</div>
 <div class="line">                    )</div>
-<div class="line">         | <a class="code" href="namespacemel_1_1execution.html#a460fabb63e024b68842b3f2575373439">mel::execution::next</a>( [&amp;means](VectorType&amp;)</div>
+<div class="line">         | <a class="code" href="namespacemel_1_1execution.html#ad4a29fe71c6b38d0071735ef75806cb0">mel::execution::next</a>( [&amp;means](VectorType&amp;)</div>
 <div class="line">         {</div>
 <div class="line">            <span class="keywordtype">double</span> mean = 0.0;</div>
 <div class="line">            <span class="keywordflow">for</span>(<span class="keywordtype">size_t</span> i = 0; i &lt; means.size();++i)</div>
@@ -273,8 +273,8 @@ vector mean: InlineExecutor
 <div class="line">        text::info(<span class="stringliteral">&quot;Error = {}&quot;</span>,e.what());</div>
 <div class="line">    }</div>
 <div class="ttc" id="anamespacemel_1_1core_html_a566d83eac83e728480e727dbfe24753d"><div class="ttname"><a href="namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d">mel::core::getNumProcessors</a></div><div class="ttdeci">MEL_API unsigned int getNumProcessors()</div><div class="ttdoc">Get the number of logical processors.</div></div>
-<div class="ttc" id="anamespacemel_1_1execution_html_a486988cae45cdfef766d7ae384509f62"><div class="ttname"><a href="namespacemel_1_1execution.html#a486988cae45cdfef766d7ae384509f62">mel::execution::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I getIteratorsFunc, F functor, int increment=1)</div><div class="ttdoc">parallel (possibly, depending on executor capabilities) loop</div><div class="ttdef"><b>Definition:</b> Executor.h:227</div></div>
-</div><!-- fragment --><p> In this new version, <a class="el" href="namespacemel_1_1execution.html#a486988cae45cdfef766d7ae384509f62">loop</a> is used, doing as much iterations as available cores. Also, the parallelism capabilities of the used executor is checked with <a class="el" href="structmel_1_1execution_1_1_executor_traits.html">ExecutorTraits</a>, such that, with no real parallelism , dividing processing in chunks doesn't0 make any advantage (also the loss is minimal as was seen in the previous example). </p>
+<div class="ttc" id="anamespacemel_1_1execution_html_a5bc08c955a3994aaf06387e9685c147e"><div class="ttname"><a href="namespacemel_1_1execution.html#a5bc08c955a3994aaf06387e9685c147e">mel::execution::loop</a></div><div class="ttdeci">ExFuture&lt; ExecutorAgent, TArg &gt; loop(ExFuture&lt; ExecutorAgent, TArg &gt; source, I getIteratorsFunc, F functor, int increment=1)</div><div class="ttdoc">parallel (possibly, depending on executor capabilities) loop</div><div class="ttdef"><b>Definition:</b> Executor.h:289</div></div>
+</div><!-- fragment --><p> In this new version, <a class="el" href="namespacemel_1_1execution.html#a5bc08c955a3994aaf06387e9685c147e">loop</a> is used, doing as much iterations as available cores. Also, the parallelism capabilities of the used executor is checked with <a class="el" href="structmel_1_1execution_1_1_executor_traits.html">ExecutorTraits</a>, such that, with no real parallelism , dividing processing in chunks doesn't0 make any advantage (also the loss is minimal as was seen in the previous example). </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

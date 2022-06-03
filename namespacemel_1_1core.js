@@ -55,10 +55,10 @@ var namespacemel_1_1core =
     [ "getCurrentThreadId", "namespacemel_1_1core.html#a24458c1b3bfe615e56149382dabe841d", null ],
     [ "getNumProcessors", "namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d", null ],
     [ "getProcessAffinity", "namespacemel_1_1core.html#a2dd299d86442cd4d54b7e2c468838d9f", null ],
-    [ "makeEvent", "namespacemel_1_1core.html#abf9c56fbb686391f089a68b01c028031", null ],
+    [ "makeEvent", "namespacemel_1_1core.html#a4226dc00f6b50dfeb19b9388f4155fa8", null ],
     [ "setAffinity", "namespacemel_1_1core.html#a7cb07e488de9020e58a113c688f9b76d", null ],
     [ "waitForBarrierThread", "namespacemel_1_1core.html#ad0937af1a6401aa286a06dc047c21d70", null ],
-    [ "waitForFutureThread", "namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6", null ],
+    [ "waitForFutureThread", "namespacemel_1_1core.html#a755007c8f8202b76ff40a1a39863a923", null ],
     [ "use_function", "namespacemel_1_1core.html#a56e0fef63ae272cda09d904b40453073", null ],
     [ "use_functor", "namespacemel_1_1core.html#a6750d6f791ca5f50b06ee08b3aa39f06", null ]
 ];

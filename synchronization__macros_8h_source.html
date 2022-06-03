@@ -97,84 +97,111 @@ $(document).ready(function(){initNavTree('synchronization__macros_8h_source.html
 </div><!--header-->
 <div class="contents">
 <a href="synchronization__macros_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;preprocessor/params.h&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;mpl/LinkArgs.h&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;mpl/LinkArgs.h&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;preprocessor/params.h&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">using</span> mel::mpl::linkFunctor;</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;mpl/ReturnAdaptor.h&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;mpl/ReturnAdaptor.h&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;tasking/Runnable.h&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="utilities_8h.html">tasking/utilities.h</a>&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;tasking/Runnable.h&gt;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">using</span> <a class="code" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a>;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;{</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keyword">namespace </span>core</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">    #define GET_ARG_1( _1,... ) _1</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">    #define GET_ARG_2( _1,_2,... ) _2</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">    #define GET_ARG_3( _1,_2,_3,... ) _3</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">    #define GET_ARG_4( _1,_2,_3,_4,... ) _4</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">    #define GET_ARG_5( _1,_2,_3,_4,_5,... ) _5</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">    #define GET_ARG_6( _1,_2,_3,_4,_5,_6,... ) _6</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">    #define GET_ARG_7( _1,_2,_3,_4,_5,_6,_7,... ) _7</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">    #define GET_ARG_8( _1,_2,_3,_4,_5,_6,_7,_8,... ) _8</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">    #define GET_ARG_9( _1,_2,_3,_4,_5,_6,_7,_8,_9,... ) _9</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">    #define GET_ARG_10( _1,_2,_3,_4,_5,_6,_7,_8,_9,_10,... ) _10</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">    #define CREATE_LINKER( TRet,function_name,args ) CREATE_LINKER_IMPL( MACRO_NUM_ARGS args ,TRet,function_name,args )</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_IMPL( N,TRet,function_name,args ) CREATE_LINKER_IMPL_( N ,TRet,function_name,args )</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_IMPL_(N,TRet,function_name,args) CREATE_LINKER_N( N ,TRet,function_name,args )</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">//#define CREATE_LINKER_N( N,TRet,function_name,args) CREATE_LINKER_ ## N( TRet,function_name, args  )</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_N( N,TRet,function_name,args) CREATE_LINKER_N_(N, TRet,function_name, args  )</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_N_( N,TRet,function_name,args) CREATE_LINKER_ ## N( TRet,function_name, args  )</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_0(TRet,function_name,args) function_name</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_1(TRet,function_name,args) \</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet,TYPELIST(),GET_ARG_1 args &gt;( function_name,_1 )</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_2(TRet,function_name,args ) \</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet, TYPELIST(),GET_ARG_1 args,GET_ARG_2 args &gt;( function_name,_1,_2 )  </span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_3(TRet,function_name,args ) \</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet,TYPELIST(),GET_ARG_1 args,GET_ARG_2 args,GET_ARG_3 args &gt;( function_name,_1,_2,_3 )</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_4(TRet,function_name,args ) \</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet,TYPELIST(),GET_ARG_1 args,GET_ARG_2 args,GET_ARG_3 args,GET_ARG_4 args &gt;( function_name,_1,_2,_3,_4 )</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_5(TRet,function_name,args ) \</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet,TYPELIST(),GET_ARG_1 args,GET_ARG_2 args,GET_ARG_3 args,GET_ARG_4 args,GET_ARG_5 args &gt;( function_name,_1,_2,_3,_4,_5 )</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_6(TRet,function_name,args ) \</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet,TYPELIST(),GET_ARG_1 args,GET_ARG_2 args,GET_ARG_3 args,GET_ARG_4 args,GET_ARG_5 args,GET_ARG_6 args &gt;( function_name,_1,_2,_3,_4,_5,_6 )</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">    #define CREATE_LINKER_7(TRet,function_name,args ) \</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">        linkFunctor&lt;TRet,TYPELIST(),GET_ARG_1 args,GET_ARG_2 args,GET_ARG_3 args,GET_ARG_4 args,GET_ARG_5 args,GET_ARG_6 args,GET_ARG_7 args&gt;( function_name,_1,_2,_3,_4,_5,_6,_7 )</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">old mpl functions/classes haven&#39;t any noexcept considerations (not existed at all in C++98), so changed in favor of a labmda based mechanism</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="comment">    #define SYNCHRONIZED_STATIC( TRet, function_name,args,runnable,qualifiers) \</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">        static TRet function_name##_sync args qualifiers; \</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">        static Future&lt;TRet&gt; function_name( MAKE_PARAMS args  ) qualifiers{ \</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">        return runnable-&gt;execute&lt;TRet&gt;(  CREATE_LINKER( TRet,function_name##_sync,args ) );}</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">    #define SYNCHRONIZED_METHOD( TRet, function_name,args,runnable,qualifiers) \</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="comment">        TRet function_name##_sync args qualifiers; \</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="comment">        Future&lt;TRet&gt; function_name( MAKE_PARAMS args  ) qualifiers{ \</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="comment">        return runnable-&gt;execute&lt;TRet&gt;(  CREATE_LINKER( TRet,makeMemberEncapsulate( &amp;std::remove_reference_t&lt;decltype(*this)&gt;::function_name##_sync,this),args ) );}</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00086"></a><span class="lineno"><a class="line" href="synchronization__macros_8h.html#acf032ec40ae26021883725e4b66a6423">   86</a></span>&#160;<span class="preprocessor">    #define SYNCHRONIZED_STATIC( function_name,TRet,args,qualifiers,runnable) \</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">        static TRet function_name##_sync args qualifiers; \</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">        static Future&lt;TRet&gt; function_name( MAKE_PARAMS args  ) qualifiers{ \</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor">        return runnable-&gt;execute&lt;TRet&gt;( [CALL_PARAMS args]() qualifiers{ \</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="preprocessor">            return function_name##_sync(CALL_PARAMS args);\</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">        });}</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno"><a class="line" href="synchronization__macros_8h.html#af1d9511834b9e945980e6c1f223fe07b">  110</a></span>&#160;<span class="preprocessor">    #define SYNCHRONIZED_METHOD( function_name,TRet,args,qualifiers,runnable) \</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="preprocessor">        TRet function_name##_sync args qualifiers; \</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="preprocessor">        Future&lt;TRet&gt; function_name( MAKE_PARAMS args  ) qualifiers{ \</span></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="preprocessor">        return runnable-&gt;execute&lt;TRet&gt;( [this, CALL_PARAMS args]() qualifiers{ \</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="preprocessor">            return function_name##_sync(CALL_PARAMS args);\</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="preprocessor">        });}</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    }   </div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;}</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="comment">///@endcond</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">using</span> <a class="code" href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a>;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;{</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keyword">namespace </span>core</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#define GET_ARG_1( _1, ... ) _1</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#define GET_ARG_2( _1, _2, ... ) _2</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#define GET_ARG_3( _1, _2, _3, ... ) _3</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#define GET_ARG_4( _1, _2, _3, _4, ... ) _4</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#define GET_ARG_5( _1, _2, _3, _4, _5, ... ) _5</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define GET_ARG_6( _1, _2, _3, _4, _5, _6, ... ) _6</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define GET_ARG_7( _1, _2, _3, _4, _5, _6, _7, ... ) _7</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#define GET_ARG_8( _1, _2, _3, _4, _5, _6, _7, _8, ... ) _8</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#define GET_ARG_9( _1, _2, _3, _4, _5, _6, _7, _8, _9, ... ) _9</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define GET_ARG_10( _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, ... ) _10</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#define CREATE_LINKER( TRet, function_name, args )                             \</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">    CREATE_LINKER_IMPL( MACRO_NUM_ARGS args, TRet, function_name, args )</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#define CREATE_LINKER_IMPL( N, TRet, function_name, args )                     \</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">    CREATE_LINKER_IMPL_( N, TRet, function_name, args )</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define CREATE_LINKER_IMPL_( N, TRet, function_name, args )                    \</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">    CREATE_LINKER_N( N, TRet, function_name, args )</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment">//#define CREATE_LINKER_N( N,TRet,function_name,args) CREATE_LINKER_ ## N(</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">// TRet,function_name, args  )</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define CREATE_LINKER_N( N, TRet, function_name, args )                        \</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">    CREATE_LINKER_N_( N, TRet, function_name, args )</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define CREATE_LINKER_N_( N, TRet, function_name, args )                       \</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">    CREATE_LINKER_##N( TRet, function_name, args )</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#define CREATE_LINKER_0( TRet, function_name, args ) function_name</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#define CREATE_LINKER_1( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args&gt;( function_name, _1 )</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">#define CREATE_LINKER_2( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args, GET_ARG_2 args&gt;(             \</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">        function_name, _1, _2 )</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">#define CREATE_LINKER_3( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args, GET_ARG_2 args,              \</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">                GET_ARG_3 args&gt;( function_name, _1, _2, _3 )</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#define CREATE_LINKER_4( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args, GET_ARG_2 args,              \</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">                GET_ARG_3 args, GET_ARG_4 args&gt;( function_name, _1, _2, _3,    \</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">                                                 _4 )</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#define CREATE_LINKER_5( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args, GET_ARG_2 args,              \</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">                GET_ARG_3 args, GET_ARG_4 args, GET_ARG_5 args&gt;(               \</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">        function_name, _1, _2, _3, _4, _5 )</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#define CREATE_LINKER_6( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args, GET_ARG_2 args,              \</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">                GET_ARG_3 args, GET_ARG_4 args, GET_ARG_5 args,                \</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">                GET_ARG_6 args&gt;( function_name, _1, _2, _3, _4, _5, _6 )</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">#define CREATE_LINKER_7( TRet, function_name, args )                           \</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">    linkFunctor&lt;TRet, TYPELIST(), GET_ARG_1 args, GET_ARG_2 args,              \</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">                GET_ARG_3 args, GET_ARG_4 args, GET_ARG_5 args,                \</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor">                GET_ARG_6 args, GET_ARG_7 args&gt;( function_name, _1, _2, _3,    \</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">                                                 _4, _5, _6, _7 )</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="comment">/*</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="comment">        old mpl functions/classes haven&#39;t any noexcept considerations (not</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="comment">        existed at all in C++98), so changed in favor of a labmda based</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="comment">        mechanism</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">                #define SYNCHRONIZED_STATIC( TRet,</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment">        function_name,args,runnable,qualifiers) \</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="comment">                        static TRet function_name##_sync args qualifiers; \</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment">                        static Future&lt;TRet&gt; function_name( MAKE_PARAMS args  )</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">        qualifiers{ \ return runnable-&gt;execute&lt;TRet&gt;(  CREATE_LINKER(</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">        TRet,function_name##_sync,args ) );}</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">                #define SYNCHRONIZED_METHOD( TRet,</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment">        function_name,args,runnable,qualifiers) \</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment">                        TRet function_name##_sync args qualifiers; \</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment">                        Future&lt;TRet&gt; function_name( MAKE_PARAMS args  )</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="comment">        qualifiers{ \ return runnable-&gt;execute&lt;TRet&gt;(  CREATE_LINKER(</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment">        TRet,makeMemberEncapsulate(</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment">        &amp;std::remove_reference_t&lt;decltype(*this)&gt;::function_name##_sync,this),args</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment">        ) );}</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment">        */</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00113"></a><span class="lineno"><a class="line" href="synchronization__macros_8h.html#acf032ec40ae26021883725e4b66a6423">  113</a></span>&#160;<span class="preprocessor">#define SYNCHRONIZED_STATIC( function_name, TRet, args, qualifiers, runnable ) \</span></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="preprocessor">    static TRet function_name##_sync args qualifiers;                          \</span></div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="preprocessor">    static Future&lt;TRet&gt; function_name( MAKE_PARAMS args ) qualifiers           \</span></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="preprocessor">    {                                                                          \</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="preprocessor">        return runnable-&gt;execute&lt;TRet&gt;(                                        \</span></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">            [CALL_PARAMS args]() qualifiers                                    \</span></div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">            { return function_name##_sync( CALL_PARAMS args ); } );            \</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">    }</span></div>
+<div class="line"><a name="l00143"></a><span class="lineno"><a class="line" href="synchronization__macros_8h.html#af1d9511834b9e945980e6c1f223fe07b">  143</a></span>&#160;<span class="preprocessor">#define SYNCHRONIZED_METHOD( function_name, TRet, args, qualifiers, runnable ) \</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;<span class="preprocessor">    TRet function_name##_sync args qualifiers;                                 \</span></div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="preprocessor">    Future&lt;TRet&gt; function_name( MAKE_PARAMS args ) qualifiers                  \</span></div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;<span class="preprocessor">    {                                                                          \</span></div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="preprocessor">        return runnable-&gt;execute&lt;TRet&gt;(                                        \</span></div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<span class="preprocessor">            [this, CALL_PARAMS args]() qualifiers                              \</span></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="preprocessor">            { return function_name##_sync( CALL_PARAMS args ); } );            \</span></div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;<span class="preprocessor">    }</span></div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    } <span class="comment">// namespace core</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;} <span class="comment">// namespace mel</span></div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="comment">///@endcond</span></div>
 <div class="ttc" id="aclassmel_1_1tasking_1_1_runnable_html"><div class="ttname"><a href="classmel_1_1tasking_1_1_runnable.html">mel::tasking::Runnable</a></div><div class="ttdoc">A class representing a &quot;running&quot; task, with added functionality to post events requesting execution o...</div><div class="ttdef"><b>Definition:</b> Runnable.h:183</div></div>
-<div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
+<div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:11</div></div>
 <div class="ttc" id="autilities_8h_html"><div class="ttname"><a href="utilities_8h.html">utilities.h</a></div><div class="ttdoc">Utilities on tasking, because lack of a better place...Some funcions are intended to be put in a cust...</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

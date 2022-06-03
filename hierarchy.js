@@ -44,8 +44,8 @@ var hierarchy =
         [ "mel::core::CallbackSubscriptor< ThreadingPolicy, VARIABLE_ARGS >", "classmel_1_1core_1_1_callback_subscriptor.html", null ]
       ] ],
       [ "mel::core::CallbackSubscriptorNotTyped< ThreadingPolicy, VARIABLE_ARGS >", "classmel_1_1core_1_1_callback_subscriptor_not_typed.html", [
-        [ "mel::core::CallbackSubscriptor< ::mel::core::CSMultithreadPolicy, std::shared_ptr< Process > >", "classmel_1_1core_1_1_callback_subscriptor.html", null ],
-        [ "mel::core::CallbackSubscriptor< ::mel::core::CSNoMultithreadPolicy, std::shared_ptr< Process > >", "classmel_1_1core_1_1_callback_subscriptor.html", null ]
+        [ "mel::core::CallbackSubscriptor<::mel::core::CSNoMultithreadPolicy, std::shared_ptr< Process > >", "classmel_1_1core_1_1_callback_subscriptor.html", null ],
+        [ "mel::core::CallbackSubscriptor<::mel::core::CSMultithreadPolicy, std::shared_ptr< Process > >", "classmel_1_1core_1_1_callback_subscriptor.html", null ]
       ] ]
     ] ],
     [ "mel::core::CallbackSubscriptor_Base< ThreadingPolicy, void >", "classmel_1_1core_1_1_callback_subscriptor___base.html", [

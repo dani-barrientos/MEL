@@ -162,8 +162,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_singleton___singlethread___policy.html">Singleton_Singlethread_Policy</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html">Thread</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper around std::thread to prive more abstractions <br  />
-  <a href="classmel_1_1core_1_1_thread.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper around std::thread to prive more abstractions.  <a href="classmel_1_1core_1_1_thread.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_timer.html">Timer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -186,8 +185,8 @@ Enumerations</h2></td></tr>
 <tr class="memdesc:aa2a125e0f16e14641d995c0675f79992"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type resturned by callbacks subscribed to CallbackSubscriptors. <br /></td></tr>
 <tr class="separator:aa2a125e0f16e14641d995c0675f79992"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee1b7838db4746c987db058df234dbbc"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">EWaitError</a> : int { <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93">FUTURE_WAIT_OK</a> = 0
-, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c">FUTURE_RECEIVED_KILL_SIGNAL</a> = -1
-, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcab7393339e32e5c9f190e313d075af9bc">FUTURE_WAIT_TIMEOUT</a> = -2
+, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c">FUTURE_RECEIVED_KILL_SIGNAL</a>
+, <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcab7393339e32e5c9f190e313d075af9bc">FUTURE_WAIT_TIMEOUT</a>
 , <a class="el" href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbcac710656fa6f6762bed81f03f94aa54de">FUTURE_UNKNOWN_ERROR</a> = -3
  }</td></tr>
 <tr class="memdesc:aee1b7838db4746c987db058df234dbbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic result error codes for future waiting.  <a href="namespacemel_1_1core.html#aee1b7838db4746c987db058df234dbbc">More...</a><br /></td></tr>
@@ -198,12 +197,12 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="separator:aa8619e3d15e44b60d9d39823e34d2fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5aadb4eac481935225fcddd937b123c"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a> { <br />
-&#160;&#160;<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cacd587bf062a7434231bf4f2760720f92">TP_LOWEST</a> =0x01
-, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cad10aa37788b0e98e143029a86ac2f7af">TP_LOW</a> =0x02
-, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca6ed40d59935d833c64ef290d01ba19fe">TP_NORMAL</a> =0x03
-, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca4c16f2ee258df9baf31cbdcb5dfe715f">TP_HIGH</a> =0x04
+&#160;&#160;<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cacd587bf062a7434231bf4f2760720f92">TP_LOWEST</a> = 0x01
+, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123cad10aa37788b0e98e143029a86ac2f7af">TP_LOW</a> = 0x02
+, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca6ed40d59935d833c64ef290d01ba19fe">TP_NORMAL</a> = 0x03
+, <a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca4c16f2ee258df9baf31cbdcb5dfe715f">TP_HIGH</a> = 0x04
 , <br />
-&#160;&#160;<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca7982db93468f0d087376aa8d78e47c3c">TP_HIGHEST</a> =0x05
+&#160;&#160;<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123ca7982db93468f0d087376aa8d78e47c3c">TP_HIGHEST</a>
 , <b>TP_NONE</b>
 <br />
  }</td></tr>
@@ -211,10 +210,10 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:abf9c56fbb686391f089a68b01c028031"><td class="memTemplParams" colspan="2"><a id="abf9c56fbb686391f089a68b01c028031"></a>
+<tr class="memitem:a4226dc00f6b50dfeb19b9388f4155fa8"><td class="memTemplParams" colspan="2"><a id="a4226dc00f6b50dfeb19b9388f4155fa8"></a>
 template&lt;class TRet , class T &gt; </td></tr>
-<tr class="memitem:abf9c56fbb686391f089a68b01c028031"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1core_1_1_callback.html">Callback</a>&lt; TRet, void &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><b>makeEvent</b> (T functor)</td></tr>
-<tr class="separator:abf9c56fbb686391f089a68b01c028031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4226dc00f6b50dfeb19b9388f4155fa8"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classmel_1_1core_1_1_callback.html">Callback</a>&lt; TRet, void &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><b>makeEvent</b> (T functor)</td></tr>
+<tr class="separator:a4226dc00f6b50dfeb19b9388f4155fa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a566d83eac83e728480e727dbfe24753d"><td class="memItemLeft" align="right" valign="top"><a id="a566d83eac83e728480e727dbfe24753d"></a>
 MEL_API unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a566d83eac83e728480e727dbfe24753d">getNumProcessors</a> ()</td></tr>
 <tr class="memdesc:a566d83eac83e728480e727dbfe24753d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of logical processors. <br /></td></tr>
@@ -226,12 +225,11 @@ MEL_API uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>getProces
 MEL_API bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a7cb07e488de9020e58a113c688f9b76d">setAffinity</a> (uint64_t)</td></tr>
 <tr class="memdesc:a7cb07e488de9020e58a113c688f9b76d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set affinity for current thread. <br /></td></tr>
 <tr class="separator:a7cb07e488de9020e58a113c688f9b76d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a104e002cdbc28f6e37b771760742e3b6"><td class="memTemplParams" colspan="2"><a id="a104e002cdbc28f6e37b771760742e3b6"></a>
+<tr class="memitem:a755007c8f8202b76ff40a1a39863a923"><td class="memTemplParams" colspan="2"><a id="a755007c8f8202b76ff40a1a39863a923"></a>
 template&lt;class ErrorType  = mel::core::WaitErrorAsException, class T &gt; </td></tr>
-<tr class="memitem:a104e002cdbc28f6e37b771760742e3b6"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a104e002cdbc28f6e37b771760742e3b6">waitForFutureThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType,::<a class="el" href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a> &gt;::value)</td></tr>
-<tr class="memdesc:a104e002cdbc28f6e37b771760742e3b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> from a <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> <br  />
- <br /></td></tr>
-<tr class="separator:a104e002cdbc28f6e37b771760742e3b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a755007c8f8202b76ff40a1a39863a923"><td class="memTemplItemLeft" align="right" valign="top">::<a class="el" href="classmel_1_1core_1_1_wait_result.html">mel::core::WaitResult</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#a755007c8f8202b76ff40a1a39863a923">waitForFutureThread</a> (const <a class="el" href="classmel_1_1core_1_1_future.html">mel::core::Future</a>&lt; T &gt; &amp;f, unsigned int msecs=::mel::core::Event::EVENT_WAIT_INFINITE) noexcept(std::is_same&lt; ErrorType, ::<a class="el" href="structmel_1_1core_1_1_wait_error_no_exception.html">mel::core::WaitErrorNoException</a> &gt;::value)</td></tr>
+<tr class="memdesc:a755007c8f8202b76ff40a1a39863a923"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> from a <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions.">Thread</a>. <br /></td></tr>
+<tr class="separator:a755007c8f8202b76ff40a1a39863a923"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0937af1a6401aa286a06dc047c21d70"><td class="memItemLeft" align="right" valign="top"><a id="ad0937af1a6401aa286a06dc047c21d70"></a>
 MEL_API ::<a class="el" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">mel::core::Event::EWaitCode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemel_1_1core.html#ad0937af1a6401aa286a06dc047c21d70">waitForBarrierThread</a> (const ::<a class="el" href="classmel_1_1parallelism_1_1_barrier.html">mel::parallelism::Barrier</a> &amp;b, unsigned int msecs=Event::EVENT_WAIT_INFINITE)</td></tr>
 <tr class="memdesc:ad0937af1a6401aa286a06dc047c21d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for a <a class="el" href="classmel_1_1parallelism_1_1_barrier.html">barrier</a> to activated in the context of a thread. <br /></td></tr>
@@ -270,7 +268,7 @@ static const <a class="el" href="structmel_1_1core_1_1use__function__t.html">use
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> priority enumeration. </p>
+<p><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions.">Thread</a> priority enumeration. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad5aadb4eac481935225fcddd937b123cacd587bf062a7434231bf4f2760720f92"></a>TP_LOWEST&#160;</td><td class="fielddoc"><p>Lowest priority </p>
 </td></tr>
@@ -310,7 +308,7 @@ static const <a class="el" href="structmel_1_1core_1_1use__function__t.html">use
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbcad870964b11910ab19fb026ea05730b93"></a>FUTURE_WAIT_OK&#160;</td><td class="fielddoc"><p>No error. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c"></a>FUTURE_RECEIVED_KILL_SIGNAL&#160;</td><td class="fielddoc"><p>Wait for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> was interrupted because waiting Process was killed. </p>
+<tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbca44683ffab2f73ab5b8422b6b526fc52c"></a>FUTURE_RECEIVED_KILL_SIGNAL&#160;</td><td class="fielddoc"><p>Wait for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a> was interrupted because waiting Process was killed </p>
 </td></tr>
 <tr><td class="fieldname"><a id="aee1b7838db4746c987db058df234dbbcab7393339e32e5c9f190e313d075af9bc"></a>FUTURE_WAIT_TIMEOUT&#160;</td><td class="fielddoc"><p>Time out expired while waiting for <a class="el" href="classmel_1_1core_1_1_future.html" title="Represents a value that maybe is not present at the current moment.">Future</a>. </p>
 </td></tr>

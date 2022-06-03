@@ -98,66 +98,72 @@ $(document).ready(function(){initNavTree('_event_8h_source.html',''); initResiza
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos &lt;danivillamanin@gmail.com&gt;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> * SPDX-License-Identifier: MIT</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;MelLibType.h&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;pthread.h&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;{</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html">   20</a></span>&#160;        <span class="keyword">class </span>MEL_API <a class="code" href="classmel_1_1core_1_1_event.html">Event</a> {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;            <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">   25</a></span>&#160;                <span class="keyword">enum</span> <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">EWaitCode</a> </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                {</div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7">   27</a></span>&#160;                    <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7">EVENT_WAIT_OK</a>, </div>
-<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d">   28</a></span>&#160;                    <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d">EVENT_WAIT_TIMEOUT</a>, </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                    EVENT_WAIT_ERROR </div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3ca3f583680fcb4e03608f88313df9bd81e">   30</a></span>&#160;                }; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">    #if defined (MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined (MEL_IOS)</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;                <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> EVENT_WAIT_INFINITE = -1;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">    #elif defined(_WIN32)       </span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> EVENT_WAIT_INFINITE = INFINITE;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">    #endif</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#af7bb8ee340ce17a1c4cf3c9dfb0405fc">   45</a></span>&#160;                <a class="code" href="classmel_1_1core_1_1_event.html#af7bb8ee340ce17a1c4cf3c9dfb0405fc">Event</a>(<span class="keywordtype">bool</span> autoRelease=<span class="keyword">true</span>, <span class="keywordtype">bool</span> signaled=<span class="keyword">false</span>);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                ~<a class="code" href="classmel_1_1core_1_1_event.html">Event</a>();</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#ac766cd6183eec80a28a1b3dfe78df61c">   54</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classmel_1_1core_1_1_event.html#ac766cd6183eec80a28a1b3dfe78df61c">set</a>();</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> * SPDX-FileCopyrightText: 2005,2022 Daniel Barrientos</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * &lt;danivillamanin@gmail.com&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * SPDX-License-Identifier: MIT</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;MelLibType.h&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#if defined( MEL_LINUX ) || defined( MEL_MACOSX ) || defined( MEL_ANDROID ) || \</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">    defined( MEL_IOS )</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;pthread.h&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacemel.html">mel</a></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;{</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keyword">namespace </span>core</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html">   24</a></span>&#160;        <span class="keyword">class </span>MEL_API <a class="code" href="classmel_1_1core_1_1_event.html">Event</a></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;          <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">   30</a></span>&#160;            <span class="keyword">enum</span> <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">EWaitCode</a></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;            {</div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7">   32</a></span>&#160;                <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7">EVENT_WAIT_OK</a>,      </div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d">   33</a></span>&#160;                <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d">EVENT_WAIT_TIMEOUT</a>, </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                EVENT_WAIT_ERROR    </div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3ca3f583680fcb4e03608f88313df9bd81e">   35</a></span>&#160;            };</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#if defined( MEL_LINUX ) || defined( MEL_MACOSX ) || defined( MEL_ANDROID ) || \</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">    defined( MEL_IOS )</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> EVENT_WAIT_INFINITE = -1;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#elif defined( _WIN32 )</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;            <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> EVENT_WAIT_INFINITE = INFINITE;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#af7bb8ee340ce17a1c4cf3c9dfb0405fc">   53</a></span>&#160;            <a class="code" href="classmel_1_1core_1_1_event.html#af7bb8ee340ce17a1c4cf3c9dfb0405fc">Event</a>( <span class="keywordtype">bool</span> autoRelease = <span class="keyword">true</span>, <span class="keywordtype">bool</span> signaled = <span class="keyword">false</span> );</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            ~<a class="code" href="classmel_1_1core_1_1_event.html">Event</a>();</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a8f3338c1fae2d2cbf9531863243faab3">   63</a></span>&#160;                <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">EWaitCode</a> <a class="code" href="classmel_1_1core_1_1_event.html#a8f3338c1fae2d2cbf9531863243faab3">wait</a>( <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> msecs = EVENT_WAIT_INFINITE) <span class="keyword">const</span>; </div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a24b3f938fbb7517923f12746729ccc6e">   68</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classmel_1_1core_1_1_event.html#a24b3f938fbb7517923f12746729ccc6e">reset</a>();</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                <a class="code" href="classmel_1_1core_1_1_event.html">Event</a>( <span class="keyword">const</span> <a class="code" href="classmel_1_1core_1_1_event.html">Event</a>&amp; ev2 ){}</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">    #if defined(MEL_LINUX) || defined (MEL_MACOSX) || defined(MEL_ANDROID) || defined(MEL_IOS)</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                <span class="keyword">mutable</span> <span class="keywordtype">bool</span> mSignaled;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                <span class="keywordtype">bool</span> mAutoRelease;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                <span class="keyword">mutable</span> pthread_mutex_t _mutex;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                <span class="keyword">mutable</span> pthread_cond_t _cond;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">    #elif defined(_WIN32)       </span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            HANDLE  mEvent;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">    #endif</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    };</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="comment">//end namespace</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    }</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;}</div>
-<div class="ttc" id="aclassmel_1_1core_1_1_event_html"><div class="ttname"><a href="classmel_1_1core_1_1_event.html">mel::core::Event</a></div><div class="ttdef"><b>Definition:</b> Event.h:20</div></div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#ac766cd6183eec80a28a1b3dfe78df61c">   63</a></span>&#160;            <span class="keywordtype">void</span> <a class="code" href="classmel_1_1core_1_1_event.html#ac766cd6183eec80a28a1b3dfe78df61c">set</a>();</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a8f3338c1fae2d2cbf9531863243faab3">   73</a></span>&#160;            <a class="code" href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">EWaitCode</a> <a class="code" href="classmel_1_1core_1_1_event.html#a8f3338c1fae2d2cbf9531863243faab3">wait</a>( <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> msecs = EVENT_WAIT_INFINITE ) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="classmel_1_1core_1_1_event.html#a24b3f938fbb7517923f12746729ccc6e">   79</a></span>&#160;            <span class="keywordtype">void</span> <a class="code" href="classmel_1_1core_1_1_event.html#a24b3f938fbb7517923f12746729ccc6e">reset</a>();</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;          <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            <a class="code" href="classmel_1_1core_1_1_event.html">Event</a>( <span class="keyword">const</span> <a class="code" href="classmel_1_1core_1_1_event.html">Event</a>&amp; ev2 ) {}</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">#if defined( MEL_LINUX ) || defined( MEL_MACOSX ) || defined( MEL_ANDROID ) || \</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">    defined( MEL_IOS )</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            <span class="keyword">mutable</span> <span class="keywordtype">bool</span> mSignaled;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            <span class="keywordtype">bool</span> mAutoRelease;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;            <span class="keyword">mutable</span> pthread_mutex_t _mutex;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            <span class="keyword">mutable</span> pthread_cond_t _cond;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor">#elif defined( _WIN32 )</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            HANDLE mEvent;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        };</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="comment">// end namespace</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    } <span class="comment">// namespace core</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;} <span class="comment">// namespace mel</span></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_event_html"><div class="ttname"><a href="classmel_1_1core_1_1_event.html">mel::core::Event</a></div><div class="ttdef"><b>Definition:</b> Event.h:25</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_event_html_a24b3f938fbb7517923f12746729ccc6e"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a24b3f938fbb7517923f12746729ccc6e">mel::core::Event::reset</a></div><div class="ttdeci">void reset()</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_event_html_a304e57b5b3f14738b34a16b42f03ab3c"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">mel::core::Event::EWaitCode</a></div><div class="ttdeci">EWaitCode</div><div class="ttdoc">Wait result codes.</div><div class="ttdef"><b>Definition:</b> Event.h:26</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_event_html_a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d">mel::core::Event::EVENT_WAIT_TIMEOUT</a></div><div class="ttdeci">@ EVENT_WAIT_TIMEOUT</div><div class="ttdoc">time out while waiting</div><div class="ttdef"><b>Definition:</b> Event.h:28</div></div>
-<div class="ttc" id="aclassmel_1_1core_1_1_event_html_a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7">mel::core::Event::EVENT_WAIT_OK</a></div><div class="ttdeci">@ EVENT_WAIT_OK</div><div class="ttdoc">wait was ok</div><div class="ttdef"><b>Definition:</b> Event.h:27</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_event_html_a304e57b5b3f14738b34a16b42f03ab3c"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3c">mel::core::Event::EWaitCode</a></div><div class="ttdeci">EWaitCode</div><div class="ttdoc">Wait result codes.</div><div class="ttdef"><b>Definition:</b> Event.h:31</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_event_html_a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caad5c6e60b7f41325f8c2b4c19ab0986d">mel::core::Event::EVENT_WAIT_TIMEOUT</a></div><div class="ttdeci">@ EVENT_WAIT_TIMEOUT</div><div class="ttdoc">time out while waiting</div><div class="ttdef"><b>Definition:</b> Event.h:33</div></div>
+<div class="ttc" id="aclassmel_1_1core_1_1_event_html_a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a304e57b5b3f14738b34a16b42f03ab3caeade5f9d818fdd0848d63c2c58b0dcc7">mel::core::Event::EVENT_WAIT_OK</a></div><div class="ttdeci">@ EVENT_WAIT_OK</div><div class="ttdoc">wait was ok</div><div class="ttdef"><b>Definition:</b> Event.h:32</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_event_html_a8f3338c1fae2d2cbf9531863243faab3"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#a8f3338c1fae2d2cbf9531863243faab3">mel::core::Event::wait</a></div><div class="ttdeci">EWaitCode wait(unsigned int msecs=EVENT_WAIT_INFINITE) const</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_event_html_ac766cd6183eec80a28a1b3dfe78df61c"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#ac766cd6183eec80a28a1b3dfe78df61c">mel::core::Event::set</a></div><div class="ttdeci">void set()</div></div>
 <div class="ttc" id="aclassmel_1_1core_1_1_event_html_af7bb8ee340ce17a1c4cf3c9dfb0405fc"><div class="ttname"><a href="classmel_1_1core_1_1_event.html#af7bb8ee340ce17a1c4cf3c9dfb0405fc">mel::core::Event::Event</a></div><div class="ttdeci">Event(bool autoRelease=true, bool signaled=false)</div></div>
-<div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:10</div></div>
+<div class="ttc" id="anamespacemel_html"><div class="ttname"><a href="namespacemel.html">mel</a></div><div class="ttdef"><b>Definition:</b> Callback_Impl.h:11</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

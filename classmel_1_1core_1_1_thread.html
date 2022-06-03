@@ -102,15 +102,14 @@ $(document).ready(function(){initNavTree('classmel_1_1core_1_1_thread.html','');
 </div><!--header-->
 <div class="contents">
 
-<p>Wrapper around std::thread to prive more abstractions <br  />
-  
+<p>Wrapper around std::thread to prive more abstractions.  
  <a href="classmel_1_1core_1_1_thread.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_thread_8h_source.html">Thread.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a1311e02532c75f98cd21db2e82a59beb"><td class="memItemLeft" align="right" valign="top"><a id="a1311e02532c75f98cd21db2e82a59beb"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>YieldPolicy</b> { <b>YP_ANY_THREAD_ANY_PROCESSOR</b> =0
+<tr class="memitem:a1311e02532c75f98cd21db2e82a59beb"><td class="memItemLeft" align="right" valign="top"><a id="a1311e02532c75f98cd21db2e82a59beb"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>YieldPolicy</b> { <b>YP_ANY_THREAD_ANY_PROCESSOR</b> = 0
 , <b>YP_ANY_THREAD_SAME_PROCESSOR</b>
  }</td></tr>
 <tr class="separator:a1311e02532c75f98cd21db2e82a59beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,7 +122,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a8dd5fa37265e74107c20acac3d6e33f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f6e151220c5b492718e24795844f18c"><td class="memItemLeft" align="right" valign="top"><a id="a6f6e151220c5b492718e24795844f18c"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#a6f6e151220c5b492718e24795844f18c">~Thread</a> ()</td></tr>
-<tr class="memdesc:a6f6e151220c5b492718e24795844f18c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> is joined on destruction. <br /></td></tr>
+<tr class="memdesc:a6f6e151220c5b492718e24795844f18c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions.">Thread</a> is joined on destruction. <br /></td></tr>
 <tr class="separator:a6f6e151220c5b492718e24795844f18c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab56c585bb361d16c92a1527123e87f65"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmel_1_1core_1_1_thread.html#ab56c585bb361d16c92a1527123e87f65">setPriority</a> (<a class="el" href="namespacemel_1_1core.html#ad5aadb4eac481935225fcddd937b123c">EThreadPriority</a> tp)</td></tr>
 <tr class="separator:ab56c585bb361d16c92a1527123e87f65"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,8 +149,7 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:ac860adb1878011327090fcc319d8762c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Wrapper around std::thread to prive more abstractions <br  />
- </p>
+<div class="textblock"><p>Wrapper around std::thread to prive more abstractions. </p>
 <dl class="section warning"><dt>Warning</dt><dd>Some of these features may not be present on certain platforms, or may have specific requirements. </dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a8dd5fa37265e74107c20acac3d6e33f5"></a>
@@ -175,8 +173,7 @@ template&lt;class F &gt; </div>
 <p>Starts the main thread routine. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>funtion with signature void f() <br  />
- </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>funtion with signature void f() </td></tr>
   </table>
   </dd>
 </dl>
@@ -295,7 +292,7 @@ template&lt;class F &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Forces the caller to wait for thread completion. Calling this method will cause the calling thread to be wait until <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a>:run finishes or the timeout expires. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Forces the caller to wait for thread completion. Calling this method will cause the calling thread to be wait until <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions.">Thread</a>:run finishes or the timeout expires. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">millis</td><td>maximum milliseconds to wait for the thread. </td></tr>
   </table>
@@ -340,8 +337,7 @@ template&lt;class F &gt; </div>
 </div><div class="memdoc">
 <p>Changes thread priority. May not be available in some platforms. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">tp</td><td>the new priority to be set. <br  />
- </td></tr>
+    <tr><td class="paramname">tp</td><td>the new priority to be set. </td></tr>
   </table>
   </dd>
 </dl>
@@ -396,7 +392,7 @@ template&lt;class F &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Forces thread termination Use with extreme caution; this method exists but it should rarely be used; it's always safer to invoke terminatRequest and wait for the <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions">Thread</a> to terminate "naturally", instead of forcing it to quite. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Forces thread termination Use with extreme caution; this method exists but it should rarely be used; it's always safer to invoke terminatRequest and wait for the <a class="el" href="classmel_1_1core_1_1_thread.html" title="Wrapper around std::thread to prive more abstractions.">Thread</a> to terminate "naturally", instead of forcing it to quite. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">exitCode</td><td>the exit code for the terminated thread. </td></tr>
   </table>

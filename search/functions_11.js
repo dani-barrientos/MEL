@@ -4,5 +4,5 @@ var searchData=
   ['thread_821',['Thread',['../classmel_1_1core_1_1_thread.html#a8dd5fa37265e74107c20acac3d6e33f5',1,'mel::core::Thread']]],
   ['threadrunnable_822',['ThreadRunnable',['../classmel_1_1tasking_1_1_thread_runnable.html#a40875f72ac18980f9c4d0228669294b2',1,'mel::tasking::ThreadRunnable']]],
   ['timer_823',['Timer',['../classmel_1_1core_1_1_timer.html#a3ad5879e6d184c6687e53ed94285f387',1,'mel::core::Timer']]],
-  ['transfer_824',['transfer',['../namespacemel_1_1execution.html#a9c2d394e1f670743253c44823c2e26fc',1,'mel::execution::transfer(ExFuture&lt; OldExecutorAgent, TRet &gt; source, Executor&lt; NewExecutorAgent &gt; newAgent)'],['../namespacemel_1_1execution.html#acf208ff66bb640770d06d1c7747a552e',1,'mel::execution::transfer(Executor&lt; NewExecutionAgent &gt; newAgent)']]]
+  ['transfer_824',['transfer',['../namespacemel_1_1execution.html#a1a4c21b6c88cac5b4c456211f521bdd6',1,'mel::execution::transfer(ExFuture&lt; OldExecutorAgent, TRet &gt; source, Executor&lt; NewExecutorAgent &gt; newAgent)'],['../namespacemel_1_1execution.html#acf208ff66bb640770d06d1c7747a552e',1,'mel::execution::transfer(Executor&lt; NewExecutionAgent &gt; newAgent)']]]
 ];
