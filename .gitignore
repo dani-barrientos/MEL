@@ -67,3 +67,4 @@ mel/html/search/search.css
 mel/html/search/search.js
 mel/html/search/searchdata.js
 mel/include/core/Thread - Copy.h
+test_format.cpp

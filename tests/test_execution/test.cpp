@@ -20,6 +20,7 @@ using mel::tasking::Process;
 #include <execution/InlineExecutor.h>
 #include <vector>
 using std::vector;
+#include <array>
 #include "test_samples.h"
 using namespace mel;
 
@@ -1188,7 +1189,7 @@ template <class ExecutorType> void _testCapturesHelper(ExecutorType ex,ThreadRun
 		);	
 	//	mel::text::info("Value = {}",res.value());
 		test->checkOccurrences("TestClass constructor",1,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info); //initial constructor from inmedaite, and default constructor in tuple elements
-		test->checkOccurrences("TestClass copy",13,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
+		test->checkOccurrences("TestClass copy",12,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);							
 		// test->checkOccurrences("destructor",test->findTextInBuffer("constructor"),__FILE__,__LINE__);
 	}
 }

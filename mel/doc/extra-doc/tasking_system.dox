@@ -462,7 +462,7 @@ by the users.
 		},0,Runnable::killFalse);     
     }
  \endcode
-This code does the following: a task launched in *th1* launch another task to the same \ef ::mel::tasking::ThreadRunnable "ThreadRunnable" (but any other ThreadRunnable would be valid) passing it *a reference to a local variable*.
+This code does the following: a task launched in *th1* launch another task to the same \rfmef ::mel::tasking::ThreadRunnable "ThreadRunnable" (but any other ThreadRunnable would be valid) passing it *a reference to a local variable*.
 After that, the first task waits for 5 seconds, so the second task is executed and change the reference variable to a new value.
 The expected result should be:
 \code
@@ -497,8 +497,36 @@ while(true)
     f2();
 }
 \endcode
-In the previous code, two labmdas are created, such that one of them declares a loval variable. But the code,  the only thing it does, is execute `r.processTasks()`
+In the previous code, two lambdas are created, such that one of them declares a local variable. But the code,  the only thing it does, is execute `r.processTasks()`
 two times. But the second time, the *stack at the point of execution is different*. If you execute that code, it throws an assert (in debug mode, in release it will crash).
 The reason is that task execution *must always be called with the stack in same place, so, this means executing `processTasks` always from same place.
+
+### Careful doing context-switch inside a 'catch' block
+This only applies to MSVC compiler. In a *catch* block, the current exception is yet alive. Making a context-switch (so, using any function that at the end lead to a \ref mel::tasking::Process::switchProcess "Process::switchProcess")
+can finish in a crash if another exception occurs before returning from this switch. Also, this no always occurs, some other unknown (at this moment) have take place in the code, but the probability of crash is high.
+So, a warning log will be generated when detecting this situation so that code have to be changed. A dangerous code would be something like:
+\code{.cpp}
+try
+{
+ ....
+}catch(...)
+{
+    mel::tasking::Process::wait(10);
+}
+\endcode
+
+The previous code should be changed such that the wait is done outside the catch. For example:
+bool exceptCaught = false;
+try
+{
+ ....
+}catch(...)
+{
+    exceptCaught = true;
+    
+}
+if ( exceptCaught )
+    mel::tasking::Process::wait(10);
+\endcode
 
 */

@@ -11,6 +11,7 @@
 #include <functional>
 using std::string;
 #include <memory>
+#include <array>
 using namespace mel;
 using namespace std::literals::string_literals;
 

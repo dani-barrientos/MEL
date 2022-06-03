@@ -25,6 +25,7 @@ using mel::tasking::Process;
 using std::vector;
 #include <memory>
 using namespace mel;
+#include <array>
 /*
 namespace mel
 {

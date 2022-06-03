@@ -739,10 +739,10 @@ int _testExceptions( tests::BaseTest* test)
 			int val;
 			try
 			{
-				mel::text::info("Task1: Context switch");
+				mel::text::debug("Task1: Context switch");
 				if ( _doWait(200) == Process::ESwitchResult::ESWITCH_OK)
 				{
-					mel::text::info("Task1: Throw exception");
+					mel::text::debug("Task1: Throw exception");
 					// if (rand()%10 < 5)
 					// 	_throwMyException(val);
 					// else
@@ -753,7 +753,7 @@ int _testExceptions( tests::BaseTest* test)
 			}catch(int v)
 			{
 				if ( v == val)
-					mel::text::info("Task1: Captured exception ok");
+					mel::text::debug("Task1: Captured exception ok");
 				else
 				{
 					stringstream ss;
@@ -770,7 +770,7 @@ int _testExceptions( tests::BaseTest* test)
 			{
 				if ( exc.code == val)
 				{
-					mel::text::info("Task1: Captured exception ok. msg ={}",exc.msg);
+					mel::text::debug("Task1: Captured exception ok. msg ={}",exc.msg);
 				}
 				else
 				{
@@ -793,10 +793,10 @@ int _testExceptions( tests::BaseTest* test)
 			try
 			{
 
-				mel::text::info("Task2: Context switch");
+				mel::text::debug("Task2: Context switch");
 				if (_doWait(300)  == Process::ESwitchResult::ESWITCH_OK)
 				{
-					mel::text::info("Task2: Throw exception");
+					mel::text::debug("Task2: Throw exception");
 					if (rand()%10 < 5)
 						_throwExc(val);
 					else
@@ -808,7 +808,7 @@ int _testExceptions( tests::BaseTest* test)
 			{
 				if ( exc.code == val)
 				{
-					mel::text::info("Task2: Captured exception ok. msg ={}",exc.msg);
+					mel::text::debug("Task2: Captured exception ok. msg ={}",exc.msg);
 				}
 				else
 				{
@@ -820,7 +820,7 @@ int _testExceptions( tests::BaseTest* test)
 			catch( int v)
 			{
 				if ( v == val)
-					mel::text::info("Task2: Captured exception ok");
+					mel::text::debug("Task2: Captured exception ok");
 				else
 				{
 					stringstream ss;
@@ -840,10 +840,10 @@ int _testExceptions( tests::BaseTest* test)
 			try
 			{
 
-				mel::text::info("Task3: Context switch");
+				mel::text::debug("Task3: Context switch");
 				if (_doWait(500)  == Process::ESwitchResult::ESWITCH_OK)
 				{
-					mel::text::info("Task3: Throw exception");
+					mel::text::debug("Task3: Throw exception");
 					if (rand()%10 < 5)
 						_throwExc(val);
 					else
@@ -855,7 +855,7 @@ int _testExceptions( tests::BaseTest* test)
 			{
 				if ( exc.code == val)
 				{
-					mel::text::info("Task3: Captured exception ok. msg ={}",exc.msg);
+					mel::text::debug("Task3: Captured exception ok. msg ={}",exc.msg);
 				}
 				else
 				{
@@ -867,7 +867,7 @@ int _testExceptions( tests::BaseTest* test)
 			catch( int v)
 			{
 				if ( v == val)
-					mel::text::info("Task3: Captured exception ok");
+					mel::text::debug("Task3: Captured exception ok");
 				else
 				{
 					stringstream ss;
