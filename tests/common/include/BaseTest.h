@@ -16,7 +16,7 @@ namespace tests
              */
             int executeTest();
             int executeAllTests();
-            void setFailed(string extraText = "");
+            void setFailed( string extraText = "",const char* fileName = nullptr,int lineNum = -1 );
             /**
              * @brief Clear internal text buffer. See addTextToBuffer 
              * 

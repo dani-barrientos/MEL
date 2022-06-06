@@ -494,147 +494,7 @@ void _basicTests( ExecutorType ex, ThreadRunnable* th, tests::BaseTest* test )
                 vec.size() / 2, __FILE__, __LINE__,
                 tests::BaseTest::LogLevel::Info );
 
-            /*
-            este método ya no tiene snetido ya que al no pasar referencia no
-            puede modificar entrada text::info("Same process as the previous
-            without using reference");
-            //this method will produce a lot of copies, movements
-            test->clearTextBuffer();
-            try
-            {
-                    if ( rand()%10 < 5 )
-                            wasError = true;
-                    else
-                            wasError = false;
-                    auto res4 = mel::tasking::waitForFutureMThread(
-                            execution::start(ex)
-                            | mel::execution::next([test,ll]() noexcept
-                            {
-                                    auto t =
-            TestClass(INITIAL_VALUE,tests::BaseTest::LogLevel::None,false);
-                                    vector<TestClass> v(LOOP_SIZE,t);
-                                    for(auto& elem:v)
-                                    {
-                                            elem.setLogLevel(ll);
-                                            elem.addToBuffer = true;
-                                    }
-                                    return std::move(v);
-                            })
-                                    | mel::execution::next([](vector<TestClass>
-            v) noexcept
-                                    {
-                                    //@todo ahora estos ejemplos no vale, porque
-            no es referencia size_t s = v.size(); for(auto& elem:v)
-                                                    ++elem.val;
-                                            return std::move(v);
-                                    })
-                                    ahora el parallel no tiene sentido porque no
-            puede modificar la entrada si uso un convert tiene que devovler
-            tupla | mel::execution::parallel(
-                                            [](const vector<TestClass>& v)
-                                            {
-                                                    //randomly throw exception
-                                                    if ( wasError )
-                                                    {
-                                                            throw
-            std::runtime_error("random error");
-                                                    }
-                                                    //multiply by 2 the first
-            half size_t endIdx = v.size()/2; for(size_t i = 0; i < endIdx;++i )
-                                                    {
-                                                            //v[i].val =
-            v[i].val*2.f;
-                                                    }
-                                            },
-                                            []( const vector<TestClass>& v)
-            noexcept
-                                            {
-                                                    //multiply by 3 the second
-            half size_t startIdx = v.size()/2; for(size_t i = startIdx; i <
-            v.size();++i )
-                                                    {
-                                                            //@todo el problema
-            ahora es que el bulk no vale para mucho, no?? v[i].val =
-            v[i].val*3.f;
-                                                    }
-                                            }
-                                    )
-                                    | mel::execution::loop(
-                                            0,LOOP_SIZE,
-                                            [](int idx,const vector<TestClass>&
-            v) noexcept
-                                            {
-                                                    tasking::Process::wait(100);
-                                                    v[idx].val+=5.f;
-                                                    tasking::Process::wait(2000);
-                                            },1
-                                    )
-                                    |execution::catchError([](std::exception_ptr
-            err)
-                                    {
-                                            try
-                                            {
-                                                    std::rethrow_exception(err);
-                                            }catch(std::exception& e)
-                                            {
-                                                    sCurrentTest->addTextToBuffer("captured
-            error "s+e.what(),tests::BaseTest::LogLevel::None);
-                                            }
-                                            catch(...)
-                                            {
-                                                    sCurrentTest->addTextToBuffer("captured
-            error unknkown"s,tests::BaseTest::LogLevel::None);
-                                            }
-
-                                            //this job capture error is any was
-            thrown in previous jobs, and create a new vector for the next job
-                                            vector<TestClass>
-            newVector(10,TestClass(1,tests::BaseTest::LogLevel::None,false));
-                                            return newVector;
-                                    })
-                                    | mel::execution::next(
-                                            [](const vector<TestClass>& v)
-            noexcept
-                                            {
-                                                    for(auto& elem:v)
-                                                    {
-                                                            //++elem.val;
-                                                            tasking::Process::wait(10);
-                                                    }
-                                                    return std::move(v);
-                                            })
-                    );
-                    stringstream ss;
-                    ss<<"Valor vector: ";
-                    for(const auto& v:res4.value())
-                            ss << v.val<<' ';
-                    ss << '\n';
-                    test->addTextToBuffer(ss.str(),tests::BaseTest::LogLevel::None);
-                    //compare result with original vector. Must be the same
-                    const auto& v = res4.value();
-                    if ( &v == &vec )
-                            test->setFailed("Both vectors NUST NOT be the same
-            "); if (!wasError)
-                    {
-                            test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*2+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-                            test->checkOccurrences(std::to_string((INITIAL_VALUE+1)*3+5+1),res4.value().size()/2,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-                    }else
-                    {
-                            //in case of error, en new vector of size 10 is
-            created, with values initialized to 1, and later incremented in last
-            job
-                            test->checkOccurrences("2",10,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-                    }
-            }catch( std::exception& e)
-            {
-                    text::info("Error = {}",e.what());
-            }
-
-            test->checkOccurrences("constructor",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-            test->checkOccurrences("copy",0,__FILE__,__LINE__,tests::BaseTest::LogLevel::Info);
-*/
-
-            // ss.str(""s); //empty stream
+                       // ss.str(""s); //empty stream
             test->clearTextBuffer();
             event.set();
         } );
@@ -1748,7 +1608,7 @@ int TestExecution::onExecuteTest()
                 _testDebug( this );
                 break;
             case 1001:
-                samples();
+                samples(this);
                 break;
             case 0:
                 result = _testLaunch( this );
@@ -1794,5 +1654,6 @@ int TestExecution::onExecuteAllTests()
     _testAdvanceSample( this );
     _testFor( this );
     _testCaptures( this );
+    samples(this);
     return 0;
 }

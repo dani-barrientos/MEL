@@ -8,6 +8,7 @@
 #include <execution/ExFuture.h>
 #include <functional>
 #include <optional>
+#include <parallelism/Barrier.h>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
