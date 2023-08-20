@@ -22,7 +22,8 @@ Issues/facts:
    - Because Android Studio is based on cmake, integration is quite straight, but symbolic links to source code need to be because proyect structure requirement in Android Studio
    - If you want to use *spdlog*, concrete android triplet need to be installed (https://vcpkg.readthedocs.io/en/latest/users/android/#android-build-requirements)
 - Visual Studio: a bug in lambda processing with /Zc:lambda option (which is neccesary) for MSVC previous to 19.31 (Visual Studio 2022 17.1) generate error in some cases with nested lambdas. For example:
-      ```
+  
+      
       #include <exception>
       auto test_lambda  = [](auto ex) 
       {
@@ -34,7 +35,7 @@ Issues/facts:
       {
          test_lambda(1);
       }
-      ```
+      
    At the present moment this error has only be shown with a case as that, using exception_ptr, but could possibly appear in other situations.
   
  # Testing
